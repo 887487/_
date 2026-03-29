@@ -593,42 +593,49 @@ init();
       <button class="help-modal-close" onclick="closeHelpModal()">✕</button>
     </div>
     <div class="help-modal-body">
-      <div class="help-section">
-        <div class="help-section-title">🗂 基本の使い方</div>
-        <ol class="help-ol">
-          <li>左のサイドバーからカテゴリを選択するか、カードをクリックするとテンプレートが表示されます。</li>
-          <li>件名・本文を確認し、必要に応じてコピーして使用してください。</li>
-          <li>「← 一覧に戻る」ボタンでカード一覧に戻れます。</li>
-        </ol>
-      </div>
-      <div class="help-section">
-        <div class="help-section-title">🔍 テンプレート検索</div>
-        <ul class="help-ul">
-          <li>右上の検索ボックスにキーワードを入力すると、タイトル・件名・本文を横断検索できます。</li>
-          <li>× ボタンで検索をクリアします。</li>
-        </ul>
-      </div>
-      <div class="help-section">
-        <div class="help-section-title">💬 定型文クイックコピー</div>
-        <ul class="help-ul">
-          <li>右上の <strong>💬 定型文</strong> ボタンをクリックするとメニューが開きます。</li>
-          <li>項目をクリックするとクリップボードにコピーされます。</li>
-        </ul>
-      </div>
-      <div class="help-section">
-        <div class="help-section-title">📤 データ更新</div>
-        <ul class="help-ul">
-          <li>右上の <strong>📤 データ更新</strong> ボタンを押すとフォルダ選択ダイアログが開きます。</li>
-          <li>HTMLファイルと同じフォルダを選択すると、その中のJSONファイルを自動で読み込みます。</li>
-        </ul>
-      </div>
-      <div class="help-section">
-        <div class="help-section-title">🛠 管理画面（管理者向け）</div>
-        <ul class="help-ul">
-          <li>右上の <strong>🛠 管理画面</strong> ボタンにはパスワードが必要です。</li>
-          <li>テンプレートの追加・編集・削除、カテゴリ管理が可能です。</li>
-        </ul>
-      </div>
+      <div class="help-modal-grid">
+
+        <div class="help-section">
+          <div class="help-section-title">🗂 基本の使い方</div>
+          <ol class="help-ol">
+            <li>左の <strong>コンテンツ一覧</strong> からカテゴリを展開し、テンプレート名をクリックします。</li>
+            <li>件名・本文を確認し、コピーして使用してください。</li>
+          </ol>
+        </div>
+
+        <div class="help-section">
+          <div class="help-section-title">🧭 サイドバー操作</div>
+          <ul class="help-ul">
+            <li>▶ アイコンのカテゴリ名をクリックすると展開・格納できます。</li>
+            <li>テンプレート名にカーソルを乗せると件名・本文のプレビューが表示されます。</li>
+            <li>現在表示中のテンプレートは青枠でハイライトされます。</li>
+            <li>青枠は画面内どこをクリックしても保持されます。<kbd>Esc</kbd> で解除します。</li>
+          </ul>
+        </div>
+
+        <div class="help-section">
+          <div class="help-section-title">🔍 テンプレート検索</div>
+          <ul class="help-ul">
+            <li>右上の検索ボックスにキーワードを入力するとタイトル・件名・本文を横断検索できます。</li>
+            <li><kbd>×</kbd> ボタンで検索をクリアします。</li>
+          </ul>
+        </div>
+
+        <div class="help-section">
+          <div class="help-section-title">💬 定型文クイックコピー</div>
+          <ul class="help-ul">
+            <li>右上の <strong>💬 定型文</strong> ボタンをクリックするとメニューが開きます。</li>
+            <li>項目をクリックするとクリップボードにコピーされます。</li>
+          </ul>
+        </div>
+
+        <div class="help-section">
+          <div class="help-section-title">📥 データ更新（D&amp;D）</div>
+          <ul class="help-ul">
+            <li>管理画面で「💾 保存して反映」すると JSON ファイルが自動ダウンロードされます。</li>
+            <li>その JSON ファイルを画面上にドロップするとデータが即時更新されます（リロードなし）。</li>
+          </ul>
+        </div>
     </div>
   </div>
 </div>

@@ -442,14 +442,15 @@ th { background:var(--bg); }
 .help-circle-btn { width:32px;height:32px;border-radius:50%;border:2px solid rgba(255,255,255,0.6);background:rgba(255,255,255,0.15);color:white;font-size:14px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;transition:background 0.2s,border-color 0.2s; }
 .help-circle-btn:hover { background:rgba(255,255,255,0.3);border-color:white; }
 .help-modal-overlay { position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9000;display:flex;align-items:center;justify-content:center;padding:20px; }
-.help-modal-box { background:var(--surface);border-radius:12px;width:680px;max-width:100%;max-height:85vh;display:flex;flex-direction:column;box-shadow:0 10px 40px rgba(0,0,0,0.25);overflow:hidden; }
+.help-modal-box { background:var(--surface);border-radius:12px;width:min(92vw,960px);max-height:88vh;display:flex;flex-direction:column;box-shadow:0 10px 40px rgba(0,0,0,0.25);overflow:hidden; }
+.help-modal-grid { display:flex;flex-direction:column;gap:0; }
 .help-modal-header { display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid #dfe4ea;background:#f8f9fa;flex-shrink:0; }
 .help-modal-title { font-size:15px;font-weight:700;color:var(--text); }
 .help-modal-close { width:28px;height:28px;border:none;background:#dfe4ea;border-radius:50%;cursor:pointer;font-size:13px;color:#555;display:flex;align-items:center;justify-content:center;transition:background 0.15s; }
 .help-modal-close:hover { background:#c5cdd8; }
 .help-modal-body { flex:1;overflow-y:auto;padding:20px 24px;display:flex;flex-direction:column;gap:20px; }
 .help-section { display:flex;flex-direction:column;gap:8px; }
-.help-section-title { font-size:13px;font-weight:700;color:#3742fa;padding-bottom:4px;border-bottom:1px solid #eef0ff; }
+.help-section-title { font-size:12px;font-weight:700;color:var(--surface);background:#3742fa;display:inline-block;padding:2px 10px;border-radius:4px;margin-bottom:2px; }
 .help-ol, .help-ul { margin:0;padding-left:22px;font-size:12px;color:var(--text);line-height:1.8; }
 .help-table { border-collapse:collapse;font-size:12px;width:100%; }
 .help-table th { background:#f0f4ff;color:#3742fa;font-weight:700;padding:6px 12px;border:1px solid var(--border);text-align:left; }
