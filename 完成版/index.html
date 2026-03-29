@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>📋 トークスクリプト集</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="common-utils.js"></script>
+</head>
+<body>
+
+<!-- ===== ヘッダー ===== -->
+<header>
+  <div class="hd-left">
+    <button id="menuBtn" onclick="toggleSideMenu()">☰</button>
+    <button class="header-title hd-title-btn" onclick="goHome()" title="ホームへ戻る">📋 トークスクリプト集</button>
+    <button class="help-circle-btn" onclick="openHelpModal()" title="使い方マニュアル">?</button>
+  </div>
+  <div class="hd-center"></div>
+  <div class="hd-right">
+    <!-- スクリプト：自ページのため非表示 -->
+    <button class="nav-btn" onclick="openNamedTab('mail.html','mailTab')">✉️ メール</button>
+    <button class="nav-btn" onclick="openNamedTab('screen.html','screenFlowTab')">🖥️ 画面遷移</button>
+    <div class="quick-copy-area">
+      <button class="quick-copy-btn nav-btn-green" id="quickCopyBtn" onclick="toggleQuickMenu()">💬 定型文</button>
+      <div class="quick-menu" id="quickMenu"></div>
+      <div class="quick-copy-toast" id="quickCopyToast"></div>
+    </div>
+    <div class="search-area">
+      <input type="text" id="searchBox" placeholder="スクリプト検索（タイトル・本文）" autocomplete="off">
+      <button id="clearBtn">×</button>
+      <div id="suggestBox"></div>
+    </div>
+  </div>
+</header>
+
+<!-- ===== ☰ スライドサイドメニュー（ツール・資料・リンク） ===== -->
+<aside id="sideMenu"></aside>
+
+<!-- ===== メインレイアウト ===== -->
+<div class="page-layout">
+
+  <!-- 左サイドバー：コンテンツ一覧（件数はJSが動的に更新） -->
+  <div class="script-sidebar-panel" id="scriptSidebarPanel">
+    <div class="sidebar-top" id="scriptSidebarTop">📂 コンテンツ一覧</div>
+    <div class="sidebar-scroll" id="scriptSidebarEl"></div>
+  </div>
+
+  <!-- メインコンテンツエリア -->
+  <main>
+    <!-- オープニングトーク（常時表示） -->
+    <div class="opening">
+      <div class="opening-title">オープニングトーク</div>
+      <div class="opening-text">お電話 ありがとうございます。NHKONE窓口 担当●●でございます。</div>
+    </div>
+
+    <!-- スクリプト表示エリア（JSが描画。クロージングも対応完了時にここに含まれる） -->
+    <div id="contentArea"></div>
+  </main>
+
+  <!-- 右サイドパネル：ヒアリングチェックシート -->
+  <div id="hearingPanel" class="hearing-panel">
+    <button id="hearingToggleBtn" class="hearing-toggle-btn" onclick="toggleHearingPanel()" title="ヒアリングチェックシート">＜</button>
+    <div class="hearing-panel-body">
+      <div class="hearing-header">
+        <span class="hearing-title">ヒアリングチェックシート</span>
+        <div class="hearing-header-btns">
+          <button class="hearing-copy-btn" onclick="copyHearingText()" title="ヒアリング内容をコピー">📋 コピー</button>
+          <button class="hearing-reset-btn" onclick="resetHearing()">リセット</button>
+        </div>
+      </div>
+      <div id="hearingCopyToast" class="hearing-copy-toast"></div>
+      <div class="hearing-content" id="hearingContent"></div>
+    </div>
+  </div>
+</div>
+
+<!-- サイドバーホバー時のコンテンツプレビュー用フローティングTooltip -->
+<div id="sbPreviewTooltip" class="sb-preview-tooltip" style="display:none"></div>
+
+<!-- ===== 使い方マニュアル モーダル ===== -->
+<div id="helpModal" class="help-modal-overlay" style="display:none" onclick="closeHelpModalOutside(event)">
+  <div class="help-modal-box">
+    <div class="help-modal-header">
+      <span class="help-modal-title">📖 使い方マニュアル — トークスクリプト集</span>
+      <button class="help-modal-close" onclick="closeHelpModal()">✕</button>
+    </div>
+    <div class="help-modal-body">
+
+      <div class="help-section">
+        <div class="help-section-title">🗂 基本の使い方</div>
+        <ol class="help-ol">
+          <li>画面左の <strong>コンテンツ一覧</strong> からカテゴリを展開し、スクリプト名をクリックします。</li>
+          <li>スクリプトのステップが表示されます。青い選択肢ボタンをクリックして次のステップへ進みます。</li>
+          <li>すべてのステップが完了すると <strong>✓ 対応完了</strong> バッジが表示され、画面下部にクロージングトークが出現します。</li>
+          <li>「不明点なし」または「不明点あり」ボタンでクロージング文言を切り替えます。</li>
+        </ol>
+      </div>
+
+      <div class="help-section">
+        <div class="help-section-title">🧭 サイドバー操作</div>
+        <ul class="help-ul">
+          <li>▶ アイコンのついた項目はクリックで展開・格納できます。</li>
+          <li>スクリプト名にカーソルを乗せるとプレビューが表示されます。</li>
+          <li>現在表示中のスクリプトは青くハイライトされます。</li>
+        </ul>
+      </div>
+
+      <div class="help-section">
+        <div class="help-section-title">🔍 スクリプト検索</div>
+        <ul class="help-ul">
+          <li>右上の検索ボックスにキーワードを入力するとスクリプトを横断検索できます（タイトル・本文対応）。</li>
+          <li>候補をクリックするかキーボードの <kbd>↑</kbd><kbd>↓</kbd><kbd>Enter</kbd> で選択できます。</li>
+        </ul>
+      </div>
+
+      <div class="help-section">
+        <div class="help-section-title">💬 定型文クイックコピー</div>
+        <ul class="help-ul">
+          <li>右上の <strong>💬 定型文</strong> ボタンをクリックするとメニューが開きます。</li>
+          <li>項目をクリックするとクリップボードにコピーされます（チャットツール等に貼り付け可能）。</li>
+        </ul>
+      </div>
+
+      <div class="help-section">
+        <div class="help-section-title">⌨️ キーボードナビゲーション</div>
+        <table class="help-table">
+          <tr><th>キー</th><th>動作</th></tr>
+          <tr><td><kbd>↑</kbd> / <kbd>↓</kbd></td><td>サイドバーアイテム・選択肢ボタンを移動</td></tr>
+          <tr><td><kbd>←</kbd></td><td>前のステップに戻る</td></tr>
+          <tr><td><kbd>Enter</kbd></td><td>フォーカス中のボタンを押す</td></tr>
+        </table>
+      </div>
+
+      <div class="help-section">
+        <div class="help-section-title">📤 データ更新</div>
+        <ul class="help-ul">
+          <li>右上の <strong>📤 データ更新</strong> ボタンを押すとフォルダ選択ダイアログが開きます。</li>
+          <li>HTMLファイルと同じフォルダを選択すると、その中のJSONファイルを自動で読み込みます。</li>
+          <li>JSONが複数ある場合はファイル名の一覧が表示されます。</li>
+        </ul>
+      </div>
+
+      <div class="help-section">
+        <div class="help-section-title">🩺 ヒアリングチェックシート</div>
+        <ul class="help-ul">
+          <li>画面右端の <strong>＜</strong> ボタンでパネルを開閉できます。</li>
+          <li>必要事項を入力後、「📋 コピー」でクリップボードへコピーできます。</li>
+          <li>「リセット」ボタンで入力内容をすべてクリアします。</li>
+        </ul>
+      </div>
+
+      <div class="help-section">
+        <div class="help-section-title">🛠 管理画面（管理者向け）</div>
+        <ul class="help-ul">
+          <li>右上の <strong>🛠 管理画面</strong> ボタンにはパスワードが必要です。</li>
+          <li>スクリプトの追加・編集・削除、カテゴリ管理、JSONエクスポートが可能です。</li>
+        </ul>
+      </div>
+
+    </div><!-- /.help-modal-body -->
+  </div><!-- /.help-modal-box -->
+</div><!-- /#helpModal -->
+
+<script src="app.js"></script>
+
+<!-- 使い方マニュアル モーダル開閉 -->
+<script>
+  function openHelpModal()  { document.getElementById('helpModal').style.display = 'flex'; }
+  function closeHelpModal() { document.getElementById('helpModal').style.display = 'none'; }
+  // モーダル外クリックで閉じる
+  function closeHelpModalOutside(e) {
+    if (e.target === document.getElementById('helpModal')) closeHelpModal();
+  }
+</script>
+</body>
+</html>
