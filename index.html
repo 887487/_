@@ -1,64 +1,54 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<title>GitHub フォルダZIPダウンロード</title>
-
-<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
-
-<style>
-body {
-  font-family: sans-serif;
-  text-align: center;
-  padding: 50px;
-}
-button {
-  padding: 15px 30px;
-  font-size: 18px;
-  cursor: pointer;
-}
-#status {
-  margin-top: 20px;
-}
-</style>
+  <meta charset="UTF-8">
+  <title>GitHub Folder Downloader</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 </head>
-
 <body>
+  <h2>GitHub フォルダ ZIP ダウンロード</h2>
 
-<h1>フォルダZIPダウンロード</h1>
-<button onclick="downloadZip()">ダウンロード</button>
-
-<div id="status"></div>
+  <button onclick="downloadZip()">ダウンロード</button>
+  <p id="status"></p>
 
 <script>
-const OWNER = "your-id";
-const REPO = "your-repo";
-const BRANCH = "main";
+const owner = "YOUR_OWNER";
+const repo = "YOUR_REPO";
+const branch = "main";
+const targetFolder = "path/to/folder"; // ←ここ固定
+
+async function fetchContents(path) {
+  const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path}?ref=${branch}`;
+  const res = await fetch(url);
+  return await res.json();
+}
+
+async function addToZip(zip, folderPath, zipFolder) {
+  const items = await fetchContents(folderPath);
+
+  for (const item of items) {
+    if (item.type === "file") {
+      const fileRes = await fetch(item.download_url);
+      const blob = await fileRes.blob();
+      zipFolder.file(item.name, blob);
+      document.getElementById("status").innerText = `取得中: ${item.path}`;
+    }
+
+    if (item.type === "dir") {
+      const newFolder = zipFolder.folder(item.name);
+      await addToZip(zip, item.path, newFolder);
+    }
+  }
+}
 
 async function downloadZip() {
-  const status = document.getElementById("status");
-  status.innerText = "準備中...";
-
   const zip = new JSZip();
 
-  // ファイル一覧取得
-  const res = await fetch("files.json");
-  const files = await res.json();
+  document.getElementById("status").innerText = "取得開始...";
 
-  let count = 0;
+  await addToZip(zip, targetFolder, zip);
 
-  for (const file of files) {
-    status.innerText = `取得中... (${++count}/${files.length})`;
-
-    const url = `https://raw.githubusercontent.com/${OWNER}/${REPO}/${BRANCH}/${file}`;
-
-    const response = await fetch(url);
-    const blob = await response.blob();
-
-    zip.file(file, blob); // フォルダ構造維持
-  }
-
-  status.innerText = "ZIP生成中...";
+  document.getElementById("status").innerText = "ZIP生成中...";
 
   const content = await zip.generateAsync({ type: "blob" });
 
@@ -67,9 +57,8 @@ async function downloadZip() {
   a.download = "download.zip";
   a.click();
 
-  status.innerText = "完了！";
+  document.getElementById("status").innerText = "完了！";
 }
 </script>
-
 </body>
 </html>
