@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>ファイルダウンロード</title>
+  <style>
+    html,body {
+      height: 100%;
+      margin: 0;
+    }
+    /* 中央にボタンだけ配置 */
+    .wrap {
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    button#downloadBtn {
+      font-size: 18px;
+      padding: 12px 28px
+      border-radius: 8px;
+      border: 1px solid #333;
+      background: #fff;
+      cursor: pointer;
+    }
+    button#downloadBtn:active { transform: translateY(1px); }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <button id="downloadBtn">ダウンロード</button>
+  </div>
+
+  <script>
+    // === ここを自分のリポジトリ情報に書き換えてください ===
+    const owner = "887487"; // 例: "octocat"
+    const repo  = "_";              // 例: "my-repo"
+    const branch = "main";                       // 例: "main" または "master" や任意のブランチ名
+    const filePath = "0330v1.zip";    // 例: "assets/sample.pdf"（リポジトリ内のパス）
+    // ==================================================
+
+    // raw.githubusercontent.com の URL を組み立てる
+    const rawUrl = `https://raw.githubusercontent.com/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/${encodeURIComponent(branch)}/${filePath}`;
+
+    // ダウンロード時のファイル名（必要ならここを変更）
+    const suggestedFileName = filePath.split('/').pop() || "download";
+
+    document.getElementById('downloadBtn').addEventListener('click', async () => {
+      try {
+        // fetch して blob としてダウンロード（CORS 回避と安全なファイル名付与のため）
+        const res = await fetch(rawUrl);
+        if (!res.ok) throw new Error(`取得失敗: ${res.status} ${res.statusText}`);
+
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+
+        // 一時的なリンクでダウンロードを実行
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = suggestedFileName; // ブラウザに保存するファイル名
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+
+        // メモリ開放
+        URL.revokeObjectURL(url);
+      } catch (err) {
+        console.error(err);
+        alert("ファイルのダウンロードに失敗しました。\nコンソールを確認してください。");
+      }
+    });
+  </script>
+</body>
+</html>
