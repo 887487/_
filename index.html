@@ -1,75 +1,75 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>ファイルダウンロード</title>
-  <style>
-    html,body {
-      height: 100%;
-      margin: 0;
-    }
-    /* 中央にボタンだけ配置 */
-    .wrap {
-      height: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    button#downloadBtn {
-      font-size: 18px;
-      padding: 12px 28px
-      border-radius: 8px;
-      border: 1px solid #333;
-      background: #fff;
-      cursor: pointer;
-    }
-    button#downloadBtn:active { transform: translateY(1px); }
-  </style>
+<meta charset="UTF-8">
+<title>GitHub フォルダZIPダウンロード</title>
+
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+
+<style>
+body {
+  font-family: sans-serif;
+  text-align: center;
+  padding: 50px;
+}
+button {
+  padding: 15px 30px;
+  font-size: 18px;
+  cursor: pointer;
+}
+#status {
+  margin-top: 20px;
+}
+</style>
 </head>
+
 <body>
-  <div class="wrap">
-    <button id="downloadBtn">ダウンロード</button>
-  </div>
 
-  <script>
-    // === ここを自分のリポジトリ情報に書き換えてください ===
-    const owner = "887487"; // 例: "octocat"
-    const repo  = "_";              // 例: "my-repo"
-    const branch = "main";                       // 例: "main" または "master" や任意のブランチ名
-    const filePath = "0330v1.zip";    // 例: "assets/sample.pdf"（リポジトリ内のパス）
-    // ==================================================
+<h1>フォルダZIPダウンロード</h1>
+<button onclick="downloadZip()">ダウンロード</button>
 
-    // raw.githubusercontent.com の URL を組み立てる
-    const rawUrl = `https://raw.githubusercontent.com/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/${encodeURIComponent(branch)}/${filePath}`;
+<div id="status"></div>
 
-    // ダウンロード時のファイル名（必要ならここを変更）
-    const suggestedFileName = filePath.split('/').pop() || "download";
+<script>
+const OWNER = "your-id";
+const REPO = "your-repo";
+const BRANCH = "main";
 
-    document.getElementById('downloadBtn').addEventListener('click', async () => {
-      try {
-        // fetch して blob としてダウンロード（CORS 回避と安全なファイル名付与のため）
-        const res = await fetch(rawUrl);
-        if (!res.ok) throw new Error(`取得失敗: ${res.status} ${res.statusText}`);
+async function downloadZip() {
+  const status = document.getElementById("status");
+  status.innerText = "準備中...";
 
-        const blob = await res.blob();
-        const url = URL.createObjectURL(blob);
+  const zip = new JSZip();
 
-        // 一時的なリンクでダウンロードを実行
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = suggestedFileName; // ブラウザに保存するファイル名
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
+  // ファイル一覧取得
+  const res = await fetch("files.json");
+  const files = await res.json();
 
-        // メモリ開放
-        URL.revokeObjectURL(url);
-      } catch (err) {
-        console.error(err);
-        alert("ファイルのダウンロードに失敗しました。\nコンソールを確認してください。");
-      }
-    });
-  </script>
+  let count = 0;
+
+  for (const file of files) {
+    status.innerText = `取得中... (${++count}/${files.length})`;
+
+    const url = `https://raw.githubusercontent.com/${OWNER}/${REPO}/${BRANCH}/${file}`;
+
+    const response = await fetch(url);
+    const blob = await response.blob();
+
+    zip.file(file, blob); // フォルダ構造維持
+  }
+
+  status.innerText = "ZIP生成中...";
+
+  const content = await zip.generateAsync({ type: "blob" });
+
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(content);
+  a.download = "download.zip";
+  a.click();
+
+  status.innerText = "完了！";
+}
+</script>
+
 </body>
 </html>
