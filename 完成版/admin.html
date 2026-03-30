@@ -2526,25 +2526,40 @@ var _scrCenterOvInited=false;
 function _scrInitCenterOverlayEvents(){
   if(_scrCenterOvInited)return;_scrCenterOvInited=true;
   var ov=document.getElementById('scrCenterOverlay');if(!ov)return;
-  ov.addEventListener('mousedown',function(e){
-    if(!_scrSelScrId)return;var r=ov.getBoundingClientRect();
+
+  // Pointer Capture API を使用：pointerdown 時に setPointerCapture でポインターを
+  // オーバーレイに固定することで、画像外へカーソルが出ても pointermove/pointerup を
+  // 確実に受け取れる。mouseleave によるキャンセルも不要になる。
+  ov.addEventListener('pointerdown',function(e){
+    if(!_scrSelScrId)return;
+    var r=ov.getBoundingClientRect();
     var rx=(e.clientX-r.left)/r.width,ry=(e.clientY-r.top)/r.height;
-    _scrHsDrawing=true;_scrHsDrawStart={rx,ry};e.preventDefault();
+    _scrHsDrawing=true;_scrHsDrawStart={rx,ry};
+    ov.setPointerCapture(e.pointerId); // ポインターをこの要素に固定
+    e.preventDefault();
   });
-  ov.addEventListener('mousemove',function(e){
-    if(!_scrHsDrawing||!_scrHsDrawStart)return;var r=ov.getBoundingClientRect();
-    var rx=Math.max(0,Math.min(1,(e.clientX-r.left)/r.width)),ry=Math.max(0,Math.min(1,(e.clientY-r.top)/r.height));
+
+  ov.addEventListener('pointermove',function(e){
+    if(!_scrHsDrawing||!_scrHsDrawStart)return;
+    var r=ov.getBoundingClientRect();
+    // 画像範囲外の座標は 0〜1 にクランプ
+    var rx=Math.max(0,Math.min(1,(e.clientX-r.left)/r.width));
+    var ry=Math.max(0,Math.min(1,(e.clientY-r.top)/r.height));
     var x=Math.min(rx,_scrHsDrawStart.rx),y=Math.min(ry,_scrHsDrawStart.ry);
     var w=Math.abs(rx-_scrHsDrawStart.rx),h=Math.abs(ry-_scrHsDrawStart.ry);
     _scrDrawCenterOverlay({x,y,w,h});
   });
-  ov.addEventListener('mouseup',function(e){
-    if(!_scrHsDrawing||!_scrHsDrawStart)return;_scrHsDrawing=false;
+
+  ov.addEventListener('pointerup',function(e){
+    if(!_scrHsDrawing||!_scrHsDrawStart)return;
+    _scrHsDrawing=false;
     var r=ov.getBoundingClientRect();
-    var rx=Math.max(0,Math.min(1,(e.clientX-r.left)/r.width)),ry=Math.max(0,Math.min(1,(e.clientY-r.top)/r.height));
+    var rx=Math.max(0,Math.min(1,(e.clientX-r.left)/r.width));
+    var ry=Math.max(0,Math.min(1,(e.clientY-r.top)/r.height));
     var x=Math.min(rx,_scrHsDrawStart.rx),y=Math.min(ry,_scrHsDrawStart.ry);
     var w=Math.abs(rx-_scrHsDrawStart.rx),h=Math.abs(ry-_scrHsDrawStart.ry);
     _scrHsDrawStart=null;
+    ov.releasePointerCapture(e.pointerId);
     if(w<0.01||h<0.01){_scrDrawCenterOverlay(null);return;}
     if(_scrEditMode==='hotspot'){
       var pat=screenPatterns.find(function(p){return p.id===_scrCurrentPatId;});if(!pat)return;
@@ -2560,7 +2575,11 @@ function _scrInitCenterOverlayEvents(){
       _scrDrawCenterOverlay(null);
     }
   });
-  ov.addEventListener('mouseleave',function(){if(_scrHsDrawing){_scrHsDrawing=false;_scrHsDrawStart=null;_scrDrawCenterOverlay(null);}});
+
+  // pointercancel: ブラウザが強制キャンセルした場合（例: スクロール割り込み）にリセット
+  ov.addEventListener('pointercancel',function(){
+    _scrHsDrawing=false;_scrHsDrawStart=null;_scrDrawCenterOverlay(null);
+  });
 }
 
 // データ保存（markDirty のみ。実際の書き込みは saveAllManual）
