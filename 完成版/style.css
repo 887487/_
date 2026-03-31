@@ -728,6 +728,7 @@ header.hd .tab-btn.active{background:rgba(255,255,255,.28);color:#fff;font-weigh
 .page-admin #tabScreen.active{display:flex;flex-direction:row;overflow:hidden;}
 .page-admin .tab-panel-hearing.active{display:block;overflow-y:auto;padding:24px;box-sizing:border-box;}
 .page-admin .tab-panel-history.active{display:block;overflow-y:auto;padding:24px;box-sizing:border-box;}
+.page-admin .tab-panel-imglib.active{display:block;overflow-y:auto;padding:20px;box-sizing:border-box;}
 html[data-theme="dark"] .page-admin .tab-panel-history{background:var(--bg);}
 .scr-pat-sidebar{width:200px;min-width:200px;background:var(--white);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;overflow:hidden;height:100%;}
 .scr-list-sidebar{width:200px;min-width:200px;background:var(--white);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;overflow:hidden;height:100%;}

@@ -593,7 +593,7 @@ html[data-theme="dark"] .modal-box { background: var(--surface); border: 1px sol
 // base64 画像を含む大容量データを localStorage の代わりに保存する
 // ============================================================
 const _IDB_DB_NAME  = 'screenFlowDB';
-const _IDB_DB_VER   = 2; // v2: patterns ストアを確実に作成
+const _IDB_DB_VER   = 3; // v3: imageLib ストアを追加
 const _IDB_STORE    = 'patterns';
 const _IDB_DATA_KEY = 'data';
 
@@ -604,7 +604,8 @@ function _idbOpen() {
     var req = indexedDB.open(_IDB_DB_NAME, _IDB_DB_VER);
     req.onupgradeneeded = function(e) {
       var db = e.target.result;
-      if (!db.objectStoreNames.contains(_IDB_STORE)) db.createObjectStore(_IDB_STORE);
+      if (!db.objectStoreNames.contains(_IDB_STORE))  db.createObjectStore(_IDB_STORE);
+      if (!db.objectStoreNames.contains('imageLib'))   db.createObjectStore('imageLib');
     };
     req.onsuccess = function(e) {
       _idbInstance = e.target.result;
@@ -615,6 +616,28 @@ function _idbOpen() {
     req.onerror = function(e) { console.error('[IDB] open error:', e.target.error); reject(e.target.error); };
   });
 }
+// 画像ライブラリ（imageLib ストア）から dataUrl を取得する
+// "lib:xxxxx" 形式の imageSrc を解決する。直接 base64 はそのまま返す。
+var _pvImgCache = {};
+function resolveImgPv(src) {
+  if (!src) return Promise.resolve(null);
+  if (!src.startsWith('lib:')) return Promise.resolve(src);
+  var libId = src.slice(4);
+  if (_pvImgCache[libId]) return Promise.resolve(_pvImgCache[libId]);
+  return _idbOpen().then(function(db) {
+    return new Promise(function(resolve) {
+      var tx  = db.transaction('imageLib', 'readonly');
+      var req = tx.objectStore('imageLib').get(libId);
+      req.onsuccess = function(e) {
+        var dataUrl = e.target.result ? e.target.result.dataUrl : null;
+        if (dataUrl) _pvImgCache[libId] = dataUrl;
+        resolve(dataUrl);
+      };
+      req.onerror = function() { resolve(null); };
+    });
+  }).catch(function() { return null; });
+}
+
 function idbGetScreenData() {
   return _idbOpen().then(function(db) {
     return new Promise(function(resolve, reject) {
@@ -914,9 +937,11 @@ function renderSidebar() {
     const screenItems = p.screens.map((s, i) => {
       const isActive  = s.id === pvCurrentId && p.id === currentPatId;
       const itemId    = 'scrItem_' + s.id;
+      const thumbId1  = 'pvThumb_sb_' + s.id;
       const thumbHtml = s.imageSrc
-        ? `<img src="${s.imageSrc}" alt="${esc(s.name)}" style="width:100%;height:100%;object-fit:cover;">`
+        ? `<img id="${thumbId1}" src="" alt="${esc(s.name)}" style="width:100%;height:100%;object-fit:cover;">`
         : '<span style="font-size:10px">🖼️</span>';
+      if (s.imageSrc) resolveImgPv(s.imageSrc).then(src => { const e = document.getElementById(thumbId1); if(e&&src)e.src=src; });
       return `
         <div class="sb-item sb-item-sub${isActive ? ' active' : ''}"
              id="${itemId}"
@@ -1024,9 +1049,11 @@ function renderFlow() {
   let html = `<div class="flow-pat-label">📂 ${esc(pat.name)}</div><div class="flow-thumb-row">`;
   screens.forEach((s, i) => {
     const isActive = s.id === pvCurrentId;
+    const thumbId2  = 'pvThumb_flow_' + s.id;
     const thumbHtml = s.imageSrc
-      ? `<img src="${s.imageSrc}" alt="${esc(s.name)}">`
+      ? `<img id="${thumbId2}" src="" alt="${esc(s.name)}">`
       : '<span style="font-size:22px">🖼️</span>';
+    if (s.imageSrc) resolveImgPv(s.imageSrc).then(src => { const e = document.getElementById(thumbId2); if(e&&src)e.src=src; });
     html += `
       <div class="flow-thumb-card ${isActive ? 'active' : ''}"
            onclick="startPreviewFrom('${s.id}')"
@@ -1073,6 +1100,19 @@ function startPreviewFrom(screenId) {
  * @param {boolean} reset - true: 履歴リセット（最初から）
  */
 function navigatePv(id, reset) {
+  // "patId::scrId" 形式なら別パターンへ切り替えてから遷移
+  if (id && id.indexOf('::') >= 0) {
+    const parts  = id.split('::');
+    const patId  = parts[0];
+    const scrId  = parts[1];
+    const pat    = patterns.find(p => p.id === patId);
+    if (!pat) return;
+    currentPatId = patId;
+    // サイドバーを再描画してからその画面へ遷移
+    renderSidebar();
+    navigatePv(scrId, reset);
+    return;
+  }
   const s = getScreen(id);
   if (!s) return;
   pvCurrentId = id;
@@ -1117,9 +1157,11 @@ function renderPvCanvas(screen) {
   const canvas    = document.createElement('div');
   canvas.className = 'pv-canvas';
   const img = document.createElement('img');
-  img.src   = screen.imageSrc;
   img.alt   = screen.name;
   canvas.appendChild(img);
+
+  // lib:xxx 形式を解決して画像をセット
+  resolveImgPv(screen.imageSrc).then(src => { if (src) img.src = src; });
 
   // ホットスポットオーバーレイを生成する
   const mailTemplates = _loadMailTemplates();
@@ -1129,7 +1171,6 @@ function renderPvCanvas(screen) {
     el.style.cssText = `left:${hs.x*100}%;top:${hs.y*100}%;width:${hs.w*100}%;height:${hs.h*100}%;`;
 
     if (hs.targetType === 'mail') {
-      // メールテンプレートへのホットスポット
       const mt  = mailTemplates.find(x => x.id === hs.targetId);
       const tip = (hs.note ? hs.note + '\n' : '') + `✉️ ${mt?.title || 'メール'}`;
       el.innerHTML       = `<div class="pv-tooltip">${esc(tip)}</div>`;
@@ -1139,8 +1180,19 @@ function renderPvCanvas(screen) {
         const tab = window.open('mail.html#' + hs.targetId, 'mailTab');
         if (tab) tab.focus();
       };
+    } else if (hs.targetType === 'pattern') {
+      // 別パターンの画面（"patId::scrId" 形式）
+      const parts  = hs.targetId.split('::');
+      const tPat   = patterns.find(p => p.id === parts[0]);
+      const tScr   = tPat?.screens.find(s => s.id === parts[1]);
+      if (!tPat || !tScr) return;
+      const tip = (hs.note ? hs.note + '\n' : '') + `🗂 ${tPat.name} → ${tScr.name}`;
+      el.innerHTML       = `<div class="pv-tooltip">${esc(tip)}</div>`;
+      el.style.borderColor = '#8e44ad';
+      el.style.background  = 'rgba(142,68,173,.15)';
+      el.onclick = () => navigatePv(hs.targetId, false);
     } else {
-      // 別画面へのホットスポット
+      // 同パターン内の別画面
       const t  = screens.find(s => s.id === hs.targetId);
       if (!t) return;
       const ti  = screens.findIndex(s => s.id === hs.targetId);
@@ -1153,11 +1205,9 @@ function renderPvCanvas(screen) {
 
   wrap.innerHTML = '';
   wrap.appendChild(canvas);
-  // 画面遷移後は画像の先頭が見えるようスクロールをリセット
   wrap.scrollTop  = 0;
   wrap.scrollLeft = 0;
 }
-
 /**
  * 遷移履歴カードリストを描画する。
  * カードをクリックするとその位置（インデックス）に戻れる。
@@ -1172,9 +1222,11 @@ function renderPvHist() {
     if (!s) return '';
     const si        = screens.findIndex(x => x.id === id);
     const isCurrent = (i === pvHistory.length - 1);
+    const thumbId3  = 'pvThumb_hist_' + s.id + '_' + i;
     const thumbHtml = s.imageSrc
-      ? `<img src="${s.imageSrc}" alt="${esc(s.name)}">`
+      ? `<img id="${thumbId3}" src="" alt="${esc(s.name)}">`
       : '🖼️';
+    if (s.imageSrc) resolveImgPv(s.imageSrc).then(src => { const e = document.getElementById(thumbId3); if(e&&src)e.src=src; });
     return `
       <div class="pv-hist-card ${isCurrent ? 'current' : ''}"
            onclick="jumpToHistory(${i})"
