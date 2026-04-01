@@ -689,9 +689,9 @@ body.dnd-xlsx-hover::after {
     <button class="tab-btn active" id="tabBtnScript"  onclick="switchTab('script')">📋 スクリプト</button>
     <button class="tab-btn" id="tabBtnMail"    onclick="switchTab('mail')">✉️ メール</button>
     <button class="tab-btn" id="tabBtnScreen"  onclick="switchTab('screen')">🖥 画面遷移</button>
-    <button class="tab-btn" id="tabBtnHistory" onclick="switchTab('history')">📝 更新履歴</button>
-    <button class="tab-btn" id="tabBtnHearing" onclick="switchTab('hearing')">📋 ヒアリング</button>
     <button class="tab-btn" id="tabBtnImgLib"  onclick="switchTab('imglib')">🖼 画像ライブラリ</button>
+    <button class="tab-btn" id="tabBtnHearing" onclick="switchTab('hearing')">📋 ヒアリング</button>
+    <button class="tab-btn" id="tabBtnHistory" onclick="switchTab('history')">📝 更新履歴</button>
   </div>
   <div class="hd-right" style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
     <button class="nav-btn" onclick="openNamedTab('index.html','scriptTab')">📋 スクリプト</button>
@@ -757,10 +757,58 @@ body.dnd-xlsx-hover::after {
     </div>
   </div>
 
-  <!-- ===== 画像ライブラリタブ ===== -->
+<!-- ===== 画像ライブラリ プレビューモーダル ===== -->
+<style>
+#imgLibPreviewModal {
+  display: none;
+  position: fixed; inset: 0; z-index: 4000;
+  background: rgba(0,0,0,.7);
+  align-items: center; justify-content: center;
+}
+#imgLibPreviewBox {
+  background: var(--surface);
+  border-radius: 12px;
+  max-width: min(90vw, 900px);
+  max-height: 90vh;
+  display: flex; flex-direction: column;
+  box-shadow: 0 24px 64px rgba(0,0,0,.4);
+  overflow: hidden;
+}
+#imgLibPreviewHead {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+#imgLibPreviewName { font-size: 13px; font-weight: 700; color: var(--text); }
+#imgLibPreviewMeta { font-size: 11px; color: var(--text3); margin-top: 2px; }
+#imgLibPreviewBody {
+  flex: 1; overflow: auto;
+  display: flex; align-items: center; justify-content: center;
+  padding: 16px; background: var(--surface2);
+}
+#imgLibPreviewBody img { max-width: 100%; max-height: 70vh; object-fit: contain; border-radius: 4px; }
+</style>
+<div id="imgLibPreviewModal" onclick="if(event.target===this)_imgLibPreviewClose()">
+  <div id="imgLibPreviewBox">
+    <div id="imgLibPreviewHead">
+      <div>
+        <div id="imgLibPreviewName"></div>
+        <div id="imgLibPreviewMeta">
+          <span id="imgLibPreviewInfo"></span>
+          <span id="imgLibPreviewUsage" style="margin-left:12px;"></span>
+        </div>
+      </div>
+      <button onclick="_imgLibPreviewClose()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text3);line-height:1;">✕</button>
+    </div>
+    <div id="imgLibPreviewBody"><img id="imgLibPreviewImg" src="" alt=""></div>
+  </div>
+</div>
+
+<!-- ===== 画像ライブラリタブ ===== -->
   <div class="tab-panel tab-panel-imglib" id="tabImgLib">
     <div style="max-width:960px;margin:0 auto;">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
         <div style="font-size:14px;font-weight:700;color:var(--text);">🖼 画像ライブラリ</div>
         <div style="display:flex;align-items:center;gap:8px;">
           <span id="imgLibCount" style="font-size:11px;color:var(--text3);"></span>
@@ -768,6 +816,15 @@ body.dnd-xlsx-hover::after {
           <button class="btn btn-secondary" style="font-size:11px;" onclick="_imgLibMergeDuplicates()">🔗 同名を統合</button>
           <button class="btn btn-secondary" style="font-size:11px;" onclick="_imgLibCleanup()">🧹 未使用を削除</button>
         </div>
+      </div>
+      <!-- 検索バー -->
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:14px;">
+        <input id="imgLibSearch" type="text" placeholder="名前またはタグで検索（例: #背景）"
+               style="flex:1;height:30px;padding:0 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:inherit;background:var(--surface);color:var(--text);outline:none;"
+               oninput="_imgLibFilter()"
+               onfocus="this.style.borderColor='var(--accent)'"
+               onblur="this.style.borderColor='var(--border)'">
+        <button class="btn btn-secondary" style="font-size:11px;height:30px;padding:0 10px;" onclick="document.getElementById('imgLibSearch').value='';_imgLibFilter()">✕</button>
       </div>
       <div id="imgLibGrid" style="display:flex;flex-wrap:wrap;gap:12px;align-content:flex-start;min-height:120px;">
         <div style="width:100%;text-align:center;padding:40px 0;color:var(--text3);font-size:12px;">読み込み中…</div>
@@ -976,8 +1033,8 @@ body.dnd-xlsx-hover::after {
           <div class="help-section-title">📋 スクリプトタブ</div>
           <ul class="help-ul">
             <li>カテゴリ名・サブカテゴリ名は<strong>ダブルクリック</strong>で編集できます（フォーカスアウトで確定）。</li>
-            <li>「＋ カテゴリを追加」でカテゴリを追加できます（色はランダムで付与）。</li>
-            <li>「⠿」ハンドルをドラッグしてスクリプトの並べ替えができます。</li>
+            <li>「＋ カテゴリを追加」でカテゴリを追加（色はランダム付与）。「⠿」ドラッグで並べ替え。</li>
+            <li>スクリプト本文・選択肢はエディタエリアで直接編集できます。</li>
           </ul>
         </div>
 
@@ -985,55 +1042,63 @@ body.dnd-xlsx-hover::after {
           <div class="help-section-title">✉️ メールタブ</div>
           <ul class="help-ul">
             <li>カテゴリ・サブカテゴリ・テンプレートの追加・編集・削除ができます。</li>
-            <li>カテゴリ名はダブルクリックで編集できます（フォーカスアウトで確定）。</li>
-            <li>「⠿」ハンドルをドラッグしてテンプレートの並べ替えができます。</li>
+            <li>カテゴリ名はダブルクリックで編集。「⠿」ドラッグでテンプレートの並べ替え。</li>
           </ul>
         </div>
 
         <div class="help-section">
-          <div class="help-section-title">🖥 画面遷移タブ</div>
+          <div class="help-section-title">🖥 画面遷移タブ — パターン・画面管理</div>
           <ul class="help-ul">
-            <li>「＋ パターンを追加」でパターンを作成します。パターン名はダブルクリックで編集できます。</li>
-            <li>「⠿」ハンドルをドラッグしてパターン・画面の並べ替えができます。</li>
-            <li><strong>📊 Excelインポート</strong>（サイドバー見出し右）または Excel ファイルの D&amp;D で、シートごとにパターンを自動作成して画像を取り込めます。モーダル内でシート・画像ごとに選択できます。</li>
-            <li>画像ファイルをドロップすると現在選択中のパターンに画像が追加されます。</li>
+            <li>「＋ パターンを追加」でパターンを作成。パターン名はダブルクリックで編集。</li>
+            <li>「⠿」ドラッグでパターン・画面の並べ替え。</li>
+            <li><strong>📊 Excelインポート</strong>（サイドバー見出し右）または Excel ファイルの D&amp;D で、シートごとにパターンを自動作成。モーダル内でシート・画像ごとにチェックして選択追加できます。</li>
+            <li>画像ファイルをドロップすると現在選択中のパターンに一括追加されます。</li>
           </ul>
         </div>
 
         <div class="help-section">
-          <div class="help-section-title">🖼 画面設定（右サイドバー）</div>
+          <div class="help-section-title">🖥 画面遷移タブ — 画面設定（右サイドバー）</div>
           <ul class="help-ul">
-            <li>画面名・メモを編集できます。メモは screen.html のプレビュー画面名下に表示されます。</li>
-            <li>スクリーンショットの差し替えが可能です（D&amp;D または「📂 クリック」）。</li>
-            <li>「📍 ホットスポット」モードで画面上をドラッグして遷移エリアを作成できます。</li>
-            <li>ホットスポットのメモは screen.html のプレビューでカーソルを乗せたときに表示されます。</li>
+            <li>画面名・メモを編集できます。メモは screen.html プレビューの画面名下に表示されます。</li>
+            <li>スクリーンショットは D&amp;D またはクリックで差し替え可能。リサイズ・トリミングも行えます。</li>
+            <li><strong>トリミング</strong>：モードを切り替えると全体選択状態になります。ハンドル（8点）をドラッグして範囲を調整し「✂️ トリミング」で確定。幅・高さの入力欄に px を指定すると出力サイズを固定できます。</li>
+          </ul>
+        </div>
+
+        <div class="help-section">
+          <div class="help-section-title">📍 ホットスポット</div>
+          <ul class="help-ul">
+            <li>「📍 ホットスポット」モードで画像上をドラッグして遷移エリアを作成します。</li>
+            <li>遷移先タイプは <strong>🖥 同パターン</strong>（同パターン内の別画面）・<strong>🗂 別パターン</strong>（別パターンの画面）・<strong>✉️ メール</strong>（メールテンプレート）の3種類から選択できます。</li>
+            <li>メモを設定すると screen.html プレビューでカーソルを乗せたときにツールチップ表示されます。</li>
+          </ul>
+        </div>
+
+        <div class="help-section">
+          <div class="help-section-title">🖼 画像ライブラリタブ</div>
+          <ul class="help-ul">
+            <li>登録されている全画像を一覧表示します。サムネイルクリックで拡大プレビュー。</li>
+            <li>画像名をクリックしてリネーム。タグ（<code>#タグ名</code>）を追加して検索バーでフィルタリングできます。</li>
+            <li>「🔄 差し替え」で画像データを更新（使用中の全パターンに即反映）。</li>
+            <li><strong>🔀 内容で統合</strong>：画像データが同一のエントリを統合。<strong>🔗 同名を統合</strong>：名前が同じエントリを統合。<strong>🧹 未使用を削除</strong>：どの画面にも使われていない画像を一括削除。</li>
           </ul>
         </div>
 
         <div class="help-section">
           <div class="help-section-title">📝 更新履歴タブ</div>
           <ul class="help-ul">
-            <li>「＋ 更新履歴を追加」で先頭行に行が追加されます。</li>
-            <li>各セルをダブルクリックで直接編集できます。</li>
+            <li>「＋ 更新履歴を追加」で先頭行に追加。各セルはダブルクリックで直接編集。</li>
             <li>「📅」ボタンのカレンダーから日付を選択できます。</li>
           </ul>
         </div>
 
         <div class="help-section">
-          <div class="help-section-title">💾 保存と自動エクスポート</div>
+          <div class="help-section-title">💾 保存・エクスポート・インポート</div>
           <ul class="help-ul">
-            <li>「<strong>💾 保存して反映</strong>」を押すと全データが保存され、同時に JSON ファイルが自動ダウンロードされます。</li>
-            <li>⚠️ 未保存バッジが表示されている間は変更が本番画面に反映されていません。</li>
-            <li>ダウンロードした JSON を各ページ（index / mail / screen）にドロップすると即時反映されます。</li>
-          </ul>
-        </div>
-
-        <div class="help-section">
-          <div class="help-section-title">📥 D&amp;D インポート対応一覧</div>
-          <ul class="help-ul">
-            <li><strong>JSON ファイル</strong>：スクリプト・メール・画面遷移データを一括インポートします（確認あり）。</li>
-            <li><strong>Excel (.xlsx)</strong>：埋め込み画像をシートごとにパターンとして取り込めます。</li>
-            <li><strong>画像ファイル</strong>：画面遷移タブが開いているときにドロップすると現在のパターンに追加されます。</li>
+            <li>「<strong>💾 保存して反映</strong>」を押すと全データが保存され、JSON ファイルが自動ダウンロードされます（エクスポートサイズは MB 表示）。⚠️ 未保存バッジがある間は未反映です。</li>
+            <li>ダウンロードした JSON を index / mail / screen の各ページにドロップするとリロードなしで即時反映されます。</li>
+            <li><strong>JSON ファイル D&amp;D</strong>：スクリプト・メール・画面遷移を一括インポート（確認あり）。画像は自動的に画像ライブラリに移行されます。</li>
+            <li><strong>Excel (.xlsx) D&amp;D</strong>：埋め込み画像をシートごとにパターンとして取り込めます。</li>
           </ul>
         </div>
 
@@ -1071,7 +1136,7 @@ function switchTab(tab){
   if(tab==='hearing'&&window.renderHearing)window.renderHearing();
   if(tab==='history')renderAdminHistoryPanel();
   if(tab==='screen')initScreenEditor();
-  if(tab==='imglib')_imgLibRender();
+  if(tab==='imglib'){ _imgLibAllItems = []; _imgLibRender(); }
 }
 
 // ===================================================================
@@ -1411,10 +1476,12 @@ async function adminImport(){
       const text=await(await target.h.getFile()).text();
       const raw=JSON.parse(text);
       let impScripts=null,impMail=null,impHistory=null,impScreen=null;
-      if((raw.version===2||raw.version===1)&&raw.talkScripts&&raw.mailTemplates){
+      if((raw.version===3||raw.version===2||raw.version===1)&&raw.talkScripts&&raw.mailTemplates){
         impScripts=raw.talkScripts;impMail=raw.mailTemplates;
         impHistory=Array.isArray(raw.updateHistory)?raw.updateHistory:null;
-        if(raw.version===2&&Array.isArray(raw.screenData))impScreen=raw.screenData;
+        if((raw.version===2||raw.version===3)&&Array.isArray(raw.screenData))impScreen=raw.screenData;
+        if(raw.version===3&&Array.isArray(raw.imageLib))window._pendingImgLib=raw.imageLib;
+        else window._pendingImgLib=null;
       }else if(Object.keys(raw).every(k=>raw[k]&&raw[k].name&&Array.isArray(raw[k].list))){impScripts=raw;}
       else if(Array.isArray(raw)){impMail=raw;}
       else{toast('❌ ファイル形式が正しくありません');return;}
@@ -1451,6 +1518,20 @@ function importJSON(input){
   };
   reader.readAsText(file);
 }
+// 画面遷移データをメモリ・localStorage に反映してサイドバーを再描画する
+function _applyScreenData(data) {
+  screenPatterns = data;
+  scrSaveIndex();
+  try { localStorage.removeItem('screenFlowData'); } catch(e) {}
+  _scrCurrentPatId = screenPatterns.length ? screenPatterns[0].id : null;
+  _scrSelScrId = null;
+  _scrInit = true;
+  scrRenderUnifiedSidebar();
+  _scrUpdateCenterCanvas();
+  _scrUpdateRightSidebar();
+  toast('✅ インポート・保存が完了しました');
+}
+
 function applyImport(impScripts,impMail,choices,conflicts,impHistory,impScreen){
   // deepcopy: structuredClone（Chrome 98+）が使えれば高速、なければ JSON roundtrip
   var _clone = typeof structuredClone === 'function'
@@ -1472,43 +1553,103 @@ function applyImport(impScripts,impMail,choices,conflicts,impHistory,impScreen){
     if(window.renderHistory)window.renderHistory();renderAdminHistoryPanel();
   }
   if(Array.isArray(impScreen)&&impScreen.length>0){
-    // インポートデータ内に直接 base64 が含まれている場合、画像ライブラリに移行する
-    var total=0, done=0;
-    impScreen.forEach(function(p){ (p.screens||[]).forEach(function(s){ if(s.imageSrc&&!s.imageSrc.startsWith('lib:'))total++; }); });
-    if(total===0){
-      // lib:xxx 参照のみ or 画像なし → そのまま適用
-      screenPatterns=impScreen;
-      idbSetScreenData(screenPatterns);
-      try { localStorage.removeItem('screenFlowData'); } catch(e) {}
-      scrSaveIndex();
-      if(document.getElementById('tabScreen').classList.contains('active')){_scrInit=false;initScreenEditor();}
-    } else {
-      // base64 画像を imgLibPut で変換してから適用
-      _importProgressShow('画像をライブラリに登録中…', '0 / '+total+' 枚', 0);
-      var promises=[];
+    // v3: imageLib マップが添付されている場合は先にライブラリに登録し、
+    //     lib:xxx 参照はそのまま利用する（再圧縮不要・高速）
+    if(Array.isArray(window._pendingImgLib) && window._pendingImgLib.length) {
+      var v3Lib = window._pendingImgLib;
+      window._pendingImgLib = null;
+      _importProgressShow('画像をライブラリに登録中…', '0 / '+v3Lib.length+' 枚', 5);
+      imgLibGetAll().then(function(existingItems) {
+        var existingIds = new Set(existingItems.map(function(x){ return x.id; }));
+        var toInsert = v3Lib.filter(function(x){ return !existingIds.has(x.id); });
+        var done = 0, total = toInsert.length;
+        if(!total) { _importProgressHide(); _applyScreenData(impScreen); return; }
+        var batches = [];
+        for(var i=0;i<toInsert.length;i+=5) batches.push(toInsert.slice(i,i+5));
+        function _insertBatch(bi) {
+          if(bi >= batches.length) { _importProgressHide(); _applyScreenData(impScreen); return; }
+          Promise.all(batches[bi].map(function(item) {
+            return _imgLibOpen().then(function(db) {
+              return new Promise(function(resolve) {
+                var tx = db.transaction('imageLib','readwrite');
+                tx.objectStore('imageLib').put(item, item.id);
+                tx.oncomplete = function(){ done++; _importProgressUpdate('画像をライブラリに登録中…',done+' / '+total+' 枚',5+Math.round(done/total*90)); resolve(); };
+                tx.onerror = resolve;
+              });
+            });
+          })).then(function(){ _insertBatch(bi+1); });
+        }
+        _insertBatch(0);
+      });
+      return;
+    }
+    // base64 画像を imgLibPut で変換してから適用
+    // まず既存ライブラリを1回だけ取得してメモリで重複チェックする
+    _importProgressShow('画像をライブラリに登録中…', 'ライブラリ確認中…', 5);
+    imgLibGetAll().then(function(existingItems) {
+      // フィンガープリントマップ（fp → lib:id）
+      var fpMap = {};
+      existingItems.forEach(function(item) {
+        var fp = item.dataUrl.slice(0,256)+'|'+item.dataUrl.slice(-64)+'|'+item.dataUrl.length;
+        fpMap[fp] = 'lib:' + item.id;
+      });
+
+      // base64 が含まれる画像エントリを列挙
+      var entries = [];
       impScreen.forEach(function(p){
         (p.screens||[]).forEach(function(s){
-          if(s.imageSrc&&!s.imageSrc.startsWith('lib:')){
-            var name=s.name||s.id;
-            var dataUrl=s.imageSrc;
-            promises.push(imgLibPut(dataUrl,name).then(function(libRef){
-              s.imageSrc=libRef;
-              done++;
-              _importProgressUpdate('画像をライブラリに登録中…',done+' / '+total+' 枚',Math.round(done/total*100));
-            }));
+          if(s.imageSrc && !s.imageSrc.startsWith('lib:')){
+            entries.push(s);
           }
         });
       });
+
+      var total = entries.length;
+      var done  = 0;
+
+      if(total === 0) {
+        // 全て lib:xxx 参照または画像なし
+        _importProgressHide();
+        _applyScreenData(impScreen);
+        return;
+      }
+
+      _importProgressUpdate('画像をライブラリに登録中…', '0 / ' + total + ' 枚', 5);
+
+      var promises = entries.map(function(s) {
+        var dataUrl = s.imageSrc;
+        var name    = s.name || s.id;
+        var fp      = dataUrl.slice(0,256)+'|'+dataUrl.slice(-64)+'|'+dataUrl.length;
+        if(fpMap[fp]) {
+          // 既存エントリを再利用（IDB 書き込みなし）
+          s.imageSrc = fpMap[fp];
+          done++;
+          _importProgressUpdate('画像をライブラリに登録中…', done+' / '+total+' 枚', Math.round(done/total*95)+5);
+          return Promise.resolve();
+        }
+        return imgLibPut(dataUrl, name).then(function(libRef){
+          s.imageSrc = libRef;
+          fpMap[libRef.slice(4)] = libRef; // キャッシュに追加
+          done++;
+          _importProgressUpdate('画像をライブラリに登録中…', done+' / '+total+' 枚', Math.round(done/total*95)+5);
+        });
+      });
+
       Promise.all(promises).then(function(){
         _importProgressHide();
-        screenPatterns=impScreen;
-        idbSetScreenData(screenPatterns);
-        try { localStorage.removeItem('screenFlowData'); } catch(e) {}
-        scrSaveIndex();
-        if(document.getElementById('tabScreen').classList.contains('active')){_scrInit=false;initScreenEditor();}
+        _applyScreenData(impScreen);
+      }).catch(function(err){
+        _importProgressHide();
+        toast('⚠️ 画像ライブラリ登録中にエラーが発生しました: ' + (err&&err.message||err));
+        // エラーが起きても screenPatterns は適用する
+        _applyScreenData(impScreen);
       });
-      return; // 非同期のため下の toast は Promise 内で出す
-    }
+    }).catch(function(err){
+      _importProgressHide();
+      toast('⚠️ 画像ライブラリの読み込みに失敗しました。画像なしで適用します。');
+      _applyScreenData(impScreen);
+    });
+    return; // 非同期処理のため return
   }
   try{
     localStorage.setItem('talkScripts',JSON.stringify(data));
@@ -1569,11 +1710,14 @@ window._processImportText = function(text, noReload) {
     var raw = JSON.parse(text);
     var impScripts = null, impMail = null, impHistory = null, impScreen = null;
 
-    if (raw && (raw.version === 2 || raw.version === 1) && raw.talkScripts && raw.mailTemplates) {
+    if (raw && (raw.version === 3 || raw.version === 2 || raw.version === 1) && raw.talkScripts && raw.mailTemplates) {
       impScripts = raw.talkScripts;
       impMail    = raw.mailTemplates;
       impHistory = Array.isArray(raw.updateHistory) ? raw.updateHistory : null;
-      if (raw.version === 2 && Array.isArray(raw.screenData)) impScreen = raw.screenData;
+      if ((raw.version === 2 || raw.version === 3) && Array.isArray(raw.screenData)) impScreen = raw.screenData;
+      // v3: imageLib を pending にセット
+      if (raw.version === 3 && Array.isArray(raw.imageLib)) window._pendingImgLib = raw.imageLib;
+      else window._pendingImgLib = null;
     } else if (Array.isArray(raw)) {
       impMail = raw;
     } else if (Object.keys(raw).every(function(k){ return raw[k] && raw[k].name && Array.isArray(raw[k].list); })) {
@@ -1590,44 +1734,84 @@ window._processImportText = function(text, noReload) {
 };
 
 function exportJSON(){
-  // インメモリの screenPatterns を優先、なければ IndexedDB から取得してダウンロード
   var inMem = (typeof screenPatterns!=='undefined'&&screenPatterns&&screenPatterns.length)
     ? screenPatterns : null;
 
-  function _doExport(screenData) {
-    var combined={
-      version:2,
-      exportedAt:new Date().toISOString(),
-      talkScripts:data,
-      mailTemplates:mailData,
-      screenData: screenData || [],
-      updateHistory:loadHistory()
-    };
-    var blob=new Blob([JSON.stringify(combined,null,2)],{type:'application/json'});
-    var a=document.createElement('a');
-    a.href=URL.createObjectURL(blob);
-    a.download='backup_'+new Date().toISOString().slice(0,10)+'.json';
-    a.style.display='none';
-    document.body.appendChild(a);
-    a.click();
-    setTimeout(function(){document.body.removeChild(a);URL.revokeObjectURL(a.href);},100);
-    toast('📥 エクスポートしました');
-  }
+  function _doExport(rawPatterns) {
+    _importProgressShow('エクスポート準備中…', '使用画像を収集しています', 10);
 
-  function _runExport(rawPatterns) {
-    // lib:xxx 形式を base64 に展開してからエクスポート
+    // v3 形式: lib:xxx 参照はそのまま保持し、使用画像を imageLib マップとして添付
+    // → 同じ画像が複数画面で使われていても1エントリのみ
     var cloned = JSON.parse(JSON.stringify(rawPatterns || []));
-    _resolveAllImgSrcs(cloned, function(resolved) {
-      _doExport(resolved);
+
+    // 使用中の lib:xxx ID を収集
+    var usedIds = new Set();
+    cloned.forEach(function(p){
+      (p.screens||[]).forEach(function(s){
+        if(s.imageSrc && s.imageSrc.startsWith('lib:')) usedIds.add(s.imageSrc.slice(4));
+      });
+    });
+
+    // 画像ライブラリから使用中エントリを取得して JPEG 再圧縮
+    imgLibGetAll().then(function(libItems) {
+      var usedItems = libItems.filter(function(item){ return usedIds.has(item.id); });
+      _importProgressUpdate('エクスポート準備中…', usedItems.length + ' 枚を圧縮中…', 20);
+
+      // 各画像を JPEG 75% に再圧縮（PNG→JPEG で大幅に削減）
+      var compressPromises = usedItems.map(function(item, idx) {
+        return new Promise(function(resolve) {
+          var img = new Image();
+          img.onload = function() {
+            var canvas = document.createElement('canvas');
+            canvas.width = img.naturalWidth; canvas.height = img.naturalHeight;
+            canvas.getContext('2d').drawImage(img, 0, 0);
+            var compressed = canvas.toDataURL('image/jpeg', 0.75);
+            _importProgressUpdate('エクスポート準備中…',
+              (idx+1)+' / '+usedItems.length+' 枚圧縮済み',
+              20 + Math.round((idx+1)/usedItems.length * 60));
+            resolve({ id: item.id, name: item.name, tags: item.tags||[], dataUrl: compressed });
+          };
+          img.onerror = function() {
+            resolve({ id: item.id, name: item.name, tags: item.tags||[], dataUrl: item.dataUrl });
+          };
+          img.src = item.dataUrl;
+        });
+      });
+
+      Promise.all(compressPromises).then(function(imageLib) {
+        _importProgressUpdate('エクスポート準備中…', 'ファイルを生成中…', 85);
+        var combined = {
+          version: 3, // v3: imageLib を別マップとして保持
+          exportedAt: new Date().toISOString(),
+          talkScripts: data,
+          mailTemplates: mailData,
+          screenData: cloned,   // lib:xxx 参照のまま
+          imageLib: imageLib,   // 使用画像の実データ（重複なし）
+          updateHistory: loadHistory()
+        };
+        var json = JSON.stringify(combined);
+        var sizeMB = (json.length / 1024 / 1024).toFixed(1);
+        var blob = new Blob([json], {type:'application/json'});
+        var el = document.createElement('a');
+        el.href = URL.createObjectURL(blob);
+        el.download = 'backup_'+new Date().toISOString().slice(0,10)+'.json';
+        el.style.display = 'none';
+        document.body.appendChild(el);
+        el.click();
+        setTimeout(function(){ document.body.removeChild(el); URL.revokeObjectURL(el.href); }, 100);
+        _importProgressHide();
+        toast('📥 エクスポートしました（' + sizeMB + ' MB）');
+      });
+    }).catch(function(err) {
+      _importProgressHide();
+      toast('❌ エクスポート失敗: ' + (err&&err.message||err));
     });
   }
 
   if (inMem) {
-    _runExport(inMem);
+    _doExport(inMem);
   } else {
-    idbGetScreenData().then(function(idbData) {
-      _runExport(idbData || []);
-    });
+    idbGetScreenData().then(function(idbData) { _doExport(idbData || []); });
   }
 }
 
@@ -2035,10 +2219,24 @@ function imgLibPut(dataUrl, name) {
     var id = 'lib' + Math.random().toString(36).substr(2, 9);
     return new Promise(function(resolve, reject) {
       var tx  = db.transaction('imageLib', 'readwrite');
-      var req = tx.objectStore('imageLib').put({ id: id, name: name || id, dataUrl: dataUrl }, id);
+      var req = tx.objectStore('imageLib').put({ id: id, name: name || id, tags: [], dataUrl: dataUrl }, id);
       tx.oncomplete = function() { resolve('lib:' + id); };
       tx.onerror    = function(e) { reject(e.target.error); };
     });
+  });
+}
+
+// 同一内容の画像が既にライブラリに存在すれば既存 ID を返し、なければ新規登録する。
+// インポート時の重複防止に使用する。
+function imgLibFindOrPut(dataUrl, name) {
+  // フィンガープリント（先頭256 + 末尾64 + 長さ）で高速照合
+  var fp = dataUrl.slice(0, 256) + '|' + dataUrl.slice(-64) + '|' + dataUrl.length;
+  return imgLibGetAll().then(function(items) {
+    var existing = items.find(function(item) {
+      return item.dataUrl.slice(0, 256) + '|' + item.dataUrl.slice(-64) + '|' + item.dataUrl.length === fp;
+    });
+    if (existing) return 'lib:' + existing.id; // 既存を再利用
+    return imgLibPut(dataUrl, name);            // 新規登録
   });
 }
 
@@ -2704,24 +2902,27 @@ function scrApplyCropSel(){
   var pat=screenPatterns.find(function(p){return p.id===_scrCurrentPatId;});if(!pat)return;
   var scr=pat.screens.find(function(s){return s.id===_scrSelScrId;});if(!scr||!scr.imageSrc)return;
   var cs=_scrCropSel;
-  // lib:xxx 形式を実 base64 に解決してからトリミング実行
   resolveImg(scr.imageSrc).then(function(dataUrl){
     if(!dataUrl){toast('⚠️ 画像データを取得できませんでした');return;}
     var tmpImg=new Image();
     tmpImg.onload=function(){
       var iw=tmpImg.naturalWidth,ih=tmpImg.naturalHeight;
-      var ow=Math.max(1,Math.round(cs.w*iw)),oh=Math.max(1,Math.round(cs.h*ih));
+      // px入力欄の値を優先。未入力なら選択範囲の実寸を使用
+      var cwEl=document.getElementById('scrCropTrimW');
+      var chEl=document.getElementById('scrCropTrimH');
+      var inputW=cwEl?parseInt(cwEl.value):0;
+      var inputH=chEl?parseInt(chEl.value):0;
+      var ow=Math.max(1, (inputW>0 ? inputW : Math.round(cs.w*iw)));
+      var oh=Math.max(1, (inputH>0 ? inputH : Math.round(cs.h*ih)));
       var out=document.createElement('canvas');out.width=ow;out.height=oh;
       out.getContext('2d').drawImage(tmpImg,cs.x*iw,cs.y*ih,cs.w*iw,cs.h*ih,0,0,ow,oh);
       var trimmedDataUrl=out.toDataURL('image/jpeg',0.9);
-      // トリミング結果を画像ライブラリに保存して lib:xxx 参照に更新
       var name=(scr.name||'trimmed')+'_crop';
       imgLibPut(trimmedDataUrl,name).then(function(libRef){
         scr.imageSrc=libRef;
         _scrCropSel=null;
         var ab=document.getElementById('scrApplyCropBtn');if(ab)ab.style.display='none';
-        var cw=document.getElementById('scrCropTrimW');if(cw)cw.value=ow;
-        var ch=document.getElementById('scrCropTrimH');if(ch)ch.value=oh;
+        if(cwEl)cwEl.value=ow;if(chEl)chEl.value=oh;
         _scrUpdateImageMeta(scr);_scrUpdateCenterCanvas();
         scrRenderUnifiedSidebar();scrSaveData();markDirty();
         toast('✅ トリミングしました（'+ow+'×'+oh+'px）');
@@ -2974,125 +3175,350 @@ function _scrInitCenterOverlayEvents(){
 
 // ライブラリ一覧を描画する
 function _imgLibRender() {
+  _imgLibFilter();
+}
+
+// 現在の検索クエリで絞り込んでグリッドを描画する
+var _imgLibAllItems = []; // キャッシュ（再フィルター用）
+
+function _imgLibFilter() {
+  var query = (document.getElementById('imgLibSearch')||{}).value || '';
+  query = query.trim().toLowerCase();
+
+  // items が未ロードなら取得してから描画
+  if (!_imgLibAllItems.length && !query) {
+    _imgLibLoad(function(items){ _imgLibAllItems = items; _imgLibDraw(items, query); });
+  } else if (!_imgLibAllItems.length) {
+    _imgLibLoad(function(items){ _imgLibAllItems = items; _imgLibDraw(items, query); });
+  } else {
+    _imgLibDraw(_imgLibAllItems, query);
+  }
+}
+
+function _imgLibLoad(cb) {
+  var grid = document.getElementById('imgLibGrid');
+  if (grid) grid.innerHTML = '<div style="width:100%;text-align:center;padding:40px 0;color:var(--text3);font-size:12px;">読み込み中…</div>';
+  imgLibGetAll().then(function(items){ cb(items); });
+}
+
+function _imgLibDraw(items, query) {
   var grid  = document.getElementById('imgLibGrid');
   var count = document.getElementById('imgLibCount');
   if (!grid) return;
-  grid.innerHTML = '<div style="width:100%;text-align:center;padding:40px 0;color:var(--text3);font-size:12px;">読み込み中…</div>';
 
-  imgLibGetAll().then(function(items) {
-    if (count) count.textContent = items.length + ' 件';
-    if (!items.length) {
-      grid.innerHTML = '<div style="width:100%;text-align:center;padding:40px 0;color:var(--text3);font-size:12px;">登録画像はありません</div>';
-      return;
-    }
-    // 使用中の lib:ID セットを収集
-    var usedIds = new Set();
-    screenPatterns.forEach(function(p) {
-      (p.screens || []).forEach(function(s) {
-        if (s.imageSrc && s.imageSrc.startsWith('lib:')) usedIds.add(s.imageSrc.slice(4));
-      });
+  // フィルタリング
+  var filtered = query ? items.filter(function(item) {
+    var nameMatch = (item.name || '').toLowerCase().indexOf(query.replace(/^#/,'')) >= 0;
+    var tags = item.tags || [];
+    var tagQ  = query.startsWith('#') ? query.slice(1) : query;
+    var tagMatch = tags.some(function(t){ return t.toLowerCase().indexOf(tagQ) >= 0; });
+    return query.startsWith('#') ? tagMatch : (nameMatch || tagMatch);
+  }) : items;
+
+  // ソート状態（グローバル変数で保持）
+  if (!window._imgLibSort) window._imgLibSort = { col: 'name', asc: true };
+  var sortCol = window._imgLibSort.col;
+  var sortAsc = window._imgLibSort.asc;
+
+  // 使用中パターン名を収集
+  var usedInPats = {}; // libId → ['パターン名', ...]
+  screenPatterns.forEach(function(p) {
+    (p.screens || []).forEach(function(s) {
+      if (s.imageSrc && s.imageSrc.startsWith('lib:')) {
+        var id = s.imageSrc.slice(4);
+        if (!usedInPats[id]) usedInPats[id] = [];
+        if (!usedInPats[id].includes(p.name)) usedInPats[id].push(p.name);
+      }
     });
+  });
 
-    grid.innerHTML = '';
-    items.forEach(function(item) {
-      var used = usedIds.has(item.id);
-      var card = document.createElement('div');
-      card.style.cssText = 'width:140px;border:2px solid var(--border);border-radius:8px;overflow:hidden;background:var(--surface);display:flex;flex-direction:column;';
+  // ソート
+  filtered = filtered.slice().sort(function(a, b) {
+    var va, vb;
+    if (sortCol === 'name') {
+      va = (a.name || '').toLowerCase(); vb = (b.name || '').toLowerCase();
+    } else if (sortCol === 'usage') {
+      va = (usedInPats[a.id] || []).join(',').toLowerCase();
+      vb = (usedInPats[b.id] || []).join(',').toLowerCase();
+    } else {
+      va = ''; vb = '';
+    }
+    return sortAsc ? va.localeCompare(vb, 'ja') : vb.localeCompare(va, 'ja');
+  });
 
-      // サムネイル
-      var thumb = document.createElement('div');
-      thumb.style.cssText = 'width:140px;height:94px;background:var(--surface2);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;';
-      var img = document.createElement('img');
-      img.src = item.dataUrl;
-      img.style.cssText = 'width:100%;height:100%;object-fit:contain;';
-      thumb.appendChild(img);
+  if (count) count.textContent = filtered.length + ' / ' + items.length + ' 件';
 
-      // フッター
-      var footer = document.createElement('div');
-      footer.style.cssText = 'padding:6px 8px;display:flex;flex-direction:column;gap:4px;';
+  if (!filtered.length) {
+    grid.innerHTML = '<div style="padding:40px 0;text-align:center;color:var(--text3);font-size:12px;">' +
+      (query ? '「' + query + '」に一致する画像はありません' : '登録画像はありません') + '</div>';
+    return;
+  }
 
-      // ── リネームインラインエディタ ──
-      var nameWrap = document.createElement('div');
-      nameWrap.style.cssText = 'display:flex;align-items:center;gap:3px;';
+  // ── テーブルレイアウト ──
+  var wrap = document.createElement('div');
+  wrap.style.cssText = 'width:100%;overflow-x:auto;';
 
-      var nameSpan = document.createElement('span');
-      nameSpan.textContent = item.name || item.id;
-      nameSpan.title = '클릭してリネーム';
-      nameSpan.style.cssText = 'font-size:10px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;cursor:pointer;';
+  var table = document.createElement('table');
+  table.style.cssText = 'width:100%;border-collapse:collapse;font-size:12px;';
 
-      var renameInput = document.createElement('input');
-      renameInput.type = 'text';
-      renameInput.value = item.name || '';
-      renameInput.style.cssText = 'display:none;font-size:10px;width:100%;padding:1px 4px;border:1px solid var(--accent);border-radius:3px;outline:none;font-family:inherit;background:var(--surface);color:var(--text);box-sizing:border-box;';
-
-      // クリックで編集モードへ
-      nameSpan.onclick = function() {
-        nameSpan.style.display = 'none';
-        renameInput.style.display = 'block';
-        renameInput.focus();
-        renameInput.select();
-      };
-      // 確定（Enter / blur）
-      function _commitRename() {
-        var newName = renameInput.value.trim();
-        if (!newName || newName === item.name) {
-          renameInput.style.display = 'none';
-          nameSpan.style.display = '';
-          return;
+  // ヘッダー行
+  var thead = document.createElement('thead');
+  var cols = [
+    { key: null,    label: '',             w: '72px' },
+    { key: 'name',  label: '画像名',       w: 'auto' },
+    { key: 'usage', label: '使用パターン', w: '260px' },
+    { key: null,    label: '操作',         w: '100px' },
+  ];
+  var tr = document.createElement('tr');
+  cols.forEach(function(col) {
+    var th = document.createElement('th');
+    th.style.cssText = 'padding:6px 10px;background:var(--surface2);border-bottom:2px solid var(--border);text-align:left;font-weight:700;color:var(--text2);white-space:nowrap;width:' + col.w + ';';
+    if (col.key) {
+      th.style.cursor = 'pointer';
+      th.style.userSelect = 'none';
+      var arrow = (sortCol === col.key) ? (sortAsc ? ' ▲' : ' ▼') : ' ⇅';
+      th.textContent = col.label + arrow;
+      th.onclick = (function(k){ return function() {
+        if (window._imgLibSort.col === k) {
+          window._imgLibSort.asc = !window._imgLibSort.asc;
+        } else {
+          window._imgLibSort = { col: k, asc: true };
         }
-        // IDB の name を更新
+        _imgLibDraw(_imgLibAllItems, (document.getElementById('imgLibSearch')||{}).value || '');
+      }; })(col.key);
+    } else {
+      th.textContent = col.label;
+    }
+    tr.appendChild(th);
+  });
+  thead.appendChild(tr);
+  table.appendChild(thead);
+
+  // データ行
+  var tbody = document.createElement('tbody');
+  filtered.forEach(function(item, idx) {
+    var pats = usedInPats[item.id] || [];
+    var used = pats.length > 0;
+    var tags = item.tags || [];
+    var rowBg = idx % 2 === 1 ? 'var(--surface2)' : 'var(--surface)';
+
+    var row = document.createElement('tr');
+    row.style.cssText = 'background:' + rowBg + ';';
+    row.onmouseover = function(){ this.style.background = 'var(--accent-lt,#eef0ff)'; };
+    row.onmouseout  = function(){ this.style.background = rowBg; };
+    // 右クリック：パターン追加コンテキストメニュー
+    row.oncontextmenu = function(e) {
+      e.preventDefault();
+      _imgLibShowContextMenu(e, item);
+    };
+
+    // ── セル①：サムネイル ──
+    var tdThumb = document.createElement('td');
+    tdThumb.style.cssText = 'padding:6px 8px;border-bottom:1px solid var(--border);';
+    var thumbImg = document.createElement('img');
+    thumbImg.src = item.dataUrl;
+    thumbImg.style.cssText = 'width:60px;height:40px;object-fit:contain;display:block;background:var(--surface2);border-radius:3px;cursor:zoom-in;';
+    thumbImg.title = 'クリックでプレビュー';
+    thumbImg.onclick = function() { _imgLibPreview(item); };
+    tdThumb.appendChild(thumbImg);
+    row.appendChild(tdThumb);
+
+    // ── セル②：画像名 ──
+    var tdName = document.createElement('td');
+    tdName.style.cssText = 'padding:6px 10px;border-bottom:1px solid var(--border);max-width:240px;';
+
+    var nameSpan = document.createElement('div');
+    nameSpan.textContent = item.name || item.id;
+    nameSpan.title = 'クリックしてリネーム';
+    nameSpan.style.cssText = 'font-size:12px;color:var(--text);cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
+
+    var renameInput = document.createElement('input');
+    renameInput.type = 'text';
+    renameInput.value = item.name || '';
+    renameInput.style.cssText = 'display:none;font-size:12px;width:100%;padding:2px 6px;border:1px solid var(--accent);border-radius:3px;outline:none;font-family:inherit;background:var(--surface);color:var(--text);box-sizing:border-box;';
+
+    nameSpan.onclick = function() {
+      nameSpan.style.display = 'none'; renameInput.style.display = 'block';
+      renameInput.focus(); renameInput.select();
+    };
+    function _commitRename() {
+      var v = renameInput.value.trim();
+      if (!v || v === item.name) { renameInput.style.display='none'; nameSpan.style.display=''; return; }
+      _imgLibOpen().then(function(db) {
+        var tx = db.transaction('imageLib','readwrite');
+        var req = tx.objectStore('imageLib').get(item.id);
+        req.onsuccess = function(e) {
+          var rec = e.target.result; if (!rec) return;
+          rec.name = v; tx.objectStore('imageLib').put(rec, item.id);
+        };
+        tx.oncomplete = function() {
+          item.name = v;
+          var cached = _imgLibAllItems.find(function(x){ return x.id===item.id; });
+          if (cached) cached.name = v;
+          nameSpan.textContent = v; renameInput.style.display='none'; nameSpan.style.display='';
+          toast('✅ リネームしました');
+        };
+      });
+    }
+    renameInput.addEventListener('keydown', function(e) {
+      if (e.key==='Enter') { e.preventDefault(); _commitRename(); }
+      if (e.key==='Escape') { renameInput.style.display='none'; nameSpan.style.display=''; }
+    });
+    renameInput.addEventListener('blur', _commitRename);
+
+    // タグ行
+    var tagRow = document.createElement('div');
+    tagRow.style.cssText = 'display:flex;flex-wrap:wrap;gap:3px;margin-top:4px;align-items:center;';
+    function _renderTagsInline() {
+      tagRow.innerHTML = '';
+      (item.tags || []).forEach(function(tag, ti) {
+        var chip = document.createElement('span');
+        chip.style.cssText = 'display:inline-flex;align-items:center;gap:2px;background:var(--accent-lt,#eef0ff);color:var(--accent);font-size:9px;font-weight:700;padding:1px 6px;border-radius:10px;';
+        var tagTxt = document.createElement('span');
+        tagTxt.textContent = '#' + tag;
+        tagTxt.style.cursor = 'pointer';
+        tagTxt.onclick = function() {
+          var si = document.getElementById('imgLibSearch');
+          if (si) { si.value='#'+tag; _imgLibFilter(); }
+        };
+        var del = document.createElement('span');
+        del.textContent='×'; del.title='タグを削除';
+        del.style.cssText='cursor:pointer;opacity:.6;font-size:10px;';
+        del.onclick = function(e) {
+          e.stopPropagation();
+          item.tags.splice(ti,1);
+          _saveItemTags(item, function(){ _renderTagsInline(); });
+        };
+        chip.appendChild(tagTxt); chip.appendChild(del);
+        tagRow.appendChild(chip);
+      });
+      var addBtn = document.createElement('span');
+      addBtn.textContent = '＋'; addBtn.title = 'タグを追加';
+      addBtn.style.cssText = 'font-size:11px;color:var(--text3);cursor:pointer;padding:0 2px;';
+      addBtn.onclick = function() {
+        addBtn.style.display='none';
+        var inp = document.createElement('input');
+        inp.type='text'; inp.placeholder='タグ名';
+        inp.style.cssText='font-size:10px;width:60px;padding:1px 4px;border:1px solid var(--accent);border-radius:10px;outline:none;font-family:inherit;background:var(--surface);color:var(--text);';
+        tagRow.appendChild(inp); inp.focus();
+        function _addTag() {
+          var v=inp.value.replace(/^#+/,'').trim();
+          if (v && !item.tags.includes(v)) { item.tags.push(v); _saveItemTags(item, function(){ _renderTagsInline(); }); }
+          else _renderTagsInline();
+        }
+        inp.addEventListener('keydown', function(e) {
+          if (e.key==='Enter') { e.preventDefault(); _addTag(); }
+          if (e.key==='Escape') _renderTagsInline();
+        });
+        inp.addEventListener('blur', _addTag);
+      };
+      tagRow.appendChild(addBtn);
+    }
+    _renderTagsInline();
+
+    tdName.appendChild(nameSpan);
+    tdName.appendChild(renameInput);
+    tdName.appendChild(tagRow);
+    row.appendChild(tdName);
+
+    // ── セル③：使用パターン ──
+    var tdUsage = document.createElement('td');
+    tdUsage.style.cssText = 'padding:6px 10px;border-bottom:1px solid var(--border);font-size:11px;color:var(--text2);';
+    if (pats.length) {
+      tdUsage.innerHTML = pats.map(function(p){ return '<span style="display:inline-block;background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:1px 7px;margin:2px 2px 2px 0;white-space:nowrap;">' + esc(p) + '</span>'; }).join('');
+    } else {
+      tdUsage.innerHTML = '<span style="color:var(--text3);">⚪ 未使用</span>';
+    }
+    row.appendChild(tdUsage);
+
+    // ── セル④：操作 ──
+    var tdOp = document.createElement('td');
+    tdOp.style.cssText = 'padding:6px 8px;border-bottom:1px solid var(--border);white-space:nowrap;';
+    var btnStyle = 'font-size:10px;padding:2px 8px;border:1px solid var(--border);border-radius:4px;background:var(--surface2);cursor:pointer;color:var(--text);font-family:inherit;margin-right:4px;';
+
+    // 差し替えボタン（隠し file input + label）
+    var replaceLabel = document.createElement('label');
+    replaceLabel.title = '画像を差し替える';
+    replaceLabel.style.cssText = btnStyle + 'display:inline-block;cursor:pointer;';
+    replaceLabel.textContent = '🔄 差し替え';
+    var replaceInput = document.createElement('input');
+    replaceInput.type = 'file';
+    replaceInput.accept = 'image/*';
+    replaceInput.style.display = 'none';
+    replaceInput.onchange = function() {
+      var file = replaceInput.files[0];
+      replaceInput.value = '';
+      if (!file) return;
+      var reader = new FileReader();
+      reader.onload = function(ev) {
+        var newDataUrl = ev.target.result;
+        // IDB の dataUrl を更新
         _imgLibOpen().then(function(db) {
           var tx  = db.transaction('imageLib', 'readwrite');
           var req = tx.objectStore('imageLib').get(item.id);
           req.onsuccess = function(e) {
-            var rec = e.target.result;
-            if (!rec) return;
-            rec.name = newName;
+            var rec = e.target.result; if (!rec) return;
+            rec.dataUrl = newDataUrl;
             tx.objectStore('imageLib').put(rec, item.id);
           };
           tx.oncomplete = function() {
-            item.name = newName;
-            // キャッシュは dataUrl のみ持つため name 更新は IDB 経由で反映
-            nameSpan.textContent = newName;
-            nameSpan.title = newName;
-            renameInput.style.display = 'none';
-            nameSpan.style.display = '';
-            toast('✅ リネームしました');
+            // メモリキャッシュを更新
+            item.dataUrl = newDataUrl;
+            var cached = _imgLibAllItems.find(function(x){ return x.id === item.id; });
+            if (cached) cached.dataUrl = newDataUrl;
+            delete _imgLibCache[item.id]; // resolveImg キャッシュもクリア
+            // 使用中の場合はキャンバス・サイドバーも再描画
+            scrRenderUnifiedSidebar();
+            _scrUpdateCenterCanvas();
+            toast('✅ 画像を差し替えました');
+            _imgLibFilter(); // グリッド再描画
           };
         });
-      }
-      renameInput.addEventListener('keydown', function(e) {
-        if (e.key === 'Enter')  { e.preventDefault(); _commitRename(); }
-        if (e.key === 'Escape') { renameInput.style.display='none'; nameSpan.style.display=''; }
-      });
-      renameInput.addEventListener('blur', _commitRename);
-
-      nameWrap.appendChild(nameSpan);
-      nameWrap.appendChild(renameInput);
-
-      // 使用中バッジ
-      var usedBadge = document.createElement('div');
-      usedBadge.textContent  = used ? '✅ 使用中' : '⚪ 未使用';
-      usedBadge.style.cssText = 'font-size:9px;color:' + (used ? 'var(--accent)' : 'var(--text3)') + ';font-weight:700;';
-
-      // 削除ボタン
-      var delBtn = document.createElement('button');
-      delBtn.textContent   = '🗑 削除';
-      delBtn.disabled      = used;
-      delBtn.title         = used ? '使用中のため削除できません' : '削除';
-      delBtn.style.cssText = 'font-size:10px;padding:2px 6px;border:1px solid var(--border);border-radius:4px;background:var(--surface2);cursor:' + (used ? 'not-allowed' : 'pointer') + ';color:' + (used ? 'var(--text3)' : 'var(--text)') + ';font-family:inherit;';
-      delBtn.onclick = function() {
-        if (!confirm('この画像をライブラリから削除しますか？')) return;
-        imgLibDelete(item.id).then(function() { _imgLibRender(); });
       };
+      reader.readAsDataURL(file);
+    };
+    replaceLabel.appendChild(replaceInput);
+    tdOp.appendChild(replaceLabel);
 
-      footer.appendChild(nameWrap);
-      footer.appendChild(usedBadge);
-      footer.appendChild(delBtn);
-      card.appendChild(thumb);
-      card.appendChild(footer);
-      grid.appendChild(card);
-    });
+    var delBtn = document.createElement('button');
+    delBtn.textContent = '🗑 削除';
+    delBtn.disabled = used;
+    delBtn.title = used ? '使用中のため削除できません' : '削除';
+    delBtn.style.cssText = 'font-size:10px;padding:2px 8px;border:1px solid var(--border);border-radius:4px;background:var(--surface2);cursor:' + (used?'not-allowed':'pointer') + ';color:' + (used?'var(--text3)':'var(--text)') + ';font-family:inherit;';
+    delBtn.onclick = function() {
+      if (!confirm('この画像をライブラリから削除しますか？')) return;
+      imgLibDelete(item.id).then(function() {
+        _imgLibAllItems = _imgLibAllItems.filter(function(x){ return x.id!==item.id; });
+        _imgLibFilter();
+      });
+    };
+    tdOp.appendChild(delBtn);
+    row.appendChild(tdOp);
+
+    tbody.appendChild(row);
+  });
+  table.appendChild(tbody);
+  wrap.appendChild(table);
+  grid.innerHTML = '';
+  grid.appendChild(wrap);
+}
+
+// IDB の tags フィールドを保存するヘルパー
+function _saveItemTags(item, cb) {
+  _imgLibOpen().then(function(db) {
+    var tx  = db.transaction('imageLib', 'readwrite');
+    var req = tx.objectStore('imageLib').get(item.id);
+    req.onsuccess = function(e) {
+      var rec = e.target.result; if (!rec) return;
+      rec.tags = item.tags || [];
+      tx.objectStore('imageLib').put(rec, item.id);
+    };
+    tx.oncomplete = function() {
+      // _imgLibAllItems キャッシュも更新
+      var cached = _imgLibAllItems.find(function(x){ return x.id === item.id; });
+      if (cached) cached.tags = item.tags;
+      if (cb) cb();
+    };
   });
 }
 
@@ -3221,6 +3647,134 @@ function _imgLibMergeDuplicates() {
 }
 
 // 未使用の画像を一括削除する
+// 画像ライブラリ プレビューモーダルを開く
+function _imgLibPreview(item) {
+  var ov = document.getElementById('imgLibPreviewModal');
+  if (!ov) return;
+  var img  = document.getElementById('imgLibPreviewImg');
+  var name = document.getElementById('imgLibPreviewName');
+  var info = document.getElementById('imgLibPreviewInfo');
+  if (img)  img.src = item.dataUrl;
+  if (name) name.textContent = item.name || item.id;
+  // 画像サイズ取得
+  if (img) {
+    img.onload = function() {
+      if (info) info.textContent = img.naturalWidth + ' × ' + img.naturalHeight + ' px';
+    };
+    if (img.complete && img.naturalWidth) {
+      if (info) info.textContent = img.naturalWidth + ' × ' + img.naturalHeight + ' px';
+    }
+  }
+  // 使用パターン表示
+  var pats = [];
+  screenPatterns.forEach(function(p) {
+    (p.screens || []).forEach(function(s) {
+      if (s.imageSrc && s.imageSrc.slice(4) === item.id && !pats.includes(p.name)) pats.push(p.name);
+    });
+  });
+  var usage = document.getElementById('imgLibPreviewUsage');
+  if (usage) usage.textContent = pats.length ? '使用パターン: ' + pats.join(', ') : '未使用';
+  ov.style.display = 'flex';
+}
+function _imgLibPreviewClose() {
+  var ov = document.getElementById('imgLibPreviewModal');
+  if (ov) ov.style.display = 'none';
+}
+
+// 画像ライブラリ行の右クリックコンテキストメニュー
+var _imgLibCtxItem = null; // 現在対象の item
+function _imgLibShowContextMenu(e, item) {
+  _imgLibHideContextMenu();
+  _imgLibCtxItem = item;
+
+  var menu = document.createElement('div');
+  menu.id = '_imgLibCtxMenu';
+  menu.style.cssText = [
+    'position:fixed',
+    'z-index:9500',
+    'background:var(--surface)',
+    'border:1px solid var(--border)',
+    'border-radius:8px',
+    'box-shadow:0 8px 28px rgba(0,0,0,.18)',
+    'min-width:200px',
+    'padding:4px 0',
+    'font-size:12px',
+    'color:var(--text)',
+    'user-select:none'
+  ].join(';');
+
+  // ヘッダー
+  var header = document.createElement('div');
+  header.textContent = '📌 パターンに追加';
+  header.style.cssText = 'padding:6px 14px 4px;font-weight:700;color:var(--text3);font-size:11px;border-bottom:1px solid var(--border);margin-bottom:4px;';
+  menu.appendChild(header);
+
+  if (!screenPatterns.length) {
+    var noItem = document.createElement('div');
+    noItem.textContent = 'パターンがありません';
+    noItem.style.cssText = 'padding:6px 14px;color:var(--text3);';
+    menu.appendChild(noItem);
+  } else {
+    screenPatterns.forEach(function(pat) {
+      var menuItem = document.createElement('div');
+      menuItem.textContent = pat.name || '（名称なし）';
+      menuItem.style.cssText = 'padding:7px 14px;cursor:pointer;display:flex;align-items:center;gap:8px;';
+      // 色ドット
+      var dot = document.createElement('span');
+      dot.style.cssText = 'width:8px;height:8px;border-radius:50%;background:' + (pat.color || '#4361ee') + ';flex-shrink:0;';
+      menuItem.prepend(dot);
+      menuItem.onmouseover = function() { this.style.background = 'var(--accent-lt,#eef0ff)'; };
+      menuItem.onmouseout  = function() { this.style.background = ''; };
+      menuItem.onclick = function(ev) {
+        ev.stopPropagation();
+        _imgLibHideContextMenu();
+        _imgLibAddToPat(item, pat.id);
+      };
+      menu.appendChild(menuItem);
+    });
+  }
+
+  // 画面に収まるよう座標を調整
+  document.body.appendChild(menu);
+  var mw = menu.offsetWidth, mh = menu.offsetHeight;
+  var x = Math.min(e.clientX, window.innerWidth  - mw - 8);
+  var y = Math.min(e.clientY, window.innerHeight - mh - 8);
+  menu.style.left = x + 'px';
+  menu.style.top  = y + 'px';
+
+  // 外側クリックで閉じる
+  setTimeout(function() {
+    document.addEventListener('click', _imgLibHideContextMenu, { once: true, capture: true });
+    document.addEventListener('contextmenu', _imgLibHideContextMenu, { once: true, capture: true });
+  }, 0);
+}
+
+function _imgLibHideContextMenu() {
+  var el = document.getElementById('_imgLibCtxMenu');
+  if (el) el.parentNode.removeChild(el);
+}
+
+// lib:xxx 参照の画面をパターンに追加して保存
+function _imgLibAddToPat(item, patId) {
+  var pat = screenPatterns.find(function(p){ return p.id === patId; });
+  if (!pat) return;
+  var scr = {
+    id: _scrGenId(),
+    name: item.name || item.id,
+    note: '',
+    imageSrc: 'lib:' + item.id,
+    hotspots: []
+  };
+  pat.screens.push(scr);
+  scrSaveIndex();
+  markDirty();
+  scrRenderUnifiedSidebar();
+  // 追加したパターンを開いて新画面を選択状態に
+  _scrCurrentPatId = patId;
+  scrSelectScreen(scr.id);
+  toast('✅ 「' + pat.name + '」に追加しました');
+}
+
 function _imgLibCleanup() {
   imgLibGetAll().then(function(items) {
     var usedIds = new Set();
@@ -3337,10 +3891,12 @@ window.addEventListener('resize',function(){
             var raw = JSON.parse(ev.target.result);
             _importProgressUpdate('JSONを解析中…', '形式を確認しています', 50);
             var impScripts=null, impMail=null, impHistory=null, impScreen=null;
-            if ((raw.version===2||raw.version===1) && raw.talkScripts && raw.mailTemplates) {
+            if ((raw.version===3||raw.version===2||raw.version===1) && raw.talkScripts && raw.mailTemplates) {
               impScripts = raw.talkScripts; impMail = raw.mailTemplates;
               impHistory = Array.isArray(raw.updateHistory) ? raw.updateHistory : null;
-              if (raw.version===2 && Array.isArray(raw.screenData)) impScreen = raw.screenData;
+              if ((raw.version===2||raw.version===3) && Array.isArray(raw.screenData)) impScreen = raw.screenData;
+              if (raw.version===3 && Array.isArray(raw.imageLib)) window._pendingImgLib = raw.imageLib;
+              else window._pendingImgLib = null;
             } else if (Array.isArray(raw)) {
               impMail = raw;
             } else if (Object.keys(raw).every(function(k){ return raw[k] && raw[k].name && Array.isArray(raw[k].list); })) {

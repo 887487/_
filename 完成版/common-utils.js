@@ -596,7 +596,7 @@ var HEARING_KEY = 'hearingState_v4';
 var DEFAULT_STATE = {
   usage: null, isMigration: null, oldPlusId: null, migMailConfirmed: null, migMailUsable: null,
   isAccountPerson: null, sAccountCreated: null, authCodeIssue: null, authCodeResult: null,
-  jAccountCreated: null, sjLinked: null, sjLoginlessResult: null,
+  jAccountCreated: null, jAuthCodeIssue: null, sjLinked: null, sjLoginlessResult: null,
   devices: {}, mailDomain: '', mailDomainManual: '', cbMistake: false, cbReject: false, cbSpam: false
 };
 
@@ -659,7 +659,8 @@ window.setHearing = function (field, value) {
     sAccountCreated: ['authCodeIssue','authCodeResult','jAccountCreated','sjLinked','sjLoginlessResult'],
     authCodeIssue:   ['authCodeResult'],
     sjLinked:        ['jAccountCreated','sjLoginlessResult'],
-    jAccountCreated: []
+    jAccountCreated: ['jAuthCodeIssue'],
+    jAuthCodeIssue:  []
   };
   if (resets[field]) resets[field].forEach(function (f) { hearingState[f] = null; });
   hearingState[field] = value;
@@ -765,7 +766,7 @@ function renderHearing() {
   if (s.usage === '世帯' && s.isMigration === true && s.oldPlusId === true && s.migMailConfirmed === true) h += _hrRow('移行案内メールを受信しているメールアドレスは現在も使用可能ですか？', _boolBtns('migMailUsable', s.migMailUsable, 'はい', 'いいえ'));
   if (s.usage === '学校' || s.usage === '事業') h += _hrRow('入電者はアカウント担当者ですか？', _boolBtns('isAccountPerson', s.isAccountPerson, 'はい', 'いいえ'));
   if (s.usage !== null) h += _hrRow('Sアカは作成済みですか？', _boolBtns('sAccountCreated', s.sAccountCreated, 'はい', 'いいえ'));
-  if (s.sAccountCreated === false) h += _hrRow('認証コード未着ですか？', _strBtns('authCodeIssue', s.authCodeIssue, [{l:'移行エラーメール受信',v:'移行エラーメール受信'},{l:'新規エラーメール受信',v:'新規エラーメール受信'},{l:'Jアカ重複メール受信',v:'Jアカ重複メール受信'},{l:'メール受信なし',v:'メール受信なし'}]));
+  if (s.sAccountCreated === false) h += _hrRow('認証コード未着ですか？', _strBtns('authCodeIssue', s.authCodeIssue, [{l:'移行エラーメール受信',v:'移行エラーメール受信'},{l:'新規エラーメール受信',v:'新規エラーメール受信'},{l:'メール受信なし',v:'メール受信なし'}]));
   if (s.authCodeIssue === '移行エラーメール受信' || s.authCodeIssue === '新規エラーメール受信') h += _hrRow('ログイン画面下部「PWをお忘れの方はこちら」から進んで認証コードが届くか', _strBtns('authCodeResult', s.authCodeResult, [{l:'認証コード受信',v:'認証コード受信'},{l:'認証コード未着(任意情報なし)',v:'認証コード未着(任意情報なし)'},{l:'認証コード未着(任意情報あり)',v:'認証コード未着(任意情報あり)'}]));
   if (s.usage === '世帯' && s.sAccountCreated === true) h += _hrRow('S-J連携済みですか？', _strBtns('sjLinked', s.sjLinked, [{l:'連携済み',v:'連携済み'},{l:'未連携',v:'未連携'},{l:'未確認（再連携が必要です）',v:'再連携必要'},{l:'ログイン不可',v:'ログイン不可'}]));
   if (s.usage === '世帯' && s.sAccountCreated === true && s.sjLinked === 'ログイン不可') h += _hrRow('ログイン画面下部「PWをお忘れの方はこちら」から進んで認証コードが届くか', _strBtns('sjLoginlessResult', s.sjLoginlessResult, [{l:'認証コード受信',v:'認証コード受信'},{l:'認証コード未着(任意情報なし)',v:'認証コード未着(任意情報なし)'},{l:'認証コード未着(任意情報あり)',v:'認証コード未着(任意情報あり)'}]));
@@ -775,6 +776,7 @@ function renderHearing() {
     else if (s.isMigration !== true) showJAccount = (s.sjLinked === '未連携' || s.sjLinked === '再連携必要');
   }
   if (showJAccount) h += _hrRow('Jアカは作成済みですか？', _boolBtns('jAccountCreated', s.jAccountCreated, 'はい', 'いいえ'));
+  if (showJAccount && s.jAccountCreated === false) h += _hrRow('認証コード未着ですか？', _strBtns('jAuthCodeIssue', s.jAuthCodeIssue, [{l:'Jアカ重複メール受信',v:'Jアカ重複メール受信'},{l:'メール受信なし',v:'メール受信なし'}]));
   var devBtns = '<div class="hr-device-btns">';
   DEVICE_LIST.forEach(function (device) {
     var d = s.devices[device];
@@ -791,11 +793,13 @@ function renderHearing() {
     }
   });
   h += _hrRow('操作環境', devBtns, 'hr-row-devices');
-  if (s.authCodeIssue === 'メール受信なし') {
+  var _showMailInvestigation = s.authCodeIssue === 'メール受信なし' || s.jAuthCodeIssue === 'メール受信なし';
+  if (_showMailInvestigation) {
     var dv = s.mailDomain;
+    var _rejectLabel = s.jAuthCodeIssue === 'メール受信なし' ? '受信拒否（mail.service.nhk-cs.jp／0570-000-320）' : '受信拒否（mail.nhk）';
     h += '<div class="hr-divider">メール未着調査</div>';
     h += '<div class="hr-row"><div class="hr-label">■ドメイン（＠以降）</div><select id="hearingDomainSel" class="hr-select" onchange="onHearingDomainChange()"><option value="">選択してください</option>' + _mkOpt('@docomo.ne.jp',dv) + _mkOpt('@softbank.ne.jp',dv) + _mkOpt('@i.softbank.jp',dv) + _mkOpt('@ezweb.ne.jp',dv) + _mkOpt('@au.com',dv) + _mkOpt('@gmail.com',dv) + _mkOpt('@yahoo.co.jp',dv) + _mkOpt('@outlook.com',dv) + '<option value="__manual__"' + (dv === '__manual__' ? ' selected' : '') + '>その他（手入力）</option></select><div id="hearingDomainManualWrap" style="display:' + (dv === '__manual__' ? 'block' : 'none') + ';margin-top:6px;"><input id="hearingDomainManual" type="text" class="hr-text-input" placeholder="例）@example.com" value="' + _hEsc(s.mailDomainManual) + '" oninput="onHearingDomainManualInput()"></div></div>';
-    h += '<div class="hr-row"><div class="hr-label">■確認項目</div>' + _mkChk('cbMistake',s.cbMistake,'メールアドレスの入力ミス') + _mkChk('cbReject',s.cbReject,'受信拒否') + _mkChk('cbSpam',s.cbSpam,'迷惑メールフィルター') + '</div>';
+    h += '<div class="hr-row"><div class="hr-label">■確認項目</div>' + _mkChk('cbMistake',s.cbMistake,'メールアドレスの入力ミス') + _mkChk('cbReject',s.cbReject,_rejectLabel) + _mkChk('cbSpam',s.cbSpam,'迷惑メールフィルター') + '</div>';
   }
   h += '<div id="hearingSummaryArea"></div>';
   el.innerHTML = h;
@@ -1155,5 +1159,92 @@ document.addEventListener('DOMContentLoaded', function () {
   window._importProgressHide = function () {
     var el = document.getElementById('_impProg');
     if (el) el.classList.remove('show');
+  };
+})();
+
+// =============================================================================
+// ⑩ 画面遷移データの IDB 書き込みスタブ（index.html / mail.html 用）
+//    screen.html / admin.html では各ページで定義された関数が優先される。
+//    index.html / mail.html では idbSetScreenData が未定義のため
+//    ここで直接 IndexedDB に書き込む。
+// =============================================================================
+(function () {
+  if (typeof idbSetScreenData === 'function') return; // 既に定義済みならスキップ
+
+  var IDB_NAME    = 'screenFlowDB';
+  var IDB_VER     = 3;
+  var IDB_STORE   = 'patterns';
+  var IDB_KEY     = 'data';
+  var _db         = null;
+
+  function _open() {
+    if (_db) return Promise.resolve(_db);
+    return new Promise(function (resolve, reject) {
+      var req = indexedDB.open(IDB_NAME, IDB_VER);
+      req.onupgradeneeded = function (e) {
+        var db = e.target.result;
+        if (!db.objectStoreNames.contains(IDB_STORE)) db.createObjectStore(IDB_STORE);
+        if (!db.objectStoreNames.contains('imageLib')) db.createObjectStore('imageLib');
+      };
+      req.onsuccess = function (e) {
+        _db = e.target.result;
+        _db.onclose = function () { _db = null; };
+        _db.onversionchange = function () { _db.close(); _db = null; };
+        resolve(_db);
+      };
+      req.onerror = function (e) { reject(e.target.error); };
+    });
+  }
+
+  // base64 画像を imageLib に保存して lib:xxx に差し替えるヘルパー
+  function _findOrPut(db, dataUrl, name) {
+    return new Promise(function (resolve) {
+      var tx  = db.transaction('imageLib', 'readonly');
+      var req = tx.objectStore('imageLib').getAll();
+      req.onsuccess = function (e) {
+        var items = e.target.result || [];
+        var fp    = dataUrl.slice(0, 256) + '|' + dataUrl.slice(-64) + '|' + dataUrl.length;
+        var found = items.find(function (item) {
+          return item.dataUrl.slice(0, 256) + '|' + item.dataUrl.slice(-64) + '|' + item.dataUrl.length === fp;
+        });
+        if (found) { resolve('lib:' + found.id); return; }
+        // 新規登録
+        var id  = 'lib' + Math.random().toString(36).substr(2, 9);
+        var tx2 = db.transaction('imageLib', 'readwrite');
+        tx2.objectStore('imageLib').put({ id: id, name: name || id, tags: [], dataUrl: dataUrl }, id);
+        tx2.oncomplete = function () { resolve('lib:' + id); };
+        tx2.onerror    = function () { resolve(dataUrl); }; // fallback
+      };
+      req.onerror = function () { resolve(dataUrl); };
+    });
+  }
+
+  window.idbSetScreenData = function (data) {
+    if (!data) return Promise.resolve();
+    return _open().then(function (db) {
+      // base64 を imageLib に移行してから patterns に保存
+      var promises = [];
+      data.forEach(function (p) {
+        (p.screens || []).forEach(function (s) {
+          if (s.imageSrc && !s.imageSrc.startsWith('lib:')) {
+            var dataUrl = s.imageSrc;
+            var name    = s.name || s.id;
+            promises.push(
+              _findOrPut(db, dataUrl, name).then(function (libRef) {
+                s.imageSrc = libRef;
+              })
+            );
+          }
+        });
+      });
+      return Promise.all(promises).then(function () {
+        return new Promise(function (resolve, reject) {
+          var tx  = db.transaction(IDB_STORE, 'readwrite');
+          var req = tx.objectStore(IDB_STORE).put(data, IDB_KEY);
+          tx.oncomplete = resolve;
+          tx.onerror    = function (e) { reject(e.target.error); };
+        });
+      });
+    });
   };
 })();
