@@ -744,18 +744,94 @@ body.dnd-xlsx-hover::after {
 
   <!-- ===== ヒアリングシートタブ ===== -->
   <div class="tab-panel tab-panel-hearing" id="tabHearing">
-    <div style="max-width:860px;margin:0 auto;">
-      <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:16px;">📋 ヒアリングチェックシート設定</div>
-      <div style="background:var(--white);border:1px solid var(--border);border-radius:10px;overflow:hidden;">
-        <div id="hearingContent" style="padding:16px;"></div>
+    <div style="max-width:920px;margin:0 auto;display:flex;flex-direction:column;gap:20px;">
+
+      <!-- ── プレビュー ── -->
+      <div>
+        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px;">📋 ヒアリングシート（プレビュー）</div>
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;">
+          <div id="hearingContent" style="padding:16px;"></div>
+        </div>
+        <div style="margin-top:8px;display:flex;gap:8px;">
+          <button class="btn btn-secondary" style="font-size:11px;" onclick="window.resetHearing&&window.resetHearing()">🔄 リセット</button>
+          <button class="btn btn-secondary" style="font-size:11px;" onclick="window.copyHearingText&&window.copyHearingText()">📋 コピー</button>
+        </div>
+        <div id="hearingCopyToast" class="hearing-copy-toast"></div>
       </div>
-      <div style="margin-top:12px;display:flex;gap:8px;">
-        <button class="btn btn-secondary" onclick="window.resetHearing&&window.resetHearing()">🔄 リセット</button>
-        <button class="btn btn-secondary" onclick="window.copyHearingText&&window.copyHearingText()">📋 コピー</button>
+
+      <!-- ── 質問エディタ ── -->
+      <div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+          <div style="font-size:13px;font-weight:700;color:var(--text);">❓ 質問定義エディタ</div>
+          <div style="display:flex;gap:6px;">
+            <button class="btn btn-secondary" style="font-size:11px;" onclick="_hrQReset()">↩ デフォルトに戻す</button>
+            <button class="btn btn-primary"   style="font-size:11px;" onclick="_hrQAdd()">＋ 質問を追加</button>
+          </div>
+        </div>
+        <div style="font-size:11px;color:var(--text3);margin-bottom:10px;">🔒 組み込み質問はラベル・表示条件を編集できます（削除不可）。✏️ カスタム質問は全て編集・削除できます。</div>
+        <div id="hrQList" style="display:flex;flex-direction:column;gap:8px;"></div>
       </div>
-      <div id="hearingCopyToast" class="hearing-copy-toast"></div>
+
+      <!-- ── 対応方針エディタ ── -->
+      <div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+          <div style="font-size:13px;font-weight:700;color:var(--text);">🗂 対応方針エディタ</div>
+          <button class="btn btn-primary" style="font-size:11px;" onclick="_hrEditorAdd()">＋ 対応方針を追加</button>
+        </div>
+        <div style="font-size:11px;color:var(--text3);margin-bottom:10px;">選択値の組み合わせに応じて対応方針を表示します。条件を空にすると常に表示されます。</div>
+        <div id="hrEditorList" style="display:flex;flex-direction:column;gap:10px;"></div>
+      </div>
+
     </div>
   </div>
+
+<!-- ===== 質問編集モーダル ===== -->
+<div id="hrQModal" style="display:none;position:fixed;inset:0;z-index:6000;background:rgba(0,0,0,.55);align-items:center;justify-content:center;" onclick="if(event.target===this)_hrQCloseModal()">
+  <div style="background:var(--surface);border-radius:12px;width:min(88vw,640px);max-height:88vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.3);overflow:hidden;">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 18px;border-bottom:1px solid var(--border);flex-shrink:0;">
+      <span style="font-size:14px;font-weight:700;">❓ 質問を編集</span>
+      <button onclick="_hrQCloseModal()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text3);">✕</button>
+    </div>
+    <div style="flex:1;overflow-y:auto;padding:16px 18px;display:flex;flex-direction:column;gap:12px;">
+      <div>
+        <label style="font-size:11px;font-weight:700;color:var(--text2);">質問ラベル</label>
+        <input id="hrQModalLabel" type="text" style="margin-top:4px;width:100%;font-size:12px;padding:6px 8px;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text);font-family:inherit;box-sizing:border-box;">
+      </div>
+      <div style="display:flex;gap:8px;">
+        <div style="flex:1;">
+          <label style="font-size:11px;font-weight:700;color:var(--text2);">フィールド名（内部ID）</label>
+          <input id="hrQModalField" type="text" style="margin-top:4px;width:100%;font-size:12px;padding:6px 8px;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text);font-family:inherit;box-sizing:border-box;">
+        </div>
+        <div style="flex:1;">
+          <label style="font-size:11px;font-weight:700;color:var(--text2);">タイプ</label>
+          <select id="hrQModalType" onchange="_hrQModalRefreshTypeUI(null)" style="margin-top:4px;width:100%;font-size:12px;padding:6px 8px;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text);font-family:inherit;box-sizing:border-box;">
+            <option value="bool">はい/いいえ（2択）</option>
+            <option value="str">選択肢（複数）</option>
+            <option value="text">テキスト入力</option>
+          </select>
+        </div>
+      </div>
+      <div id="hrQModalBoolRow" style="display:flex;gap:8px;">
+        <div style="flex:1;"><label style="font-size:11px;color:var(--text2);">はい側ラベル</label><input id="hrQModalTrueLabel" type="text" style="margin-top:4px;width:100%;font-size:12px;padding:5px 8px;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text);font-family:inherit;box-sizing:border-box;"></div>
+        <div style="flex:1;"><label style="font-size:11px;color:var(--text2);">いいえ側ラベル</label><input id="hrQModalFalseLabel" type="text" style="margin-top:4px;width:100%;font-size:12px;padding:5px 8px;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text);font-family:inherit;box-sizing:border-box;"></div>
+      </div>
+      <div id="hrQModalStrRow" style="display:none;">
+        <label style="font-size:11px;font-weight:700;color:var(--text2);">選択肢（表示名 / 値）</label>
+        <div id="hrQModalOptions" style="margin-top:6px;"></div>
+        <button onclick="_hrQModalAddOption()" style="margin-top:4px;font-size:10px;padding:2px 10px;border:1px solid var(--accent);border-radius:4px;background:var(--surface);cursor:pointer;color:var(--accent);font-family:inherit;">＋ 選択肢を追加</button>
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:700;color:var(--text2);">表示条件（複数グループはOR、グループ内はAND）</label>
+        <div style="font-size:10px;color:var(--text3);margin-bottom:6px;">条件なし = 常に表示</div>
+        <div id="hrQModalConditions" style="margin-top:6px;"></div>
+      </div>
+    </div>
+    <div style="padding:12px 18px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;flex-shrink:0;">
+      <button class="btn btn-secondary" onclick="_hrQCloseModal()">キャンセル</button>
+      <button class="btn btn-primary"   onclick="_hrQModalSave()">💾 保存</button>
+    </div>
+  </div>
+</div>
 
 <!-- ===== 画像ライブラリ プレビューモーダル ===== -->
 <style>
@@ -1118,7 +1194,359 @@ function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').
 let toastT;
 function openAdminHelp(){var m=document.getElementById('adminHelpModal');if(m)m.style.display='flex';}
 function closeAdminHelp(){var m=document.getElementById('adminHelpModal');if(m)m.style.display='none';}
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeAdminHelp();_closeCalPopup();}});
+
+// ===================================================================
+// 対応方針エディタ（ヒアリングタブ）
+// データ構造: [{id, conditions:[{field,value}], policy, enabled}]
+// ===================================================================
+var HR_POLICY_KEY = 'hearingPolicies_v1';
+
+function _hrPoliciesLoad() {
+  try { var s=localStorage.getItem(HR_POLICY_KEY); return s ? JSON.parse(s) : null; } catch(e){ return null; }
+}
+function _hrPoliciesSave(list) {
+  try { localStorage.setItem(HR_POLICY_KEY, JSON.stringify(list)); } catch(e) {}
+}
+
+// ヒアリング状態のフィールド一覧（表示名 → 実フィールド名）
+var HR_FIELDS = [
+  {l:'（条件なし）',          v:''},
+  {l:'用途',                  v:'usage',          opts:['世帯','学校','事業']},
+  {l:'移行対象者',            v:'isMigration',    opts:['true','false']},
+  {l:'旧プラスID発行',        v:'oldPlusId',      opts:['true','false']},
+  {l:'移行案内メール確認',    v:'migMailConfirmed',opts:['true','false']},
+  {l:'移行メール使用可',      v:'migMailUsable',  opts:['true','false']},
+  {l:'アカウント担当者',      v:'isAccountPerson', opts:['true','false']},
+  {l:'Sアカ作成済み',         v:'sAccountCreated', opts:['true','false']},
+  {l:'認証コード問題(Sアカ)', v:'authCodeIssue',  opts:['移行エラーメール受信','新規エラーメール受信','メール受信なし']},
+  {l:'認証コード結果(Sアカ)', v:'authCodeResult', opts:['認証コード受信','認証コード未着(任意情報なし)','認証コード未着(任意情報あり)']},
+  {l:'S-J連携状態',           v:'sjLinked',       opts:['連携済み','未連携','再連携必要','ログイン不可']},
+  {l:'Jアカなしログイン結果', v:'sjLoginlessResult', opts:['認証コード受信','認証コード未着(任意情報なし)','認証コード未着(任意情報あり)']},
+  {l:'Jアカ作成済み',         v:'jAccountCreated', opts:['true','false']},
+  {l:'認証コード問題(Jアカ)', v:'jAuthCodeIssue', opts:['Jアカ重複メール受信','メール受信なし']},
+];
+
+function _hrEditorRender() {
+  var el = document.getElementById('hrEditorList'); if (!el) return;
+  var list = _hrPoliciesLoad() || [];
+  if (!list.length) {
+    el.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:12px 0;">対応方針が登録されていません。「＋ 対応方針を追加」で追加してください。</div>';
+    return;
+  }
+  el.innerHTML = '';
+  list.forEach(function(item, idx) {
+    var card = document.createElement('div');
+    card.style.cssText = 'background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px 14px;display:flex;flex-direction:column;gap:8px;';
+
+    // ── ヘッダー（番号・有効化トグル・削除ボタン）──
+    var hd = document.createElement('div');
+    hd.style.cssText = 'display:flex;align-items:center;gap:8px;';
+    var num = document.createElement('span');
+    num.textContent = '方針 ' + (idx+1);
+    num.style.cssText = 'font-size:11px;font-weight:700;color:var(--text3);flex:1;';
+    var ena = document.createElement('label');
+    ena.style.cssText = 'display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text2);cursor:pointer;';
+    var enaChk = document.createElement('input');
+    enaChk.type = 'checkbox'; enaChk.checked = item.enabled !== false;
+    enaChk.onchange = function() { _hrPolicySetField(idx,'enabled',enaChk.checked); };
+    ena.appendChild(enaChk); ena.appendChild(document.createTextNode('有効'));
+    var del = document.createElement('button');
+    del.textContent = '🗑 削除'; del.style.cssText = 'font-size:10px;padding:2px 8px;border:1px solid var(--border);border-radius:4px;background:var(--surface2);cursor:pointer;color:var(--text);font-family:inherit;';
+    del.onclick = function() { if(!confirm('この対応方針を削除しますか？'))return; var l=_hrPoliciesLoad()||[]; l.splice(idx,1); _hrPoliciesSave(l); _hrEditorRender(); };
+    hd.appendChild(num); hd.appendChild(ena); hd.appendChild(del);
+    card.appendChild(hd);
+
+    // ── 条件行 ──
+    var conds = item.conditions || [];
+    var condLabel = document.createElement('div');
+    condLabel.textContent = '表示条件（AND条件）'; condLabel.style.cssText = 'font-size:11px;font-weight:700;color:var(--text2);';
+    card.appendChild(condLabel);
+
+    var condList = document.createElement('div');
+    condList.style.cssText = 'display:flex;flex-direction:column;gap:4px;';
+    conds.forEach(function(cond, ci) {
+      var row = document.createElement('div');
+      row.style.cssText = 'display:flex;gap:6px;align-items:center;';
+      var fSel = document.createElement('select');
+      fSel.style.cssText = 'font-size:11px;padding:2px 4px;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text);font-family:inherit;flex:1;';
+      HR_FIELDS.forEach(function(f){ var o=document.createElement('option'); o.value=f.v; o.textContent=f.l; if(cond.field===f.v)o.selected=true; fSel.appendChild(o); });
+      var vSel = document.createElement('select');
+      vSel.style.cssText = 'font-size:11px;padding:2px 4px;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text);font-family:inherit;flex:1;';
+      function _fillVSel(field) {
+        vSel.innerHTML = '';
+        var fd = HR_FIELDS.find(function(f){return f.v===field;});
+        (fd&&fd.opts||[]).forEach(function(o){ var el=document.createElement('option'); el.value=o; el.textContent=o; if(cond.value===o)el.selected=true; vSel.appendChild(el); });
+      }
+      _fillVSel(cond.field);
+      fSel.onchange = function() { _fillVSel(fSel.value); _hrCondSetField(idx,ci,'field',fSel.value); _hrCondSetField(idx,ci,'value',vSel.value); };
+      vSel.onchange = function() { _hrCondSetField(idx,ci,'value',vSel.value); };
+      var delC = document.createElement('button');
+      delC.textContent='✕'; delC.style.cssText='font-size:10px;padding:2px 6px;border:1px solid var(--border);border-radius:4px;background:var(--surface2);cursor:pointer;color:var(--text);font-family:inherit;';
+      delC.onclick=(function(ci){ return function(){ var l=_hrPoliciesLoad()||[]; (l[idx].conditions||[]).splice(ci,1); _hrPoliciesSave(l); _hrEditorRender(); }; })(ci);
+      row.appendChild(fSel); row.appendChild(vSel); row.appendChild(delC);
+      condList.appendChild(row);
+    });
+    // 条件追加ボタン
+    var addCond = document.createElement('button');
+    addCond.textContent='＋ 条件を追加'; addCond.style.cssText='font-size:10px;padding:2px 8px;border:1px solid var(--accent);border-radius:4px;background:var(--surface);cursor:pointer;color:var(--accent);font-family:inherit;align-self:flex-start;margin-top:2px;';
+    addCond.onclick=(function(idx){ return function(){
+      var l=_hrPoliciesLoad()||[];
+      if(!l[idx].conditions)l[idx].conditions=[];
+      l[idx].conditions.push({field:'usage',value:'世帯'});
+      _hrPoliciesSave(l); _hrEditorRender();
+    }; })(idx);
+    condList.appendChild(addCond);
+    card.appendChild(condList);
+
+    // ── 対応方針テキスト ──
+    var polLabel = document.createElement('div');
+    polLabel.textContent = '対応方針テキスト'; polLabel.style.cssText = 'font-size:11px;font-weight:700;color:var(--text2);';
+    card.appendChild(polLabel);
+    var ta = document.createElement('textarea');
+    ta.value = item.policy || '';
+    ta.rows = 3;
+    ta.style.cssText = 'width:100%;font-size:12px;padding:6px 8px;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text);font-family:inherit;resize:vertical;box-sizing:border-box;';
+    ta.oninput = (function(idx){ return function(){ _hrPolicySetField(idx,'policy',this.value); }; })(idx);
+    card.appendChild(ta);
+
+    el.appendChild(card);
+  });
+}
+
+function _hrPolicySetField(idx, field, val) {
+  var l = _hrPoliciesLoad()||[];
+  if (!l[idx]) return;
+  l[idx][field] = val;
+  _hrPoliciesSave(l);
+}
+function _hrCondSetField(pIdx, cIdx, field, val) {
+  var l = _hrPoliciesLoad()||[];
+  if (!l[pIdx]||!l[pIdx].conditions[cIdx]) return;
+  l[pIdx].conditions[cIdx][field] = val;
+  _hrPoliciesSave(l);
+}
+function _hrEditorAdd() {
+  var l = _hrPoliciesLoad()||[];
+  l.push({id:'hr'+Math.random().toString(36).substr(2,8), conditions:[], policy:'', enabled:true});
+  _hrPoliciesSave(l);
+  _hrEditorRender();
+}
+
+// calcPolicies から呼ばれるカスタムポリシーを注入
+function _hrCustomPolicies(s) {
+  var list = _hrPoliciesLoad()||[];
+  var result = [];
+  list.forEach(function(item) {
+    if (item.enabled === false || !item.policy) return;
+    var match = (item.conditions||[]).every(function(cond) {
+      if (!cond.field) return true;
+      var val = s[cond.field];
+      var cv = cond.value;
+      if (cv === 'true')  return val === true;
+      if (cv === 'false') return val === false;
+      return val === cv;
+    });
+    if (match) result.push(item.policy);
+  });
+  return result;
+}
+
+// switchTab で hearing タブを開くときにエディタも描画
+
+// ===================================================================
+// ヒアリング質問エディタ（admin.html 専用）
+// common-utils.js の _hrGetQuestions() / _hrQuestionsSave() を使用
+// ===================================================================
+var HR_OP_OPTIONS = [
+  {l:'= 等しい',      v:'eq'},
+  {l:'≠ 等しくない',  v:'neq'},
+  {l:'= true',        v:'true'},
+  {l:'= false',       v:'false'},
+  {l:'null でない',   v:'notnull'},
+  {l:'リストに含む',  v:'in'},
+];
+var HR_TYPE_OPTIONS = [{l:'はい/いいえ（2択）',v:'bool'},{l:'選択肢（複数）',v:'str'},{l:'テキスト入力',v:'text'}];
+
+function _hrQEditorRender() {
+  var qList = document.getElementById('hrQList'); if (!qList) return;
+  var polEl = document.getElementById('hrEditorList'); if (polEl) _hrEditorRender();
+  var qs = (typeof _hrGetQuestions === 'function') ? _hrGetQuestions() : [];
+  qList.innerHTML = '';
+  qs.forEach(function(q, qi) {
+    var card = document.createElement('div');
+    card.style.cssText = 'background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 12px;display:flex;flex-direction:column;gap:6px;';
+    // ── ヘッダー ──
+    var hd = document.createElement('div');
+    hd.style.cssText = 'display:flex;align-items:center;gap:6px;';
+    var badge = document.createElement('span');
+    badge.textContent = q.builtin ? '🔒 組み込み' : '✏️ カスタム';
+    badge.style.cssText = 'font-size:9px;padding:1px 6px;border-radius:10px;background:' + (q.builtin?'#dfe4ea':'#d8f5e3') + ';color:var(--text3);flex-shrink:0;';
+    var lbl = document.createElement('span');
+    lbl.textContent = q.label;
+    lbl.style.cssText = 'font-size:11px;color:var(--text);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
+    var enaWrap = document.createElement('label');
+    enaWrap.style.cssText = 'display:flex;align-items:center;gap:3px;font-size:10px;color:var(--text2);cursor:pointer;flex-shrink:0;';
+    var enaChk = document.createElement('input'); enaChk.type='checkbox'; enaChk.checked = q.enabled !== false;
+    enaChk.onchange = (function(qi){ return function() { _hrQSetEnabled(qi, this.checked); }; })(qi);
+    enaWrap.appendChild(enaChk); enaWrap.appendChild(document.createTextNode('表示'));
+    var editBtn = document.createElement('button');
+    editBtn.textContent='✏️'; editBtn.title='編集'; editBtn.style.cssText='font-size:11px;padding:2px 6px;border:1px solid var(--border);border-radius:4px;background:var(--surface2);cursor:pointer;font-family:inherit;';
+    editBtn.onclick=(function(qi){ return function(){ _hrQOpenModal(qi); }; })(qi);
+    hd.appendChild(badge); hd.appendChild(lbl); hd.appendChild(enaWrap);
+    if (!q.builtin) {
+      var delBtn = document.createElement('button');
+      delBtn.textContent='🗑'; delBtn.title='削除'; delBtn.style.cssText='font-size:11px;padding:2px 6px;border:1px solid var(--border);border-radius:4px;background:var(--surface2);cursor:pointer;font-family:inherit;';
+      delBtn.onclick=(function(qi){ return function(){ if(!confirm('この質問を削除しますか？'))return; var qs=_hrGetQuestions(); qs.splice(qi,1); _hrQuestionsSave(qs); _hrQEditorRender(); if(window.renderHearing)window.renderHearing(); }; })(qi);
+      hd.appendChild(delBtn);
+    }
+    hd.appendChild(editBtn);
+    card.appendChild(hd);
+    // 表示条件サマリ
+    if (q.showIf && q.showIf.length) {
+      var cSumm = document.createElement('div');
+      cSumm.style.cssText='font-size:10px;color:var(--text3);padding-left:4px;';
+      cSumm.textContent = '条件: ' + q.showIf.map(function(g){
+        return g.map(function(c){ return c.field+' '+c.op+(c.value?' ['+c.value+']':''); }).join(' AND ');
+      }).join(' | OR | ');
+      card.appendChild(cSumm);
+    }
+    qList.appendChild(card);
+  });
+}
+
+// 有効/無効切り替え
+function _hrQSetEnabled(qi, val) {
+  var qs = _hrGetQuestions(); if (!qs[qi]) return;
+  qs[qi].enabled = val;
+  _hrQuestionsSave(qs); _hrQEditorRender();
+  if (window.renderHearing) window.renderHearing();
+}
+
+// 質問追加
+function _hrQAdd() {
+  var qs = _hrGetQuestions();
+  var id = 'cq_' + Math.random().toString(36).substr(2,8);
+  qs.push({id:id, label:'新しい質問', field:id, type:'bool', trueLabel:'はい', falseLabel:'いいえ', options:[], showIf:[], enabled:true, builtin:false, resets:[]});
+  _hrQuestionsSave(qs);
+  _hrQEditorRender();
+  _hrQOpenModal(qs.length - 1);
+}
+
+// デフォルトリセット
+function _hrQReset() {
+  if (!confirm('質問定義をデフォルトに戻しますか？（カスタム質問も削除されます）')) return;
+  try { localStorage.removeItem('hearingQuestionsDef_v1'); } catch(e){}
+  _hrQEditorRender();
+  if (window.renderHearing) window.renderHearing();
+  toast('✅ 質問定義をリセットしました');
+}
+
+// ── 質問編集モーダル ──
+var _hrQModalIdx = -1;
+function _hrQOpenModal(qi) {
+  _hrQModalIdx = qi;
+  var qs = _hrGetQuestions(); var q = qs[qi]; if (!q) return;
+  var m = document.getElementById('hrQModal'); if (!m) return;
+  document.getElementById('hrQModalLabel').value = q.label || '';
+  document.getElementById('hrQModalField').value = q.field || '';
+  document.getElementById('hrQModalField').disabled = !!q.builtin;
+  var typeSel = document.getElementById('hrQModalType');
+  typeSel.value = q.type || 'bool';
+  typeSel.disabled = !!q.builtin;
+  _hrQModalRefreshTypeUI(q);
+  _hrQModalRenderConditions(q);
+  m.style.display = 'flex';
+}
+function _hrQCloseModal() { var m=document.getElementById('hrQModal'); if(m)m.style.display='none'; }
+function _hrQModalRefreshTypeUI(q) {
+  var type = q ? q.type : document.getElementById('hrQModalType').value;
+  document.getElementById('hrQModalBoolRow').style.display = type==='bool'?'flex':'none';
+  document.getElementById('hrQModalStrRow').style.display  = type==='str'?'block':'none';
+  if (q && type==='bool') {
+    document.getElementById('hrQModalTrueLabel').value  = q.trueLabel  || 'はい';
+    document.getElementById('hrQModalFalseLabel').value = q.falseLabel || 'いいえ';
+  }
+  if (q && type==='str') _hrQModalRenderOptions(q.options||[]);
+}
+function _hrQModalRenderOptions(opts) {
+  var el = document.getElementById('hrQModalOptions'); if (!el) return;
+  el.innerHTML = '';
+  opts.forEach(function(o, oi) {
+    var row = document.createElement('div'); row.style.cssText='display:flex;gap:4px;margin-bottom:4px;';
+    var lbl = document.createElement('input'); lbl.type='text'; lbl.value=o.l||''; lbl.placeholder='表示名';
+    lbl.style.cssText='flex:1;font-size:11px;padding:2px 6px;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text);font-family:inherit;';
+    var val = document.createElement('input'); val.type='text'; val.value=o.v||''; val.placeholder='値';
+    val.style.cssText='flex:1;font-size:11px;padding:2px 6px;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text);font-family:inherit;';
+    var del = document.createElement('button'); del.textContent='✕';
+    del.style.cssText='font-size:11px;padding:2px 6px;border:1px solid var(--border);border-radius:4px;background:var(--surface2);cursor:pointer;font-family:inherit;';
+    del.onclick=(function(oi){ return function(){ var qs=_hrGetQuestions(); (qs[_hrQModalIdx].options||[]).splice(oi,1); _hrQModalRenderOptions(qs[_hrQModalIdx].options); }; })(oi);
+    lbl.oninput=(function(oi){ return function(){ var qs=_hrGetQuestions(); if(qs[_hrQModalIdx].options[oi]) qs[_hrQModalIdx].options[oi].l=this.value; }; })(oi);
+    val.oninput=(function(oi){ return function(){ var qs=_hrGetQuestions(); if(qs[_hrQModalIdx].options[oi]) qs[_hrQModalIdx].options[oi].v=this.value; }; })(oi);
+    row.appendChild(lbl); row.appendChild(val); row.appendChild(del);
+    el.appendChild(row);
+  });
+}
+function _hrQModalAddOption() {
+  var qs = _hrGetQuestions(); if (!qs[_hrQModalIdx]) return;
+  if (!qs[_hrQModalIdx].options) qs[_hrQModalIdx].options = [];
+  qs[_hrQModalIdx].options.push({l:'', v:''});
+  _hrQModalRenderOptions(qs[_hrQModalIdx].options);
+}
+function _hrQModalRenderConditions(q) {
+  var el = document.getElementById('hrQModalConditions'); if (!el) return;
+  el.innerHTML = '';
+  var groups = q.showIf || [];
+  groups.forEach(function(group, gi) {
+    var gEl = document.createElement('div');
+    gEl.style.cssText='background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:8px;margin-bottom:8px;';
+    var gHead = document.createElement('div'); gHead.style.cssText='display:flex;align-items:center;gap:6px;margin-bottom:6px;';
+    var gLbl = document.createElement('span'); gLbl.textContent='条件グループ '+(gi+1)+'（AND）'; gLbl.style.cssText='font-size:10px;font-weight:700;color:var(--text2);flex:1;';
+    var gDel = document.createElement('button'); gDel.textContent='グループ削除'; gDel.style.cssText='font-size:9px;padding:1px 6px;border:1px solid var(--border);border-radius:4px;background:var(--surface);cursor:pointer;font-family:inherit;';
+    gDel.onclick=(function(gi){ return function(){ var qs=_hrGetQuestions(); qs[_hrQModalIdx].showIf.splice(gi,1); _hrQModalRenderConditions(qs[_hrQModalIdx]); }; })(gi);
+    gHead.appendChild(gLbl); gHead.appendChild(gDel); gEl.appendChild(gHead);
+    group.forEach(function(cond, ci) {
+      var row = document.createElement('div'); row.style.cssText='display:flex;gap:4px;margin-bottom:4px;align-items:center;';
+      var fSel = document.createElement('select'); fSel.style.cssText='font-size:10px;padding:2px 4px;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text);font-family:inherit;flex:1;';
+      var HR_FIELDS_ED = [{l:'usage',v:'usage'},{l:'isMigration',v:'isMigration'},{l:'oldPlusId',v:'oldPlusId'},{l:'migMailConfirmed',v:'migMailConfirmed'},{l:'migMailUsable',v:'migMailUsable'},{l:'isAccountPerson',v:'isAccountPerson'},{l:'sAccountCreated',v:'sAccountCreated'},{l:'authCodeIssue',v:'authCodeIssue'},{l:'authCodeResult',v:'authCodeResult'},{l:'sjLinked',v:'sjLinked'},{l:'sjLoginlessResult',v:'sjLoginlessResult'},{l:'jAccountCreated',v:'jAccountCreated'},{l:'jAuthCodeIssue',v:'jAuthCodeIssue'}];
+      var qs2 = _hrGetQuestions(); qs2.filter(function(q){return !q.builtin;}).forEach(function(q){ HR_FIELDS_ED.push({l:q.label,v:q.field}); });
+      HR_FIELDS_ED.forEach(function(f){ var o=document.createElement('option'); o.value=f.v; o.textContent=f.l; if(cond.field===f.v)o.selected=true; fSel.appendChild(o); });
+      fSel.onchange=(function(gi,ci){ return function(){ var qs=_hrGetQuestions(); qs[_hrQModalIdx].showIf[gi][ci].field=this.value; }; })(gi,ci);
+      var opSel = document.createElement('select'); opSel.style.cssText='font-size:10px;padding:2px 4px;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text);font-family:inherit;';
+      HR_OP_OPTIONS.forEach(function(o){ var el=document.createElement('option'); el.value=o.v; el.textContent=o.l; if(cond.op===o.v)el.selected=true; opSel.appendChild(el); });
+      opSel.onchange=(function(gi,ci){ return function(){ var qs=_hrGetQuestions(); qs[_hrQModalIdx].showIf[gi][ci].op=this.value; }; })(gi,ci);
+      var valIn = document.createElement('input'); valIn.type='text'; valIn.value=cond.value||''; valIn.placeholder='値（inはカンマ区切り）';
+      valIn.style.cssText='flex:1;font-size:10px;padding:2px 4px;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text);font-family:inherit;';
+      valIn.oninput=(function(gi,ci){ return function(){ var qs=_hrGetQuestions(); qs[_hrQModalIdx].showIf[gi][ci].value=this.value; }; })(gi,ci);
+      var cDel = document.createElement('button'); cDel.textContent='✕'; cDel.style.cssText='font-size:10px;padding:2px 5px;border:1px solid var(--border);border-radius:4px;background:var(--surface2);cursor:pointer;font-family:inherit;';
+      cDel.onclick=(function(gi,ci){ return function(){ var qs=_hrGetQuestions(); qs[_hrQModalIdx].showIf[gi].splice(ci,1); _hrQModalRenderConditions(qs[_hrQModalIdx]); }; })(gi,ci);
+      row.appendChild(fSel); row.appendChild(opSel); row.appendChild(valIn); row.appendChild(cDel);
+      gEl.appendChild(row);
+    });
+    var addCond = document.createElement('button'); addCond.textContent='＋ AND条件追加'; addCond.style.cssText='font-size:10px;padding:2px 8px;border:1px solid var(--accent);border-radius:4px;background:var(--surface);cursor:pointer;color:var(--accent);font-family:inherit;';
+    addCond.onclick=(function(gi){ return function(){ var qs=_hrGetQuestions(); qs[_hrQModalIdx].showIf[gi].push({field:'usage',op:'eq',value:'世帯'}); _hrQModalRenderConditions(qs[_hrQModalIdx]); }; })(gi);
+    gEl.appendChild(addCond); el.appendChild(gEl);
+  });
+  var addGrp = document.createElement('button'); addGrp.textContent='＋ ORグループを追加'; addGrp.style.cssText='font-size:10px;padding:3px 10px;border:1px solid var(--border);border-radius:4px;background:var(--surface2);cursor:pointer;font-family:inherit;';
+  addGrp.onclick=function(){ var qs=_hrGetQuestions(); if(!qs[_hrQModalIdx].showIf)qs[_hrQModalIdx].showIf=[]; qs[_hrQModalIdx].showIf.push([{field:'usage',op:'eq',value:'世帯'}]); _hrQModalRenderConditions(qs[_hrQModalIdx]); };
+  el.appendChild(addGrp);
+}
+function _hrQModalSave() {
+  var qs = _hrGetQuestions(); var q = qs[_hrQModalIdx]; if (!q) return;
+  q.label = document.getElementById('hrQModalLabel').value || q.label;
+  if (!q.builtin) q.field = document.getElementById('hrQModalField').value || q.field;
+  if (!q.builtin) q.type  = document.getElementById('hrQModalType').value;
+  if (q.type==='bool') {
+    q.trueLabel  = document.getElementById('hrQModalTrueLabel').value || 'はい';
+    q.falseLabel = document.getElementById('hrQModalFalseLabel').value || 'いいえ';
+  }
+  _hrQuestionsSave(qs);
+  _hrQCloseModal();
+  _hrQEditorRender();
+  if (window.renderHearing) window.renderHearing();
+  toast('✅ 保存しました');
+}
+
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeAdminHelp();_closeCalPopup();}});;
 function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>el.classList.remove('show'),3000);}
 
 // ===================================================================
@@ -1133,7 +1561,7 @@ function switchTab(tab){
     if(panel)panel.classList.toggle('active',t===tab);
     if(btn)btn.classList.toggle('active',t===tab);
   });
-  if(tab==='hearing'&&window.renderHearing)window.renderHearing();
+  if(tab==='hearing'&&window.renderHearing){ window.renderHearing(); _hrQEditorRender(); _hrEditorRender(); }
   if(tab==='history')renderAdminHistoryPanel();
   if(tab==='screen')initScreenEditor();
   if(tab==='imglib'){ _imgLibAllItems = []; _imgLibRender(); }
@@ -1505,10 +1933,12 @@ function importJSON(input){
   reader.onload=function(e){
     try{
       const raw=JSON.parse(e.target.result);let impScripts=null,impMail=null,impHistory=null,impScreen=null;
-      if((raw.version===2||raw.version===1)&&raw.talkScripts&&raw.mailTemplates){
+      if((raw.version===3||raw.version===2||raw.version===1)&&raw.talkScripts&&raw.mailTemplates){
         impScripts=raw.talkScripts;impMail=raw.mailTemplates;
         impHistory=Array.isArray(raw.updateHistory)?raw.updateHistory:null;
-        if(raw.version===2&&Array.isArray(raw.screenData))impScreen=raw.screenData;
+        if((raw.version===2||raw.version===3)&&Array.isArray(raw.screenData))impScreen=raw.screenData;
+        if(raw.version===3&&Array.isArray(raw.imageLib))window._pendingImgLib=raw.imageLib;
+        else window._pendingImgLib=null;
       } else if(Object.keys(raw).every(k=>raw[k]&&raw[k].name&&Array.isArray(raw[k].list))){impScripts=raw;impMail=null;}
       else if(Array.isArray(raw)){impScripts=null;impMail=raw;}
       else{toast('❌ ファイルの形式が正しくありません');return;}
@@ -1792,15 +2222,43 @@ function exportJSON(){
         var json = JSON.stringify(combined);
         var sizeMB = (json.length / 1024 / 1024).toFixed(1);
         var blob = new Blob([json], {type:'application/json'});
-        var el = document.createElement('a');
-        el.href = URL.createObjectURL(blob);
-        el.download = 'backup_'+new Date().toISOString().slice(0,10)+'.json';
-        el.style.display = 'none';
-        document.body.appendChild(el);
-        el.click();
-        setTimeout(function(){ document.body.removeChild(el); URL.revokeObjectURL(el.href); }, 100);
-        _importProgressHide();
-        toast('📥 エクスポートしました（' + sizeMB + ' MB）');
+        var _now = new Date();
+        var _pad = function(n){return String(n).padStart(2,'0');};
+        var _fname = _now.getFullYear()+'-'+_pad(_now.getMonth()+1)+'-'+_pad(_now.getDate())+
+                     '-'+_pad(_now.getHours())+'-'+_pad(_now.getMinutes())+'.json';
+
+        // showSaveFilePicker が使えれば admin.html 直下（同一ディレクトリ）を初期候補に
+        if (window.showSaveFilePicker) {
+          window.showSaveFilePicker({
+            suggestedName: _fname,
+            startIn: 'downloads', // file:// 環境では無視されることがあるが指定しておく
+            types: [{ description: 'JSON ファイル', accept: {'application/json': ['.json']} }]
+          }).then(function(fh) {
+            return fh.createWritable().then(function(writable) {
+              return writable.write(blob).then(function(){ return writable.close(); });
+            });
+          }).then(function() {
+            _importProgressHide();
+            toast('📥 エクスポートしました（' + sizeMB + ' MB）');
+          }).catch(function(err) {
+            if (err && err.name === 'AbortError') { _importProgressHide(); return; } // キャンセル
+            // showSaveFilePicker 失敗時はフォールバック
+            _doFallbackDownload(blob, _fname, sizeMB);
+          });
+        } else {
+          _doFallbackDownload(blob, _fname, sizeMB);
+        }
+        function _doFallbackDownload(blob, fname, sizeMB) {
+          var el = document.createElement('a');
+          el.href = URL.createObjectURL(blob);
+          el.download = fname;
+          el.style.display = 'none';
+          document.body.appendChild(el);
+          el.click();
+          setTimeout(function(){ document.body.removeChild(el); URL.revokeObjectURL(el.href); }, 100);
+          _importProgressHide();
+          toast('📥 エクスポートしました（' + sizeMB + ' MB）');
+        }
       });
     }).catch(function(err) {
       _importProgressHide();
@@ -2980,6 +3438,12 @@ function _scrRsRenderHsList(scr){
       +'<select class="scr-hs-select" style="display:'+(isMail?'block':'none')+'" onchange="_scrRsHsSet('+hi+',\'targetId\',this.value)"><option value="">— メールテンプレートを選択 —</option>'+mailOpts+'</select>'
       +'<label class="scr-rs-label" style="margin-top:4px;">メモ（任意）</label>'
       +'<textarea class="scr-hs-memo" rows="2" placeholder="メモ（任意）" oninput="_scrRsHsSet('+hi+',\'note\',this.value)">'+esc(hs.note||'')+'</textarea>'
+      +'<div class="scr-rs-label" style="margin-top:6px;font-weight:700;color:var(--accent);">📩 メールモーダルボタン（任意）</div>'
+      +'<select class="scr-hs-select" style="margin-top:2px;" onchange="_scrRsHsSet('+hi+',\'mailBtnTarget\',this.value)">'
+      +'<option value="">— 紐付けるメールテンプレート —</option>'
+      +mailTpls.map(function(t){ return '<option value="'+t.id+'"'+(hs.mailBtnTarget===t.id?' selected':'')+'>'+esc(t.title||t.id)+'</option>'; }).join('')
+      +'</select>'
+      +(hs.mailBtnTarget ? '<div style="font-size:10px;color:var(--text3);margin-top:3px;">ボタンの表示範囲（ホットスポットと同じ比率）は自動でホットスポット右横に配置されます。</div>' : '')
       +'</div>';
   });
   el.innerHTML=h;
@@ -3055,6 +3519,58 @@ function _scrInitCenterOverlayEvents(){
   }
 
   // ── pointerdown ──
+  // scrCenterCanvas（スクロール領域全体）で pointerdown を拾い、
+  // ov（画像オーバーレイ）外からのドラッグでもホットスポットを作成できるようにする。
+  // ov 内のイベントは ov.pointerdown が処理するので、ここでは「ov 外のみ」を担当。
+  var _outerCapture = false;
+  var _scrCenterCanvasEl = document.getElementById('scrCenterCanvas');
+  if (_scrCenterCanvasEl) {
+    _scrCenterCanvasEl.addEventListener('pointerdown', function(e) {
+      if (!_scrSelScrId || _scrEditMode !== 'hotspot') return;
+      var r = ov.getBoundingClientRect();
+      // ov 内ならスキップ（ov.pointerdown が担当）
+      if (r.width > 0 && e.clientX >= r.left && e.clientX <= r.right &&
+          e.clientY >= r.top && e.clientY <= r.bottom) return;
+      if (r.width === 0) return; // 画像未ロード
+      // ov 外から開始 → 座標を ov の境界にクランプ
+      var rx = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
+      var ry = Math.max(0, Math.min(1, (e.clientY - r.top)  / r.height));
+      _scrHsDrawing = true; _scrHsDrawStart = {rx: rx, ry: ry};
+      _outerCapture = true;
+      _scrCenterCanvasEl.setPointerCapture(e.pointerId);
+      e.preventDefault();
+    }, {passive: false});
+    _scrCenterCanvasEl.addEventListener('pointermove', function(e) {
+      if (!_outerCapture || !_scrHsDrawing || !_scrHsDrawStart) return;
+      var r = ov.getBoundingClientRect();
+      var rx = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
+      var ry = Math.max(0, Math.min(1, (e.clientY - r.top)  / r.height));
+      _scrDrawCenterOverlay({x:Math.min(rx,_scrHsDrawStart.rx), y:Math.min(ry,_scrHsDrawStart.ry),
+                              w:Math.abs(rx-_scrHsDrawStart.rx), h:Math.abs(ry-_scrHsDrawStart.ry)});
+    });
+    _scrCenterCanvasEl.addEventListener('pointerup', function(e) {
+      if (!_outerCapture) return;
+      _outerCapture = false;
+      var r = ov.getBoundingClientRect();
+      var rx = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
+      var ry = Math.max(0, Math.min(1, (e.clientY - r.top)  / r.height));
+      _scrCenterCanvasEl.releasePointerCapture(e.pointerId);
+      if (!_scrHsDrawStart) return;
+      var sx=_scrHsDrawStart.rx, sy=_scrHsDrawStart.ry;
+      _scrHsDrawing = false; _scrHsDrawStart = null;
+      var x=Math.min(rx,sx), y=Math.min(ry,sy), w=Math.abs(rx-sx), h=Math.abs(ry-sy);
+      if (w<0.005||h<0.005){_scrDrawCenterOverlay(null);return;}
+      var pat=screenPatterns.find(function(p){return p.id===_scrCurrentPatId;});if(!pat)return;
+      var scr=pat.screens.find(function(s){return s.id===_scrSelScrId;});if(!scr)return;
+      if(!scr.hotspots)scr.hotspots=[];
+      scr.hotspots.push({id:_scrGenId(),x:x,y:y,w:w,h:h,targetId:'',targetType:'screen',note:''});
+      scrSaveData();markDirty();_scrRsRenderHsList(scr);_scrDrawCenterOverlay(null);
+    });
+    _scrCenterCanvasEl.addEventListener('pointercancel', function() {
+      _outerCapture=false; _scrHsDrawing=false; _scrHsDrawStart=null; _scrDrawCenterOverlay(null);
+    });
+  }
+
   ov.addEventListener('pointerdown',function(e){
     if(!_scrSelScrId)return;
     var r=ov.getBoundingClientRect();
