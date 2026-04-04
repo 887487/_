@@ -41,17 +41,24 @@
     .body-text { font-size: 13px; line-height: 1.85; color: var(--text, #2f3542); white-space: pre-wrap; word-break: break-all; }
     mark { background: var(--mark-bg, #ffeaa7); color: inherit; border-radius: 2px; padding: 0 1px; }
 
-    /* サイドバー：テンプレート名・備考 2カラム */
+    /* サイドバー：件名 + テンプレート名 縦積み */
     .sb-item {
-      display: grid;
-      grid-template-columns: minmax(0, 4fr) minmax(0, 1fr);
-      align-items: center;
-      gap: 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .sb-item-subject {
+      font-size: 10px;
+      color: var(--text3, #888);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
     .sb-item-title {
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+      font-weight: 600;
     }
     .sb-item-note {
       font-size: 10px;
@@ -331,12 +338,12 @@ function renderSidebar() {
 function buildMailSbItem(t) {
   const itemId    = 'mailItem_' + t.id;
   const preview   = ((t.subject ? '件名: ' + t.subject + '\n' : '') + (t.body || '')).slice(0, 120);
-  const noteHtml  = t.note ? `<span class="sb-item-note">${esc(t.note)}</span>` : '';
-  const gridStyle = t.note ? '' : ' style="grid-template-columns:minmax(0,1fr)"';
-  return `<div class="sb-item${currentId===t.id?' active':''}" id="${itemId}"
+  const subjHtml  = t.subject ? `<span class="sb-item-subject">${esc(t.subject)}</span>` : '';
+  return `<div class="sb-item" id="${itemId}"
     onclick="showDetail('${t.id}');sbFocusSet('${itemId}')" tabindex="0" role="button"
-    data-preview="${esc(preview)}"${gridStyle}>
-    <span class="sb-item-title">${esc(t.title || '（タイトルなし）')}</span>${noteHtml}
+    data-preview="${esc(preview)}">
+    ${subjHtml}
+    <span class="sb-item-title">${esc(t.title || '（タイトルなし）')}</span>
   </div>`;
 }
 
@@ -492,9 +499,11 @@ function showMailSearchResults(results, keyword) {
     const subj = mailHighlight(mailEsc(t.subject||'（件名なし）'), keyword);
     const bodySnip = mailExcerpt(t.body||'', keyword);
     const bodyH = mailHighlight(mailEsc(bodySnip), keyword);
+    const noteSnip = t.note ? t.note.slice(0, 80) : '';
     h += `<div class="search-result-card" style="cursor:pointer;background:white;border:1px solid #dfe4ea;border-radius:10px;padding:14px 16px;margin-bottom:10px" onclick="showDetail('${t.id}')">
       <div style="font-weight:700;font-size:14px;margin-bottom:4px">${mailHighlight(mailEsc(t.title||''), keyword)}</div>
       <div style="font-size:11px;color:#888;margin-bottom:6px">${mailEsc(t.category||'')}${t.subCategory?' › '+mailEsc(t.subCategory):''}</div>
+      ${noteSnip ? `<div style="font-size:11px;color:#e67e22;margin-bottom:5px;padding:3px 8px;background:#fef9f0;border-radius:4px;border-left:3px solid #e67e22;">${mailHighlight(mailEsc(noteSnip), keyword)}</div>` : ''}
       <div style="font-size:12px;color:#666;margin-bottom:4px">件名：${subj}</div>
       ${bodySnip ? `<div style="font-size:12px;color:#888">${bodyH}</div>` : ''}
     </div>`;
