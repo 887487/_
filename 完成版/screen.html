@@ -157,7 +157,8 @@ html[data-theme="dark"] .sb-cat-header-inner.open {
 /* サムネイル画像 */
 .flow-thumb-img {
   width: 110px;
-  height: 72px;
+  min-height: 60px;
+  max-height: 180px;
   border-radius: 5px;
   background: var(--surface2);
   border: 1px solid var(--border);
@@ -168,7 +169,7 @@ html[data-theme="dark"] .sb-cat-header-inner.open {
   font-size: 22px;
   margin-bottom: 5px;
 }
-.flow-thumb-img img { width: 100%; height: 100%; object-fit: cover; }
+.flow-thumb-img img { width: 100%; height: auto; object-fit: contain; display: block; }
 
 .flow-thumb-footer { text-align: center; width: 100%; }
 .flow-thumb-num  { font-size: 8px; color: var(--text4); font-family: 'JetBrains Mono', monospace; }

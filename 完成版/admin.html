@@ -3872,6 +3872,15 @@ function _imgLibDraw(items, query) {
           var cached = _imgLibAllItems.find(function(x){ return x.id===item.id; });
           if (cached) cached.name = v;
           nameSpan.textContent = v; renameInput.style.display='none'; nameSpan.style.display='';
+          // パターン内で lib:id を使っている画面名も同期更新
+          var libRef = 'lib:' + item.id;
+          var updated = 0;
+          screenPatterns.forEach(function(p) {
+            (p.screens || []).forEach(function(s) {
+              if (s.imageSrc === libRef && s.name !== v) { s.name = v; updated++; }
+            });
+          });
+          if (updated > 0) { scrSaveIndex(); markDirty(); scrRenderUnifiedSidebar(); }
           toast('✅ リネームしました');
         };
       });

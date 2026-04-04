@@ -205,7 +205,7 @@ function _processImportText(text, noReload) {
         var imported = { scripts: false, mail: false, screen: false, history: false };
 
         // ===== version:2（統合JSON：スクリプト＋メール＋画面遷移＋更新履歴）=====
-        if (raw && (raw.version === 2 || raw.version === 1) && raw.talkScripts && Array.isArray(raw.mailTemplates)) {
+        if (raw && (raw.version === 3 || raw.version === 2 || raw.version === 1) && raw.talkScripts && Array.isArray(raw.mailTemplates)) {
           _importProgressHide();
           if (!confirm('現在のデータをインポートしたデータで上書きします。よろしいですか？')) return;
           _importProgressShow('データを保存中…', 'スクリプト・メール', 50);
@@ -214,9 +214,15 @@ function _processImportText(text, noReload) {
             localStorage.setItem('mailTemplates', JSON.stringify(raw.mailTemplates));
             imported.scripts = true;
             imported.mail    = true;
-            if (raw.version === 2 && Array.isArray(raw.screenData)) {
+            if ((raw.version === 2 || raw.version === 3) && Array.isArray(raw.screenData)) {
               imported.screen = true;
               imported.screenData = raw.screenData;
+            }
+            // v3: imageLib を pending にセット（idbSetScreenData 内で処理）
+            if (raw.version === 3 && Array.isArray(raw.imageLib)) {
+              window._pendingImgLib = raw.imageLib;
+            } else {
+              window._pendingImgLib = null;
             }
             if (Array.isArray(raw.updateHistory) && raw.updateHistory.length > 0) {
               _mergeHistory(raw.updateHistory);
@@ -1338,7 +1344,34 @@ document.addEventListener('DOMContentLoaded', function () {
   window.idbSetScreenData = function (data) {
     if (!data) return Promise.resolve();
     return _open().then(function (db) {
-      // base64 を imageLib に移行してから patterns に保存
+      // v3: _pendingImgLib がある場合は imageLib を先に一括登録してから patterns を保存
+      var pendingLib = window._pendingImgLib;
+      window._pendingImgLib = null;
+
+      if (pendingLib && pendingLib.length) {
+        return new Promise(function(resolve) {
+          var tx = db.transaction('imageLib', 'readonly');
+          var req = tx.objectStore('imageLib').getAllKeys();
+          req.onsuccess = function(e) {
+            var existingIds = new Set(e.target.result || []);
+            var toInsert = pendingLib.filter(function(x){ return !existingIds.has(x.id); });
+            if (!toInsert.length) { resolve(); return; }
+            var tx2 = db.transaction('imageLib', 'readwrite');
+            toInsert.forEach(function(item){ tx2.objectStore('imageLib').put(item, item.id); });
+            tx2.oncomplete = resolve; tx2.onerror = resolve;
+          };
+          req.onerror = function(){ resolve(); };
+        }).then(function() {
+          return new Promise(function(resolve, reject) {
+            var tx = db.transaction(IDB_STORE, 'readwrite');
+            tx.objectStore(IDB_STORE).put(data, IDB_KEY);
+            tx.oncomplete = resolve;
+            tx.onerror    = function(e){ reject(e.target.error); };
+          });
+        });
+      }
+
+      // 通常パス（v1/v2）：base64 を imageLib に移行してから patterns を保存
       var promises = [];
       data.forEach(function (p) {
         (p.screens || []).forEach(function (s) {
