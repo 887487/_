@@ -206,7 +206,7 @@ function _processImportText(text, noReload) {
 
         // ===== version:3/2/1（統合JSON：スクリプト＋メール＋画面遷移＋更新履歴）=====
         if (raw && (raw.version === 3 || raw.version === 2 || raw.version === 1) &&
-            raw.talkScripts !== undefined && raw.mailTemplates !== undefined) {
+            'talkScripts' in raw && 'mailTemplates' in raw) {
           _importProgressHide();
           if (!confirm('現在のデータをインポートしたデータで上書きします。よろしいですか？')) return;
           _importProgressShow('データを保存中…', 'スクリプト・メール', 50);

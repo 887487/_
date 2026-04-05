@@ -41,24 +41,29 @@
     .body-text { font-size: 13px; line-height: 1.85; color: var(--text, #2f3542); white-space: pre-wrap; word-break: break-all; }
     mark { background: var(--mark-bg, #ffeaa7); color: inherit; border-radius: 2px; padding: 0 1px; }
 
-    /* サイドバー：件名 + テンプレート名 縦積み */
+    /* サイドバー：件名(3.5fr) テンプレート名(1.5fr) 横並び */
     .sb-item {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
+      display: grid;
+      grid-template-columns: 3.5fr 1.5fr;
+      align-items: center;
+      gap: 0 6px;
     }
     .sb-item-subject {
-      font-size: 10px;
-      color: var(--text3, #888);
+      font-size: 11px;
+      color: var(--text, #2f3542);
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+      font-weight: 500;
     }
     .sb-item-title {
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
-      font-weight: 600;
+      font-weight: 400;
+      font-size: 10px;
+      color: var(--text3, #888);
+      text-align: right;
     }
     .sb-item-note {
       font-size: 10px;
@@ -338,11 +343,10 @@ function renderSidebar() {
 function buildMailSbItem(t) {
   const itemId    = 'mailItem_' + t.id;
   const preview   = ((t.subject ? '件名: ' + t.subject + '\n' : '') + (t.body || '')).slice(0, 120);
-  const subjHtml  = t.subject ? `<span class="sb-item-subject">${esc(t.subject)}</span>` : '';
   return `<div class="sb-item" id="${itemId}"
     onclick="showDetail('${t.id}');sbFocusSet('${itemId}')" tabindex="0" role="button"
     data-preview="${esc(preview)}">
-    ${subjHtml}
+    <span class="sb-item-subject">${esc(t.subject || '（件名なし）')}</span>
     <span class="sb-item-title">${esc(t.title || '（タイトルなし）')}</span>
   </div>`;
 }

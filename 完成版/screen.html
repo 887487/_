@@ -842,39 +842,49 @@ document.addEventListener('DOMContentLoaded', function() {
 function _applyImportedData(text) {
   try {
     const raw = JSON.parse(text);
-    let screenData = null;
 
-    // version:2 の統合JSONフォーマットに対応
-    if (raw && (raw.version === 2 || raw.version === 1) && Array.isArray(raw.screenData)) {
-      screenData = raw.screenData;
-      // スクリプト・メールデータも localStorage に保存しておく
+    // ── v1 / v2 / v3 統合フォーマット ──
+    if (raw && (raw.version === 1 || raw.version === 2 || raw.version === 3)) {
+      // スクリプト・メール・履歴を localStorage に保存
       if (raw.talkScripts)  localStorage.setItem('talkScripts',   JSON.stringify(raw.talkScripts));
-      if (raw.mailTemplates) localStorage.setItem('mailTemplates', JSON.stringify(raw.mailTemplates));
-    }
-    // screenData 単独配列にも対応
-    else if (Array.isArray(raw) && raw.length && raw[0].screens !== undefined) {
-      screenData = raw;
-    }
-
-    if (!screenData || !screenData.length) {
-      toast('⚠️ 画面遷移データが見つかりませんでした');
+      if (Array.isArray(raw.mailTemplates)) localStorage.setItem('mailTemplates', JSON.stringify(raw.mailTemplates));
+      if (Array.isArray(raw.updateHistory) && raw.updateHistory.length > 0) {
+        if (typeof _mergeHistory === 'function') _mergeHistory(raw.updateHistory);
+      }
+      // v3: imageLib を pending にセット
+      if (raw.version === 3 && Array.isArray(raw.imageLib)) {
+        window._pendingImgLib = raw.imageLib;
+      } else {
+        window._pendingImgLib = null;
+      }
+      // 画面遷移データを反映
+      if (Array.isArray(raw.screenData) && raw.screenData.length) {
+        patterns = raw.screenData;
+        idbSetScreenData(patterns);
+        try { localStorage.removeItem('screenFlowData'); } catch(e) {}
+        currentPatId = null; pvCurrentId = null; pvHistory = [];
+        renderSidebar(); renderFlow(); _pvClearCanvas(); updateStartFab();
+        toast('✅ データを更新しました');
+      } else {
+        // 画面遷移データなしでもスクリプト・メールは保存済み
+        toast('✅ スクリプト・メールデータを更新しました');
+      }
       return;
     }
 
-    // メモリ上のデータを更新して IndexedDB にも保存
-    patterns = screenData;
-    idbSetScreenData(patterns);
-    try { localStorage.removeItem('screenFlowData'); } catch(e) {}
+    // ── screenData 単独配列フォーマット ──
+    if (Array.isArray(raw) && raw.length && raw[0].screens !== undefined) {
+      window._pendingImgLib = null;
+      patterns = raw;
+      idbSetScreenData(patterns);
+      try { localStorage.removeItem('screenFlowData'); } catch(e) {}
+      currentPatId = null; pvCurrentId = null; pvHistory = [];
+      renderSidebar(); renderFlow(); _pvClearCanvas(); updateStartFab();
+      toast('✅ データを更新しました');
+      return;
+    }
 
-    // デフォルトクローズ
-    currentPatId = null;
-    pvCurrentId  = null;
-    pvHistory    = [];
-    renderSidebar();
-    renderFlow();
-    _pvClearCanvas();
-    updateStartFab();
-    toast('✅ データを更新しました');
+    toast('⚠️ 対応していないファイル形式です');
   } catch(e) {
     toast('❌ 読み込みに失敗しました: ' + e.message);
   }
