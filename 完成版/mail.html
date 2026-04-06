@@ -341,11 +341,12 @@ function renderSidebar() {
 }
 
 function buildMailSbItem(t) {
-  const itemId    = 'mailItem_' + t.id;
-  const preview   = ((t.subject ? '件名: ' + t.subject + '\n' : '') + (t.body || '')).slice(0, 120);
+  const itemId  = 'mailItem_' + t.id;
+  const preview = ((t.subject ? '件名: ' + t.subject + '\n' : '') + (t.body || '')).slice(0, 120);
+  const note    = t.note ? t.note.slice(0, 120) : '';
   return `<div class="sb-item" id="${itemId}"
     onclick="showDetail('${t.id}');sbFocusSet('${itemId}')" tabindex="0" role="button"
-    data-preview="${esc(preview)}">
+    data-preview="${esc(preview)}" data-note="${esc(note)}">
     <span class="sb-item-subject">${esc(t.subject || '（件名なし）')}</span>
     <span class="sb-item-title">${esc(t.title || '（タイトルなし）')}</span>
   </div>`;
@@ -578,11 +579,11 @@ function goHome() {
   document.addEventListener('mouseover', function(e) {
     const item = e.target.closest('.sb-item[data-preview]');
     if (!item || !tooltip) return;
-    const preview = item.getAttribute('data-preview');
-    if (!preview) return;
+    const note = item.getAttribute('data-note');
+    if (!note) return;
     clearTimeout(timer);
     timer = setTimeout(() => {
-      tooltip.textContent = preview;
+      tooltip.textContent = note;
       tooltip.style.display = 'block';
     }, 260);
   });
