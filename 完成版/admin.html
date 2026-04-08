@@ -1949,7 +1949,7 @@ function importJSON(input){
   reader.readAsText(file);
 }
 // 画面遷移データをメモリ・localStorage に反映してサイドバーを再描画する
-function _applyScreenData(data) {
+function _applyScreenData(data, silent) {
   screenPatterns = data;
   scrSaveIndex();
   try { localStorage.removeItem('screenFlowData'); } catch(e) {}
@@ -1959,7 +1959,7 @@ function _applyScreenData(data) {
   scrRenderUnifiedSidebar();
   _scrUpdateCenterCanvas();
   _scrUpdateRightSidebar();
-  toast('✅ インポート・保存が完了しました');
+  if (!silent) toast('✅ インポート・保存が完了しました');
 }
 
 function applyImport(impScripts,impMail,choices,conflicts,impHistory,impScreen){
@@ -2097,7 +2097,45 @@ function markClean(){_dirty=false;const ind=document.getElementById('dirtyIndica
 function save(){markDirty();}
 function saveAll(){markDirty();}
 var _bc=(function(){try{return new BroadcastChannel('tool_data_update');}catch(e){return null;}})();
-function _notifyTabs(){if(_bc){try{_bc.postMessage({type:'mailDataUpdated',ts:Date.now()});}catch(e){}}try{localStorage.setItem('_mailSaveTs',Date.now().toString());}catch(e){}}
+if(_bc){
+  _bc.onmessage=function(ev){
+    var type=ev.data&&ev.data.type;
+    // ── スクリプトデータ更新（他ページからのインポート時）──
+    if(type==='scriptsUpdated'){
+      try{var ss=localStorage.getItem('talkScripts');if(ss){Object.keys(data).forEach(function(k){delete data[k];});Object.assign(data,JSON.parse(ss));render();}}catch(e){}
+    }
+    // ── メールデータ更新 ──
+    if(type==='mailDataUpdated'){
+      try{var ms=localStorage.getItem('mailTemplates');if(ms)mailData=JSON.parse(ms);}catch(e){}
+      try{var mc=localStorage.getItem('mailCatMeta');if(mc){mailCatMeta=JSON.parse(mc);}}catch(e){}
+      renderMailSidebar();
+    }
+    // ── 画面遷移データ更新 ──
+    if(type==='screenDataUpdated'){
+      // IDB から最新データを取得して即時反映
+      idbGetScreenData().then(function(d){
+        if(Array.isArray(d)&&d.length){
+          _applyScreenData(d, true);
+        }
+        _imgLibAllItems=[];
+        _imgLibCache={};
+        if(document.getElementById('tabImgLib')&&document.getElementById('tabImgLib').classList.contains('active')){
+          _imgLibRender();
+        }
+      });
+    }
+  };
+}
+function _notifyTabs(){
+  if(_bc){
+    try{_bc.postMessage({type:'scriptsUpdated',ts:Date.now()});}catch(e){}
+    try{_bc.postMessage({type:'mailDataUpdated',ts:Date.now()});}catch(e){}
+    try{_bc.postMessage({type:'screenDataUpdated',ts:Date.now()});}catch(e){}
+  }
+  try{localStorage.setItem('_scriptSaveTs',Date.now().toString());}catch(e){}
+  try{localStorage.setItem('_mailSaveTs',Date.now().toString());}catch(e){}
+  try{localStorage.setItem('_screenSaveTs',Date.now().toString());}catch(e){}
+}
 function saveAllManual(){
   // 保存対象：talkScripts / mailTemplates / mailCatMeta → localStorage
   //           screenPatterns の画像データ → メモリ維持（エクスポートで JSON 保存）
@@ -2814,7 +2852,15 @@ function idbSetScreenData(data) {
   return Promise.resolve(); // 常に成功
 }
 function idbGetScreenData() {
-  return Promise.resolve(scrLoadIndex()); // インデックスのみ返す
+  // 実際の IDB（screenFlowDB / patterns ストア）から読み取る
+  return _imgLibOpen().then(function(db) {
+    return new Promise(function(resolve) {
+      var tx  = db.transaction('patterns', 'readonly');
+      var req = tx.objectStore('patterns').get('data');
+      req.onsuccess = function(e) { resolve(e.target.result || null); };
+      req.onerror   = function()  { resolve(null); };
+    });
+  }).catch(function() { return null; });
 }
 
 // ===================================================================

@@ -268,6 +268,8 @@ function _processImportText(text, noReload) {
             setTimeout(function () {
               localStorage.setItem('talkScripts', JSON.stringify(raw));
               imported.scripts = true;
+              // 他タブにスクリプト更新を通知
+              try { var _bcs=new BroadcastChannel('tool_data_update'); _bcs.postMessage({type:'scriptsUpdated',ts:Date.now()}); _bcs.close(); } catch(e) {}
               _importProgressUpdate('データを反映中…', '', 85);
               setTimeout(function () {
                 if (noReload) { _applyImportedDataToPage(imported, raw); } else { location.reload(); }
@@ -355,7 +357,18 @@ function _applyImportedDataToPage(imported, raw) {
       }
       // IDB にも保存（screen.html / admin.html 共通・画像含む完全データ）
       if (typeof idbSetScreenData === 'function') {
-        idbSetScreenData(imported.screenData);
+        var _idbP = idbSetScreenData(imported.screenData);
+        // 保存完了後に admin.html へ反映通知
+        var _afterSave = function() {
+          try {
+            var _bcast = new BroadcastChannel('tool_data_update');
+            _bcast.postMessage({ type: 'screenDataUpdated', ts: Date.now() });
+            _bcast.close();
+          } catch(e) {}
+          try { localStorage.setItem('_screenSaveTs', Date.now().toString()); } catch(e) {}
+        };
+        if (_idbP && typeof _idbP.then === 'function') { _idbP.then(_afterSave); }
+        else { _afterSave(); }
       }
     } catch(e) {}
   }
@@ -1398,3 +1411,58 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   };
 })();
+
+// =============================================================================
+// ⑪ BroadcastChannel 受信リスナー（admin.html / 他ページからのリアルタイム反映）
+// =============================================================================
+(function() {
+  var _rxBc;
+  try { _rxBc = new BroadcastChannel('tool_data_update'); } catch(e) { return; }
+
+  _rxBc.onmessage = function(ev) {
+    var type = ev.data && ev.data.type;
+
+    // ── スクリプトデータ更新 ──
+    if (type === 'scriptsUpdated') {
+      // app.js (index.html) の reloadScripts 関数があれば呼ぶ
+      if (typeof window.reloadScripts === 'function') {
+        window.reloadScripts();
+      }
+    }
+
+    // ── メールデータ更新 ──
+    if (type === 'mailDataUpdated') {
+      try {
+        var s = localStorage.getItem('mailTemplates');
+        if (s) {
+          // mail.html: templates 配列を再ロード
+          if (typeof templates !== 'undefined' && Array.isArray(templates)) {
+            templates.length = 0;
+            JSON.parse(s).forEach(function(t){ templates.push(t); });
+            if (typeof renderSidebar === 'function') renderSidebar();
+            if (typeof showList    === 'function') showList(typeof currentCat !== 'undefined' ? currentCat : '__all__');
+          }
+        }
+      } catch(e) {}
+    }
+
+    // ── 画面遷移データ更新 ──
+    if (type === 'screenDataUpdated') {
+      // screen.html: idbGetScreenData から再ロード
+      if (typeof idbGetScreenData === 'function') {
+        idbGetScreenData().then(function(data) {
+          if (!Array.isArray(data) || !data.length) return;
+          if (typeof patterns !== 'undefined') {
+            patterns.length = 0;
+            data.forEach(function(p){ patterns.push(p); });
+          }
+          // 表示キャッシュをクリア
+          if (typeof _pvImgCache !== 'undefined') { Object.keys(_pvImgCache).forEach(function(k){ delete _pvImgCache[k]; }); }
+          if (typeof renderSidebar === 'function') renderSidebar();
+          if (typeof renderFlow    === 'function') renderFlow();
+        });
+      }
+    }
+  };
+})();
+
