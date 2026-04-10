@@ -442,6 +442,12 @@ html[data-theme="dark"] .modal-box { background: var(--surface); border: 1px sol
       <div class="quick-menu" id="quickMenu"></div>
       <div class="quick-copy-toast" id="quickCopyToast"></div>
     </div>
+    <div class="search-wrap">
+      <input id="searchBox" type="text" placeholder="パターン・画面を検索…" autocomplete="off"
+        oninput="scrSearch(this.value)"
+        onkeydown="if(event.key==='Escape'){this.value='';scrSearch('');}">
+      <button id="clearBtn" onclick="this.style.display='none';document.getElementById('searchBox').value='';scrSearch('');">×</button>
+    </div>
   </div>
 </header>
 
@@ -692,6 +698,16 @@ function idbGetScreenData() {
     });
   }).catch(function(e) { console.error('[IDB] read error:', e); return null; });
 }
+// 画面遷移データ更新を他タブ（admin.html等）に通知する
+function _broadcastScreenUpdate() {
+  try {
+    var bc = new BroadcastChannel('tool_data_update');
+    bc.postMessage({ type: 'screenDataUpdated', ts: Date.now() });
+    bc.close();
+  } catch(e) {}
+  try { localStorage.setItem('_screenSaveTs', Date.now().toString()); } catch(e) {}
+}
+
 function idbSetScreenData(data) {
   // IDB は Structured Clone で内部コピーするため JSON roundtrip 不要
   // JSON.parse(JSON.stringify) は大容量 base64 で RangeError が起きるため使用しない
@@ -843,44 +859,54 @@ function _applyImportedData(text) {
   try {
     const raw = JSON.parse(text);
 
-    // ── v1 / v2 / v3 統合フォーマット ──
+    // ── v1 / v2 / v3 統合フォーマット（差分結合）──
     if (raw && (raw.version === 1 || raw.version === 2 || raw.version === 3)) {
-      // スクリプト・メール・履歴を localStorage に保存
-      if (raw.talkScripts)  localStorage.setItem('talkScripts',   JSON.stringify(raw.talkScripts));
-      if (Array.isArray(raw.mailTemplates)) localStorage.setItem('mailTemplates', JSON.stringify(raw.mailTemplates));
+      // スクリプト・メール：差分結合
+      if (raw.talkScripts) {
+        let curS = {}; try { const c = localStorage.getItem('talkScripts'); if(c) curS = JSON.parse(c); } catch(e) {}
+        const merged = typeof _mergeScripts === 'function' ? _mergeScripts(curS, raw.talkScripts) : raw.talkScripts;
+        localStorage.setItem('talkScripts', JSON.stringify(merged));
+        try { const bc=new BroadcastChannel('tool_data_update');bc.postMessage({type:'scriptsUpdated',ts:Date.now()});bc.close(); } catch(e){}
+      }
+      if (Array.isArray(raw.mailTemplates)) {
+        let curM = []; try { const c = localStorage.getItem('mailTemplates'); if(c) curM = JSON.parse(c); } catch(e) {}
+        const merged = typeof _mergeMail === 'function' ? _mergeMail(curM, raw.mailTemplates) : raw.mailTemplates;
+        localStorage.setItem('mailTemplates', JSON.stringify(merged));
+        try { const bc=new BroadcastChannel('tool_data_update');bc.postMessage({type:'mailDataUpdated',ts:Date.now()});bc.close(); } catch(e){}
+      }
       if (Array.isArray(raw.updateHistory) && raw.updateHistory.length > 0) {
         if (typeof _mergeHistory === 'function') _mergeHistory(raw.updateHistory);
       }
-      // v3: imageLib を pending にセット
-      if (raw.version === 3 && Array.isArray(raw.imageLib)) {
-        window._pendingImgLib = raw.imageLib;
-      } else {
-        window._pendingImgLib = null;
-      }
-      // 画面遷移データを反映
+      if (raw.version === 3 && Array.isArray(raw.imageLib)) window._pendingImgLib = raw.imageLib;
+      else window._pendingImgLib = null;
+
+      // 画面遷移データ：パターン id 単位で差分結合
       if (Array.isArray(raw.screenData) && raw.screenData.length) {
-        patterns = raw.screenData;
+        const mergedScr = typeof _mergeScreenData === 'function'
+          ? _mergeScreenData(patterns, raw.screenData) : raw.screenData;
+        patterns = mergedScr;
         idbSetScreenData(patterns);
         try { localStorage.removeItem('screenFlowData'); } catch(e) {}
         currentPatId = null; pvCurrentId = null; pvHistory = [];
         renderSidebar(); renderFlow(); _pvClearCanvas(); updateStartFab();
-        toast('✅ データを更新しました');
+        toast('✅ データを結合しました');
       } else {
-        // 画面遷移データなしでもスクリプト・メールは保存済み
-        toast('✅ スクリプト・メールデータを更新しました');
+        toast('✅ スクリプト・メールデータを結合しました');
       }
       return;
     }
 
-    // ── screenData 単独配列フォーマット ──
+    // ── screenData 単独配列フォーマット（差分結合）──
     if (Array.isArray(raw) && raw.length && raw[0].screens !== undefined) {
       window._pendingImgLib = null;
-      patterns = raw;
+      const mergedScr = typeof _mergeScreenData === 'function'
+        ? _mergeScreenData(patterns, raw) : raw;
+      patterns = mergedScr;
       idbSetScreenData(patterns);
       try { localStorage.removeItem('screenFlowData'); } catch(e) {}
       currentPatId = null; pvCurrentId = null; pvHistory = [];
       renderSidebar(); renderFlow(); _pvClearCanvas(); updateStartFab();
-      toast('✅ データを更新しました');
+      toast('✅ データを結合しました');
       return;
     }
 
@@ -975,6 +1001,15 @@ const _PAT_COLORS = [
 ];
 function _patColor(idx) { return _PAT_COLORS[idx % _PAT_COLORS.length]; }
 
+// ── 検索フィルター ──
+var _scrSearchQuery = '';
+function scrSearch(q) {
+  _scrSearchQuery = (q || '').trim().toLowerCase();
+  const clearBtn = document.getElementById('clearBtn');
+  if (clearBtn) clearBtn.style.display = _scrSearchQuery ? 'block' : 'none';
+  renderSidebar();
+}
+
 function renderSidebar() {
   const list    = document.getElementById('scrAccList');
   const countEl = document.getElementById('scrContentCount');
@@ -989,6 +1024,22 @@ function renderSidebar() {
     return;
   }
 
+  // 検索クエリによるフィルタリング
+  const q = _scrSearchQuery;
+  let displayPatterns = patterns;
+  if (q) {
+    displayPatterns = patterns.map(p => {
+      const patMatch = p.name.toLowerCase().includes(q);
+      const filteredScreens = p.screens.filter(s => s.name.toLowerCase().includes(q));
+      if (!patMatch && !filteredScreens.length) return null;
+      return patMatch ? p : Object.assign({}, p, { screens: filteredScreens });
+    }).filter(Boolean);
+    if (!displayPatterns.length) {
+      list.innerHTML = `<div style="padding:14px;color:var(--text3,#aaa);font-size:12px;">「${esc(q)}」に一致するパターン・画面はありません</div>`;
+      return;
+    }
+  }
+
   // アコーディオン展開状態を保存（再描画時に維持）
   const openSet = new Set();
   list.querySelectorAll('.sb-acc-body.open').forEach(function(body) {
@@ -996,10 +1047,10 @@ function renderSidebar() {
     if (block && block.id) openSet.add(block.id);
   });
 
-  list.innerHTML = patterns.map((p, pIdx) => {
+  list.innerHTML = displayPatterns.map((p, pIdx) => {
     const accId  = 'scrAcc_' + p.id;
-    const isOpen = p.id === currentPatId;
-    const color  = _patColor(pIdx);
+    const isOpen = q ? true : p.id === currentPatId;  // 検索中は全て展開
+    const color  = _patColor(patterns.indexOf(p));  // 元の色インデックスを維持
 
     // このパターン内にアクティブ画面があるか（アクティブ時はパターン青枠を外す）
     const hasActiveScreen = isOpen && p.screens.some(s => s.id === pvCurrentId);

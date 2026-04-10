@@ -196,6 +196,53 @@ window.importJSON = function (input) {
  * @param {string}  text       - JSON 文字列
  * @param {boolean} noReload   - true: ページリロードなし、false: リロードあり（旧挙動）
  */
+// =============================================================================
+// 差分結合ヘルパー（インポート時：上書きではなく ID ベースでマージ）
+// =============================================================================
+
+// スクリプトを結合する（カテゴリ key が同じなら上書き、なければ追加）
+function _mergeScripts(current, incoming) {
+  if (!incoming) return current;
+  var merged = JSON.parse(JSON.stringify(current || {}));
+  Object.keys(incoming).forEach(function(key) {
+    merged[key] = incoming[key]; // カテゴリごと上書き（スクリプトは key 単位）
+  });
+  return merged;
+}
+
+// メールテンプレートを結合する（id が同じなら上書き、なければ追加）
+function _mergeMail(current, incoming) {
+  if (!Array.isArray(incoming)) return current;
+  var merged = JSON.parse(JSON.stringify(Array.isArray(current) ? current : []));
+  incoming.forEach(function(t) {
+    var idx = merged.findIndex(function(x){ return x.id === t.id; });
+    if (idx >= 0) merged[idx] = t; // 既存を上書き
+    else merged.push(t);           // 差分を追加
+  });
+  return merged;
+}
+
+// 画面遷移データを結合する（パターン id が同じなら画面レベルでマージ）
+function _mergeScreenData(current, incoming) {
+  if (!Array.isArray(incoming)) return current;
+  var merged = JSON.parse(JSON.stringify(Array.isArray(current) ? current : []));
+  incoming.forEach(function(inPat) {
+    var exPat = merged.find(function(p){ return p.id === inPat.id; });
+    if (!exPat) {
+      merged.push(inPat); // 新パターンを追加
+    } else {
+      // 既存パターン内で画面を結合
+      exPat.name = inPat.name; // パターン名は最新を使用
+      (inPat.screens || []).forEach(function(inScr) {
+        var exScr = exPat.screens.find(function(s){ return s.id === inScr.id; });
+        if (exScr) Object.assign(exScr, inScr); // 既存画面を上書き
+        else exPat.screens.push(inScr);          // 差分画面を追加
+      });
+    }
+  });
+  return merged;
+}
+
 function _processImportText(text, noReload) {
   try {
     _importProgressShow('JSONを解析中…', 'ファイルを確認しています', 20);
@@ -208,16 +255,35 @@ function _processImportText(text, noReload) {
         if (raw && (raw.version === 3 || raw.version === 2 || raw.version === 1) &&
             'talkScripts' in raw && 'mailTemplates' in raw) {
           _importProgressHide();
-          if (!confirm('現在のデータをインポートしたデータで上書きします。よろしいですか？')) return;
-          _importProgressShow('データを保存中…', 'スクリプト・メール', 50);
+          if (!confirm('インポートしたデータを現在のデータに差分結合します（重複は上書き、新規は追加）。よろしいですか？')) return;
+          _importProgressShow('データを結合中…', 'スクリプト・メール', 50);
           setTimeout(function () {
-            localStorage.setItem('talkScripts',   JSON.stringify(raw.talkScripts));
-            localStorage.setItem('mailTemplates', JSON.stringify(raw.mailTemplates));
+            // スクリプト：カテゴリ key 単位で結合
+            var curScripts = {};
+            try { var cs = localStorage.getItem('talkScripts'); if(cs) curScripts = JSON.parse(cs); } catch(e) {}
+            var mergedScripts = _mergeScripts(curScripts, raw.talkScripts);
+            localStorage.setItem('talkScripts', JSON.stringify(mergedScripts));
+            // 他タブ通知用に scriptsUpdated BC を送信
+            try { var _bcs2=new BroadcastChannel('tool_data_update'); _bcs2.postMessage({type:'scriptsUpdated',ts:Date.now()}); _bcs2.close(); } catch(e) {}
+            // メール：id 単位で結合
+            var curMail = [];
+            try { var cm = localStorage.getItem('mailTemplates'); if(cm) curMail = JSON.parse(cm); } catch(e) {}
+            var mergedMail = _mergeMail(curMail, raw.mailTemplates);
+            localStorage.setItem('mailTemplates', JSON.stringify(mergedMail));
             imported.scripts = true;
             imported.mail    = true;
+            // _applyImportedDataToPage でメール反映に使う raw を差分結合後データで上書き
+            raw = Object.assign({}, raw, { talkScripts: mergedScripts, mailTemplates: mergedMail });
             if ((raw.version === 2 || raw.version === 3) && Array.isArray(raw.screenData)) {
+              // 画面遷移：パターン id 単位で結合
+              var curScreenData = null;
+              try {
+                var csd = localStorage.getItem('screenFlowIndex'); if(csd) curScreenData = JSON.parse(csd);
+              } catch(e) {}
+              var mergedScreen = _mergeScreenData(curScreenData, raw.screenData);
               imported.screen = true;
-              imported.screenData = raw.screenData;
+              imported.screenData = mergedScreen;
+              raw = Object.assign({}, raw, { screenData: mergedScreen });
             }
             // v3: imageLib を pending にセット（idbSetScreenData 内で処理）
             if (raw.version === 3 && Array.isArray(raw.imageLib)) {
