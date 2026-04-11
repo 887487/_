@@ -242,7 +242,8 @@ html[data-theme="dark"] .sb-cat-header-inner.open {
 }
 .pv-canvas-wrap {
   flex: 1; overflow: auto; background: var(--bg);
-  display: flex; align-items: center; justify-content: center;
+  display: flex; align-items: flex-start; justify-content: center;
+  padding: 20px; box-sizing: border-box;
   position: relative; cursor: grab;
 }
 .pv-canvas-wrap.grabbing { cursor: grabbing; }
@@ -250,6 +251,7 @@ html[data-theme="dark"] .sb-cat-header-inner.open {
   position: relative; display: inline-block;
   transform-origin: top center;
   transition: transform 0.15s ease;
+  flex-shrink: 0;
 }
 .pv-canvas img { display: block; max-width: none; }
 /* ズームコントロール */
