@@ -240,9 +240,34 @@ html[data-theme="dark"] .sb-cat-header-inner.open {
   word-break: break-word;
   flex-shrink: 0;
 }
-.pv-canvas-wrap { flex: 1; overflow: auto; background: var(--bg); padding: 20px; display: flex; align-items: flex-start; }
-.pv-canvas { position: relative; display: inline-block; }
-.pv-canvas img { display: block; max-width: 100%; }
+.pv-canvas-wrap {
+  flex: 1; overflow: auto; background: var(--bg);
+  display: flex; align-items: center; justify-content: center;
+  position: relative; cursor: grab;
+}
+.pv-canvas-wrap.grabbing { cursor: grabbing; }
+.pv-canvas {
+  position: relative; display: inline-block;
+  transform-origin: top center;
+  transition: transform 0.15s ease;
+}
+.pv-canvas img { display: block; max-width: none; }
+/* ズームコントロール */
+.pv-zoom-ctrl {
+  display: flex; align-items: center; gap: 4px; margin-left: auto;
+}
+.pv-zoom-ctrl button {
+  height: 22px; min-width: 22px; padding: 0 4px;
+  border: 1px solid rgba(255,255,255,.4); border-radius: 4px;
+  background: rgba(255,255,255,.15); color: #fff;
+  cursor: pointer; font-size: 12px; font-family: inherit;
+  transition: background .12s;
+}
+.pv-zoom-ctrl button:hover { background: rgba(255,255,255,.3); }
+.pv-zoom-ctrl span {
+  font-size: 11px; color: rgba(255,255,255,.85);
+  min-width: 36px; text-align: center; font-family: monospace;
+}
 .pv-mail-btn {
   position: absolute; z-index: 3;
   background: rgba(230,126,34,.85); border: 2px solid #e67e22;
@@ -496,6 +521,12 @@ html[data-theme="dark"] .modal-box { background: var(--surface); border: 1px sol
             <span class="pv-title" id="pvTitle"></span>
             <span class="pv-badge" id="pvBadge"></span>
             <span class="pv-hint">🖱 青枠クリックで遷移</span>
+            <div class="pv-zoom-ctrl" id="pvZoomCtrl" style="display:none;">
+              <button onclick="pvZoom(-0.1)" title="縮小">－</button>
+              <span id="pvZoomLabel">100%</span>
+              <button onclick="pvZoom(+0.1)" title="拡大">＋</button>
+              <button onclick="pvZoomFit()" title="全体を表示" style="font-size:10px;padding:0 5px;">⊞ Fit</button>
+            </div>
           </div>
           <!-- 画面メモ（admin.html の画面設定メモ欄と連動。空のとき非表示） -->
           <div class="pv-memo-bar" id="pvMemo" style="display:none;"></div>
@@ -1350,7 +1381,68 @@ function renderPvCanvas(screen) {
   wrap.appendChild(canvas);
   wrap.scrollTop  = 0;
   wrap.scrollLeft = 0;
+
+  // 画像ロード後に Fit ズームを適用
+  img.onload = () => {
+    pvZoomFit();
+    document.getElementById('pvZoomCtrl').style.display = 'flex';
+  };
+  // 既にキャッシュ済みの場合
+  if (img.complete && img.naturalWidth) {
+    pvZoomFit();
+    document.getElementById('pvZoomCtrl').style.display = 'flex';
+  }
 }
+
+// ── プレビューズーム ──
+var _pvZoom = 1.0;  // 現在のズーム倍率
+
+function pvZoomFit() {
+  const wrap   = document.getElementById('pvCanvasWrap');
+  const canvas = wrap ? wrap.querySelector('.pv-canvas') : null;
+  const img    = canvas ? canvas.querySelector('img') : null;
+  if (!wrap || !img || !img.naturalWidth) return;
+
+  const wW = wrap.clientWidth  - 32;  // padding 分を引く
+  const wH = wrap.clientHeight - 32;
+  const iW = img.naturalWidth;
+  const iH = img.naturalHeight;
+
+  const scaleW = wW / iW;
+  const scaleH = wH / iH;
+  _pvZoom = Math.min(scaleW, scaleH, 1.0);  // 1.0 を超えて拡大はしない
+  _pvApplyZoom();
+}
+
+function pvZoom(delta) {
+  _pvZoom = Math.min(3.0, Math.max(0.1, _pvZoom + delta));
+  _pvApplyZoom();
+}
+
+function _pvApplyZoom() {
+  const wrap   = document.getElementById('pvCanvasWrap');
+  const canvas = wrap ? wrap.querySelector('.pv-canvas') : null;
+  if (!canvas) return;
+  canvas.style.transform = `scale(${_pvZoom})`;
+  canvas.style.transformOrigin = 'top center';
+  // wrap のスクロール原点をリセット
+  wrap.scrollTop  = 0;
+  wrap.scrollLeft = 0;
+  const label = document.getElementById('pvZoomLabel');
+  if (label) label.textContent = Math.round(_pvZoom * 100) + '%';
+}
+
+// Ctrl+ホイールでズーム
+(function() {
+  const wrap = document.getElementById('pvCanvasWrap');
+  if (!wrap) return;
+  wrap.addEventListener('wheel', function(e) {
+    if (!e.ctrlKey) return;
+    e.preventDefault();
+    pvZoom(e.deltaY < 0 ? 0.1 : -0.1);
+  }, { passive: false });
+})();
+
 /**
  * 遷移履歴カードリストを描画する。
  * カードをクリックするとその位置（インデックス）に戻れる。
