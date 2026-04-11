@@ -1313,12 +1313,29 @@ function renderPvCanvas(screen) {
   canvas.className = 'pv-canvas';
   const img = document.createElement('img');
   img.alt   = screen.name;
+  // チラつき防止：画像を非表示状態でロードし、Fit後に表示する
+  img.style.visibility = 'hidden';
   canvas.appendChild(img);
 
   // lib:xxx 形式を解決して画像をセット
-  resolveImgPv(screen.imageSrc).then(src => { if (src) img.src = src; });
+  resolveImgPv(screen.imageSrc).then(src => {
+    if (!src) return;
 
-  // ホットスポットオーバーレイを生成する
+    img.onload = () => {
+      // Fitスケールを計算してからcanvasを表示（チラつきなし）
+      wrap.innerHTML = '';
+      wrap.appendChild(canvas);
+      wrap.scrollTop  = 0;
+      wrap.scrollLeft = 0;
+      pvZoomFit();
+      img.style.visibility = '';
+      document.getElementById('pvZoomCtrl').style.display = 'flex';
+    };
+    img.src = src;
+  });
+
+  // ホットスポットオーバーレイを生成する（canvas に追加済み）
+  const mailTemplatesPv = _loadMailTemplates();
   const mailTemplates = _loadMailTemplates();
   (screen.hotspots || []).filter(h => h.targetId).forEach(hs => {
     const el = document.createElement('div');
@@ -1326,7 +1343,7 @@ function renderPvCanvas(screen) {
     el.style.cssText = `left:${hs.x*100}%;top:${hs.y*100}%;width:${hs.w*100}%;height:${hs.h*100}%;`;
 
     if (hs.targetType === 'mail') {
-      const mt  = mailTemplates.find(x => x.id === hs.targetId);
+      const mt  = mailTemplatesPv.find(x => x.id === hs.targetId);
       const tip = (hs.note ? hs.note + '\n' : '') + `✉️ ${mt?.title || 'メール'}`;
       el.innerHTML       = `<div class="pv-tooltip">${esc(tip)}</div>`;
       el.style.borderColor = '#e67e22';
@@ -1359,7 +1376,7 @@ function renderPvCanvas(screen) {
 
     // ── メールモーダルボタン（ホットスポット右横に自動配置）──
     if (hs.mailBtnTarget) {
-      const mt2 = mailTemplates.find(x => x.id === hs.mailBtnTarget);
+      const mt2 = mailTemplatesPv.find(x => x.id === hs.mailBtnTarget);
       if (mt2) {
         const mbtn = document.createElement('div');
         // ホットスポットの右横・同高さに配置（右端が画像外に出る場合は左横）
@@ -1379,21 +1396,8 @@ function renderPvCanvas(screen) {
     }
   });
 
-  wrap.innerHTML = '';
-  wrap.appendChild(canvas);
   wrap.scrollTop  = 0;
   wrap.scrollLeft = 0;
-
-  // 画像ロード後に Fit ズームを適用
-  img.onload = () => {
-    pvZoomFit();
-    document.getElementById('pvZoomCtrl').style.display = 'flex';
-  };
-  // 既にキャッシュ済みの場合
-  if (img.complete && img.naturalWidth) {
-    pvZoomFit();
-    document.getElementById('pvZoomCtrl').style.display = 'flex';
-  }
 }
 
 // ── プレビューズーム ──
