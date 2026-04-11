@@ -688,18 +688,6 @@ document.addEventListener('click', (e) => {
   window.renderScriptSidebar  = renderScriptSidebar;
   window.updateSidebarActive  = updateSidebarActive;
 
-  // reloadScripts：BroadcastChannel 経由で admin.html の「保存して反映」を受信したとき呼ばれる
-  window.reloadScripts = function() {
-    try {
-      const saved = localStorage.getItem('talkScripts');
-      if (!saved) return;
-      const newData = JSON.parse(saved);
-      Object.keys(scripts).forEach(k => delete scripts[k]);
-      Object.assign(scripts, newData);
-      renderScriptSidebar();
-    } catch(e) {}
-  };
-
   // 初回描画
   renderScriptSidebar();
 

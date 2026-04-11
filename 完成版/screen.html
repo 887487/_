@@ -241,32 +241,32 @@ html[data-theme="dark"] .sb-cat-header-inner.open {
   flex-shrink: 0;
 }
 .pv-canvas-wrap {
-  flex: 1; overflow: auto; background: var(--bg);
+  flex: 1; overflow: hidden; background: var(--bg);
   display: flex; align-items: flex-start; justify-content: center;
   padding: 20px; box-sizing: border-box;
-  position: relative; cursor: grab;
+  position: relative; cursor: default;
 }
-.pv-canvas-wrap.grabbing { cursor: grabbing; }
+.pv-canvas-wrap.zoomable { overflow: auto; }
 .pv-canvas {
   position: relative; display: inline-block;
   transform-origin: top center;
   flex-shrink: 0;
 }
 .pv-canvas img { display: block; max-width: none; }
-/* ズームコントロール */
+/* ズームコントロール（黒系） */
 .pv-zoom-ctrl {
   display: flex; align-items: center; gap: 4px; margin-left: auto;
 }
 .pv-zoom-ctrl button {
   height: 22px; min-width: 22px; padding: 0 4px;
-  border: 1px solid rgba(255,255,255,.4); border-radius: 4px;
-  background: rgba(255,255,255,.15); color: #fff;
+  border: 1px solid rgba(0,0,0,.25); border-radius: 4px;
+  background: rgba(0,0,0,.12); color: #222;
   cursor: pointer; font-size: 12px; font-family: inherit;
   transition: background .12s;
 }
-.pv-zoom-ctrl button:hover { background: rgba(255,255,255,.3); }
+.pv-zoom-ctrl button:hover { background: rgba(0,0,0,.22); }
 .pv-zoom-ctrl span {
-  font-size: 11px; color: rgba(255,255,255,.85);
+  font-size: 11px; color: rgba(0,0,0,.7);
   min-width: 36px; text-align: center; font-family: monospace;
 }
 .pv-mail-btn {
@@ -279,7 +279,7 @@ html[data-theme="dark"] .sb-cat-header-inner.open {
 .pv-mail-btn:hover { background: rgba(230,126,34,1); }
 .pv-hs { position: absolute; border: 2px solid var(--accent); background: rgba(37,99,235,.10); border-radius: 2px; cursor: pointer; transition: background .1s; }
 .pv-hs:hover { background: rgba(37,99,235,.24); }
-.pv-tooltip { position: absolute; bottom: calc(100% + 4px); left: 0; background: rgba(0,0,0,.8); color: #fff; font-size: 10px; padding: 4px 7px; border-radius: 4px; white-space: pre; pointer-events: none; opacity: 0; transition: opacity .12s; z-index: 10; }
+.pv-tooltip { position: absolute; bottom: calc(100% + 4px); left: 0; background: rgba(0,0,0,.8); color: #fff; font-size: 12px; padding: 4px 7px; border-radius: 4px; white-space: pre; pointer-events: none; opacity: 0; transition: opacity .12s; z-index: 10; transform-origin: bottom left; }
 .pv-hs:hover .pv-tooltip { opacity: 1; }
 /* 備考ラベル：ホットスポット左上に常時表示 */
 /* ── 遷移履歴サイドバー（右）── */
@@ -1348,24 +1348,19 @@ function renderPvCanvas(screen) {
 
   // ホットスポットオーバーレイを生成する（canvas に追加済み）
   const mailTemplatesPv = _loadMailTemplates();
-  const mailTemplates = _loadMailTemplates();
-  (screen.hotspots || []).filter(h => h.targetId).forEach(hs => {
+  // ④ 遷移先なし＋備考テキストのみも表示対象に（targetId または note があれば表示）
+  (screen.hotspots || []).filter(h => h.targetId || h.note).forEach(hs => {
     const el = document.createElement('div');
     el.className = 'pv-hs';
     el.style.cssText = `left:${hs.x*100}%;top:${hs.y*100}%;width:${hs.w*100}%;height:${hs.h*100}%;`;
 
-    if (hs.targetType === 'mail') {
-      const mt  = mailTemplatesPv.find(x => x.id === hs.targetId);
-      const tip = (hs.note ? hs.note + '\n' : '') + `✉️ ${mt?.title || 'メール'}`;
-      el.innerHTML       = `<div class="pv-tooltip">${esc(tip)}</div>`;
-      el.style.borderColor = '#e67e22';
-      el.style.background  = 'rgba(230,126,34,.15)';
-      el.onclick = () => {
-        const tab = window.open('mail.html#' + hs.targetId, 'mailTab');
-        if (tab) tab.focus();
-      };
+    if (!hs.targetId) {
+      // 遷移先なし：備考テキストのみ表示（グレー枠、クリック不可）
+      el.style.borderColor = 'rgba(100,100,100,.5)';
+      el.style.background  = 'rgba(100,100,100,.08)';
+      el.style.cursor      = 'default';
+      el.innerHTML = `<div class="pv-tooltip">${esc(hs.note || '')}</div>`;
     } else if (hs.targetType === 'pattern') {
-      // 別パターンの画面（"patId::scrId" 形式）
       const parts  = hs.targetId.split('::');
       const tPat   = patterns.find(p => p.id === parts[0]);
       const tScr   = tPat?.screens.find(s => s.id === parts[1]);
@@ -1376,7 +1371,6 @@ function renderPvCanvas(screen) {
       el.style.background  = 'rgba(142,68,173,.15)';
       el.onclick = () => navigatePv(hs.targetId, false);
     } else {
-      // 同パターン内の別画面
       const t  = screens.find(s => s.id === hs.targetId);
       if (!t) return;
       const ti  = screens.findIndex(s => s.id === hs.targetId);
@@ -1386,26 +1380,35 @@ function renderPvCanvas(screen) {
     }
     canvas.appendChild(el);
 
-    // ── メールモーダルボタン（ホットスポット右横に自動配置）──
-    if (hs.mailBtnTarget) {
-      const mt2 = mailTemplatesPv.find(x => x.id === hs.mailBtnTarget);
-      if (mt2) {
-        const mbtn = document.createElement('div');
-        // ホットスポットの右横・同高さに配置（右端が画像外に出る場合は左横）
-        const btnW = Math.min(hs.w, 0.06); // 幅は最大6%
-        const btnX = (hs.x + hs.w + 0.005 + btnW <= 1)
-          ? hs.x + hs.w + 0.005 : hs.x - btnW - 0.005;
-        mbtn.className = 'pv-mail-btn';
-        mbtn.style.cssText = `left:${btnX*100}%;top:${hs.y*100}%;width:${btnW*100}%;height:${hs.h*100}%;`;
-        mbtn.title = `📩 ${mt2.title || 'メール'}を表示`;
-        mbtn.innerHTML = '<span style="font-size:clamp(8px,1.4vw,14px);">📩</span>';
-        mbtn.onclick = (ev) => {
-          ev.stopPropagation();
-          _openMailModal(mt2);
-        };
-        canvas.appendChild(mbtn);
-      }
+    // ── メールモーダルボタン（mailBtnTargets:[{id,label}] 配列 or 旧形式 mailBtnTarget 文字列）──
+    let mailBtnEntries = [];
+    if (Array.isArray(hs.mailBtnTargets) && hs.mailBtnTargets.length) {
+      mailBtnEntries = hs.mailBtnTargets;  // 新形式: [{id, label}, ...]
+    } else if (hs.mailBtnTarget) {
+      mailBtnEntries = [{id: hs.mailBtnTarget, label: hs.mailBtnLabel || ''}];  // 旧形式互換
     }
+
+    const btnW  = Math.min(hs.w, 0.06);
+    const baseX = (hs.x + hs.w + 0.005 + btnW <= 1)
+      ? hs.x + hs.w + 0.005 : hs.x - btnW - 0.005;
+
+    mailBtnEntries.forEach((entry, mi) => {
+      const mailId = typeof entry === 'string' ? entry : entry.id;
+      const btnLabel = typeof entry === 'string' ? '' : (entry.label || '');
+      const mt2 = mailTemplatesPv.find(x => x.id === mailId);
+      if (!mt2) return;
+      const mbtn = document.createElement('div');
+      const btnH     = hs.h / mailBtnEntries.length;
+      const btnY     = hs.y + btnH * mi;
+      mbtn.className = 'pv-mail-btn';
+      mbtn.style.cssText = `left:${baseX*100}%;top:${btnY*100}%;width:${btnW*100}%;height:${btnH*100}%;`;
+      mbtn.title = `📩 ${mt2.title || 'メール'}を表示`;
+      mbtn.innerHTML = btnLabel
+        ? `<span style="font-size:clamp(8px,1.2vw,11px);line-height:1.2;text-align:center;padding:1px;word-break:break-all;">${esc(btnLabel)}</span>`
+        : '<span style="font-size:clamp(8px,1.4vw,14px);">📩</span>';
+      mbtn.onclick = (ev) => { ev.stopPropagation(); _openMailModal(mt2); };
+      canvas.appendChild(mbtn);
+    });
   });
 
   wrap.scrollTop  = 0;
@@ -1443,9 +1446,15 @@ function _pvApplyZoom() {
   if (!canvas) return;
   canvas.style.transform = `scale(${_pvZoom})`;
   canvas.style.transformOrigin = 'top center';
-  // wrap のスクロール原点をリセット
+  // ① 過剰スクロール制限：等倍以下は overflow:hidden、拡大時のみ auto
+  wrap.classList.toggle('zoomable', _pvZoom > 1.005);
   wrap.scrollTop  = 0;
   wrap.scrollLeft = 0;
+  // ③ ツールチップのスケール逆補正（画像スケールに関わらず固定サイズで表示）
+  const inv = 1 / _pvZoom;
+  canvas.querySelectorAll('.pv-tooltip').forEach(t => {
+    t.style.transform = `scale(${inv})`;
+  });
   const label = document.getElementById('pvZoomLabel');
   if (label) label.textContent = Math.round(_pvZoom * 100) + '%';
 }

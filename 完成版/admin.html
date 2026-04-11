@@ -3468,32 +3468,94 @@ function _scrRsRenderHsList(scr){
       }).join('');
       if(opts)patOpts+='<optgroup label="'+esc(p.name)+'">'+opts+'</optgroup>';
     });
-    var mailOpts=mailTpls.map(function(t){
-      return '<option value="'+t.id+'"'+(isMail&&hs.targetId===t.id?' selected':'')+'>'+esc(t.title||t.id)+'</option>';
-    }).join('');
+
     h+='<div class="scr-hs-item">'
       +'<div class="scr-hs-hd"><span class="scr-hs-id">HS-'+(hi+1).toString().padStart(2,'0')+'</span>'
       +'<button class="scr-hs-del" onclick="_scrRsDelHs('+hi+')" title="削除">✕</button></div>'
       +'<div class="scr-toggle-row">'
       +'<button onclick="_scrRsSetHsType('+hi+',\'screen\')" style="flex:1;height:24px;font-size:10px;border-radius:4px;cursor:pointer;font-family:inherit;'+(isScr?selBg:unselBg)+'">🖥 同パターン</button>'
       +'<button onclick="_scrRsSetHsType('+hi+',\'pattern\')" style="flex:1;height:24px;font-size:10px;border-radius:4px;cursor:pointer;font-family:inherit;'+(isPat?selBg:unselBg)+'">🗂 別パターン</button>'
-      +'<button onclick="_scrRsSetHsType('+hi+',\'mail\')" style="flex:1;height:24px;font-size:10px;border-radius:4px;cursor:pointer;font-family:inherit;'+(isMail?selBg:unselBg)+'">✉️ メール</button>'
       +'</div>'
       +'<select class="scr-hs-select" style="display:'+(isScr?'block':'none')+'" onchange="_scrRsHsSet('+hi+',\'targetId\',this.value)"><option value="">— 同パターン内の遷移先 —</option>'+screenOpts+'</select>'
       +'<select class="scr-hs-select" style="display:'+(isPat?'block':'none')+'" onchange="_scrRsHsSet('+hi+',\'targetId\',this.value)"><option value="">— パターン / 画面を選択 —</option>'+patOpts+'</select>'
-      +'<select class="scr-hs-select" style="display:'+(isMail?'block':'none')+'" onchange="_scrRsHsSet('+hi+',\'targetId\',this.value)"><option value="">— メールテンプレートを選択 —</option>'+mailOpts+'</select>'
+
       +'<label class="scr-rs-label" style="margin-top:4px;">メモ（任意）</label>'
       +'<textarea class="scr-hs-memo" rows="2" placeholder="メモ（任意）" oninput="_scrRsHsSet('+hi+',\'note\',this.value)">'+esc(hs.note||'')+'</textarea>'
-      +'<div class="scr-rs-label" style="margin-top:6px;font-weight:700;color:var(--accent);">📩 メールモーダルボタン（任意）</div>'
-      +'<select class="scr-hs-select" style="margin-top:2px;" onchange="_scrRsHsSet('+hi+',\'mailBtnTarget\',this.value)">'
-      +'<option value="">— 紐付けるメールテンプレート —</option>'
-      +mailTpls.map(function(t){ return '<option value="'+t.id+'"'+(hs.mailBtnTarget===t.id?' selected':'')+'>'+esc(t.title||t.id)+'</option>'; }).join('')
-      +'</select>'
-      +(hs.mailBtnTarget ? '<div style="font-size:10px;color:var(--text3);margin-top:3px;">ボタンの表示範囲（ホットスポットと同じ比率）は自動でホットスポット右横に配置されます。</div>' : '')
+      +'<div class="scr-rs-label" style="margin-top:6px;font-weight:700;color:var(--accent);">📩 メールモーダルボタン（複数設定可）</div>'
+      +_scrRsMailBtns(hi, hs, mailTpls)
+      +'<button onclick="_scrRsAddMailBtn('+hi+')" style="margin-top:4px;font-size:10px;padding:2px 8px;border:1px solid var(--accent);border-radius:4px;background:var(--surface);cursor:pointer;color:var(--accent);font-family:inherit;">＋ ボタンを追加</button>'
+      +'<div style="font-size:10px;color:var(--text3);margin-top:3px;">ボタンはホットスポット右横に縦並びで自動配置されます。</div>'
       +'</div>';
   });
   el.innerHTML=h;
 }
+// ── メールボタン複数管理ヘルパー ──
+// mailBtnTargets: [{id, label}, ...] 形式で管理
+// 旧 mailBtnTarget / mailBtnLabel との後方互換は screen.html 側で吸収
+
+function _scrRsMailBtns(hi, hs, mailTpls) {
+  // 旧形式 → 新形式へ変換
+  var btns = [];
+  if (Array.isArray(hs.mailBtnTargets)) {
+    btns = hs.mailBtnTargets;
+  } else if (hs.mailBtnTarget) {
+    btns = [{id: hs.mailBtnTarget, label: hs.mailBtnLabel || ''}];
+  }
+  if (!btns.length) return '<div style="font-size:10px;color:var(--text3);margin-top:2px;">ボタンなし</div>';
+  var h = '<div style="display:flex;flex-direction:column;gap:4px;margin-top:4px;">';
+  btns.forEach(function(btn, bi) {
+    var selOpts = '<option value="">— テンプレートを選択 —</option>' +
+      mailTpls.map(function(t){
+        return '<option value="'+t.id+'"'+(btn.id===t.id?' selected':'')+'>'+esc(t.title||t.id)+'</option>';
+      }).join('');
+    h += '<div style="display:flex;gap:4px;align-items:center;background:var(--surface2);border-radius:4px;padding:4px 6px;">'
+      + '<div style="flex:1;min-width:0;">'
+      + '<select class="scr-hs-select" style="margin-bottom:3px;" onchange="_scrRsMailBtnSet('+hi+','+bi+',\'id\',this.value)">'+selOpts+'</select>'
+      + '<input type="text" class="scr-size-input" style="width:100%;box-sizing:border-box;font-size:10px;padding:2px 5px;" placeholder="ボタン名（省略可・省略時は📩）" value="'+esc(btn.label||'')+'" oninput="_scrRsMailBtnSet('+hi+','+bi+',\'label\',this.value)">'
+      + '</div>'
+      + '<button onclick="_scrRsDelMailBtn('+hi+','+bi+')" style="flex-shrink:0;height:22px;padding:0 6px;border:1px solid var(--border);border-radius:4px;background:var(--surface2);cursor:pointer;font-size:10px;font-family:inherit;">✕</button>'
+      + '</div>';
+  });
+  h += '</div>';
+  return h;
+}
+
+function _scrRsGetMailBtns(idx) {
+  var pat = screenPatterns.find(function(p){return p.id===_scrCurrentPatId;});if(!pat)return null;
+  var scr = pat.screens.find(function(s){return s.id===_scrSelScrId;});if(!scr||!scr.hotspots[idx])return null;
+  var hs = scr.hotspots[idx];
+  // 旧形式を新形式に変換
+  if (!Array.isArray(hs.mailBtnTargets)) {
+    hs.mailBtnTargets = hs.mailBtnTarget ? [{id:hs.mailBtnTarget, label:hs.mailBtnLabel||''}] : [];
+    delete hs.mailBtnTarget; delete hs.mailBtnLabel;
+  }
+  return hs.mailBtnTargets;
+}
+
+function _scrRsAddMailBtn(idx) {
+  var btns = _scrRsGetMailBtns(idx); if(!btns) return;
+  btns.push({id:'', label:''});
+  scrSaveData(); markDirty();
+  var pat=screenPatterns.find(function(p){return p.id===_scrCurrentPatId;});
+  var scr=pat?pat.screens.find(function(s){return s.id===_scrSelScrId;}):null;
+  if(scr) _scrRsRenderHsList(scr);
+}
+
+function _scrRsDelMailBtn(idx, bi) {
+  var btns = _scrRsGetMailBtns(idx); if(!btns) return;
+  btns.splice(bi, 1);
+  scrSaveData(); markDirty();
+  var pat=screenPatterns.find(function(p){return p.id===_scrCurrentPatId;});
+  var scr=pat?pat.screens.find(function(s){return s.id===_scrSelScrId;}):null;
+  if(scr) _scrRsRenderHsList(scr);
+}
+
+function _scrRsMailBtnSet(idx, bi, field, val) {
+  var btns = _scrRsGetMailBtns(idx); if(!btns||!btns[bi]) return;
+  btns[bi][field] = val;
+  scrSaveData(); markDirty();
+}
+
 function _scrRsHsSet(idx,field,val){var pat=screenPatterns.find(function(p){return p.id===_scrCurrentPatId;});if(!pat)return;var scr=pat.screens.find(function(s){return s.id===_scrSelScrId;});if(!scr||!scr.hotspots[idx])return;scr.hotspots[idx][field]=val;scrSaveData();markDirty();}
 function _scrRsSetHsType(idx,type){var pat=screenPatterns.find(function(p){return p.id===_scrCurrentPatId;});if(!pat)return;var scr=pat.screens.find(function(s){return s.id===_scrSelScrId;});if(!scr||!scr.hotspots[idx])return;scr.hotspots[idx].targetType=type;scr.hotspots[idx].targetId='';scrSaveData();markDirty();_scrRsRenderHsList(scr);_scrDrawCenterOverlay(null);}
 function _scrRsDelHs(idx){var pat=screenPatterns.find(function(p){return p.id===_scrCurrentPatId;});if(!pat)return;var scr=pat.screens.find(function(s){return s.id===_scrSelScrId;});if(!scr)return;scr.hotspots.splice(idx,1);scrSaveData();markDirty();_scrRsRenderHsList(scr);_scrDrawCenterOverlay(null);}
