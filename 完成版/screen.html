@@ -250,7 +250,6 @@ html[data-theme="dark"] .sb-cat-header-inner.open {
 .pv-canvas {
   position: relative; display: inline-block;
   transform-origin: top center;
-  transition: transform 0.15s ease;
   flex-shrink: 0;
 }
 .pv-canvas img { display: block; max-width: none; }
@@ -1322,13 +1321,26 @@ function renderPvCanvas(screen) {
     if (!src) return;
 
     img.onload = () => {
-      // Fitスケールを計算してからcanvasを表示（チラつきなし）
+      // ① wrap のサイズからスケールを事前計算
+      const wW = (wrap.clientWidth  || wrap.offsetWidth)  - 40;
+      const wH = (wrap.clientHeight || wrap.offsetHeight) - 40;
+      const iW = img.naturalWidth;
+      const iH = img.naturalHeight;
+      if (iW > 0 && iH > 0) {
+        _pvZoom = Math.min(wW / iW, wH / iH, 1.0);
+      }
+      // ② transition なしでスケールを適用してから DOM に追加
+      canvas.style.transform = `scale(${_pvZoom})`;
+      canvas.style.transformOrigin = 'top center';
+      img.style.visibility = '';
+      // ③ 正しいスケールで一度だけ追加（チラつきなし）
       wrap.innerHTML = '';
       wrap.appendChild(canvas);
-      wrap.scrollTop  = 0;
+      wrap.scrollTop = 0;
       wrap.scrollLeft = 0;
-      pvZoomFit();
-      img.style.visibility = '';
+      // ④ ズームラベル更新
+      const label = document.getElementById('pvZoomLabel');
+      if (label) label.textContent = Math.round(_pvZoom * 100) + '%';
       document.getElementById('pvZoomCtrl').style.display = 'flex';
     };
     img.src = src;
