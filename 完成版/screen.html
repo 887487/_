@@ -1388,7 +1388,19 @@ function renderPvCanvas(screen) {
       mailBtnEntries = [{id: hs.mailBtnTarget, label: hs.mailBtnLabel || ''}];  // 旧形式互換
     }
 
-    const btnW  = Math.min(hs.w, 0.06);
+    // ボタン幅をラベル文字数から計算（画像の実ピクセル幅を基準に比率変換）
+    // 📩アイコンのみ: 28px、テキストあり: 文字数×7 + 20px（パディング込み）
+    const imgNW = img.naturalWidth || 800;
+    const FONT_PX = 11;   // ボタン内テキストのフォントサイズ (px)
+    const PAD_PX  = 20;   // 左右パディング合計 (px)
+
+    // 各ボタンのテキスト幅を事前計算して最大幅を決定（ボタン列幅を揃える）
+    const btnPxWidths = mailBtnEntries.map((entry) => {
+      const lbl = typeof entry === 'string' ? '' : (entry.label || '');
+      return lbl ? lbl.length * FONT_PX * 0.65 + PAD_PX : 28;
+    });
+    const maxBtnPx = Math.max(...btnPxWidths, 28);
+    const btnW  = Math.min(Math.max(maxBtnPx / imgNW, 0.03), 0.18);  // 3%〜18% に制限
     const baseX = (hs.x + hs.w + 0.005 + btnW <= 1)
       ? hs.x + hs.w + 0.005 : hs.x - btnW - 0.005;
 
@@ -1404,8 +1416,8 @@ function renderPvCanvas(screen) {
       mbtn.style.cssText = `left:${baseX*100}%;top:${btnY*100}%;width:${btnW*100}%;height:${btnH*100}%;`;
       mbtn.title = `📩 ${mt2.title || 'メール'}を表示`;
       mbtn.innerHTML = btnLabel
-        ? `<span style="font-size:clamp(8px,1.2vw,11px);line-height:1.2;text-align:center;padding:1px;word-break:break-all;">${esc(btnLabel)}</span>`
-        : '<span style="font-size:clamp(8px,1.4vw,14px);">📩</span>';
+        ? `<span style="font-size:${FONT_PX}px;line-height:1.2;text-align:center;padding:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;">${esc(btnLabel)}</span>`
+        : '<span style="font-size:14px;">📩</span>';
       mbtn.onclick = (ev) => { ev.stopPropagation(); _openMailModal(mt2); };
       canvas.appendChild(mbtn);
     });
