@@ -1,8 +1,9 @@
 https://887487.github.io/_/
 
 * mail.html  コピー機能不要
+* index.html をindexとして使用する（script.htmlを作成する）
+* クロージングトークの固定表示を変更
 * 
-
 
 
 * メールモーダルのボタンを画像横で縦に並べる
