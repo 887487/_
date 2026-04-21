@@ -1,0 +1,53 @@
+業務システム
+　┗Genesys（https://login.mypurecloud.jp/#/authenticate-adv/org/tci-gp1）
+　┗Trans-CRM（https://ctssvr501.cloud.contact-link.jp/cts_nhk_net/login/index.php）
+　┗LINE WORKS（https://auth.worksmobile.com/login/login?accessUrl=https%3A%2F%2Fcommon.worksmobile.com%2Fproxy%2Fmy）
+　┗対話要約AI（https://tci-dcc-support-summaryai02.spiral-site.com/summary_nhk/login?back-url=/summary_nhk）
+　┗SpeechVisualizer（http://tci-ami-web16/Speechvisualizer/
+　┗新トランスピーチ（https://transpeech.jp/login）
+
+資料
+　┗NHKONE関連
+　　　┗【NHK ONE】コールセンターについて_20260410
+　　　┗【NHK ONE】サービス概要・世帯での利用_20250908
+　　　┗【NHK ONE】学校での利用_20260102
+　　　┗【NHK ONE】事業での利用_20250904
+　　　┗【NHK ONE】アカウント登録導線説明資料
+　　　┗【確定版】20251110_受信料アカウント全国説明会資料_1117修正
+　　　┗【世帯アカウント】ユーザーお困りポイント_20250908
+　　　┗【NGH版】J→S転送受けフロー_20260416
+　　　┗【NGH用】S→J転送対応フロー_20260420
+
+　┗研修資料
+　　　┗【NGH】事業所紹介_20260401
+　　　┗【NGH】CMマニュアル_20251031
+　　　┗クレーム対応のポイント
+　　　┗わかりやすい伝え方・話し方（ロジカルシンキング）
+　　　┗高齢者対応
+　　　┗【LINE WORKS】インストールと活用方法
+　　　┗【trans-CRM】利用マニュアル_20260410
+　　　┗【transpeech】AmiVoice Operator Agent利用マニュアル
+　　　┗【NGH】対話要約AIマニュアル_20250819
+　　　┗【NGH】Genesys Cloud利用マニュアル_20251029
+　　　┗【新transpeech】マニュアル_20260317_軽量版
+
+🌎 関連サイト
+　┗NHK HP（https://www.nhk.or.jp/）
+　┗NHKONEインフォメーション（https://www.nhk.or.jp/nhkone/）
+　┗ヘルプセンター（https://www.nhk.or.jp/nhkone/help/）
+　┗NHK for school（https://edu.web.nhk/school/）
+　┗全国のNHK放送局（https://www.nhk.or.jp/info/pr/nationwide-nhk/）
+　┗各放送局営業窓口一覧（https://www.nhk-cs.jp/jushinryo/menjo/window.html）
+　┗学校コード検索HP（https://edu-data.jp/）
+　┗郵便局HP（https://www.post.japanpost.jp/zipcode/index.html）
+
+--------------------------------------------------
+■用途	世帯／学校／事業
+■移行対象者ですか？	はい／いいえ
+■2025/8/15時点で旧プラスのIDは発行されていましたか？	はい(不明の場合はこっち)／いいえ
+■7月/9月/10月に送信している移行案内メールは確認されていますか？	はい／いいえ(不明の場合はこっち)
+■移行案内メールを受信しているメールアドレスは現在も使用可能ですか？	はい／いいえ
+■Sアカは作成済みですか？	はい／いいえ
+■認証コード未着ですか？	移行エラーメール受信／新規エラーメール受信／メール受信なし
+■PWをお忘れの方はこちらから認証コードが届くか	
+■S-J連携済みですか？	連携済み／未連携／未確認(再連携が必要です)／ログイン不可
