@@ -640,15 +640,9 @@ window.saveSideMenuData = function(data) {
   try { localStorage.setItem(SIDE_MENU_DATA_KEY, JSON.stringify(data)); } catch(e) {}
 };
 
-// 初回起動時にデフォルトデータを localStorage に書き込む
-// → admin.html で即座に編集・管理できるようにする
-(function() {
-  try {
-    if (!localStorage.getItem(SIDE_MENU_DATA_KEY)) {
-      localStorage.setItem(SIDE_MENU_DATA_KEY, JSON.stringify(window.DEFAULT_SIDE_MENU_DATA));
-    }
-  } catch(e) {}
-})();
+// 初回起動時の localStorage 書き込みは廃止。
+// サイドメニューデータの正は common-utils.js の DEFAULT_SIDE_MENU_DATA（jsファイル直書き）。
+// admin.html の「📝 jsファイルに書き込む」で更新する。
 
 function _phonRow(letter, r1, r2) {
   var cell = function (v) {
@@ -658,7 +652,8 @@ function _phonRow(letter, r1, r2) {
 }
 
 function _buildSideMenuHTML(isDark) {
-  var sections = window.loadSideMenuData() || window.DEFAULT_SIDE_MENU_DATA;
+  // localStorage は使用しない。jsファイルの DEFAULT_SIDE_MENU_DATA を正として参照する。
+  var sections = window.DEFAULT_SIDE_MENU_DATA;
   var html = '';
 
   // ダークモードトグル（固定）
@@ -1565,6 +1560,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // ── サイドメニュー更新 ──
     if (type === 'sideMenuUpdated') {
+      // データ本体が含まれる場合（admin.html の smWriteToFile から送信）は
+      // DEFAULT_SIDE_MENU_DATA をメモリ上で更新し、localStorage キャッシュも削除する
+      if (e.data && e.data.data) {
+        window.DEFAULT_SIDE_MENU_DATA = e.data.data;
+        try { localStorage.removeItem('sideMenuData'); } catch(ex) {}
+      }
       var sideMenuEl = document.getElementById('sideMenu');
       if (sideMenuEl) {
         var isDarkNow = localStorage.getItem('darkMode') === '1';

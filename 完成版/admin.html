@@ -14,19 +14,6 @@
    admin.html 専用スタイル（改修版）
    ============================================================ */
 
-/* ── 個別エクスポートメニュー ── */
-.export-menu-item {
-  display: block; width: 100%;
-  padding: 9px 16px;
-  text-align: left; font-size: 12px;
-  font-family: inherit; font-weight: 500;
-  background: none; border: none;
-  color: var(--text); cursor: pointer;
-  transition: background .1s;
-}
-.export-menu-item:hover { background: var(--accent-lt); color: var(--accent); }
-.export-menu-item + .export-menu-item { border-top: 1px solid var(--border2); }
-
 /* ── サイドバー共通：縦間隔 ── */
 .cat-header {
   height: 36px;
@@ -748,19 +735,6 @@ body.dnd-xlsx-hover::after {
     <span style="width:1px;height:20px;background:rgba(255,255,255,.25);margin:0 4px;flex-shrink:0;"></span>
     <input type="file" id="importFile" accept=".json" style="display:none" onchange="importJSON(this)">
     <span id="dirtyIndicator" style="visibility:hidden;display:inline-flex;align-items:center;gap:4px;background:#e07a00;color:white;font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;">⚠️ 未保存</span>
-    <div style="position:relative;display:inline-block;">
-      <button class="btn btn-secondary" id="exportMenuBtn" onclick="toggleExportMenu()" style="font-size:12px;">📤 個別エクスポート ▾</button>
-      <div id="exportMenu" style="display:none;position:absolute;right:0;top:calc(100% + 4px);background:var(--surface);border:1px solid var(--border);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.18);min-width:200px;z-index:4000;overflow:hidden;">
-        <div style="padding:6px 12px 4px;font-size:10px;font-weight:700;color:var(--muted);border-bottom:1px solid var(--border);">データ種別を選択してエクスポート</div>
-        <button class="export-menu-item" onclick="exportSingle('script')">📋 スクリプト</button>
-        <button class="export-menu-item" onclick="exportSingle('mail')">✉️ メール</button>
-        <button class="export-menu-item" onclick="exportSingle('screen')">🖥 画面遷移</button>
-        <button class="export-menu-item" onclick="exportSingle('imglib')">🖼 画像ライブラリ</button>
-        <button class="export-menu-item" onclick="exportSingle('hearing')">📋 ヒアリング</button>
-        <button class="export-menu-item" onclick="exportSingle('sidemenu')">☰ サイドメニュー</button>
-        <button class="export-menu-item" onclick="exportSingle('history')">📝 更新履歴</button>
-      </div>
-    </div>
     <button class="btn btn-primary" onclick="saveAllManual()">💾 保存して反映</button>
   </div>
 </header>
@@ -1127,9 +1101,10 @@ body.dnd-xlsx-hover::after {
         <div style="font-size:14px;font-weight:700;color:var(--text);">☰ サイドメニュー編集</div>
         <div style="display:flex;gap:8px;">
           <button class="btn btn-secondary" onclick="smReset()" style="font-size:11px;">↩ デフォルトに戻す</button>
-          <button class="btn btn-primary" onclick="smSave()" style="font-size:12px;">💾 保存して反映</button>
+          <button class="btn btn-secondary" onclick="smWriteToFile()" style="font-size:12px;" title="common-utils.js の DEFAULT_SIDE_MENU_DATA を現在の内容で上書きします">📝 jsファイルに書き込む</button>
         </div>
       </div>
+      <div id="smWriteStatus" style="display:none;margin-bottom:12px;padding:8px 12px;border-radius:6px;font-size:12px;"></div>
       <div style="font-size:11px;color:var(--text3);margin-bottom:14px;">各カテゴリ内の項目を編集できます。名前・URLをクリックして直接編集してください。</div>
 
       <!-- カテゴリ一覧（JSが描画） -->
@@ -2809,28 +2784,138 @@ function calSelect(d){
 var _smData = null; // 編集中データ
 
 function smLoad() {
-  _smData = window.loadSideMenuData() || JSON.parse(JSON.stringify(window.DEFAULT_SIDE_MENU_DATA));
+  // localStorage は使用しない。DEFAULT_SIDE_MENU_DATA（jsファイルの値）を正とする
+  _smData = JSON.parse(JSON.stringify(window.DEFAULT_SIDE_MENU_DATA));
 }
 
 function smSave() {
+  // 内部用（smWriteToFile から呼ばれる）: 画面を再描画するだけ
   if (!_smData) smLoad();
-  window.saveSideMenuData(_smData);
-  // 開いている index/mail/screen タブに反映通知
-  try {
-    var bc = new BroadcastChannel('tool_data_update');
-    bc.postMessage({ type: 'sideMenuUpdated', ts: Date.now() });
-    bc.close();
-  } catch(e) {}
-  toast('✅ サイドメニューを保存しました');
   smRender();
 }
 
 function smReset() {
-  if (!confirm('サイドメニューをデフォルト設定に戻します。よろしいですか？')) return;
+  if (!confirm('サイドメニューをデフォルト設定に戻します。よろしいですか？（jsファイルへの反映は「📝 jsファイルに書き込む」で行ってください）')) return;
   _smData = JSON.parse(JSON.stringify(window.DEFAULT_SIDE_MENU_DATA));
-  window.saveSideMenuData(_smData);
   smRender();
   toast('↩ デフォルト設定に戻しました');
+}
+
+// =============================================================================
+// common-utils.js への直接書き込み（File System Access API）
+// DEFAULT_SIDE_MENU_DATA の宣言ブロックを現在の _smData で置換して上書き保存する。
+// ブラウザごとに1セッション1回のフォルダ選択が必要。
+// =============================================================================
+var _smDirHandle = null; // 選択済みフォルダハンドルをセッション中キャッシュ
+
+function _smSetStatus(msg, type) {
+  var el = document.getElementById('smWriteStatus');
+  if (!el) return;
+  el.style.display = msg ? 'block' : 'none';
+  el.style.background = type === 'ok'  ? '#e8f5e9' :
+                        type === 'err' ? '#ffeaea' : 'var(--accent-lt)';
+  el.style.color      = type === 'ok'  ? '#2e7d32' :
+                        type === 'err' ? '#c62828' : 'var(--accent)';
+  el.style.border     = '1px solid ' + (
+                        type === 'ok'  ? '#a5d6a7' :
+                        type === 'err' ? '#ef9a9a' : 'var(--accent)');
+  el.textContent = msg;
+}
+
+async function smWriteToFile() {
+  // ① File System Access API の有無チェック
+  if (!window.showDirectoryPicker) {
+    _smSetStatus('❌ このブラウザは File System Access API に対応していません（Chrome/Edge をお使いください）', 'err');
+    return;
+  }
+
+  if (!_smData) smLoad();
+  if (!_smData) { _smSetStatus('❌ 書き込むデータがありません', 'err'); return; }
+
+  _smSetStatus('⏳ フォルダを選択してください（common-utils.js が含まれるフォルダ）', 'info');
+
+  try {
+    // ② フォルダ選択（キャッシュがあれば再利用）
+    if (!_smDirHandle) {
+      _smDirHandle = await window.showDirectoryPicker({ mode: 'readwrite' });
+    } else {
+      // キャッシュ済みハンドルの権限を確認・再要求
+      var perm = await _smDirHandle.requestPermission({ mode: 'readwrite' });
+      if (perm !== 'granted') _smDirHandle = await window.showDirectoryPicker({ mode: 'readwrite' });
+    }
+
+    // ③ common-utils.js を取得
+    var fileHandle;
+    try {
+      fileHandle = await _smDirHandle.getFileHandle('common-utils.js', { create: false });
+    } catch(e) {
+      _smSetStatus('❌ 選択したフォルダに common-utils.js が見つかりませんでした', 'err');
+      _smDirHandle = null;
+      return;
+    }
+
+    // ④ 現在のファイル内容を読み込む
+    var file = await fileHandle.getFile();
+    var src  = await file.text();
+
+    // ⑤ DEFAULT_SIDE_MENU_DATA ブロックを特定して置換
+    //    開始マーカー: "window.DEFAULT_SIDE_MENU_DATA = ["
+    //    終了マーカー: "];\n\nwindow.loadSideMenuData"（次の宣言の手前）
+    var START_MARKER = 'window.DEFAULT_SIDE_MENU_DATA = [';
+    var END_MARKER   = '\n\nwindow.loadSideMenuData';
+
+    var startIdx = src.indexOf(START_MARKER);
+    if (startIdx === -1) {
+      _smSetStatus('❌ common-utils.js 内に DEFAULT_SIDE_MENU_DATA が見つかりませんでした', 'err');
+      return;
+    }
+    var endIdx = src.indexOf(END_MARKER, startIdx);
+    if (endIdx === -1) {
+      _smSetStatus('❌ DEFAULT_SIDE_MENU_DATA の終端を特定できませんでした', 'err');
+      return;
+    }
+
+    // 新しいブロックを生成
+    // JSON.stringify で整形し、先頭の "[" と末尾の "]" の間のインデントを調整する
+    var newJson = JSON.stringify(_smData, null, 2);
+    // 2スペースインデント → 行頭に2スペース追加（common-utils.js の既存スタイルに合わせる）
+    var indented = newJson
+      .split('\n')
+      .map(function(line, i) { return i === 0 ? line : '  ' + line; })
+      .join('\n');
+
+    var newBlock = 'window.DEFAULT_SIDE_MENU_DATA = ' + indented + ';';
+    var newSrc   = src.slice(0, startIdx) + newBlock + src.slice(endIdx);
+
+    // ⑥ ファイルに書き込む
+    var writable = await fileHandle.createWritable();
+    await writable.write(newSrc);
+    await writable.close();
+
+    // ⑦ メモリ上の DEFAULT_SIDE_MENU_DATA も更新してページ内に即時反映
+    window.DEFAULT_SIDE_MENU_DATA = JSON.parse(JSON.stringify(_smData));
+
+    // ⑧ localStorage のサイドメニューキャッシュを削除（jsファイルを正として扱うため）
+    try { localStorage.removeItem('sideMenuData'); } catch(ex) {}
+
+    // ⑨ 開いている他タブにデータ本体を付けて通知（common-utils.js が即時反映）
+    try {
+      var bc2 = new BroadcastChannel('tool_data_update');
+      bc2.postMessage({ type: 'sideMenuUpdated', data: JSON.parse(JSON.stringify(_smData)) });
+      bc2.close();
+    } catch(ex) {}
+
+    _smSetStatus('✅ common-utils.js に書き込みました（DEFAULT_SIDE_MENU_DATA を更新）', 'ok');
+    toast('✅ common-utils.js に書き込みました');
+
+  } catch(e) {
+    if (e.name === 'AbortError') {
+      _smSetStatus('', '');  // キャンセルは無視
+    } else {
+      _smSetStatus('❌ 書き込みエラー: ' + e.message, 'err');
+    }
+    _smDirHandle = null;
+  }
 }
 
 function smRender() {
@@ -4858,127 +4943,6 @@ function _imgLibCleanup() {
 }
 
 function scrSaveData(){markDirty();}
-
-// ===================================================================
-// 個別エクスポート
-// ===================================================================
-function toggleExportMenu() {
-  var menu = document.getElementById('exportMenu');
-  if (!menu) return;
-  var isOpen = menu.style.display !== 'none';
-  menu.style.display = isOpen ? 'none' : 'block';
-  if (!isOpen) {
-    setTimeout(function() {
-      document.addEventListener('click', function _close(e) {
-        if (!e.target.closest('#exportMenuBtn') && !e.target.closest('#exportMenu')) {
-          menu.style.display = 'none';
-        }
-        document.removeEventListener('click', _close);
-      });
-    }, 0);
-  }
-}
-
-function _downloadJson(obj, filename) {
-  var json = JSON.stringify(obj, null, 2);
-  var blob = new Blob([json], { type: 'application/json' });
-  var a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = filename;
-  a.style.display = 'none';
-  document.body.appendChild(a);
-  a.click();
-  setTimeout(function() { document.body.removeChild(a); URL.revokeObjectURL(a.href); }, 100);
-}
-
-function _nowStr() {
-  var d = new Date();
-  var p = function(n) { return String(n).padStart(2, '0'); };
-  return d.getFullYear() + '-' + p(d.getMonth()+1) + '-' + p(d.getDate())
-       + '-' + p(d.getHours()) + '-' + p(d.getMinutes());
-}
-
-function exportSingle(type) {
-  document.getElementById('exportMenu').style.display = 'none';
-  var ts = _nowStr();
-
-  if (type === 'script') {
-    _downloadJson({ version: 1, exportedAt: new Date().toISOString(), talkScripts: data }, 'scripts-' + ts + '.json');
-    toast('📥 スクリプトをエクスポートしました');
-
-  } else if (type === 'mail') {
-    _downloadJson({ version: 1, exportedAt: new Date().toISOString(), mailTemplates: mailData, mailCatMeta: mailCatMeta }, 'mail-' + ts + '.json');
-    toast('📥 メールテンプレートをエクスポートしました');
-
-  } else if (type === 'screen') {
-    // 画面遷移は画像ライブラリも同梱（v3形式）
-    var inMem = (typeof screenPatterns !== 'undefined' && screenPatterns && screenPatterns.length) ? screenPatterns : null;
-    function _doScreenExport(rawPatterns) {
-      var cloned = JSON.parse(JSON.stringify(rawPatterns || []));
-      var usedIds = new Set();
-      cloned.forEach(function(p) {
-        (p.screens || []).forEach(function(s) {
-          if (s.imageSrc && s.imageSrc.startsWith('lib:')) usedIds.add(s.imageSrc.slice(4));
-        });
-      });
-      imgLibGetAll().then(function(libItems) {
-        var usedItems = libItems.filter(function(item) { return usedIds.has(item.id); });
-        var done = 0, total = usedItems.length;
-        if (!total) {
-          _downloadJson({ version: 3, exportedAt: new Date().toISOString(), screenData: cloned, imageLib: [] }, 'screen-' + ts + '.json');
-          toast('📥 画面遷移をエクスポートしました');
-          return;
-        }
-        var compressed = [];
-        usedItems.forEach(function(item) {
-          var img = new Image();
-          img.onload = function() {
-            var canvas = document.createElement('canvas');
-            canvas.width = img.naturalWidth; canvas.height = img.naturalHeight;
-            canvas.getContext('2d').drawImage(img, 0, 0);
-            compressed.push({ id: item.id, name: item.name, tags: item.tags || [], dataUrl: canvas.toDataURL('image/jpeg', 0.75) });
-            if (++done === total) {
-              _downloadJson({ version: 3, exportedAt: new Date().toISOString(), screenData: cloned, imageLib: compressed }, 'screen-' + ts + '.json');
-              toast('📥 画面遷移をエクスポートしました');
-            }
-          };
-          img.onerror = function() {
-            compressed.push({ id: item.id, name: item.name, tags: item.tags || [], dataUrl: item.dataUrl });
-            if (++done === total) {
-              _downloadJson({ version: 3, exportedAt: new Date().toISOString(), screenData: cloned, imageLib: compressed }, 'screen-' + ts + '.json');
-              toast('📥 画面遷移をエクスポートしました');
-            }
-          };
-          img.src = item.dataUrl;
-        });
-      });
-    }
-    if (inMem) { _doScreenExport(inMem); }
-    else { idbGetScreenData().then(function(d) { _doScreenExport(d || []); }); }
-
-  } else if (type === 'imglib') {
-    imgLibGetAll().then(function(items) {
-      _downloadJson({ version: 1, exportedAt: new Date().toISOString(), imageLib: items }, 'imglib-' + ts + '.json');
-      toast('📥 画像ライブラリをエクスポートしました（' + items.length + '件）');
-    });
-
-  } else if (type === 'hearing') {
-    var questions = (typeof _hrGetQuestions === 'function') ? _hrGetQuestions() : [];
-    var policies = (function() { try { var s = localStorage.getItem('hearingPolicies_v1'); return s ? JSON.parse(s) : []; } catch(e) { return []; } })();
-    _downloadJson({ version: 1, exportedAt: new Date().toISOString(), hearingQuestions: questions, hearingPolicies: policies }, 'hearing-' + ts + '.json');
-    toast('📥 ヒアリングをエクスポートしました');
-
-  } else if (type === 'sidemenu') {
-    var smData = window.loadSideMenuData() || window.DEFAULT_SIDE_MENU_DATA;
-    _downloadJson({ version: 1, exportedAt: new Date().toISOString(), sideMenuData: smData }, 'sidemenu-' + ts + '.json');
-    toast('📥 サイドメニューをエクスポートしました');
-
-  } else if (type === 'history') {
-    var hist = loadHistory();
-    _downloadJson({ version: 1, exportedAt: new Date().toISOString(), updateHistory: hist }, 'history-' + ts + '.json');
-    toast('📥 更新履歴をエクスポートしました（' + hist.length + '件）');
-  }
-}
 
 // ── ズーム ──
 var _scrZoom = 1;
