@@ -3,169 +3,254 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>📋 トークスクリプト集</title>
+  <title>🏠 ホーム</title>
   <link rel="stylesheet" href="style.css">
   <script src="common-utils.js"></script>
+  <style>
+    html, body {
+      height: 100%;
+      overflow: hidden;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Noto Sans JP', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ===== ヘッダー ===== */
+    .home-header {
+      height: var(--header-h);
+      background: var(--header-bg);
+      color: var(--header-text);
+      display: flex;
+      align-items: center;
+      padding: 0 20px;
+      gap: 12px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: var(--shadow-md);
+    }
+    .home-header-icon { font-size: 22px; }
+    .home-header-title {
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      color: var(--header-text);
+    }
+
+    /* ===== ページ本体：サイドバー＋メイン横並び ===== */
+    .home-body {
+      flex: 1;
+      display: flex;
+      height: calc(100vh - var(--header-h));
+      overflow: hidden;
+    }
+
+    /* ===== 左サイドバー（常時表示・独立スクロール）===== */
+    /* common-utils.js が描画する #sideMenu をそのまま流用。
+       通常は fixed + slide だが、ここでは static に上書きする */
+    #sideMenu {
+      position: static !important;
+      left: auto !important;
+      top: auto !important;
+      transform: none !important;
+      transition: none !important;
+      width: var(--sidemenu-w) !important;
+      min-width: var(--sidemenu-w) !important;
+      max-width: var(--sidemenu-w) !important;
+      height: 100% !important;
+      box-shadow: none !important;
+      border-right: 1px solid var(--border);
+      overflow-y: auto;
+      overflow-x: hidden;
+      flex-shrink: 0;
+      z-index: 1 !important;
+    }
+
+    /* ===== メインコンテンツ ===== */
+    .home-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 48px 24px 64px;
+      height: 100%;
+      overflow-y: auto;
+    }
+
+    .home-lead {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    .home-lead-title {
+      font-size: 22px;
+      font-weight: 700;
+      margin: 0 0 8px;
+      color: var(--text);
+    }
+    .home-lead-sub {
+      font-size: 13px;
+      color: var(--text3);
+      margin: 0;
+    }
+
+    /* ===== カードグリッド ===== */
+    .home-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 18px;
+      width: 100%;
+      max-width: 900px;
+    }
+
+    .home-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 28px 24px;
+      cursor: pointer;
+      text-decoration: none;
+      color: inherit;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      transition: box-shadow 0.18s, border-color 0.18s, transform 0.12s;
+    }
+    .home-card:hover {
+      box-shadow: var(--shadow-md);
+      border-color: var(--accent);
+      transform: translateY(-2px);
+    }
+    .home-card:active {
+      transform: translateY(0);
+    }
+
+    .home-card-icon {
+      font-size: 34px;
+      line-height: 1;
+    }
+    .home-card-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .home-card-desc {
+      font-size: 12px;
+      color: var(--text3);
+      line-height: 1.7;
+    }
+    .home-card-arrow {
+      margin-top: auto;
+      font-size: 12px;
+      color: var(--accent);
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+
+    /* 管理カードはやや控えめなスタイル */
+    .home-card.admin-card {
+      border-style: dashed;
+      opacity: 0.85;
+    }
+    .home-card.admin-card:hover {
+      opacity: 1;
+    }
+
+    /* ===== フッター ===== */
+    .home-footer {
+      text-align: center;
+      padding: 16px;
+      font-size: 11px;
+      color: var(--text3);
+      border-top: 1px solid var(--border);
+    }
+
+    @media (max-width: 700px) {
+      #sideMenu {
+        display: none !important;
+      }
+      .home-grid {
+        grid-template-columns: 1fr;
+      }
+      .home-main {
+        padding: 32px 16px 48px;
+      }
+    }
+  </style>
 </head>
 <body>
 
-<!-- ===== ヘッダー ===== -->
-<header>
-  <div class="hd-left">
-    <button id="menuBtn" onclick="toggleSideMenu()">☰</button>
-    <button class="header-title hd-title-btn" onclick="goHome()" title="ホームへ戻る">📋 トークスクリプト集</button>
-    <button class="help-circle-btn" onclick="openHelpModal()" title="使い方マニュアル">?</button>
-  </div>
-  <div class="hd-center"></div>
-  <div class="hd-right">
-    <!-- スクリプト：自ページのため非表示 -->
-    <button class="nav-btn" onclick="openNamedTab('mail.html','mailTab')">✉️ メール</button>
-    <button class="nav-btn" onclick="openNamedTab('screen.html','screenFlowTab')">🖥️ 画面遷移</button>
-    <div class="quick-copy-area">
-      <button class="quick-copy-btn nav-btn-green" id="quickCopyBtn" onclick="toggleQuickMenu()">💬 定型文</button>
-      <div class="quick-menu" id="quickMenu"></div>
-      <div class="quick-copy-toast" id="quickCopyToast"></div>
-    </div>
-    <div class="search-area">
-      <input type="text" id="searchBox" placeholder="スクリプト検索（タイトル・本文）" autocomplete="off">
-      <button id="clearBtn">×</button>
-      <div id="suggestBox"></div>
-    </div>
-  </div>
+<header class="home-header">
+  <span class="home-header-icon">🏠</span>
+  <span class="home-header-title">ツール一覧</span>
 </header>
 
-<!-- ===== ☰ スライドサイドメニュー（ツール・資料・リンク） ===== -->
-<aside id="sideMenu"></aside>
-
-<!-- ===== メインレイアウト ===== -->
-<div class="page-layout">
-
-  <!-- 左サイドバー：コンテンツ一覧（件数はJSが動的に更新） -->
-  <div class="script-sidebar-panel" id="scriptSidebarPanel">
-    <div class="sidebar-top" id="scriptSidebarTop">📂 コンテンツ一覧</div>
-    <div class="sidebar-scroll" id="scriptSidebarEl"></div>
+<div class="home-body">
+  <aside id="sideMenu"></aside>
+  <main class="home-main">
+  <div class="home-lead">
+    <p class="home-lead-title">ようこそ！利用するツールを選んでください。</p>
+    <p class="home-lead-sub">各ページはタブで開きます。複数ページを同時に使えます。</p>
   </div>
 
-  <!-- メインコンテンツエリア -->
-  <main>
-    <!-- オープニングトーク（常時表示） -->
-    <div class="opening">
-      <div class="opening-title">オープニングトーク</div>
-      <div class="opening-text">お電話 ありがとうございます。NHKONE窓口 担当●●でございます。</div>
-    </div>
+  <div class="home-grid">
 
-    <!-- スクリプト表示エリア（JSが描画。クロージングも対応完了時にここに含まれる） -->
-    <div id="contentArea"></div>
-  </main>
+    <!-- トークスクリプト集 -->
+    <a class="home-card" onclick="openNamedTab('script.html','scriptTab')" href="javascript:void(0)">
+      <span class="home-card-icon">📋</span>
+      <span class="home-card-title">トークスクリプト集</span>
+      <span class="home-card-desc">
+        お問い合わせ対応のトークスクリプトを一覧から検索・参照できます。ヒアリングチェックシート付き。
+      </span>
+      <span class="home-card-arrow">開く →</span>
+    </a>
 
-  <!-- 右サイドパネル：ヒアリングチェックシート -->
-  <div id="hearingPanel" class="hearing-panel">
-    <button id="hearingToggleBtn" class="hearing-toggle-btn" onclick="toggleHearingPanel()" title="ヒアリングチェックシート">＜</button>
-    <div class="hearing-panel-body">
-      <div class="hearing-header">
-        <span class="hearing-title">ヒアリングチェックシート</span>
-        <div class="hearing-header-btns">
-          <button class="hearing-copy-btn" onclick="copyHearingText()" title="ヒアリング内容をコピー">📋 コピー</button>
-          <button class="hearing-reset-btn" onclick="resetHearing()">リセット</button>
-        </div>
-      </div>
-      <div id="hearingCopyToast" class="hearing-copy-toast"></div>
-      <div class="hearing-content" id="hearingContent"></div>
-    </div>
+    <!-- メールテンプレート集 -->
+    <a class="home-card" onclick="openNamedTab('mail.html','mailTab')" href="javascript:void(0)">
+      <span class="home-card-icon">✉️</span>
+      <span class="home-card-title">メールテンプレート集</span>
+      <span class="home-card-desc">
+        返信・案内メールのテンプレートをカテゴリ別に管理。件名・本文をすぐに確認できます。
+      </span>
+      <span class="home-card-arrow">開く →</span>
+    </a>
+
+    <!-- 画面遷移フロー -->
+    <a class="home-card" onclick="openNamedTab('screen.html','screenFlowTab')" href="javascript:void(0)">
+      <span class="home-card-icon">🖥️</span>
+      <span class="home-card-title">画面遷移フロー</span>
+      <span class="home-card-desc">
+        システム画面の遷移フローを視覚的に確認できます。操作手順の確認・説明に活用できます。
+      </span>
+      <span class="home-card-arrow">開く →</span>
+    </a>
+
+    <!-- 管理画面 -->
+    <a class="home-card admin-card" onclick="openNamedTab('admin.html','adminTab')" href="javascript:void(0)">
+      <span class="home-card-icon">⚙️</span>
+      <span class="home-card-title">管理画面</span>
+      <span class="home-card-desc">
+        スクリプト・メールテンプレート・画面フローのデータ編集・追加・削除を行います。
+      </span>
+      <span class="home-card-arrow">開く →</span>
+    </a>
+
   </div>
+</main>
 </div>
 
-<!-- サイドバーホバー時のコンテンツプレビュー用フローティングTooltip -->
-<div id="sbPreviewTooltip" class="sb-preview-tooltip" style="display:none"></div>
+<footer class="home-footer">
+  各ページはタブ（または新規ウィンドウ）で開きます。
+</footer>
 
-<!-- ===== 使い方マニュアル モーダル ===== -->
-<div id="helpModal" class="help-modal-overlay" style="display:none" onclick="closeHelpModalOutside(event)">
-  <div class="help-modal-box">
-    <div class="help-modal-header">
-      <span class="help-modal-title">📖 使い方マニュアル — トークスクリプト集</span>
-      <button class="help-modal-close" onclick="closeHelpModal()">✕</button>
-    </div>
-    <div class="help-modal-body">
-      <div class="help-modal-grid">
-
-        <div class="help-section">
-          <div class="help-section-title">🗂 基本の使い方</div>
-          <ol class="help-ol">
-            <li>左の <strong>コンテンツ一覧</strong> からカテゴリを展開し、スクリプト名をクリックします。</li>
-            <li>青い選択肢ボタンをクリックしてステップを進めます。</li>
-            <li>すべてのステップが完了すると <strong>✓ 対応完了</strong> バッジが表示され、クロージングトークが出現します。</li>
-            <li>「不明点なし」「不明点あり」ボタンでクロージング文言を切り替えられます。</li>
-          </ol>
-        </div>
-
-        <div class="help-section">
-          <div class="help-section-title">🧭 サイドバー操作</div>
-          <ul class="help-ul">
-            <li>▶ アイコンのカテゴリ名をクリックすると展開・格納できます。</li>
-            <li>スクリプト名にカーソルを乗せると内容のプレビューが表示されます。</li>
-            <li>現在表示中のスクリプトは青枠でハイライトされます。</li>
-            <li>青枠は画面内どこをクリックしても保持されます。<kbd>Esc</kbd> で解除します。</li>
-          </ul>
-        </div>
-
-        <div class="help-section">
-          <div class="help-section-title">🔍 スクリプト検索</div>
-          <ul class="help-ul">
-            <li>右上の検索ボックスにキーワードを入力するとタイトル・本文を横断検索できます。</li>
-            <li>候補をクリックするか <kbd>↑</kbd><kbd>↓</kbd><kbd>Enter</kbd> で選択できます。</li>
-            <li><kbd>×</kbd> ボタンで検索をクリアします。</li>
-          </ul>
-        </div>
-
-        <div class="help-section">
-          <div class="help-section-title">💬 定型文クイックコピー</div>
-          <ul class="help-ul">
-            <li>右上の <strong>💬 定型文</strong> ボタンをクリックするとメニューが開きます。</li>
-            <li>項目をクリックするとクリップボードにコピーされます。</li>
-          </ul>
-        </div>
-
-        <div class="help-section">
-          <div class="help-section-title">⌨️ キーボードナビゲーション</div>
-          <table class="help-table">
-            <tr><th>キー</th><th>動作</th></tr>
-            <tr><td><kbd>↑</kbd> / <kbd>↓</kbd></td><td>サイドバーアイテム・選択肢ボタンを移動</td></tr>
-            <tr><td><kbd>←</kbd></td><td>前のステップに戻る</td></tr>
-            <tr><td><kbd>Enter</kbd></td><td>フォーカス中のボタンを押す</td></tr>
-            <tr><td><kbd>Esc</kbd></td><td>サイドバーの青枠フォーカスを解除</td></tr>
-          </table>
-        </div>
-
-        <div class="help-section">
-          <div class="help-section-title">🩺 ヒアリングチェックシート</div>
-          <ul class="help-ul">
-            <li>画面右端の <strong>＜</strong> ボタンでパネルを開閉できます。</li>
-            <li>入力後「📋 コピー」でクリップボードへコピーできます。</li>
-            <li>「リセット」ボタンで入力内容をすべてクリアします。</li>
-          </ul>
-        </div>
-
-        <div class="help-section">
-          <div class="help-section-title">📥 データ更新（D&amp;D）</div>
-          <ul class="help-ul">
-            <li>管理画面で「💾 保存して反映」すると JSON ファイルが自動ダウンロードされます。</li>
-            <li>その JSON ファイルを画面上にドロップするとデータが即時更新されます（リロードなし）。</li>
-          </ul>
-        </div>
-    </div>
-  </div>
-</div>
-
-<script src="app.js"></script>
-
-<!-- 使い方マニュアル モーダル開閉 -->
 <script>
-  function openHelpModal()  { document.getElementById('helpModal').style.display = 'flex'; }
-  function closeHelpModal() { document.getElementById('helpModal').style.display = 'none'; }
-  // モーダル外クリックで閉じる
-  function closeHelpModalOutside(e) {
-    if (e.target === document.getElementById('helpModal')) closeHelpModal();
-  }
+  // common-utils.js の openNamedTab / _buildSideMenuHTML を使用
+  // #sideMenu は CSS で static 表示に固定しているため toggleSideMenu() は不要
 </script>
 </body>
 </html>

@@ -581,48 +581,74 @@ window.renderHistory = function () {
 // =============================================================================
 var SIDE_MENU_DATA_KEY = 'sideMenuData';
 
-// デフォルトのサイドメニューデータ（初回起動時 / リセット時に使用）
+// デフォルトのサイドメニューデータ（オリジナル全URL入り）
 window.DEFAULT_SIDE_MENU_DATA = [
   { id: 'linkTools', label: '🔧 ツール', type: 'links', items: [
-    { name: 'Genesys',      url: 'https://login.mypurecloud.jp/#/authenticate-adv/org/tci-gp1' },
-    { name: 'CRM',          url: 'https://ctssvr501.cloud.contact-link.jp/cts_nhk_net/login/index.php' },
-    { name: 'LINE WORKS',   url: 'https://auth.worksmobile.com/login/login?accessUrl=https%3A%2F%2Fcommon.worksmobile.com%2Fproxy%2Fmy' },
-    { name: '対話要約AI',   url: 'https://tci-dcc-support-summaryai02.spiral-site.com/summary_nhk' },
-    { name: 'SpeechVisualizer', url: 'http://tci-ami-web16/Speechvisualizer/' }
+    { name: 'Genesys',         url: 'https://login.mypurecloud.jp/#/authenticate-adv/org/tci-gp1' },
+    { name: 'CRM',             url: 'https://ctssvr501.cloud.contact-link.jp/cts_nhk_net/login/index.php' },
+    { name: 'LINE WORKS',      url: 'https://auth.worksmobile.com/login/login?accessUrl=https%3A%2F%2Fcommon.worksmobile.com%2Fproxy%2Fmy' },
+    { name: '対話要約AI',      url: 'https://tci-dcc-support-summaryai02.spiral-site.com/summary_nhk' },
+    { name: 'SpeechVisualizer',url: 'http://tci-ami-web16/Speechvisualizer/' }
   ]},
   { id: 'linkDocs', label: '📄 資料', type: 'links_with_sub', subSections: [
     { id: 'subDocs_Work', label: 'NHKONE 関連資料', items: [
-      { name: 'コールセンターについて', url: '' },
-      { name: 'サービス概要・世帯での利用', url: '' }
+      { name: 'コールセンターについて',       url: 'file://tohoku/share/%E6%8B%A0%E7%82%B9/%E4%BB%99%E5%8F%B0%E9%9D%92%E8%91%89/00_%E4%BA%8B%E6%A5%AD%E6%89%80/NGH/%E6%A5%AD%E5%8B%99%E8%B3%87%E6%96%99/%E3%83%9E%E3%83%8B%E3%83%A5%E3%82%A2%E3%83%AB%E9%96%A2%E9%80%A3/NHK%20ONE%20%E9%96%A2%E9%80%A3%E8%B3%87%E6%96%99/%E3%80%90NHK%20ONE%E3%80%91%E3%82%B3%E3%83%BC%E3%83%AB%E3%82%BB%E3%83%B3%E3%82%BF%E3%83%BC%E3%81%AB%E3%81%A4%E3%81%84%E3%81%A6_20251129.pdf' },
+      { name: 'サービス概要・世帯での利用',   url: 'file://tohoku/share/%E6%8B%A0%E7%82%B9/%E4%BB%99%E5%8F%B0%E9%9D%92%E8%91%89/00_%E4%BA%8B%E6%A5%AD%E6%89%80/NGH/%E6%A5%AD%E5%8B%99%E8%B3%87%E6%96%99/%E3%83%9E%E3%83%8B%E3%83%A5%E3%82%A2%E3%83%AB%E9%96%A2%E9%80%A3/NHK%20ONE%20%E9%96%A2%E9%80%A3%E8%B3%87%E6%96%99/%E3%80%90NHK%20ONE%E3%80%91%E3%82%B5%E3%83%BC%E3%83%93%E3%82%B9%E6%A6%82%E8%A6%81%E3%83%BB%E4%B8%96%E5%B8%AF%E3%81%A7%E3%81%AE%E5%88%A9%E7%94%A8_20250908.pdf' },
+      { name: '学校での利用',               url: 'file://tohoku/share/%E6%8B%A0%E7%82%B9/%E4%BB%99%E5%8F%B0%E9%9D%92%E8%91%89/00_%E4%BA%8B%E6%A5%AD%E6%89%80/NGH/%E6%A5%AD%E5%8B%99%E8%B3%87%E6%96%99/%E3%83%9E%E3%83%8B%E3%83%A5%E3%82%A2%E3%83%AB%E9%96%A2%E9%80%A3/NHK%20ONE%20%E9%96%A2%E9%80%A3%E8%B3%87%E6%96%99/%E3%80%90NHK%20ONE%E3%80%91%E5%AD%A6%E6%A0%A1%E3%81%A7%E3%81%AE%E5%88%A9%E7%94%A8_20260102.pdf' },
+      { name: '事業での利用',               url: 'file://tohoku/share/%E6%8B%A0%E7%82%B9/%E4%BB%99%E5%8F%B0%E9%9D%92%E8%91%89/00_%E4%BA%8B%E6%A5%AD%E6%89%80/NGH/%E6%A5%AD%E5%8B%99%E8%B3%87%E6%96%99/%E3%83%9E%E3%83%8B%E3%83%A5%E3%82%A2%E3%83%AB%E9%96%A2%E9%80%A3/NHK%20ONE%20%E9%96%A2%E9%80%A3%E8%B3%87%E6%96%99/%E3%80%90NHK%20ONE%E3%80%91%E4%BA%8B%E6%A5%AD%E3%81%A7%E3%81%AE%E5%88%A9%E7%94%A8_20250904.pdf' },
+      { name: 'ユーザーお困りポイント',      url: 'file://tohoku/share/%E6%8B%A0%E7%82%B9/%E4%BB%99%E5%8F%B0%E9%9D%92%E8%91%89/00_%E4%BA%8B%E6%A5%AD%E6%89%80/NGH/%E6%A5%AD%E5%8B%99%E8%B3%87%E6%96%99/%E3%83%9E%E3%83%8B%E3%83%A5%E3%82%A2%E3%83%AB%E9%96%A2%E9%80%A3/NHK%20ONE%20%E9%96%A2%E9%80%A3%E8%B3%87%E6%96%99/%E3%80%90%E4%B8%96%E5%B8%AF%E3%82%A2%E3%82%AB%E3%82%A6%E3%83%B3%E3%83%88%E3%80%91%E3%83%A6%E3%83%BC%E3%82%B6%E3%83%BC%E3%81%8A%E5%9B%B0%E3%82%8A%E3%83%9D%E3%82%A4%E3%83%B3%E3%83%88_20250908.pdf' },
+      { name: 'アカウント登録導線説明資料',  url: 'file://tohoku/share/%E6%8B%A0%E7%82%B9/%E4%BB%99%E5%8F%B0%E9%9D%92%E8%91%89/00_%E4%BA%8B%E6%A5%AD%E6%89%80/NGH/%E6%A5%AD%E5%8B%99%E8%B3%87%E6%96%99/%E3%83%9E%E3%83%8B%E3%83%A5%E3%82%A2%E3%83%AB%E9%96%A2%E9%80%A3/NHK%20ONE%20%E9%96%A2%E9%80%A3%E8%B3%87%E6%96%99/%E3%80%90NHK%20ONE%E3%80%91%E3%82%A2%E3%82%AB%E3%82%A6%E3%83%B3%E3%83%88%E7%99%BB%E9%8C%B2%E5%B0%8E%E7%B7%9A%E8%AA%AC%E6%98%8E%E8%B3%87%E6%96%99.pdf' },
+      { name: '受信料アカウント全国説明会資料', url: 'file://tohoku/share/%E6%8B%A0%E7%82%B9/%E4%BB%99%E5%8F%B0%E9%9D%92%E8%91%89/00_%E4%BA%8B%E6%A5%AD%E6%89%80/NGH/%E6%A5%AD%E5%8B%99%E8%B3%87%E6%96%99/%E3%83%9E%E3%83%8B%E3%83%A5%E3%82%A2%E3%83%AB%E9%96%A2%E9%80%A3/NHK%20ONE%20%E9%96%A2%E9%80%A3%E8%B3%87%E6%96%99/%E3%80%90%E7%A2%BA%E5%AE%9A%E7%89%88%E3%80%9120251110_%E5%8F%97%E4%BF%A1%E6%96%99%E3%82%A2%E3%82%AB%E3%82%A6%E3%83%B3%E3%83%88%E5%85%A8%E5%9B%BD%E8%AA%AC%E6%98%8E%E4%BC%9A%E8%B3%87%E6%96%99_1117%E4%BF%AE%E6%AD%A3.pdf' },
+      { name: 'J→S転送対応フロー',          url: 'file://tohoku/share/%E6%8B%A0%E7%82%B9/%E4%BB%99%E5%8F%B0%E9%9D%92%E8%91%89/00_%E4%BA%8B%E6%A5%AD%E6%89%80/NGH/%E6%A5%AD%E5%8B%99%E8%B3%87%E6%96%99/%E3%83%9E%E3%83%8B%E3%83%A5%E3%82%A2%E3%83%AB%E9%96%A2%E9%80%A3/NHK%20ONE%20%E9%96%A2%E9%80%A3%E8%B3%87%E6%96%99/J%E2%86%92S%E8%BB%A2%E9%80%81/%E3%80%90NGH%E7%89%88%E3%80%91J%E2%86%92S%E8%BB%A2%E9%80%81%E5%AF%BE%E5%BF%9C%E3%83%95%E3%83%AD%E3%83%BC_20260307.pdf' }
     ]},
     { id: 'subDocs_Quality', label: '応対品質', items: [
-      { name: 'クレーム対応のポイント', url: '' }
+      { name: 'クレーム対応のポイント',                             url: 'file://tohoku/share/%E6%8B%A0%E7%82%B9/%E4%BB%99%E5%8F%B0%E9%9D%92%E8%91%89/00_%E4%BA%8B%E6%A5%AD%E6%89%80/NGH/%E6%A5%AD%E5%8B%99%E8%B3%87%E6%96%99/%E3%83%9E%E3%83%8B%E3%83%A5%E3%82%A2%E3%83%AB%E9%96%A2%E9%80%A3/%E5%BF%9C%E5%AF%BE%E5%93%81%E8%B3%AA/%E3%82%AF%E3%83%AC%E3%83%BC%E3%83%A0%E5%AF%BE%E5%BF%9C%E3%81%AE%E3%83%9D%E3%82%A4%E3%83%B3%E3%83%88.pdf' },
+      { name: 'わかりやすい伝え方・話し方（ロジカルシンキング）', url: 'file://tohoku/share/%E6%8B%A0%E7%82%B9/%E4%BB%99%E5%8F%B0%E9%9D%92%E8%91%89/00_%E4%BA%8B%E6%A5%AD%E6%89%80/NGH/%E6%A5%AD%E5%8B%99%E8%B3%87%E6%96%99/%E3%83%9E%E3%83%8B%E3%83%A5%E3%82%A2%E3%83%AB%E9%96%A2%E9%80%A3/%E5%BF%9C%E5%AF%BE%E5%93%81%E8%B3%AA/%E3%82%8F%E3%81%8B%E3%82%8A%E3%82%84%E3%81%99%E3%81%84%E4%BC%9D%E3%81%88%E6%96%B9%E3%83%BB%E8%A9%B1%E3%81%97%E6%96%B9%EF%BC%88%E3%83%AD%E3%82%B8%E3%82%AB%E3%83%AB%E3%82%B7%E3%83%B3%E3%82%AD%E3%83%B3%E3%82%B0%EF%BC%89.pdf' },
+      { name: '高齢者対応',                                       url: 'file://tohoku/share/%E6%8B%A0%E7%82%B9/%E4%BB%99%E5%8F%B0%E9%9D%92%E8%91%89/00_%E4%BA%8B%E6%A5%AD%E6%89%80/NGH/%E6%A5%AD%E5%8B%99%E8%B3%87%E6%96%99/%E3%83%9E%E3%83%8B%E3%83%A5%E3%82%A2%E3%83%AB%E9%96%A2%E9%80%A3/%E5%BF%9C%E5%AF%BE%E5%93%81%E8%B3%AA/%E9%AB%98%E9%BD%A2%E8%80%85%E5%AF%BE%E5%BF%9C.pdf' }
     ]},
     { id: 'subDocs_Training', label: '研修', items: [
-      { name: 'CMマニュアル', url: '' }
+      { name: '【NGH】事業所紹介',    url: 'file://tohoku/share/%E6%8B%A0%E7%82%B9/%E4%BB%99%E5%8F%B0%E9%9D%92%E8%91%89/00_%E4%BA%8B%E6%A5%AD%E6%89%80/NGH/%E6%A5%AD%E5%8B%99%E8%B3%87%E6%96%99/%E3%83%9E%E3%83%8B%E3%83%A5%E3%82%A2%E3%83%AB%E9%96%A2%E9%80%A3/%E3%80%90NGH%E3%80%91%E4%BA%8B%E6%A5%AD%E6%89%80%E7%B4%B9%E4%BB%8B_20260127.pdf' },
+      { name: 'CMマニュアル',         url: 'file://tohoku/share/%E6%8B%A0%E7%82%B9/%E4%BB%99%E5%8F%B0%E9%9D%92%E8%91%89/00_%E4%BA%8B%E6%A5%AD%E6%89%80/NGH/%E6%A5%AD%E5%8B%99%E8%B3%87%E6%96%99/%E3%83%9E%E3%83%8B%E3%83%A5%E3%82%A2%E3%83%AB%E9%96%A2%E9%80%A3/%E3%80%90NGH%E3%80%91CM%E3%83%9E%E3%83%8B%E3%83%A5%E3%82%A2%E3%83%AB_20251031.pdf' },
+      { name: 'LINEWORKS マニュアル', url: 'file://tohoku/share/%E6%8B%A0%E7%82%B9/%E4%BB%99%E5%8F%B0%E9%9D%92%E8%91%89/00_%E4%BA%8B%E6%A5%AD%E6%89%80/NGH/%E6%A5%AD%E5%8B%99%E8%B3%87%E6%96%99/%E3%83%9E%E3%83%8B%E3%83%A5%E3%82%A2%E3%83%AB%E9%96%A2%E9%80%A3/%E5%90%84%E7%A8%AE%E3%83%84%E3%83%BC%E3%83%AB/%E3%80%90LINE%20WORKS%E3%80%91%E3%82%A4%E3%83%B3%E3%82%B9%E3%83%88%E3%83%BC%E3%83%AB%E3%81%A8%E6%B4%BB%E7%94%A8%E6%96%B9%E6%B3%95.pdf' },
+      { name: 'Genesys マニュアル',   url: 'file://tohoku/share/%E6%8B%A0%E7%82%B9/%E4%BB%99%E5%8F%B0%E9%9D%92%E8%91%89/00_%E4%BA%8B%E6%A5%AD%E6%89%80/NGH/%E6%A5%AD%E5%8B%99%E8%B3%87%E6%96%99/%E3%83%9E%E3%83%8B%E3%83%A5%E3%82%A2%E3%83%AB%E9%96%A2%E9%80%A3/%E5%90%84%E7%A8%AE%E3%83%84%E3%83%BC%E3%83%AB/%E3%80%90NGH%E3%80%91Genesys%20Cloud%E5%88%A9%E7%94%A8%E3%83%9E%E3%83%8B%E3%83%A5%E3%82%A2%E3%83%AB_20251029.pdf' },
+      { name: '対話要約AI マニュアル',url: 'file://tohoku/share/%E6%8B%A0%E7%82%B9/%E4%BB%99%E5%8F%B0%E9%9D%92%E8%91%89/00_%E4%BA%8B%E6%A5%AD%E6%89%80/NGH/%E6%A5%AD%E5%8B%99%E8%B3%87%E6%96%99/%E3%83%9E%E3%83%8B%E3%83%A5%E3%82%A2%E3%83%AB%E9%96%A2%E9%80%A3/%E5%90%84%E7%A8%AE%E3%83%84%E3%83%BC%E3%83%AB/%E3%80%90NGH%E3%80%91%E5%AF%BE%E8%A9%B1%E8%A6%81%E7%B4%84AI%E3%83%9E%E3%83%8B%E3%83%A5%E3%82%A2%E3%83%AB_20250819.pdf' },
+      { name: 'trans-CRM マニュアル', url: 'file://tohoku/share/%E6%8B%A0%E7%82%B9/%E4%BB%99%E5%8F%B0%E9%9D%92%E8%91%89/00_%E4%BA%8B%E6%A5%AD%E6%89%80/NGH/%E6%A5%AD%E5%8B%99%E8%B3%87%E6%96%99/%E3%83%9E%E3%83%8B%E3%83%A5%E3%82%A2%E3%83%AB%E9%96%A2%E9%80%A3/%E5%90%84%E7%A8%AE%E3%83%84%E3%83%BC%E3%83%AB/%E3%80%90trans-CRM%E3%80%91%E5%88%A9%E7%94%A8%E3%83%9E%E3%83%8B%E3%83%A5%E3%82%A2%E3%83%AB20260216.pdf' },
+      { name: 'AmiVoice マニュアル',  url: 'file://tohoku/share/%E6%8B%A0%E7%82%B9/%E4%BB%99%E5%8F%B0%E9%9D%92%E8%91%89/00_%E4%BA%8B%E6%A5%AD%E6%89%80/NGH/%E6%A5%AD%E5%8B%99%E8%B3%87%E6%96%99/%E3%83%9E%E3%83%8B%E3%83%A5%E3%82%A2%E3%83%AB%E9%96%A2%E9%80%A3/%E5%90%84%E7%A8%AE%E3%83%84%E3%83%BC%E3%83%AB/%E3%80%90transpeech%E3%80%91AmiVoice%20Operator%20Agent%E5%88%A9%E7%94%A8%E3%83%9E%E3%83%8B%E3%83%A5%E3%82%A2%E3%83%AB.pdf' }
     ]}
   ]},
   { id: 'linkSites', label: '🌐 関連サイト', type: 'links', items: [
-    { name: 'NHK HP',               url: 'https://www.nhk.or.jp/' },
+    { name: 'NHK HP',                  url: 'https://www.nhk.or.jp/' },
     { name: 'NHKONEインフォメーション', url: 'https://www.nhk.or.jp/nhkone/' },
-    { name: 'ヘルプセンター',        url: 'https://www.nhk.or.jp/nhkone/help/' },
-    { name: 'NHK for school',       url: 'https://www.nhk.or.jp/school/' },
-    { name: '全国のNHK放送局',      url: 'https://www.nhk.or.jp/info/pr/nationwide-nhk/' },
-    { name: '各放送局営業窓口一覧', url: 'https://www.nhk-cs.jp/jushinryo/menjo/window.html' },
-    { name: '学校コード検索HP',     url: 'https://edu-data.jp/' },
-    { name: '郵便局HP',            url: 'https://www.post.japanpost.jp/zipcode/index.html' }
+    { name: 'ヘルプセンター',           url: 'https://www.nhk.or.jp/nhkone/help/' },
+    { name: 'NHK for school',          url: 'https://www.nhk.or.jp/school/' },
+    { name: '全国のNHK放送局',         url: 'https://www.nhk.or.jp/info/pr/nationwide-nhk/' },
+    { name: '各放送局営業窓口一覧',    url: 'https://www.nhk-cs.jp/jushinryo/menjo/window.html' },
+    { name: '学校コード検索HP',        url: 'https://edu-data.jp/' },
+    { name: '郵便局HP',               url: 'https://www.post.japanpost.jp/zipcode/index.html' }
   ]}
 ];
 
 window.loadSideMenuData = function() {
   try {
     var s = localStorage.getItem(SIDE_MENU_DATA_KEY);
-    return s ? JSON.parse(s) : null;
-  } catch(e) { return null; }
+    if (s) return JSON.parse(s);
+  } catch(e) {}
+  return null;
 };
+
 window.saveSideMenuData = function(data) {
   try { localStorage.setItem(SIDE_MENU_DATA_KEY, JSON.stringify(data)); } catch(e) {}
 };
+
+// 初回起動時にデフォルトデータを localStorage に書き込む
+// → admin.html で即座に編集・管理できるようにする
+(function() {
+  try {
+    if (!localStorage.getItem(SIDE_MENU_DATA_KEY)) {
+      localStorage.setItem(SIDE_MENU_DATA_KEY, JSON.stringify(window.DEFAULT_SIDE_MENU_DATA));
+    }
+  } catch(e) {}
+})();
 
 function _phonRow(letter, r1, r2) {
   var cell = function (v) {
@@ -1207,6 +1233,12 @@ document.addEventListener('DOMContentLoaded', function () {
     window.renderHistory();
     window.addEventListener('storage', function (e) {
       if (e.key === 'updateHistory') window.renderHistory();
+      // 他タブでサイドメニューが更新されたら即再描画
+      if (e.key === 'sideMenuData') {
+        var isDarkNow = localStorage.getItem('darkMode') === '1';
+        m.innerHTML = _buildSideMenuHTML(isDarkNow);
+        window.renderHistory();
+      }
     });
   }
 

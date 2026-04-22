@@ -14,6 +14,19 @@
    admin.html 専用スタイル（改修版）
    ============================================================ */
 
+/* ── 個別エクスポートメニュー ── */
+.export-menu-item {
+  display: block; width: 100%;
+  padding: 9px 16px;
+  text-align: left; font-size: 12px;
+  font-family: inherit; font-weight: 500;
+  background: none; border: none;
+  color: var(--text); cursor: pointer;
+  transition: background .1s;
+}
+.export-menu-item:hover { background: var(--accent-lt); color: var(--accent); }
+.export-menu-item + .export-menu-item { border-top: 1px solid var(--border2); }
+
 /* ── サイドバー共通：縦間隔 ── */
 .cat-header {
   height: 36px;
@@ -735,6 +748,19 @@ body.dnd-xlsx-hover::after {
     <span style="width:1px;height:20px;background:rgba(255,255,255,.25);margin:0 4px;flex-shrink:0;"></span>
     <input type="file" id="importFile" accept=".json" style="display:none" onchange="importJSON(this)">
     <span id="dirtyIndicator" style="visibility:hidden;display:inline-flex;align-items:center;gap:4px;background:#e07a00;color:white;font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;">⚠️ 未保存</span>
+    <div style="position:relative;display:inline-block;">
+      <button class="btn btn-secondary" id="exportMenuBtn" onclick="toggleExportMenu()" style="font-size:12px;">📤 個別エクスポート ▾</button>
+      <div id="exportMenu" style="display:none;position:absolute;right:0;top:calc(100% + 4px);background:var(--surface);border:1px solid var(--border);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.18);min-width:200px;z-index:4000;overflow:hidden;">
+        <div style="padding:6px 12px 4px;font-size:10px;font-weight:700;color:var(--muted);border-bottom:1px solid var(--border);">データ種別を選択してエクスポート</div>
+        <button class="export-menu-item" onclick="exportSingle('script')">📋 スクリプト</button>
+        <button class="export-menu-item" onclick="exportSingle('mail')">✉️ メール</button>
+        <button class="export-menu-item" onclick="exportSingle('screen')">🖥 画面遷移</button>
+        <button class="export-menu-item" onclick="exportSingle('imglib')">🖼 画像ライブラリ</button>
+        <button class="export-menu-item" onclick="exportSingle('hearing')">📋 ヒアリング</button>
+        <button class="export-menu-item" onclick="exportSingle('sidemenu')">☰ サイドメニュー</button>
+        <button class="export-menu-item" onclick="exportSingle('history')">📝 更新履歴</button>
+      </div>
+    </div>
     <button class="btn btn-primary" onclick="saveAllManual()">💾 保存して反映</button>
   </div>
 </header>
@@ -1628,7 +1654,7 @@ function switchTab(tab){
   if(tab==='history')renderAdminHistoryPanel();
   if(tab==='screen')initScreenEditor();
   if(tab==='imglib'){ _imgLibAllItems = []; _imgLibRender(); }
-  if(tab==='sidemenu'){ smRender(); }
+  if(tab==='sidemenu'){ _smData = null; smRender(); }
 }
 
 // ===================================================================
@@ -1868,7 +1894,7 @@ function renderEditor(){
     }else{cho=`<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span class="end-tag">✓ ここで終了</span><button class="add-choice-btn" style="width:auto;padding:5px 14px" onclick="addChoice(${si})">選択肢を追加して分岐させる</button></div>`;}
     sh+=`<div class="step-card ${cardCls}"><div class="step-head">${badge}${endBadge}<span class="step-head-spacer"></span>${si>0?`<button class="step-del-btn" onclick="delStep(${si})">🗑 このステップを削除</button>`:''}</div>
     <div class="step-body"><div class="field-label">トーク内容</div>
-    <div class="fmt-bar"><button class="fmt-btn" type="button" onclick="fmtStep(${si},'bold')"><b>B</b> 太字</button><button class="fmt-btn" type="button" onclick="fmtStep(${si},'red')"><span class="fmt-red">A</span> 赤字</button><button class="fmt-btn" type="button" onclick="fmtStep(${si},'red-bold')"><span class="fmt-red"><b>A</b></span> 赤太字</button><button class="fmt-btn" type="button" onclick="fmtStep(${si},'clear')">✕ 解除</button></div>
+    <div class="fmt-bar"><button class="fmt-btn" type="button" onclick="fmtStep(${si},'bold')"><b>B</b> 太字</button><button class="fmt-btn" type="button" onclick="fmtStep(${si},'red')"><span class="fmt-red">A</span> 赤字</button><button class="fmt-btn" type="button" onclick="fmtStep(${si},'red-bold')"><span class="fmt-red"><b>A</b></span> 赤太字</button><button class="fmt-btn" type="button" onclick="fmtStep(${si},'clear')">✕ 解除</button><button class="fmt-btn" type="button" onclick="insertTable(${si})" title="2行3列の表を挿入">⊞ 表</button><button class="fmt-btn" type="button" onclick="insertTableConfig(${si})" title="列数・行数を指定">⊞ カスタム表</button></div>
     <div class="ta-wrap"><textarea class="step-text" id="stepTa_${si}" placeholder="オペレーターが話す内容を入力…" oninput="updST(${si},this.value)">${esc(step.text||'')}</textarea></div>
     ${cho}
     <details class="memo-details" ${step.memo?'open':''}><summary class="memo-summary">📝 メモ</summary><textarea class="step-memo" placeholder="社内メモ（お客様には見えません）" oninput="updMemo(${si},this.value)">${esc(step.memo||'')}</textarea></details>
@@ -1935,6 +1961,38 @@ function getEditItem(){const cat=data[currentCat];const list=currentSubKey&&cat.
 function updTitle(v){getEditItem().title=v;save();renderSidebar();renderPreview();}
 function updST(si,v){getEditItem().steps[si].text=v;save();renderPreview();}
 function fmtStep(si,type){const ta=document.getElementById('stepTa_'+si);if(!ta)return;const start=ta.selectionStart,end=ta.selectionEnd,val=ta.value,sel=val.slice(start,end);if(!sel&&type!=='clear')return;let wrapped=sel;if(type==='bold')wrapped='<b>'+sel+'</b>';if(type==='red')wrapped='<span style="color:#e63946">'+sel+'</span>';if(type==='red-bold')wrapped='<span style="color:#e63946"><b>'+sel+'</b></span>';if(type==='clear')wrapped=sel.replace(/<[^>]+>/g,'');const newVal=val.slice(0,start)+wrapped+val.slice(end);ta.value=newVal;getEditItem().steps[si].text=newVal;save();renderPreview();const newEnd=start+wrapped.length;ta.setSelectionRange(newEnd,newEnd);ta.focus();}
+// 表挿入（デフォルト2行3列）
+function insertTable(si) {
+  _insertTableHtml(si, 2, 3);
+}
+// カスタム行列数で表挿入
+function insertTableConfig(si) {
+  var cols = parseInt(prompt('列数を入力（例: 3）', '3'));
+  if (isNaN(cols) || cols < 1) return;
+  var rows = parseInt(prompt('行数を入力（ヘッダー行を除く。例: 2）', '2'));
+  if (isNaN(rows) || rows < 0) return;
+  _insertTableHtml(si, rows, cols);
+}
+function _insertTableHtml(si, rows, cols) {
+  var ta = document.getElementById('stepTa_' + si);
+  if (!ta) return;
+  // ヘッダー行
+  var header = '<tr>' + Array(cols).fill(0).map(function(_,i){ return '<th>見出し'+(i+1)+'</th>'; }).join('') + '</tr>';
+  // データ行
+  var dataRows = Array(rows).fill(0).map(function(_,ri){
+    return '<tr>' + Array(cols).fill(0).map(function(_,ci){ return '<td>内容'+(ri+1)+'-'+(ci+1)+'</td>'; }).join('') + '</tr>';
+  }).join('');
+  var tableHtml = '\n<table>\n<thead>' + header + '</thead>\n<tbody>' + dataRows + '</tbody>\n</table>\n';
+  var start = ta.selectionStart;
+  var val = ta.value;
+  var newVal = val.slice(0, start) + tableHtml + val.slice(ta.selectionEnd);
+  ta.value = newVal;
+  getEditItem().steps[si].text = newVal;
+  save();
+  renderPreview();
+  ta.focus();
+  ta.setSelectionRange(start + tableHtml.length, start + tableHtml.length);
+}
 function addStep(){getEditItem().steps.push({text:'',choices:[]});save();renderEditor();renderPreview();setTimeout(()=>{const c=document.querySelectorAll('#editorScroll .step-card');if(c.length)c[c.length-1].scrollIntoView({behavior:'smooth',block:'start'});},60);}
 function delStep(si){if(!confirm(`ステップ${si}を削除しますか？`))return;const steps=getEditItem().steps;steps.splice(si,1);steps.forEach(s=>{if(s.choices)s.choices.forEach(c=>{if(c.go>=si)c.go=Math.max(0,c.go-1);});});save();renderEditor();renderPreview();}
 function addChoice(si){const steps=getEditItem().steps;if(!steps[si].choices)steps[si].choices=[];steps[si].choices.push({label:'',go:Math.min(si+1,steps.length-1)});save();renderEditor();renderPreview();}
@@ -2776,7 +2834,7 @@ function smReset() {
 }
 
 function smRender() {
-  smLoad();
+  if (!_smData) smLoad();  // 初回のみ読み込む（追加・編集中は上書きしない）
   var list = document.getElementById('smCatList');
   if (!list) return;
 
@@ -4800,6 +4858,127 @@ function _imgLibCleanup() {
 }
 
 function scrSaveData(){markDirty();}
+
+// ===================================================================
+// 個別エクスポート
+// ===================================================================
+function toggleExportMenu() {
+  var menu = document.getElementById('exportMenu');
+  if (!menu) return;
+  var isOpen = menu.style.display !== 'none';
+  menu.style.display = isOpen ? 'none' : 'block';
+  if (!isOpen) {
+    setTimeout(function() {
+      document.addEventListener('click', function _close(e) {
+        if (!e.target.closest('#exportMenuBtn') && !e.target.closest('#exportMenu')) {
+          menu.style.display = 'none';
+        }
+        document.removeEventListener('click', _close);
+      });
+    }, 0);
+  }
+}
+
+function _downloadJson(obj, filename) {
+  var json = JSON.stringify(obj, null, 2);
+  var blob = new Blob([json], { type: 'application/json' });
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.style.display = 'none';
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(function() { document.body.removeChild(a); URL.revokeObjectURL(a.href); }, 100);
+}
+
+function _nowStr() {
+  var d = new Date();
+  var p = function(n) { return String(n).padStart(2, '0'); };
+  return d.getFullYear() + '-' + p(d.getMonth()+1) + '-' + p(d.getDate())
+       + '-' + p(d.getHours()) + '-' + p(d.getMinutes());
+}
+
+function exportSingle(type) {
+  document.getElementById('exportMenu').style.display = 'none';
+  var ts = _nowStr();
+
+  if (type === 'script') {
+    _downloadJson({ version: 1, exportedAt: new Date().toISOString(), talkScripts: data }, 'scripts-' + ts + '.json');
+    toast('📥 スクリプトをエクスポートしました');
+
+  } else if (type === 'mail') {
+    _downloadJson({ version: 1, exportedAt: new Date().toISOString(), mailTemplates: mailData, mailCatMeta: mailCatMeta }, 'mail-' + ts + '.json');
+    toast('📥 メールテンプレートをエクスポートしました');
+
+  } else if (type === 'screen') {
+    // 画面遷移は画像ライブラリも同梱（v3形式）
+    var inMem = (typeof screenPatterns !== 'undefined' && screenPatterns && screenPatterns.length) ? screenPatterns : null;
+    function _doScreenExport(rawPatterns) {
+      var cloned = JSON.parse(JSON.stringify(rawPatterns || []));
+      var usedIds = new Set();
+      cloned.forEach(function(p) {
+        (p.screens || []).forEach(function(s) {
+          if (s.imageSrc && s.imageSrc.startsWith('lib:')) usedIds.add(s.imageSrc.slice(4));
+        });
+      });
+      imgLibGetAll().then(function(libItems) {
+        var usedItems = libItems.filter(function(item) { return usedIds.has(item.id); });
+        var done = 0, total = usedItems.length;
+        if (!total) {
+          _downloadJson({ version: 3, exportedAt: new Date().toISOString(), screenData: cloned, imageLib: [] }, 'screen-' + ts + '.json');
+          toast('📥 画面遷移をエクスポートしました');
+          return;
+        }
+        var compressed = [];
+        usedItems.forEach(function(item) {
+          var img = new Image();
+          img.onload = function() {
+            var canvas = document.createElement('canvas');
+            canvas.width = img.naturalWidth; canvas.height = img.naturalHeight;
+            canvas.getContext('2d').drawImage(img, 0, 0);
+            compressed.push({ id: item.id, name: item.name, tags: item.tags || [], dataUrl: canvas.toDataURL('image/jpeg', 0.75) });
+            if (++done === total) {
+              _downloadJson({ version: 3, exportedAt: new Date().toISOString(), screenData: cloned, imageLib: compressed }, 'screen-' + ts + '.json');
+              toast('📥 画面遷移をエクスポートしました');
+            }
+          };
+          img.onerror = function() {
+            compressed.push({ id: item.id, name: item.name, tags: item.tags || [], dataUrl: item.dataUrl });
+            if (++done === total) {
+              _downloadJson({ version: 3, exportedAt: new Date().toISOString(), screenData: cloned, imageLib: compressed }, 'screen-' + ts + '.json');
+              toast('📥 画面遷移をエクスポートしました');
+            }
+          };
+          img.src = item.dataUrl;
+        });
+      });
+    }
+    if (inMem) { _doScreenExport(inMem); }
+    else { idbGetScreenData().then(function(d) { _doScreenExport(d || []); }); }
+
+  } else if (type === 'imglib') {
+    imgLibGetAll().then(function(items) {
+      _downloadJson({ version: 1, exportedAt: new Date().toISOString(), imageLib: items }, 'imglib-' + ts + '.json');
+      toast('📥 画像ライブラリをエクスポートしました（' + items.length + '件）');
+    });
+
+  } else if (type === 'hearing') {
+    var questions = (typeof _hrGetQuestions === 'function') ? _hrGetQuestions() : [];
+    var policies = (function() { try { var s = localStorage.getItem('hearingPolicies_v1'); return s ? JSON.parse(s) : []; } catch(e) { return []; } })();
+    _downloadJson({ version: 1, exportedAt: new Date().toISOString(), hearingQuestions: questions, hearingPolicies: policies }, 'hearing-' + ts + '.json');
+    toast('📥 ヒアリングをエクスポートしました');
+
+  } else if (type === 'sidemenu') {
+    var smData = window.loadSideMenuData() || window.DEFAULT_SIDE_MENU_DATA;
+    _downloadJson({ version: 1, exportedAt: new Date().toISOString(), sideMenuData: smData }, 'sidemenu-' + ts + '.json');
+    toast('📥 サイドメニューをエクスポートしました');
+
+  } else if (type === 'history') {
+    var hist = loadHistory();
+    _downloadJson({ version: 1, exportedAt: new Date().toISOString(), updateHistory: hist }, 'history-' + ts + '.json');
+    toast('📥 更新履歴をエクスポートしました（' + hist.length + '件）');
+  }
+}
 
 // ── ズーム ──
 var _scrZoom = 1;

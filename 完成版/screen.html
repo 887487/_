@@ -1329,7 +1329,8 @@ function renderPvCanvas(screen) {
       const iW = img.naturalWidth;
       const iH = img.naturalHeight;
       if (iW > 0 && iH > 0) {
-        _pvZoom = Math.min(wW / iW, wH / iH, 1.0);
+        _pvZoom    = Math.min(wW / iW, wH / iH, 1.0);
+        _pvFitZoom = _pvZoom;  // Fitズームを記憶
       }
       // ② transition なしでスケールを適用してから DOM に追加
       canvas.style.transform = `scale(${_pvZoom})`;
@@ -1430,7 +1431,8 @@ function renderPvCanvas(screen) {
 }
 
 // ── プレビューズーム ──
-var _pvZoom = 1.0;  // 現在のズーム倍率
+var _pvZoom    = 1.0;  // 現在のズーム倍率
+var _pvFitZoom = 1.0;  // Fit時のズーム倍率（スクロール有効化の基準）
 
 function pvZoomFit() {
   const wrap   = document.getElementById('pvCanvasWrap');
@@ -1446,6 +1448,7 @@ function pvZoomFit() {
   const scaleW = wW / iW;
   const scaleH = wH / iH;
   _pvZoom = Math.min(scaleW, scaleH, 1.0);  // 1.0 を超えて拡大はしない
+  _pvFitZoom = _pvZoom;  // Fitズームを記憶
   _pvApplyZoom();
 }
 
@@ -1460,15 +1463,16 @@ function _pvApplyZoom() {
   if (!canvas) return;
   canvas.style.transform = `scale(${_pvZoom})`;
   canvas.style.transformOrigin = 'top center';
-  // ① 過剰スクロール制限：等倍以下は overflow:hidden、拡大時のみ auto
-  const _isZoomed = _pvZoom > 1.005;
+  // Fitサイズを超えた場合のみスクロール有効
+  // _pvFitZoom が未設定（初回）の場合は 1.0 を基準にする
+  const fitBase = _pvFitZoom > 0 ? _pvFitZoom : 1.0;
+  const _isZoomed = _pvZoom > fitBase + 0.005;
   wrap.classList.toggle('zoomable', _isZoomed);
-  // ズーム中のみスクロール可 - スクロール位置は拡大時のみリセットしない
   if (!_isZoomed) {
     wrap.scrollTop  = 0;
     wrap.scrollLeft = 0;
   }
-  // ③ ツールチップのスケール逆補正（画像スケールに関わらず固定サイズで表示）
+  // ツールチップのスケール逆補正（画像スケールに関わらず固定サイズで表示）
   const inv = 1 / _pvZoom;
   canvas.querySelectorAll('.pv-tooltip').forEach(t => {
     t.style.transform = `scale(${inv})`;
