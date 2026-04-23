@@ -781,6 +781,13 @@ body.dnd-xlsx-hover::after {
   <div class="tab-panel tab-panel-hearing" id="tabHearing">
     <div style="max-width:920px;margin:0 auto;display:flex;flex-direction:column;gap:20px;">
 
+      <!-- ── ヒアリングタブ ヘッダーバー ── -->
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <div style="font-size:14px;font-weight:700;color:var(--text);">📋 ヒアリング設定</div>
+        <button class="btn btn-secondary" onclick="hrWriteToFile()" style="font-size:12px;" title="common-utils.js の HEARING_QUESTIONS_DEFAULT / HEARING_POLICIES_DEFAULT を現在の内容で上書きします">📝 jsファイルに書き込む</button>
+      </div>
+      <div id="hrWriteStatus" style="display:none;padding:8px 12px;border-radius:6px;font-size:12px;"></div>
+
       <!-- ── プレビュー ── -->
       <div>
         <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px;">📋 ヒアリングシート（プレビュー）</div>
@@ -1100,7 +1107,6 @@ body.dnd-xlsx-hover::after {
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
         <div style="font-size:14px;font-weight:700;color:var(--text);">☰ サイドメニュー編集</div>
         <div style="display:flex;gap:8px;">
-          <button class="btn btn-secondary" onclick="smReset()" style="font-size:11px;">↩ デフォルトに戻す</button>
           <button class="btn btn-secondary" onclick="smWriteToFile()" style="font-size:12px;" title="common-utils.js の DEFAULT_SIDE_MENU_DATA を現在の内容で上書きします">📝 jsファイルに書き込む</button>
         </div>
       </div>
@@ -1263,13 +1269,14 @@ function closeAdminHelp(){var m=document.getElementById('adminHelpModal');if(m)m
 // 対応方針エディタ（ヒアリングタブ）
 // データ構造: [{id, conditions:[{field,value}], policy, enabled}]
 // ===================================================================
-var HR_POLICY_KEY = 'hearingPolicies_v1';
+var HR_POLICY_KEY = 'hearingPolicies_v1'; // 後方互換のため定義のみ残す
 
 function _hrPoliciesLoad() {
-  try { var s=localStorage.getItem(HR_POLICY_KEY); return s ? JSON.parse(s) : null; } catch(e){ return null; }
+  return JSON.parse(JSON.stringify(window.HEARING_POLICIES_DEFAULT || []));
 }
 function _hrPoliciesSave(list) {
-  try { localStorage.setItem(HR_POLICY_KEY, JSON.stringify(list)); } catch(e) {}
+  window.HEARING_POLICIES_DEFAULT = JSON.parse(JSON.stringify(list || []));
+}
 }
 
 // ヒアリング状態のフィールド一覧（表示名 → 実フィールド名）
@@ -1498,8 +1505,8 @@ function _hrQAdd() {
 
 // デフォルトリセット
 function _hrQReset() {
-  if (!confirm('質問定義をデフォルトに戻しますか？（カスタム質問も削除されます）')) return;
-  try { localStorage.removeItem('hearingQuestionsDef_v1'); } catch(e){}
+  if (!confirm('質問定義をリセットしますか？（カスタム質問も削除されます）\n※jsファイルへの反映は「📝 jsファイルに書き込む」で行ってください')) return;
+  window.HEARING_QUESTIONS_DEFAULT = [];
   _hrQEditorRender();
   if (window.renderHearing) window.renderHearing();
   toast('✅ 質問定義をリセットしました');
@@ -2915,6 +2922,123 @@ async function smWriteToFile() {
       _smSetStatus('❌ 書き込みエラー: ' + e.message, 'err');
     }
     _smDirHandle = null;
+  }
+}
+
+// =============================================================================
+// common-utils.js へのヒアリングデータ直接書き込み（File System Access API）
+// HEARING_QUESTIONS_DEFAULT / HEARING_POLICIES_DEFAULT を現在の内容で置換する。
+// =============================================================================
+var _hrDirHandle = null; // フォルダハンドルをセッション中キャッシュ
+
+function _hrSetStatus(msg, type) {
+  var el = document.getElementById('hrWriteStatus');
+  if (!el) return;
+  el.style.display = msg ? 'block' : 'none';
+  el.style.background = type === 'ok'  ? '#e8f5e9' :
+                        type === 'err' ? '#ffeaea' : 'var(--accent-lt)';
+  el.style.color      = type === 'ok'  ? '#2e7d32' :
+                        type === 'err' ? '#c62828' : 'var(--accent)';
+  el.style.border     = '1px solid ' + (
+                        type === 'ok'  ? '#a5d6a7' :
+                        type === 'err' ? '#ef9a9a' : 'var(--accent)');
+  el.textContent = msg;
+}
+
+async function hrWriteToFile() {
+  if (!window.showDirectoryPicker) {
+    _hrSetStatus('❌ このブラウザは File System Access API に対応していません（Chrome/Edge をお使いください）', 'err');
+    return;
+  }
+
+  _hrSetStatus('⏳ フォルダを選択してください（common-utils.js が含まれるフォルダ）', 'info');
+
+  try {
+    // ① フォルダ選択
+    if (!_hrDirHandle) {
+      _hrDirHandle = await window.showDirectoryPicker({ mode: 'readwrite' });
+    } else {
+      var perm = await _hrDirHandle.requestPermission({ mode: 'readwrite' });
+      if (perm !== 'granted') _hrDirHandle = await window.showDirectoryPicker({ mode: 'readwrite' });
+    }
+
+    // ② common-utils.js を取得
+    var fileHandle;
+    try {
+      fileHandle = await _hrDirHandle.getFileHandle('common-utils.js', { create: false });
+    } catch(e) {
+      _hrSetStatus('❌ 選択したフォルダに common-utils.js が見つかりませんでした', 'err');
+      _hrDirHandle = null;
+      return;
+    }
+
+    var file = await fileHandle.getFile();
+    var src  = await file.text();
+
+    // ③ HEARING_QUESTIONS_DEFAULT ブロックを置換
+    //    開始: "var HEARING_QUESTIONS_DEFAULT = "
+    //    終端: ";\nvar HEARING_POLICIES_DEFAULT"
+    var Q_START = 'var HEARING_QUESTIONS_DEFAULT = ';
+    var Q_END   = ';\nvar HEARING_POLICIES_DEFAULT';
+    var qStart  = src.indexOf(Q_START);
+    var qEnd    = src.indexOf(Q_END, qStart);
+    if (qStart === -1 || qEnd === -1) {
+      _hrSetStatus('❌ common-utils.js 内に HEARING_QUESTIONS_DEFAULT が見つかりませんでした', 'err');
+      return;
+    }
+    var currentQuestions = _hrGetQuestions ? _hrGetQuestions() : (window.HEARING_QUESTIONS_DEFAULT || []);
+    var qIndented = JSON.stringify(currentQuestions, null, 2)
+      .split('\n').map(function(l, i){ return i === 0 ? l : '  ' + l; }).join('\n');
+    src = src.slice(0, qStart) + 'var HEARING_QUESTIONS_DEFAULT = ' + qIndented
+        + src.slice(qEnd);
+
+    // ④ HEARING_POLICIES_DEFAULT ブロックを置換
+    //    開始: "var HEARING_POLICIES_DEFAULT = "
+    //    終端: ";\n// localStorage"（次のコメント行の手前）
+    var P_START = 'var HEARING_POLICIES_DEFAULT = ';
+    var P_END   = ';\n// localStorage';
+    var pStart  = src.indexOf(P_START);
+    var pEnd    = src.indexOf(P_END, pStart);
+    if (pStart === -1 || pEnd === -1) {
+      _hrSetStatus('❌ common-utils.js 内に HEARING_POLICIES_DEFAULT が見つかりませんでした', 'err');
+      return;
+    }
+    var currentPolicies = window.HEARING_POLICIES_DEFAULT || [];
+    var pIndented = JSON.stringify(currentPolicies, null, 2)
+      .split('\n').map(function(l, i){ return i === 0 ? l : '  ' + l; }).join('\n');
+    src = src.slice(0, pStart) + 'var HEARING_POLICIES_DEFAULT = ' + pIndented
+        + src.slice(pEnd);
+
+    // ⑤ ファイルに書き込む
+    var writable = await fileHandle.createWritable();
+    await writable.write(src);
+    await writable.close();
+
+    // ⑥ localStorage キャッシュ削除
+    try { localStorage.removeItem('hearingQuestionsDef_v1'); } catch(ex) {}
+    try { localStorage.removeItem('hearingPolicies_v1');     } catch(ex) {}
+
+    // ⑦ 他タブにデータ本体を付けて通知
+    try {
+      var bc = new BroadcastChannel('tool_data_update');
+      bc.postMessage({
+        type:      'hearingUpdated',
+        questions: JSON.parse(JSON.stringify(currentQuestions)),
+        policies:  JSON.parse(JSON.stringify(currentPolicies))
+      });
+      bc.close();
+    } catch(ex) {}
+
+    _hrSetStatus('✅ common-utils.js に書き込みました（質問 ' + currentQuestions.length + ' 件 / 対応方針 ' + currentPolicies.length + ' 件）', 'ok');
+    toast('✅ common-utils.js にヒアリングデータを書き込みました');
+
+  } catch(e) {
+    if (e.name === 'AbortError') {
+      _hrSetStatus('', '');
+    } else {
+      _hrSetStatus('❌ 書き込みエラー: ' + e.message, 'err');
+    }
+    _hrDirHandle = null;
   }
 }
 

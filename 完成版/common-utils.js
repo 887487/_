@@ -925,17 +925,18 @@ function calcPolicies(s) {
 // localStorage に 'hearingQuestionsDef_v1' があればそちらを使用する。
 // デフォルト項目数 = 0（admin.htmlで追加管理）
 // ===================================================================
-var HEARING_QUESTIONS_DEFAULT = [];  // デフォルト0件 - admin.htmlで管理
+var HEARING_QUESTIONS_DEFAULT = [];  // jsファイルに直書き管理。admin.html の「📝 jsファイルに書き込む」で更新する。
+var HEARING_POLICIES_DEFAULT  = [];  // jsファイルに直書き管理。admin.html の「📝 jsファイルに書き込む」で更新する。
+// localStorage キーは後方互換のため定義のみ残す（読み書きには使用しない）
 var HEARING_QUESTIONS_KEY = 'hearingQuestionsDef_v1';
 
 function _hrQuestionsLoad() {
-  try {
-    var s = localStorage.getItem(HEARING_QUESTIONS_KEY); if (!s) return [];
-    return JSON.parse(s);
-  } catch(e) { return []; }
+  // jsファイルの HEARING_QUESTIONS_DEFAULT を正として返す
+  return JSON.parse(JSON.stringify(window.HEARING_QUESTIONS_DEFAULT || []));
 }
 function _hrQuestionsSave(list) {
-  try { localStorage.setItem(HEARING_QUESTIONS_KEY, JSON.stringify(list)); } catch(e){}
+  // メモリ上の変数を更新するだけ（localStorage は使用しない）
+  window.HEARING_QUESTIONS_DEFAULT = JSON.parse(JSON.stringify(list || []));
 }
 function _hrGetQuestions() { return _hrQuestionsLoad(); }
 
@@ -1560,10 +1561,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // ── サイドメニュー更新 ──
     if (type === 'sideMenuUpdated') {
-      // データ本体が含まれる場合（admin.html の smWriteToFile から送信）は
-      // DEFAULT_SIDE_MENU_DATA をメモリ上で更新し、localStorage キャッシュも削除する
-      if (e.data && e.data.data) {
-        window.DEFAULT_SIDE_MENU_DATA = e.data.data;
+      if (ev.data && ev.data.data) {
+        window.DEFAULT_SIDE_MENU_DATA = ev.data.data;
         try { localStorage.removeItem('sideMenuData'); } catch(ex) {}
       }
       var sideMenuEl = document.getElementById('sideMenu');
@@ -1572,6 +1571,15 @@ document.addEventListener('DOMContentLoaded', function () {
         sideMenuEl.innerHTML = _buildSideMenuHTML(isDarkNow);
         window.renderHistory();
       }
+    }
+
+    // ── ヒアリング更新 ──
+    if (type === 'hearingUpdated') {
+      if (ev.data.questions) window.HEARING_QUESTIONS_DEFAULT = ev.data.questions;
+      if (ev.data.policies)  window.HEARING_POLICIES_DEFAULT  = ev.data.policies;
+      try { localStorage.removeItem('hearingQuestionsDef_v1'); } catch(ex) {}
+      try { localStorage.removeItem('hearingPolicies_v1');     } catch(ex) {}
+      if (typeof window.renderHearing === 'function') window.renderHearing();
     }
   };
 })();
