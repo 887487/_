@@ -998,24 +998,6 @@ function renderHearing() {
     }
   });
 
-  // 操作環境（固定セクション）
-  var devBtns = '<div class="hr-device-btns">';
-  DEVICE_LIST.forEach(function(device) {
-    var d = s.devices[device];
-    devBtns += '<button class="hr-device-btn' + (d.selected?' active':'') + '" onclick="toggleHearingDevice(\'' + device + '\')">' + device + '</button>';
-  });
-  devBtns += '</div>';
-  DEVICE_LIST.forEach(function(device) {
-    var d = s.devices[device];
-    var opts = DEVICE_DETAIL_OPTIONS[device];
-    if (d.selected && opts && opts.length) {
-      devBtns += '<div class="hr-device-detail"><span class="hr-device-detail-label">' + device + '：</span>';
-      opts.forEach(function(opt){ devBtns += '<button class="hr-detail-btn' + (d.detail===opt?' active':'') + '" onclick="setHearingDeviceDetail(\'' + device + '\',\'' + opt + '\')">' + opt + '</button>'; });
-      devBtns += '</div>';
-    }
-  });
-  h += _hrRow('操作環境', devBtns, 'hr-row-devices');
-
   // メール未着調査（固定セクション）
   var _showMailInvestigation = s.authCodeIssue === 'メール受信なし' || s.jAuthCodeIssue === 'メール受信なし';
   if (_showMailInvestigation) {

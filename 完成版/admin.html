@@ -14,6 +14,68 @@
    admin.html 専用スタイル（改修版）
    ============================================================ */
 
+/* ── ビジュアル表エディタ モーダル ── */
+.tbl-modal-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,.45); z-index: 8000;
+  align-items: center; justify-content: center;
+}
+.tbl-modal-overlay.show { display: flex; }
+.tbl-modal-box {
+  background: var(--surface); border-radius: 12px;
+  box-shadow: 0 12px 40px rgba(0,0,0,.3);
+  padding: 20px 24px 20px; min-width: 360px; max-width: 90vw; max-height: 90vh;
+  display: flex; flex-direction: column; gap: 14px; overflow: hidden;
+}
+.tbl-modal-title { font-size: 14px; font-weight: 700; color: var(--text); }
+.tbl-modal-controls {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  font-size: 12px; color: var(--text2);
+}
+.tbl-modal-controls label { display: flex; align-items: center; gap: 5px; }
+.tbl-modal-controls input[type=number] {
+  width: 50px; padding: 3px 6px; border: 1px solid var(--border);
+  border-radius: 5px; font-size: 12px; background: var(--bg); color: var(--text);
+}
+.tbl-modal-scroll { overflow: auto; flex: 1; }
+/* 編集可能な表プレビュー */
+.tbl-preview { border-collapse: collapse; min-width: 300px; }
+.tbl-preview th, .tbl-preview td {
+  border: 2px solid var(--accent);
+  min-width: 80px; min-height: 28px;
+  padding: 5px 8px; font-size: 13px;
+  outline: none; vertical-align: top;
+  white-space: pre-wrap; word-break: break-word;
+}
+.tbl-preview th {
+  background: var(--accent-lt); font-weight: 700; color: var(--accent);
+  text-align: center;
+}
+.tbl-preview th[contenteditable=true]:empty::before,
+.tbl-preview td[contenteditable=true]:empty::before {
+  content: attr(data-placeholder); color: var(--text3); pointer-events: none;
+  font-weight: 400; font-style: italic;
+}
+.tbl-preview th:focus, .tbl-preview td:focus {
+  background: #fffbe6; outline: 2px solid #f0a500;
+}
+.tbl-modal-row-btns {
+  display: flex; flex-direction: column; gap: 4px;
+  align-self: flex-start; padding-top: 4px;
+}
+.tbl-modal-col-btns {
+  display: flex; gap: 4px; justify-content: flex-start;
+}
+.tbl-dim-btn {
+  width: 26px; height: 26px; border: 1px solid var(--border);
+  border-radius: 5px; background: var(--surface2,var(--bg));
+  color: var(--text2); font-size: 14px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background .12s;
+}
+.tbl-dim-btn:hover { background: var(--accent-lt); color: var(--accent); }
+.tbl-modal-footer { display: flex; gap: 8px; justify-content: flex-end; }
+
 /* ── サイドバー共通：縦間隔 ── */
 .cat-header {
   height: 36px;
@@ -1163,6 +1225,32 @@ body.dnd-xlsx-hover::after {
   </div>
 </div>
 
+<!-- ===== ビジュアル表エディタ モーダル ===== -->
+<div class="tbl-modal-overlay" id="tblModalOverlay" onclick="if(event.target===this)closeTblModal()">
+  <div class="tbl-modal-box">
+    <div class="tbl-modal-title">⊞ 表を編集</div>
+    <div class="tbl-modal-controls">
+      <label>列数 <input type="number" id="tblColCount" min="1" max="10" value="3" onchange="tblResize()"></label>
+      <label>行数（ヘッダー除く） <input type="number" id="tblRowCount" min="0" max="20" value="2" onchange="tblResize()"></label>
+      <label style="margin-left:8px;"><input type="checkbox" id="tblHasHeader" checked onchange="tblResize()"> ヘッダー行あり</label>
+    </div>
+    <!-- 列追加削除ボタン + テーブル + 行追加削除ボタン -->
+    <div style="display:flex;gap:8px;align-items:flex-start;overflow:auto;">
+      <div>
+        <div class="tbl-modal-col-btns" id="tblColBtns" style="margin-bottom:4px;padding-left:0;"></div>
+        <div class="tbl-modal-scroll">
+          <table class="tbl-preview" id="tblPreview"></table>
+        </div>
+      </div>
+      <div class="tbl-modal-row-btns" id="tblRowBtns"></div>
+    </div>
+    <div class="tbl-modal-footer">
+      <button class="btn btn-secondary" onclick="closeTblModal()">キャンセル</button>
+      <button class="btn btn-primary" onclick="confirmTblInsert()">⊞ 挿入</button>
+    </div>
+  </div>
+</div>
+
 <div id="toast"></div>
 
 <!-- ヘルプモーダル -->
@@ -1875,7 +1963,7 @@ function renderEditor(){
     }else{cho=`<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span class="end-tag">✓ ここで終了</span><button class="add-choice-btn" style="width:auto;padding:5px 14px" onclick="addChoice(${si})">選択肢を追加して分岐させる</button></div>`;}
     sh+=`<div class="step-card ${cardCls}"><div class="step-head">${badge}${endBadge}<span class="step-head-spacer"></span>${si>0?`<button class="step-del-btn" onclick="delStep(${si})">🗑 このステップを削除</button>`:''}</div>
     <div class="step-body"><div class="field-label">トーク内容</div>
-    <div class="fmt-bar"><button class="fmt-btn" type="button" onclick="fmtStep(${si},'bold')"><b>B</b> 太字</button><button class="fmt-btn" type="button" onclick="fmtStep(${si},'red')"><span class="fmt-red">A</span> 赤字</button><button class="fmt-btn" type="button" onclick="fmtStep(${si},'red-bold')"><span class="fmt-red"><b>A</b></span> 赤太字</button><button class="fmt-btn" type="button" onclick="fmtStep(${si},'clear')">✕ 解除</button><button class="fmt-btn" type="button" onclick="insertTable(${si})" title="2行3列の表を挿入">⊞ 表</button><button class="fmt-btn" type="button" onclick="insertTableConfig(${si})" title="列数・行数を指定">⊞ カスタム表</button></div>
+    <div class="fmt-bar"><button class="fmt-btn" type="button" onclick="fmtStep(${si},'bold')"><b>B</b> 太字</button><button class="fmt-btn" type="button" onclick="fmtStep(${si},'red')"><span class="fmt-red">A</span> 赤字</button><button class="fmt-btn" type="button" onclick="fmtStep(${si},'red-bold')"><span class="fmt-red"><b>A</b></span> 赤太字</button><button class="fmt-btn" type="button" onclick="fmtStep(${si},'clear')">✕ 解除</button><button class="fmt-btn" type="button" onclick="openTableEditor(${si})" title="表をビジュアル編集して挿入">⊞ 表</button></div>
     <div class="ta-wrap"><textarea class="step-text" id="stepTa_${si}" placeholder="オペレーターが話す内容を入力…" oninput="updST(${si},this.value)">${esc(step.text||'')}</textarea></div>
     ${cho}
     <details class="memo-details" ${step.memo?'open':''}><summary class="memo-summary">📝 メモ</summary><textarea class="step-memo" placeholder="社内メモ（お客様には見えません）" oninput="updMemo(${si},this.value)">${esc(step.memo||'')}</textarea></details>
@@ -1943,36 +2031,223 @@ function updTitle(v){getEditItem().title=v;save();renderSidebar();renderPreview(
 function updST(si,v){getEditItem().steps[si].text=v;save();renderPreview();}
 function fmtStep(si,type){const ta=document.getElementById('stepTa_'+si);if(!ta)return;const start=ta.selectionStart,end=ta.selectionEnd,val=ta.value,sel=val.slice(start,end);if(!sel&&type!=='clear')return;let wrapped=sel;if(type==='bold')wrapped='<b>'+sel+'</b>';if(type==='red')wrapped='<span style="color:#e63946">'+sel+'</span>';if(type==='red-bold')wrapped='<span style="color:#e63946"><b>'+sel+'</b></span>';if(type==='clear')wrapped=sel.replace(/<[^>]+>/g,'');const newVal=val.slice(0,start)+wrapped+val.slice(end);ta.value=newVal;getEditItem().steps[si].text=newVal;save();renderPreview();const newEnd=start+wrapped.length;ta.setSelectionRange(newEnd,newEnd);ta.focus();}
 // 表挿入（デフォルト2行3列）
-function insertTable(si) {
-  _insertTableHtml(si, 2, 3);
+// =============================================================================
+// ビジュアル表エディタ
+// =============================================================================
+var _tblTargetSi = null;
+
+function openTableEditor(si) {
+  _tblTargetSi = si;
+  // デフォルト値にリセット
+  document.getElementById('tblColCount').value = 3;
+  document.getElementById('tblRowCount').value = 2;
+  document.getElementById('tblHasHeader').checked = true;
+  tblResize();
+  document.getElementById('tblModalOverlay').classList.add('show');
+  // 最初のセルにフォーカス
+  setTimeout(function() {
+    var first = document.querySelector('#tblPreview [contenteditable]');
+    if (first) first.focus();
+  }, 60);
 }
-// カスタム行列数で表挿入
-function insertTableConfig(si) {
-  var cols = parseInt(prompt('列数を入力（例: 3）', '3'));
-  if (isNaN(cols) || cols < 1) return;
-  var rows = parseInt(prompt('行数を入力（ヘッダー行を除く。例: 2）', '2'));
-  if (isNaN(rows) || rows < 0) return;
-  _insertTableHtml(si, rows, cols);
+
+function closeTblModal() {
+  document.getElementById('tblModalOverlay').classList.remove('show');
+  _tblTargetSi = null;
 }
-function _insertTableHtml(si, rows, cols) {
-  var ta = document.getElementById('stepTa_' + si);
-  if (!ta) return;
+
+function tblResize() {
+  var cols      = Math.max(1, Math.min(10, parseInt(document.getElementById('tblColCount').value) || 3));
+  var rows      = Math.max(0, Math.min(20, parseInt(document.getElementById('tblRowCount').value) || 2));
+  var hasHeader = document.getElementById('tblHasHeader').checked;
+  document.getElementById('tblColCount').value = cols;
+  document.getElementById('tblRowCount').value = rows;
+
+  var tbl = document.getElementById('tblPreview');
+  // 既存セルの内容を保存
+  var saved = tblGetData();
+
+  tbl.innerHTML = '';
+
   // ヘッダー行
-  var header = '<tr>' + Array(cols).fill(0).map(function(_,i){ return '<th>見出し'+(i+1)+'</th>'; }).join('') + '</tr>';
+  if (hasHeader) {
+    var thead = tbl.createTHead();
+    var hr = thead.insertRow();
+    for (var c = 0; c < cols; c++) {
+      var th = document.createElement('th');
+      th.contentEditable = 'true';
+      th.setAttribute('data-placeholder', '見出し' + (c + 1));
+      th.textContent = (saved.header && saved.header[c] != null) ? saved.header[c] : '';
+      hr.appendChild(th);
+    }
+  }
+
   // データ行
-  var dataRows = Array(rows).fill(0).map(function(_,ri){
-    return '<tr>' + Array(cols).fill(0).map(function(_,ci){ return '<td>内容'+(ri+1)+'-'+(ci+1)+'</td>'; }).join('') + '</tr>';
-  }).join('');
-  var tableHtml = '\n<table>\n<thead>' + header + '</thead>\n<tbody>' + dataRows + '</tbody>\n</table>\n';
-  var start = ta.selectionStart;
-  var val = ta.value;
-  var newVal = val.slice(0, start) + tableHtml + val.slice(ta.selectionEnd);
-  ta.value = newVal;
-  getEditItem().steps[si].text = newVal;
-  save();
-  renderPreview();
-  ta.focus();
-  ta.setSelectionRange(start + tableHtml.length, start + tableHtml.length);
+  var tbody = tbl.createTBody();
+  for (var r = 0; r < rows; r++) {
+    var row = tbody.insertRow();
+    for (var ci = 0; ci < cols; ci++) {
+      var td = row.insertCell();
+      td.contentEditable = 'true';
+      td.setAttribute('data-placeholder', '内容');
+      td.textContent = (saved.rows && saved.rows[r] && saved.rows[r][ci] != null) ? saved.rows[r][ci] : '';
+    }
+  }
+
+  // 行追加削除ボタンを更新
+  tblUpdateRowBtns(rows);
+  tblUpdateColBtns(cols);
+}
+
+function tblGetData() {
+  var tbl = document.getElementById('tblPreview');
+  var header = null;
+  if (tbl.tHead && tbl.tHead.rows[0]) {
+    header = Array.from(tbl.tHead.rows[0].cells).map(function(c){ return c.textContent; });
+  }
+  var rows = Array.from(tbl.tBodies[0] ? tbl.tBodies[0].rows : []).map(function(r){
+    return Array.from(r.cells).map(function(c){ return c.textContent; });
+  });
+  return { header: header, rows: rows };
+}
+
+function tblUpdateRowBtns(rows) {
+  var wrap = document.getElementById('tblRowBtns');
+  wrap.innerHTML = '';
+  var hasHeader = document.getElementById('tblHasHeader').checked;
+  // ヘッダー分だけ上部スペース
+  if (hasHeader) {
+    var spacer = document.createElement('div');
+    spacer.style.height = '34px';
+    wrap.appendChild(spacer);
+  }
+  for (var r = 0; r < rows; r++) {
+    (function(ri) {
+      var del = document.createElement('button');
+      del.className = 'tbl-dim-btn';
+      del.title = (ri + 1) + '行目を削除';
+      del.textContent = '−';
+      del.onclick = function() {
+        var cur = parseInt(document.getElementById('tblRowCount').value) || 0;
+        if (cur <= 0) return;
+        // 現在のデータ保存してから行削除
+        var d = tblGetData();
+        d.rows.splice(ri, 1);
+        document.getElementById('tblRowCount').value = cur - 1;
+        _tblRestoreAndRender(d);
+      };
+      wrap.appendChild(del);
+    })(r);
+  }
+  var add = document.createElement('button');
+  add.className = 'tbl-dim-btn';
+  add.title = '行を追加';
+  add.textContent = '＋';
+  add.onclick = function() {
+    var cur = parseInt(document.getElementById('tblRowCount').value) || 0;
+    document.getElementById('tblRowCount').value = cur + 1;
+    tblResize();
+  };
+  wrap.appendChild(add);
+}
+
+function tblUpdateColBtns(cols) {
+  var wrap = document.getElementById('tblColBtns');
+  wrap.innerHTML = '';
+  for (var c = 0; c < cols; c++) {
+    (function(ci) {
+      var del = document.createElement('button');
+      del.className = 'tbl-dim-btn';
+      del.title = (ci + 1) + '列目を削除';
+      del.textContent = '−';
+      del.style.width = '80px';
+      del.onclick = function() {
+        var cur = parseInt(document.getElementById('tblColCount').value) || 0;
+        if (cur <= 1) return;
+        var d = tblGetData();
+        if (d.header) d.header.splice(ci, 1);
+        d.rows.forEach(function(row){ row.splice(ci, 1); });
+        document.getElementById('tblColCount').value = cur - 1;
+        _tblRestoreAndRender(d);
+      };
+      wrap.appendChild(del);
+    })(c);
+  }
+  var add = document.createElement('button');
+  add.className = 'tbl-dim-btn';
+  add.title = '列を追加';
+  add.textContent = '＋';
+  add.style.width = '26px';
+  add.onclick = function() {
+    var cur = parseInt(document.getElementById('tblColCount').value) || 0;
+    document.getElementById('tblColCount').value = cur + 1;
+    tblResize();
+  };
+  wrap.appendChild(add);
+}
+
+function _tblRestoreAndRender(savedData) {
+  var cols      = parseInt(document.getElementById('tblColCount').value) || 1;
+  var rows      = parseInt(document.getElementById('tblRowCount').value) || 0;
+  var hasHeader = document.getElementById('tblHasHeader').checked;
+  var tbl = document.getElementById('tblPreview');
+  tbl.innerHTML = '';
+  if (hasHeader) {
+    var thead = tbl.createTHead();
+    var hr = thead.insertRow();
+    for (var c = 0; c < cols; c++) {
+      var th = document.createElement('th');
+      th.contentEditable = 'true';
+      th.setAttribute('data-placeholder', '見出し' + (c + 1));
+      th.textContent = (savedData.header && savedData.header[c] != null) ? savedData.header[c] : '';
+      hr.appendChild(th);
+    }
+  }
+  var tbody = tbl.createTBody();
+  for (var r = 0; r < rows; r++) {
+    var row = tbody.insertRow();
+    for (var ci = 0; ci < cols; ci++) {
+      var td = row.insertCell();
+      td.contentEditable = 'true';
+      td.setAttribute('data-placeholder', '内容');
+      td.textContent = (savedData.rows && savedData.rows[r] && savedData.rows[r][ci] != null) ? savedData.rows[r][ci] : '';
+    }
+  }
+  tblUpdateRowBtns(rows);
+  tblUpdateColBtns(cols);
+}
+
+function confirmTblInsert() {
+  if (_tblTargetSi === null) return;
+  var d = tblGetData();
+  var hasHeader = document.getElementById('tblHasHeader').checked;
+  var esc = function(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); };
+
+  var html = '\n<table>\n';
+  if (hasHeader && d.header) {
+    html += '<thead><tr>' + d.header.map(function(v){ return '<th>' + esc(v) + '</th>'; }).join('') + '</tr></thead>\n';
+  }
+  if (d.rows.length) {
+    html += '<tbody>';
+    d.rows.forEach(function(row){
+      html += '<tr>' + row.map(function(v){ return '<td>' + esc(v) + '</td>'; }).join('') + '</tr>\n';
+    });
+    html += '</tbody>';
+  }
+  html += '</table>\n';
+
+  var ta = document.getElementById('stepTa_' + _tblTargetSi);
+  if (ta) {
+    var start  = ta.selectionStart;
+    var newVal = ta.value.slice(0, start) + html + ta.value.slice(ta.selectionEnd);
+    ta.value = newVal;
+    getEditItem().steps[_tblTargetSi].text = newVal;
+    save();
+    renderPreview();
+    ta.focus();
+    ta.setSelectionRange(start + html.length, start + html.length);
+  }
+  closeTblModal();
 }
 function addStep(){getEditItem().steps.push({text:'',choices:[]});save();renderEditor();renderPreview();setTimeout(()=>{const c=document.querySelectorAll('#editorScroll .step-card');if(c.length)c[c.length-1].scrollIntoView({behavior:'smooth',block:'start'});},60);}
 function delStep(si){if(!confirm(`ステップ${si}を削除しますか？`))return;const steps=getEditItem().steps;steps.splice(si,1);steps.forEach(s=>{if(s.choices)s.choices.forEach(c=>{if(c.go>=si)c.go=Math.max(0,c.go-1);});});save();renderEditor();renderPreview();}
