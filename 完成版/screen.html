@@ -269,14 +269,28 @@ html[data-theme="dark"] .sb-cat-header-inner.open {
   font-size: 11px; color: rgba(0,0,0,.7);
   min-width: 36px; text-align: center; font-family: monospace;
 }
-.pv-mail-btn {
-  position: absolute; z-index: 3;
-  background: rgba(230,126,34,.85); border: 2px solid #e67e22;
-  border-radius: 4px; cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  transition: background .12s; box-sizing: border-box;
+.pv-mail-bar {
+  padding: 5px 14px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  flex-shrink: 0;
 }
-.pv-mail-btn:hover { background: rgba(230,126,34,1); }
+.pv-mail-btn {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 4px 12px;
+  background: rgba(230,126,34,.15); border: 1px solid #e67e22;
+  border-radius: 5px; cursor: pointer;
+  font-size: 12px; font-family: inherit; color: #c0551a;
+  white-space: nowrap;
+  transition: background .12s;
+}
+.pv-mail-btn:hover { background: rgba(230,126,34,.32); }
+html[data-theme="dark"] .pv-mail-btn { color: #f0a060; border-color: #c06820; }
+html[data-theme="dark"] .pv-mail-btn:hover { background: rgba(230,126,34,.25); }
 .pv-hs { position: absolute; border: 2px solid var(--accent); background: rgba(37,99,235,.10); border-radius: 2px; cursor: pointer; transition: background .1s; }
 .pv-hs:hover { background: rgba(37,99,235,.24); }
 .pv-tooltip { position: absolute; bottom: calc(100% + 4px); left: 0; background: rgba(0,0,0,.8); color: #fff; font-size: 12px; padding: 4px 7px; border-radius: 4px; white-space: pre; pointer-events: none; opacity: 0; transition: opacity .12s; z-index: 10; transform-origin: bottom left; }
@@ -531,6 +545,8 @@ html[data-theme="dark"] .modal-box { background: var(--surface); border: 1px sol
           </div>
           <!-- 画面メモ（admin.html の画面設定メモ欄と連動。空のとき非表示） -->
           <div class="pv-memo-bar" id="pvMemo" style="display:none;"></div>
+          <!-- メールテンプレートボタンバー（ホットスポットに設定されたメールボタンを一覧表示） -->
+          <div class="pv-mail-bar" id="pvMailBar" style="display:none;"></div>
           <div class="pv-canvas-wrap" id="pvCanvasWrap">
             <div style="color:var(--text4);padding:40px;font-size:12px;text-align:center;width:100%;">
               <div style="font-size:36px;margin-bottom:10px">🖼️</div>
@@ -1352,8 +1368,7 @@ function renderPvCanvas(screen) {
   // ホットスポットオーバーレイを生成する（canvas に追加済み）
   const mailTemplatesPv = _loadMailTemplates();
   // ④ 遷移先なし＋備考テキストのみも表示対象に（targetId または note があれば表示）
-  (screen.hotspots || []).filter(h => h.targetId || h.note).forEach(hs => {
-    const el = document.createElement('div');
+  (screen.hotspots || []).filter(h => h.targetId || h.note).forEach(hs => {    const el = document.createElement('div');
     el.className = 'pv-hs';
     el.style.cssText = `left:${hs.x*100}%;top:${hs.y*100}%;width:${hs.w*100}%;height:${hs.h*100}%;`;
 
@@ -1382,49 +1397,45 @@ function renderPvCanvas(screen) {
       el.onclick   = () => navigatePv(hs.targetId, false);
     }
     canvas.appendChild(el);
-
-    // ── メールモーダルボタン（mailBtnTargets:[{id,label}] 配列 or 旧形式 mailBtnTarget 文字列）──
-    let mailBtnEntries = [];
-    if (Array.isArray(hs.mailBtnTargets) && hs.mailBtnTargets.length) {
-      mailBtnEntries = hs.mailBtnTargets;  // 新形式: [{id, label}, ...]
-    } else if (hs.mailBtnTarget) {
-      mailBtnEntries = [{id: hs.mailBtnTarget, label: hs.mailBtnLabel || ''}];  // 旧形式互換
-    }
-
-    // ボタン幅をラベル文字数から計算（画像の実ピクセル幅を基準に比率変換）
-    // 📩アイコンのみ: 28px、テキストあり: 文字数×7 + 20px（パディング込み）
-    const imgNW = img.naturalWidth || 800;
-    const FONT_PX = 11;   // ボタン内テキストのフォントサイズ (px)
-    const PAD_PX  = 20;   // 左右パディング合計 (px)
-
-    // 各ボタンのテキスト幅を事前計算して最大幅を決定（ボタン列幅を揃える）
-    const btnPxWidths = mailBtnEntries.map((entry) => {
-      const lbl = typeof entry === 'string' ? '' : (entry.label || '');
-      return lbl ? lbl.length * FONT_PX * 0.65 + PAD_PX : 28;
-    });
-    const maxBtnPx = Math.max(...btnPxWidths, 28);
-    const btnW  = Math.min(Math.max(maxBtnPx / imgNW, 0.03), 0.18);  // 3%〜18% に制限
-    const baseX = (hs.x + hs.w + 0.005 + btnW <= 1)
-      ? hs.x + hs.w + 0.005 : hs.x - btnW - 0.005;
-
-    mailBtnEntries.forEach((entry, mi) => {
-      const mailId = typeof entry === 'string' ? entry : entry.id;
-      const btnLabel = typeof entry === 'string' ? '' : (entry.label || '');
-      const mt2 = mailTemplatesPv.find(x => x.id === mailId);
-      if (!mt2) return;
-      const mbtn = document.createElement('div');
-      const btnH     = hs.h / mailBtnEntries.length;
-      const btnY     = hs.y + btnH * mi;
-      mbtn.className = 'pv-mail-btn';
-      mbtn.style.cssText = `left:${baseX*100}%;top:${btnY*100}%;width:${btnW*100}%;height:${btnH*100}%;`;
-      mbtn.title = `📩 ${mt2.title || 'メール'}を表示`;
-      mbtn.innerHTML = btnLabel
-        ? `<span style="font-size:${FONT_PX}px;line-height:1.2;text-align:center;padding:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;">${esc(btnLabel)}</span>`
-        : '<span style="font-size:14px;">📩</span>';
-      mbtn.onclick = (ev) => { ev.stopPropagation(); _openMailModal(mt2); };
-      canvas.appendChild(mbtn);
-    });
   });
+
+  // ── メールボタンバー（備考テキストの下に全ボタンを並べて表示）──
+  // 全ホットスポットからメールボタンエントリを収集して重複排除
+  const mailBar = document.getElementById('pvMailBar');
+  if (mailBar) {
+    const mailTemplatesPv = _loadMailTemplates();
+    const seen = new Set();
+    const entries = [];
+    (screen.hotspots || []).forEach(hs => {
+      let btnList = [];
+      if (Array.isArray(hs.mailBtnTargets) && hs.mailBtnTargets.length) {
+        btnList = hs.mailBtnTargets;
+      } else if (hs.mailBtnTarget) {
+        btnList = [{ id: hs.mailBtnTarget, label: hs.mailBtnLabel || '' }];
+      }
+      btnList.forEach(entry => {
+        const mailId = typeof entry === 'string' ? entry : entry.id;
+        if (seen.has(mailId)) return;
+        seen.add(mailId);
+        const mt = mailTemplatesPv.find(x => x.id === mailId);
+        if (mt) entries.push({ mt, label: typeof entry === 'string' ? '' : (entry.label || '') });
+      });
+    });
+
+    if (entries.length) {
+      mailBar.innerHTML = entries.map((e, i) => {
+        const label = e.label || e.mt.title || 'メール';
+        return `<button class="pv-mail-btn" data-mail-idx="${i}">📩 ${esc(label)}</button>`;
+      }).join('');
+      mailBar.querySelectorAll('.pv-mail-btn').forEach((btn, i) => {
+        btn.onclick = () => _openMailModal(entries[i].mt);
+      });
+      mailBar.style.display = '';
+    } else {
+      mailBar.innerHTML = '';
+      mailBar.style.display = 'none';
+    }
+  }
 
   wrap.scrollTop  = 0;
   wrap.scrollLeft = 0;
@@ -1578,6 +1589,8 @@ function _pvClearCanvas() {
   if (pvTitle) pvTitle.textContent = '';
   if (pvBadge) pvBadge.textContent = '';
   if (pvMemo)  { pvMemo.textContent = ''; pvMemo.style.display = 'none'; }
+  const mailBarClear = document.getElementById('pvMailBar');
+  if (mailBarClear) { mailBarClear.innerHTML = ''; mailBarClear.style.display = 'none'; }
 }
 
 // ============================================================
