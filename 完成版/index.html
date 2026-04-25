@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>🏠 ホーム</title>
+  <title>🏠 ホーム — ツール一覧</title>
   <link rel="stylesheet" href="style.css">
   <script src="common-utils.js"></script>
   <style>
@@ -188,6 +188,7 @@
 <header class="home-header">
   <span class="home-header-icon">🏠</span>
   <span class="home-header-title">ツール一覧</span>
+  <span id="homeClock" style="margin-left:auto;font-size:13px;font-variant-numeric:tabular-nums;color:var(--header-text);opacity:.85;letter-spacing:.03em;"></span>
 </header>
 
 <div class="home-body">
@@ -249,8 +250,19 @@
 </footer>
 
 <script>
-  // common-utils.js の openNamedTab / _buildSideMenuHTML を使用
-  // #sideMenu は CSS で static 表示に固定しているため toggleSideMenu() は不要
+  (function() {
+    var DAYS = ['日','月','火','水','木','金','土'];
+    function updateClock() {
+      var d = new Date();
+      var p = function(n){ return String(n).padStart(2,'0'); };
+      document.getElementById('homeClock').textContent =
+        d.getFullYear() + '/' + p(d.getMonth()+1) + '/' + p(d.getDate()) +
+        '(' + DAYS[d.getDay()] + ') ' +
+        p(d.getHours()) + ':' + p(d.getMinutes()) + ':' + p(d.getSeconds());
+    }
+    updateClock();
+    setInterval(updateClock, 1000);
+  })();
 </script>
 </body>
 </html>
