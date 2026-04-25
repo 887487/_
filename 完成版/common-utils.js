@@ -13,6 +13,121 @@
 // =============================================================================
 
 // =============================================================================
+// ⓪ 統合 IndexedDB レイヤー
+//    全データを screenFlowDB（v4）の appData ストアで管理する。
+//    localStorage は darkMode と hearingState のみ継続使用。
+// =============================================================================
+var _APP_IDB_INST = null;
+function _appIdbOpen() {
+  if (_APP_IDB_INST) return Promise.resolve(_APP_IDB_INST);
+  return new Promise(function(resolve, reject) {
+    var req = indexedDB.open('screenFlowDB', 4);
+    req.onupgradeneeded = function(e) {
+      var db = e.target.result;
+      if (!db.objectStoreNames.contains('patterns'))  db.createObjectStore('patterns');
+      if (!db.objectStoreNames.contains('imageLib'))   db.createObjectStore('imageLib');
+      if (!db.objectStoreNames.contains('appData'))    db.createObjectStore('appData');
+    };
+    req.onsuccess = function(e) {
+      _APP_IDB_INST = e.target.result;
+      _APP_IDB_INST.onclose = function() { _APP_IDB_INST = null; };
+      _APP_IDB_INST.onversionchange = function() { _APP_IDB_INST.close(); _APP_IDB_INST = null; };
+      resolve(_APP_IDB_INST);
+    };
+    req.onerror = function(e) { reject(e.target.error); };
+  });
+}
+
+window.idbGetAppData = function(key) {
+  return _appIdbOpen().then(function(db) {
+    return new Promise(function(resolve, reject) {
+      var tx  = db.transaction('appData', 'readonly');
+      var req = tx.objectStore('appData').get(key);
+      req.onsuccess = function(e) { resolve(e.target.result !== undefined ? e.target.result : null); };
+      req.onerror   = function(e) { reject(e.target.error); };
+    });
+  });
+};
+
+window.idbSetAppData = function(key, value) {
+  return _appIdbOpen().then(function(db) {
+    return new Promise(function(resolve, reject) {
+      var tx  = db.transaction('appData', 'readwrite');
+      var req = tx.objectStore('appData').put(value, key);
+      tx.oncomplete = function() { resolve(); };
+      tx.onerror    = function(e) { reject(e.target.error); };
+    });
+  });
+};
+
+// 全ページ共通の in-memory キャッシュ
+window._appCache = {
+  scripts:          {},
+  mailTemplates:    [],
+  mailCatMeta:      { cats: [], subs: {} },
+  updateHistory:    [],
+  hearingQuestions: [],
+  hearingPolicies:  [],
+  sideMenuData:     null   // null → DEFAULT_SIDE_MENU_DATA にフォールバック
+};
+
+// localStorage からの一回限りのマイグレーション
+function _migrateFromLocalStorage() {
+  var map = {
+    scripts:          'talkScripts',
+    mailTemplates:    'mailTemplates',
+    mailCatMeta:      'mailCatMeta',
+    updateHistory:    'updateHistory',
+    hearingQuestions: 'hearingQuestionsDef_v1',
+    hearingPolicies:  'hearingPolicies_v1',
+    sideMenuData:     'sideMenuData'
+  };
+  var writes = [];
+  Object.keys(map).forEach(function(idbKey) {
+    try {
+      var raw = localStorage.getItem(map[idbKey]);
+      if (raw) {
+        var val = JSON.parse(raw);
+        window._appCache[idbKey] = val;
+        writes.push(window.idbSetAppData(idbKey, val));
+        localStorage.removeItem(map[idbKey]);
+      }
+    } catch(e) {}
+  });
+  return Promise.all(writes);
+}
+
+/**
+ * 全データを IDB から _appCache に読み込む。
+ * 各ページの DOMContentLoaded で await / .then() して使う。
+ */
+window.initAppData = function() {
+  var keys = ['scripts','mailTemplates','mailCatMeta','updateHistory','hearingQuestions','hearingPolicies','sideMenuData'];
+  return _appIdbOpen().then(function(db) {
+    return new Promise(function(resolve) {
+      var tx    = db.transaction('appData', 'readonly');
+      var store = tx.objectStore('appData');
+      var result = {};
+      var left   = keys.length;
+      keys.forEach(function(k) {
+        var req = store.get(k);
+        req.onsuccess = function(e) { result[k] = e.target.result; if (!--left) resolve(result); };
+        req.onerror   = function()  { result[k] = null;            if (!--left) resolve(result); };
+      });
+    });
+  }).then(function(result) {
+    var needsMigration = keys.some(function(k) { return result[k] == null; });
+    if (needsMigration) return _migrateFromLocalStorage().then(function() { return result; });
+    return result;
+  }).then(function(result) {
+    keys.forEach(function(k) {
+      if (result[k] != null) window._appCache[k] = result[k];
+    });
+    return window._appCache;
+  });
+};
+
+// =============================================================================
 // ① ダークモード初期化（DOM構築前に実行してフラッシュ防止）
 // 要件：「ダークモード：オフ」をデフォルトにする。
 // 変更前：OS設定（prefers-color-scheme）を優先していた。
@@ -260,16 +375,18 @@ function _processImportText(text, noReload) {
           setTimeout(function () {
             // スクリプト：カテゴリ key 単位で結合
             var curScripts = {};
-            try { var cs = localStorage.getItem('talkScripts'); if(cs) curScripts = JSON.parse(cs); } catch(e) {}
+            var curScripts = window._appCache.scripts || {};
             var mergedScripts = _mergeScripts(curScripts, raw.talkScripts);
-            localStorage.setItem('talkScripts', JSON.stringify(mergedScripts));
+            window._appCache.scripts = mergedScripts;
+            window.idbSetAppData('scripts', mergedScripts);
             // 他タブ通知用に scriptsUpdated BC を送信
             try { var _bcs2=new BroadcastChannel('tool_data_update'); _bcs2.postMessage({type:'scriptsUpdated',ts:Date.now()}); _bcs2.close(); } catch(e) {}
             // メール：id 単位で結合
             var curMail = [];
-            try { var cm = localStorage.getItem('mailTemplates'); if(cm) curMail = JSON.parse(cm); } catch(e) {}
+            var curMail = window._appCache.mailTemplates || [];
             var mergedMail = _mergeMail(curMail, raw.mailTemplates);
-            localStorage.setItem('mailTemplates', JSON.stringify(mergedMail));
+            window._appCache.mailTemplates = mergedMail;
+            window.idbSetAppData('mailTemplates', mergedMail);
             imported.scripts = true;
             imported.mail    = true;
             // _applyImportedDataToPage でメール反映に使う raw を差分結合後データで上書き
@@ -317,7 +434,8 @@ function _processImportText(text, noReload) {
           if (!confirm('現在のデータをインポートしたデータで上書きします。よろしいですか？')) return;
           _importProgressShow('データを保存中…', 'メールテンプレート', 60);
           setTimeout(function () {
-            localStorage.setItem('mailTemplates', JSON.stringify(raw));
+            window._appCache.mailTemplates = raw;
+            window.idbSetAppData('mailTemplates', raw);
             imported.mail = true;
             _importProgressUpdate('データを反映中…', '', 85);
             setTimeout(function () {
@@ -337,7 +455,8 @@ function _processImportText(text, noReload) {
             if (!confirm('現在のデータをインポートしたデータで上書きします。よろしいですか？')) return;
             _importProgressShow('データを保存中…', 'スクリプト', 60);
             setTimeout(function () {
-              localStorage.setItem('talkScripts', JSON.stringify(raw));
+              window._appCache.scripts = raw;
+              window.idbSetAppData('scripts', raw);
               imported.scripts = true;
               // 他タブにスクリプト更新を通知
               try { var _bcs=new BroadcastChannel('tool_data_update'); _bcs.postMessage({type:'scriptsUpdated',ts:Date.now()}); _bcs.close(); } catch(e) {}
@@ -381,7 +500,7 @@ function _applyImportedDataToPage(imported, raw) {
     msgs.push('スクリプト');
   } else if (imported.scripts) {
     try {
-      var saved = localStorage.getItem('talkScripts');
+      var saved = JSON.stringify(window._appCache.scripts || null);
       if (saved && typeof scripts !== 'undefined') {
         var newData = JSON.parse(saved);
         Object.keys(scripts).forEach(function(k){ delete scripts[k]; });
@@ -396,7 +515,7 @@ function _applyImportedDataToPage(imported, raw) {
   // メールテンプレートの反映（mail.html の templates 変数を再ロード）
   if (imported.mail) {
     try {
-      var saved = localStorage.getItem('mailTemplates');
+      var saved = JSON.stringify(window._appCache.mailTemplates || null);
       if (saved && typeof templates !== 'undefined') {
         templates.length = 0;
         _clone(JSON.parse(saved)).forEach(function(t){ templates.push(t); });
@@ -475,14 +594,14 @@ function _applyImportedDataToPage(imported, raw) {
 // 更新履歴をマージ保存（既存にないIDのみ追加し、日付降順ソート）
 function _mergeHistory(incoming) {
   try {
-    var cur = [];
-    try { var s = localStorage.getItem('updateHistory'); if (s) cur = JSON.parse(s); } catch (e) {}
+    var cur = window._appCache.updateHistory || [];
     var inMap = {};
     incoming.forEach(function (h) { inMap[h.id] = h; });
     var kept   = cur.filter(function (h) { return !inMap[h.id]; });
     var merged = incoming.concat(kept);
     merged.sort(function (a, b) { return (b.date || '').localeCompare(a.date || ''); });
-    localStorage.setItem('updateHistory', JSON.stringify(merged));
+    window._appCache.updateHistory = merged;
+    window.idbSetAppData('updateHistory', merged);
   } catch (e) {}
 }
 
@@ -554,8 +673,7 @@ window.openAdminWithAuth = function () {
 window.renderHistory = function () {
   var panel = document.getElementById('historyPanel');
   if (!panel) return;
-  var arr = [];
-  try { var r = localStorage.getItem('updateHistory'); if (r) arr = JSON.parse(r); } catch (e) {}
+  var arr = window._appCache.updateHistory || [];
   if (!arr || arr.length === 0) {
     arr = [{ id: 'h_default_1', content: '初版作成', author: '菅原', approver: '-', date: '2026/03/08' }];
   }
@@ -629,15 +747,12 @@ window.DEFAULT_SIDE_MENU_DATA = [
 ];
 
 window.loadSideMenuData = function() {
-  try {
-    var s = localStorage.getItem(SIDE_MENU_DATA_KEY);
-    if (s) return JSON.parse(s);
-  } catch(e) {}
-  return null;
+  return window._appCache.sideMenuData || null;
 };
 
 window.saveSideMenuData = function(data) {
-  try { localStorage.setItem(SIDE_MENU_DATA_KEY, JSON.stringify(data)); } catch(e) {}
+  window._appCache.sideMenuData = data;
+  window.idbSetAppData('sideMenuData', data);
 };
 
 // 初回起動時の localStorage 書き込みは廃止。
@@ -674,6 +789,9 @@ function _buildSideMenuHTML(isDark) {
       (sec.subSections || []).forEach(function(sub, sj) {
         var subId = sub.id || (secId + '_sub' + sj);
         var lis = (sub.items || []).map(function(it) {
+          if (it.disabled) {
+            return '<li><span class="sm-link-disabled">' + (it.name || '') + '<em class="sm-disabled-badge">無効</em></span></li>';
+          }
           return '<li><a href="' + (it.url || '#') + '" target="_blank">' + it.name + '</a></li>';
         }).join('');
         html += '<li class="sub-acc-item">' +
@@ -714,6 +832,9 @@ function _buildSideMenuHTML(isDark) {
     } else {
       // 通常リンクセクション
       var lis = (sec.items || []).map(function(it) {
+        if (it.disabled) {
+          return '<li><span class="sm-link-disabled">' + (it.name || '') + '<em class="sm-disabled-badge">無効</em></span></li>';
+        }
         return '<li><a href="' + (it.url || '#') + '" target="_blank">' + it.name + '</a></li>';
       }).join('');
       html += '<div class="side-section"><div class="side-section-header" onclick="toggleAccordion(\'' + secId + '\')">' +
@@ -931,12 +1052,11 @@ var HEARING_POLICIES_DEFAULT  = [];  // jsファイルに直書き管理。admin
 var HEARING_QUESTIONS_KEY = 'hearingQuestionsDef_v1';
 
 function _hrQuestionsLoad() {
-  // jsファイルの HEARING_QUESTIONS_DEFAULT を正として返す
-  return JSON.parse(JSON.stringify(window.HEARING_QUESTIONS_DEFAULT || []));
+  return JSON.parse(JSON.stringify(window._appCache.hearingQuestions || []));
 }
 function _hrQuestionsSave(list) {
-  // メモリ上の変数を更新するだけ（localStorage は使用しない）
-  window.HEARING_QUESTIONS_DEFAULT = JSON.parse(JSON.stringify(list || []));
+  window._appCache.hearingQuestions = JSON.parse(JSON.stringify(list || []));
+  window.idbSetAppData('hearingQuestions', window._appCache.hearingQuestions);
 }
 function _hrGetQuestions() { return _hrQuestionsLoad(); }
 
@@ -1510,12 +1630,12 @@ document.addEventListener('DOMContentLoaded', function () {
     // ── メールデータ更新 ──
     if (type === 'mailDataUpdated') {
       try {
-        var s = localStorage.getItem('mailTemplates');
-        if (s) {
+        var _mt = window._appCache.mailTemplates;
+        if (_mt) {
           // mail.html: templates 配列を再ロード
           if (typeof templates !== 'undefined' && Array.isArray(templates)) {
             templates.length = 0;
-            JSON.parse(s).forEach(function(t){ templates.push(t); });
+            _mt.forEach(function(t){ templates.push(t); });
             if (typeof renderSidebar === 'function') renderSidebar();
             if (typeof showList    === 'function') showList(typeof currentCat !== 'undefined' ? currentCat : '__all__');
           }
@@ -1544,8 +1664,8 @@ document.addEventListener('DOMContentLoaded', function () {
     // ── サイドメニュー更新 ──
     if (type === 'sideMenuUpdated') {
       if (ev.data && ev.data.data) {
-        window.DEFAULT_SIDE_MENU_DATA = ev.data.data;
-        try { localStorage.removeItem('sideMenuData'); } catch(ex) {}
+        window._appCache.sideMenuData = ev.data.data;
+        window.idbSetAppData('sideMenuData', ev.data.data);
       }
       var sideMenuEl = document.getElementById('sideMenu');
       if (sideMenuEl) {
@@ -1557,10 +1677,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // ── ヒアリング更新 ──
     if (type === 'hearingUpdated') {
-      if (ev.data.questions) window.HEARING_QUESTIONS_DEFAULT = ev.data.questions;
-      if (ev.data.policies)  window.HEARING_POLICIES_DEFAULT  = ev.data.policies;
-      try { localStorage.removeItem('hearingQuestionsDef_v1'); } catch(ex) {}
-      try { localStorage.removeItem('hearingPolicies_v1');     } catch(ex) {}
+      if (ev.data.questions) { window._appCache.hearingQuestions = ev.data.questions; window.idbSetAppData('hearingQuestions', ev.data.questions); }
+      if (ev.data.policies)  { window._appCache.hearingPolicies  = ev.data.policies;  window.idbSetAppData('hearingPolicies',  ev.data.policies);  }
+      // hearing はIDBで管理 (localStorage不使用)
       if (typeof window.renderHearing === 'function') window.renderHearing();
     }
   };

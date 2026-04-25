@@ -40,7 +40,20 @@
     .body-wrap { background: var(--surface2, #f8f9fa); border: 1px solid var(--border, #dfe4ea); border-radius: 7px; padding: 14px 16px; }
     .body-text { font-size: 13px; line-height: 1.85; color: var(--text, #2f3542); white-space: pre-wrap; word-break: break-all; }
 
-
+    /* コピーボタン付きフィールド */
+    .field-copy-row { display: flex; align-items: flex-start; gap: 8px; }
+    .field-copy-row > :first-child { flex: 1; min-width: 0; }
+    .copy-btn-col { display: flex; flex-direction: column; gap: 6px; flex-shrink: 0; padding-top: 2px; }
+    .copy-btn {
+      height: 30px; padding: 0 12px; border: 1px solid var(--border, #dfe4ea);
+      border-radius: 5px; background: var(--surface, white); color: var(--text2, #555);
+      font-size: 11px; font-family: inherit; cursor: pointer; white-space: nowrap;
+      transition: background .12s, border-color .12s;
+    }
+    .copy-btn:hover { background: var(--accent-lt, #eef0ff); border-color: var(--accent, #3742fa); color: var(--accent, #3742fa); }
+    .copy-btn.copied { background: #e8f5e9; border-color: #4caf50; color: #388e3c; }
+    .copy-toast-inline { font-size: 10px; color: #4caf50; text-align: center; opacity: 0; transition: opacity .2s; }
+    .copy-toast-inline.show { opacity: 1; }
     mark { background: var(--mark-bg, #ffeaa7); color: inherit; border-radius: 2px; padding: 0 1px; }
 
     /* サイドバー：件名(3.5fr) テンプレート名(1.5fr) 横並び */
@@ -130,7 +143,7 @@
   </div>
   <div class="hd-center"></div>
   <div class="hd-right">
-    <button class="hd-btn" onclick="openNamedTab('script.html','scriptTab')">📋 スクリプト</button>
+    <button class="hd-btn" onclick="openNamedTab('index.html','scriptTab')">📋 スクリプト</button>
     <!-- メール：自ページのため非表示 -->
     <button class="hd-btn" onclick="openNamedTab('screen.html','screenFlowTab')">🖥️ 画面遷移</button>
     <div class="quick-copy-area">
@@ -167,22 +180,22 @@ let currentId  = null;
 
 // ===== LOAD =====
 function load() {
-  try {
-    const s = localStorage.getItem('mailTemplates');
-    templates = s ? JSON.parse(s) : [];
-  } catch(e) { templates = []; }
+  var cached = window._appCache && window._appCache.mailTemplates;
+  templates = cached ? cached.slice() : [];
 }
 
 function init() {
-  load();
-  renderSidebar();
-  // URLハッシュにテンプレートIDがあれば直接表示
-  const hash = location.hash.replace('#', '');
-  if (hash && templates.find(t => t.id === hash)) {
-    showDetail(hash);
-  } else {
-    showList('__all__');
-  }
+  var doInit = window.initAppData ? window.initAppData() : Promise.resolve();
+  doInit.then(function() {
+    load();
+    renderSidebar();
+    var hash = location.hash.replace('#', '');
+    if (hash && templates.find(function(t){ return t.id === hash; })) {
+      showDetail(hash);
+    } else {
+      showList('__all__');
+    }
+  });
 }
 
 // トークスクリプト側からpostMessageで呼ばれたとき
@@ -210,8 +223,9 @@ window.addEventListener('message', function(e) {
   } catch(e) {}
 })();
 
+// storage event は不要（BroadcastChannel で受信）
 window.addEventListener('storage', function(e) {
-  if (e.key === 'mailTemplates' || e.key === 'mailCatMeta' || e.key === '_mailSaveTs') {
+  if (false && (e.key === 'mailTemplates' || e.key === 'mailCatMeta')) {
     load(); renderSidebar();
     if (currentId && !templates.find(t => t.id === currentId)) {
       currentId = null; showList(currentCat || '__all__');
@@ -394,20 +408,58 @@ function showDetail(id) {
       <div class="detail-body">
         <div>
           <div class="field-label">件名</div>
-          <div class="subject-row">
-            <span class="subject-text">${esc(t.subject||'（件名なし）')}</span>
+          <div class="field-copy-row">
+            <div class="subject-row">
+              <span class="subject-text">${esc(t.subject||'（件名なし）')}</span>
+            </div>
+            <div class="copy-btn-col">
+              <button class="copy-btn" id="copySubjBtn" onclick="mailCopyField('${id}','subject')">📋 件名コピー</button>
+              <button class="copy-btn" id="copyAllBtn"  onclick="mailCopyField('${id}','all')">📋 全文コピー</button>
+            </div>
           </div>
         </div>
         <div>
           <div class="field-label">本文</div>
-          <div class="body-wrap">
-            <div class="body-text">${esc(t.body||'')}</div>
+          <div class="field-copy-row">
+            <div class="body-wrap">
+              <div class="body-text">${esc(t.body||'')}</div>
+            </div>
+            <div class="copy-btn-col">
+              <button class="copy-btn" id="copyBodyBtn" onclick="mailCopyField('${id}','body')">📋 本文コピー</button>
+            </div>
           </div>
         </div>
       </div>
     </div>`;
 }
 
+function mailCopyField(id, field) {
+  const t = templates.find(x => x.id === id);
+  if (!t) return;
+  let text = '';
+  let btnId = '';
+  if (field === 'subject') { text = t.subject || ''; btnId = 'copySubjBtn'; }
+  else if (field === 'body')    { text = t.body    || ''; btnId = 'copyBodyBtn'; }
+  else if (field === 'all')     {
+    text = (t.subject ? '件名：' + t.subject + '\n\n' : '') + (t.body || '');
+    btnId = 'copyAllBtn';
+  }
+  const done = () => {
+    const btn = document.getElementById(btnId);
+    if (!btn) return;
+    btn.classList.add('copied');
+    const orig = btn.textContent;
+    btn.textContent = '✓ コピー完了';
+    setTimeout(() => { btn.classList.remove('copied'); btn.textContent = orig; }, 1600);
+  };
+  if (navigator.clipboard) navigator.clipboard.writeText(text).then(done).catch(() => { _fallbackCopy(text); done(); });
+  else { _fallbackCopy(text); done(); }
+}
+function _fallbackCopy(text) {
+  const el = document.createElement('textarea');
+  el.value = text; document.body.appendChild(el); el.select();
+  document.execCommand('copy'); document.body.removeChild(el);
+}
 
 function backToList() {
   currentId = null;

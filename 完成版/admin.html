@@ -292,6 +292,18 @@
   transition: background .12s; margin-top: 6px;
 }
 .sm-add-btn:hover { background: var(--accent); color: #fff; }
+.sm-toggle-btn {
+  height: 26px; padding: 0 8px; flex-shrink: 0;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 4px; color: var(--text3);
+  font-size: 11px; font-family: inherit; cursor: pointer;
+  transition: background .12s, color .12s, border-color .12s;
+  white-space: nowrap;
+}
+.sm-toggle-btn:hover { border-color: var(--accent); color: var(--accent); }
+.sm-toggle-btn.on {
+  background: #ffeaea; border-color: #e74c3c; color: #c0392b; font-weight: 700;
+}
 .tab-panel-sidemenu { display: none; }
 
 .hist-del-btn {
@@ -839,9 +851,9 @@ body.dnd-xlsx-hover::after {
       <!-- ── ヒアリングタブ ヘッダーバー ── -->
       <div style="display:flex;align-items:center;justify-content:space-between;">
         <div style="font-size:14px;font-weight:700;color:var(--text);">📋 ヒアリング設定</div>
-        <button class="btn btn-secondary" onclick="hrWriteToFile()" style="font-size:12px;" title="common-utils.js の HEARING_QUESTIONS_DEFAULT / HEARING_POLICIES_DEFAULT を現在の内容で上書きします">📝 jsファイルに書き込む</button>
+        <button class="btn btn-primary" onclick="hrSave()" style="font-size:12px;">💾 保存して反映</button>
       </div>
-      <div id="hrWriteStatus" style="display:none;padding:8px 12px;border-radius:6px;font-size:12px;"></div>
+      <div id="hrSaveStatus" style="display:none;padding:8px 12px;border-radius:6px;font-size:12px;"></div>
 
       <!-- ── プレビュー ── -->
       <div>
@@ -1325,13 +1337,12 @@ function closeAdminHelp(){var m=document.getElementById('adminHelpModal');if(m)m
 // 対応方針エディタ（ヒアリングタブ）
 // データ構造: [{id, conditions:[{field,value}], policy, enabled}]
 // ===================================================================
-var HR_POLICY_KEY = 'hearingPolicies_v1'; // 後方互換のため定義のみ残す
-
 function _hrPoliciesLoad() {
-  return JSON.parse(JSON.stringify(window.HEARING_POLICIES_DEFAULT || []));
+  return JSON.parse(JSON.stringify(window._appCache.hearingPolicies || []));
 }
 function _hrPoliciesSave(list) {
-  window.HEARING_POLICIES_DEFAULT = JSON.parse(JSON.stringify(list || []));
+  window._appCache.hearingPolicies = JSON.parse(JSON.stringify(list || []));
+  window.idbSetAppData('hearingPolicies', window._appCache.hearingPolicies);
 }
 
 // ヒアリング状態のフィールド一覧（表示名 → 実フィールド名）
@@ -1560,8 +1571,9 @@ function _hrQAdd() {
 
 // デフォルトリセット
 function _hrQReset() {
-  if (!confirm('質問定義をリセットしますか？（カスタム質問も削除されます）\n※jsファイルへの反映は「📝 jsファイルに書き込む」で行ってください')) return;
-  window.HEARING_QUESTIONS_DEFAULT = [];
+  if (!confirm('質問定義をリセットしますか？（カスタム質問も削除されます）')) return;
+  window._appCache.hearingQuestions = [];
+  window.idbSetAppData('hearingQuestions', []);
   _hrQEditorRender();
   if (window.renderHearing) window.renderHearing();
   toast('✅ 質問定義をリセットしました');
@@ -1741,10 +1753,25 @@ function toggleMailCatAcc(e,key){
     }else{renderMailSidebar();}
   },200);
 }
-function loadData(){try{const s=localStorage.getItem('talkScripts');if(s)return JSON.parse(s);}catch(e){}return null;}
-let data=loadData()||{};
+function loadData(){ return window._appCache ? (Object.keys(window._appCache.scripts||{}).length ? window._appCache.scripts : null) : null; }
+let data = {};
+// initAppData が完了してから data / mailData を確定させる
+(window.initAppData ? window.initAppData() : Promise.resolve()).then(function() {
+  var loaded = loadData();
+  if (loaded) { Object.assign(data, loaded); }
+  // mailData を _appCache から再初期化
+  if (window._appCache && window._appCache.mailTemplates && window._appCache.mailTemplates.length) {
+    mailData = window._appCache.mailTemplates.slice();
+  }
+  if (window._appCache && window._appCache.mailCatMeta) {
+    mailCatMeta = window._appCache.mailCatMeta;
+  }
+  ensureColors();
+  render();
+  renderMailSidebar();
+  if (typeof renderAdminHistoryPanel === 'function') renderAdminHistoryPanel();
+});
 function ensureColors(){let ci=0;Object.values(data).forEach(cat=>{if(!cat.color)cat.color=CAT_COLORS[ci%CAT_COLORS.length];ci++;});}
-ensureColors();
 let currentCat=null,currentSubKey=null,currentIdx=null;
 
 function render(){renderSidebar();if(currentCat&&currentIdx!==null){const cat=data[currentCat];if(!cat){currentCat=null;currentSubKey=null;currentIdx=null;showEmpty();return;}const list=currentSubKey&&cat.sub&&cat.sub[currentSubKey]?cat.sub[currentSubKey].list:cat.list||[];if(!list[currentIdx]){currentCat=null;currentSubKey=null;currentIdx=null;showEmpty();}else{renderEditor();renderPreview();}}}
@@ -2415,10 +2442,10 @@ function applyImport(impScripts,impMail,choices,conflicts,impHistory,impScreen){
     return; // 非同期処理のため return
   }
   try{
-    localStorage.setItem('talkScripts',JSON.stringify(data));
-    localStorage.setItem('mailTemplates',JSON.stringify(mailData));
-    localStorage.setItem('mailCatMeta',JSON.stringify(mailCatMeta||{cats:[],subs:{}}));
-    _notifyTabs();markClean();
+    window._appCache.scripts = data;
+    window._appCache.mailTemplates = mailData;
+    window._appCache.mailCatMeta = mailCatMeta||{cats:[],subs:{}};
+    Promise.all([window.idbSetAppData('scripts',data),window.idbSetAppData('mailTemplates',mailData),window.idbSetAppData('mailCatMeta',mailCatMeta||{cats:[],subs:{}})]).then(function(){_notifyTabs();markClean();});
   }catch(ex){toast('⚠️ 保存中にエラーが発生しました: '+ex.message);}
   toast('✅ インポート・保存が完了しました');
 }
@@ -2435,12 +2462,12 @@ if(_bc){
     var type=ev.data&&ev.data.type;
     // ── スクリプトデータ更新（他ページからのインポート時）──
     if(type==='scriptsUpdated'){
-      try{var ss=localStorage.getItem('talkScripts');if(ss){Object.keys(data).forEach(function(k){delete data[k];});Object.assign(data,JSON.parse(ss));render();}}catch(e){}
+      var ss=window._appCache.scripts;if(ss){Object.keys(data).forEach(function(k){delete data[k];});Object.assign(data,ss);render();}
     }
     // ── メールデータ更新 ──
     if(type==='mailDataUpdated'){
-      try{var ms=localStorage.getItem('mailTemplates');if(ms)mailData=JSON.parse(ms);}catch(e){}
-      try{var mc=localStorage.getItem('mailCatMeta');if(mc){mailCatMeta=JSON.parse(mc);}}catch(e){}
+      var ms=window._appCache.mailTemplates;if(ms)mailData=ms.slice();
+      var mc=window._appCache.mailCatMeta;if(mc)mailCatMeta=mc;
       renderMailSidebar();
     }
     // ── 画面遷移データ更新 ──
@@ -2465,38 +2492,28 @@ function _notifyTabs(){
     try{_bc.postMessage({type:'mailDataUpdated',ts:Date.now()});}catch(e){}
     try{_bc.postMessage({type:'screenDataUpdated',ts:Date.now()});}catch(e){}
   }
-  try{localStorage.setItem('_scriptSaveTs',Date.now().toString());}catch(e){}
-  try{localStorage.setItem('_mailSaveTs',Date.now().toString());}catch(e){}
-  try{localStorage.setItem('_screenSaveTs',Date.now().toString());}catch(e){}
+  // タイムスタンプはBroadcastChannelで通知するため localStorage は不要
 }
 function saveAllManual(){
-  // 保存対象：talkScripts / mailTemplates / mailCatMeta → localStorage
-  //           screenPatterns の画像データ → メモリ維持（エクスポートで JSON 保存）
-  //           screenPatterns の骨格（名前・ホットスポット）→ scrSaveIndex() で localStorage
+  // 全データを IndexedDB (appData ストア) に保存する
+  window._appCache.scripts       = data;
+  window._appCache.mailTemplates = mailData;
+  window._appCache.mailCatMeta   = mailCatMeta || {cats:[],subs:{}};
 
-  // ① 旧 screenFlowData を削除して空き容量を確保
-  try { localStorage.removeItem('screenFlowData'); } catch(e) {}
-
-  // ② talkScripts
-  try { localStorage.setItem('talkScripts', JSON.stringify(data)); }
-  catch(e){ toast('❌ 保存失敗 [talkScripts]: ' + e.message); return; }
-
-  // ③ mailTemplates
-  try { localStorage.setItem('mailTemplates', JSON.stringify(mailData)); }
-  catch(e){ toast('❌ 保存失敗 [mailTemplates]: ' + e.message); return; }
-
-  // ④ mailCatMeta
-  try { localStorage.setItem('mailCatMeta', JSON.stringify(mailCatMeta||{cats:[],subs:{}})); }
-  catch(e){ toast('❌ 保存失敗 [mailCatMeta]: ' + e.message); return; }
-
-  // ⑤ 画面遷移インデックス（パターン名・画面名・ホットスポット、imageSrcなし）
-  scrSaveIndex();
-
-  _notifyTabs();
-  markClean();
-  // 保存と同時に JSON をエクスポートする（D&D インポート統合のため）
-  exportJSON();
-  toast('✅ 保存しました。本番画面に反映されます。');
+  Promise.all([
+    window.idbSetAppData('scripts',       data),
+    window.idbSetAppData('mailTemplates', mailData),
+    window.idbSetAppData('mailCatMeta',   mailCatMeta || {cats:[],subs:{}}),
+  ]).then(function() {
+    // 画面遷移インデックスも保存
+    scrSaveIndex();
+    _notifyTabs();
+    markClean();
+    exportJSON();
+    toast('✅ 保存しました。本番画面に反映されます。');
+  }).catch(function(e) {
+    toast('❌ 保存失敗: ' + e.message);
+  });
 }
 // ===================================================================
 // common-utils.js の _processImportText を上書き
@@ -2657,7 +2674,7 @@ window.addEventListener('beforeunload',function(e){if(_dirty){e.preventDefault()
 // メールテンプレート管理
 // ===================================================================
 // MAIL_COLORS → APP_COLORS エイリアスを共通パレット定義箇所で宣言済み
-let mailData=(function(){try{const s=localStorage.getItem('mailTemplates');return s?JSON.parse(s):[];}catch(e){return[];}})();
+let mailData = (window._appCache && window._appCache.mailTemplates) ? window._appCache.mailTemplates.slice() : [];
 let mId=null,_pendingMailSubCatKey=null;
 let mailCatMeta=(function(){try{const s=localStorage.getItem('mailCatMeta');return s?JSON.parse(s):null;}catch(e){return null;}})();
 function saveMailCatMeta(){}
@@ -3020,148 +3037,37 @@ function calSelect(d){
 var _smData = null; // 編集中データ
 
 function smLoad() {
-  // localStorage は使用しない。DEFAULT_SIDE_MENU_DATA（jsファイルの値）を正とする
-  _smData = JSON.parse(JSON.stringify(window.DEFAULT_SIDE_MENU_DATA));
+  var d = window._appCache.sideMenuData || window.DEFAULT_SIDE_MENU_DATA;
+  _smData = JSON.parse(JSON.stringify(d));
 }
 
 function smSave() {
-  // 内部用（smWriteToFile から呼ばれる）: 画面を再描画するだけ
   if (!_smData) smLoad();
+  window._appCache.sideMenuData = JSON.parse(JSON.stringify(_smData));
+  window.idbSetAppData('sideMenuData', _smData).then(function() {
+    try {
+      var bc = new BroadcastChannel('tool_data_update');
+      bc.postMessage({ type: 'sideMenuUpdated', data: JSON.parse(JSON.stringify(_smData)) });
+      bc.close();
+    } catch(e) {}
+    toast('✅ サイドメニューを保存しました');
+  });
   smRender();
 }
 
 function smReset() {
-  if (!confirm('サイドメニューをデフォルト設定に戻します。よろしいですか？（jsファイルへの反映は「📝 jsファイルに書き込む」で行ってください）')) return;
+  if (!confirm('サイドメニューをデフォルト設定に戻します。よろしいですか？')) return;
   _smData = JSON.parse(JSON.stringify(window.DEFAULT_SIDE_MENU_DATA));
   smRender();
   toast('↩ デフォルト設定に戻しました');
 }
 
-// =============================================================================
-// common-utils.js への直接書き込み（File System Access API）
-// DEFAULT_SIDE_MENU_DATA の宣言ブロックを現在の _smData で置換して上書き保存する。
-// ブラウザごとに1セッション1回のフォルダ選択が必要。
-// =============================================================================
-var _smDirHandle = null; // 選択済みフォルダハンドルをセッション中キャッシュ
-
-function _smSetStatus(msg, type) {
-  var el = document.getElementById('smWriteStatus');
-  if (!el) return;
-  el.style.display = msg ? 'block' : 'none';
-  el.style.background = type === 'ok'  ? '#e8f5e9' :
-                        type === 'err' ? '#ffeaea' : 'var(--accent-lt)';
-  el.style.color      = type === 'ok'  ? '#2e7d32' :
-                        type === 'err' ? '#c62828' : 'var(--accent)';
-  el.style.border     = '1px solid ' + (
-                        type === 'ok'  ? '#a5d6a7' :
-                        type === 'err' ? '#ef9a9a' : 'var(--accent)');
-  el.textContent = msg;
-}
-
-async function smWriteToFile() {
-  // ① File System Access API の有無チェック
-  if (!window.showDirectoryPicker) {
-    _smSetStatus('❌ このブラウザは File System Access API に対応していません（Chrome/Edge をお使いください）', 'err');
-    return;
-  }
-
-  if (!_smData) smLoad();
-  if (!_smData) { _smSetStatus('❌ 書き込むデータがありません', 'err'); return; }
-
-  _smSetStatus('⏳ フォルダを選択してください（common-utils.js が含まれるフォルダ）', 'info');
-
-  try {
-    // ② フォルダ選択（キャッシュがあれば再利用）
-    if (!_smDirHandle) {
-      _smDirHandle = await window.showDirectoryPicker({ mode: 'readwrite' });
-    } else {
-      // キャッシュ済みハンドルの権限を確認・再要求
-      var perm = await _smDirHandle.requestPermission({ mode: 'readwrite' });
-      if (perm !== 'granted') _smDirHandle = await window.showDirectoryPicker({ mode: 'readwrite' });
-    }
-
-    // ③ common-utils.js を取得
-    var fileHandle;
-    try {
-      fileHandle = await _smDirHandle.getFileHandle('common-utils.js', { create: false });
-    } catch(e) {
-      _smSetStatus('❌ 選択したフォルダに common-utils.js が見つかりませんでした', 'err');
-      _smDirHandle = null;
-      return;
-    }
-
-    // ④ 現在のファイル内容を読み込む
-    var file = await fileHandle.getFile();
-    var src  = await file.text();
-
-    // ⑤ DEFAULT_SIDE_MENU_DATA ブロックを特定して置換
-    //    開始マーカー: "window.DEFAULT_SIDE_MENU_DATA = ["
-    //    終了マーカー: "];\n\nwindow.loadSideMenuData"（次の宣言の手前）
-    var START_MARKER = 'window.DEFAULT_SIDE_MENU_DATA = [';
-    var END_MARKER   = '\n\nwindow.loadSideMenuData';
-
-    var startIdx = src.indexOf(START_MARKER);
-    if (startIdx === -1) {
-      _smSetStatus('❌ common-utils.js 内に DEFAULT_SIDE_MENU_DATA が見つかりませんでした', 'err');
-      return;
-    }
-    var endIdx = src.indexOf(END_MARKER, startIdx);
-    if (endIdx === -1) {
-      _smSetStatus('❌ DEFAULT_SIDE_MENU_DATA の終端を特定できませんでした', 'err');
-      return;
-    }
-
-    // 新しいブロックを生成
-    // JSON.stringify で整形し、先頭の "[" と末尾の "]" の間のインデントを調整する
-    var newJson = JSON.stringify(_smData, null, 2);
-    // 2スペースインデント → 行頭に2スペース追加（common-utils.js の既存スタイルに合わせる）
-    var indented = newJson
-      .split('\n')
-      .map(function(line, i) { return i === 0 ? line : '  ' + line; })
-      .join('\n');
-
-    var newBlock = 'window.DEFAULT_SIDE_MENU_DATA = ' + indented + ';';
-    var newSrc   = src.slice(0, startIdx) + newBlock + src.slice(endIdx);
-
-    // ⑥ ファイルに書き込む
-    var writable = await fileHandle.createWritable();
-    await writable.write(newSrc);
-    await writable.close();
-
-    // ⑦ メモリ上の DEFAULT_SIDE_MENU_DATA も更新してページ内に即時反映
-    window.DEFAULT_SIDE_MENU_DATA = JSON.parse(JSON.stringify(_smData));
-
-    // ⑧ localStorage のサイドメニューキャッシュを削除（jsファイルを正として扱うため）
-    try { localStorage.removeItem('sideMenuData'); } catch(ex) {}
-
-    // ⑨ 開いている他タブにデータ本体を付けて通知（common-utils.js が即時反映）
-    try {
-      var bc2 = new BroadcastChannel('tool_data_update');
-      bc2.postMessage({ type: 'sideMenuUpdated', data: JSON.parse(JSON.stringify(_smData)) });
-      bc2.close();
-    } catch(ex) {}
-
-    _smSetStatus('✅ common-utils.js に書き込みました（DEFAULT_SIDE_MENU_DATA を更新）', 'ok');
-    toast('✅ common-utils.js に書き込みました');
-
-  } catch(e) {
-    if (e.name === 'AbortError') {
-      _smSetStatus('', '');  // キャンセルは無視
-    } else {
-      _smSetStatus('❌ 書き込みエラー: ' + e.message, 'err');
-    }
-    _smDirHandle = null;
-  }
-}
 
 // =============================================================================
-// common-utils.js へのヒアリングデータ直接書き込み（File System Access API）
-// HEARING_QUESTIONS_DEFAULT / HEARING_POLICIES_DEFAULT を現在の内容で置換する。
+// ヒアリングデータ保存（IndexedDB）
 // =============================================================================
-var _hrDirHandle = null; // フォルダハンドルをセッション中キャッシュ
-
 function _hrSetStatus(msg, type) {
-  var el = document.getElementById('hrWriteStatus');
+  var el = document.getElementById('hrSaveStatus');
   if (!el) return;
   el.style.display = msg ? 'block' : 'none';
   el.style.background = type === 'ok'  ? '#e8f5e9' :
@@ -3174,102 +3080,25 @@ function _hrSetStatus(msg, type) {
   el.textContent = msg;
 }
 
-async function hrWriteToFile() {
-  if (!window.showDirectoryPicker) {
-    _hrSetStatus('❌ このブラウザは File System Access API に対応していません（Chrome/Edge をお使いください）', 'err');
-    return;
-  }
-
-  _hrSetStatus('⏳ フォルダを選択してください（common-utils.js が含まれるフォルダ）', 'info');
-
-  try {
-    // ① フォルダ選択
-    if (!_hrDirHandle) {
-      _hrDirHandle = await window.showDirectoryPicker({ mode: 'readwrite' });
-    } else {
-      var perm = await _hrDirHandle.requestPermission({ mode: 'readwrite' });
-      if (perm !== 'granted') _hrDirHandle = await window.showDirectoryPicker({ mode: 'readwrite' });
-    }
-
-    // ② common-utils.js を取得
-    var fileHandle;
-    try {
-      fileHandle = await _hrDirHandle.getFileHandle('common-utils.js', { create: false });
-    } catch(e) {
-      _hrSetStatus('❌ 選択したフォルダに common-utils.js が見つかりませんでした', 'err');
-      _hrDirHandle = null;
-      return;
-    }
-
-    var file = await fileHandle.getFile();
-    var src  = await file.text();
-
-    // ③ HEARING_QUESTIONS_DEFAULT ブロックを置換
-    //    開始: "var HEARING_QUESTIONS_DEFAULT = "
-    //    終端: ";\nvar HEARING_POLICIES_DEFAULT"
-    var Q_START = 'var HEARING_QUESTIONS_DEFAULT = ';
-    var Q_END   = ';\nvar HEARING_POLICIES_DEFAULT';
-    var qStart  = src.indexOf(Q_START);
-    var qEnd    = src.indexOf(Q_END, qStart);
-    if (qStart === -1 || qEnd === -1) {
-      _hrSetStatus('❌ common-utils.js 内に HEARING_QUESTIONS_DEFAULT が見つかりませんでした', 'err');
-      return;
-    }
-    var currentQuestions = _hrGetQuestions ? _hrGetQuestions() : (window.HEARING_QUESTIONS_DEFAULT || []);
-    var qIndented = JSON.stringify(currentQuestions, null, 2)
-      .split('\n').map(function(l, i){ return i === 0 ? l : '  ' + l; }).join('\n');
-    src = src.slice(0, qStart) + 'var HEARING_QUESTIONS_DEFAULT = ' + qIndented
-        + src.slice(qEnd);
-
-    // ④ HEARING_POLICIES_DEFAULT ブロックを置換
-    //    開始: "var HEARING_POLICIES_DEFAULT = "
-    //    終端: ";\n// localStorage"（次のコメント行の手前）
-    var P_START = 'var HEARING_POLICIES_DEFAULT = ';
-    var P_END   = ';\n// localStorage';
-    var pStart  = src.indexOf(P_START);
-    var pEnd    = src.indexOf(P_END, pStart);
-    if (pStart === -1 || pEnd === -1) {
-      _hrSetStatus('❌ common-utils.js 内に HEARING_POLICIES_DEFAULT が見つかりませんでした', 'err');
-      return;
-    }
-    var currentPolicies = window.HEARING_POLICIES_DEFAULT || [];
-    var pIndented = JSON.stringify(currentPolicies, null, 2)
-      .split('\n').map(function(l, i){ return i === 0 ? l : '  ' + l; }).join('\n');
-    src = src.slice(0, pStart) + 'var HEARING_POLICIES_DEFAULT = ' + pIndented
-        + src.slice(pEnd);
-
-    // ⑤ ファイルに書き込む
-    var writable = await fileHandle.createWritable();
-    await writable.write(src);
-    await writable.close();
-
-    // ⑥ localStorage キャッシュ削除
-    try { localStorage.removeItem('hearingQuestionsDef_v1'); } catch(ex) {}
-    try { localStorage.removeItem('hearingPolicies_v1');     } catch(ex) {}
-
-    // ⑦ 他タブにデータ本体を付けて通知
+function hrSave() {
+  var questions = window._appCache.hearingQuestions || [];
+  var policies  = window._appCache.hearingPolicies  || [];
+  Promise.all([
+    window.idbSetAppData('hearingQuestions', questions),
+    window.idbSetAppData('hearingPolicies',  policies),
+  ]).then(function() {
     try {
       var bc = new BroadcastChannel('tool_data_update');
-      bc.postMessage({
-        type:      'hearingUpdated',
-        questions: JSON.parse(JSON.stringify(currentQuestions)),
-        policies:  JSON.parse(JSON.stringify(currentPolicies))
-      });
+      bc.postMessage({ type: 'hearingUpdated', questions: questions, policies: policies });
       bc.close();
-    } catch(ex) {}
-
-    _hrSetStatus('✅ common-utils.js に書き込みました（質問 ' + currentQuestions.length + ' 件 / 対応方針 ' + currentPolicies.length + ' 件）', 'ok');
-    toast('✅ common-utils.js にヒアリングデータを書き込みました');
-
-  } catch(e) {
-    if (e.name === 'AbortError') {
-      _hrSetStatus('', '');
-    } else {
-      _hrSetStatus('❌ 書き込みエラー: ' + e.message, 'err');
-    }
-    _hrDirHandle = null;
-  }
+    } catch(e) {}
+    _hrSetStatus('✅ 保存しました（質問 ' + questions.length + ' 件 / 対応方針 ' + policies.length + ' 件）', 'ok');
+    toast('✅ ヒアリングデータを保存しました');
+  }).catch(function(e) {
+    _hrSetStatus('❌ 保存失敗: ' + e.message, 'err');
+  });
 }
+
 
 function smRender() {
   if (!_smData) smLoad();  // 初回のみ読み込む（追加・編集中は上書きしない）
@@ -3285,9 +3114,11 @@ function smRender() {
       // サブセクション表示
       itemsHtml = (sec.subSections || []).map(function(sub, sj) {
         var subItems = (sub.items || []).map(function(it, ij) {
+          var disabledBtn = '<button class="sm-toggle-btn' + (it.disabled ? ' on' : '') + '" onclick="smToggleSubDisabled(' + si + ',' + sj + ',' + ij + ')" title="' + (it.disabled ? '有効に戻す' : '無効にする') + '">' + (it.disabled ? '🚫 無効' : '有効') + '</button>';
           return '<div style="display:flex;gap:6px;align-items:center;padding:4px 0;border-bottom:1px solid var(--border);">' +
-            '<input class="sm-input" value="' + _smEsc(it.name) + '" placeholder="リンク名" oninput="smSetSubItem(' + si + ',' + sj + ',' + ij + ',\'name\',this.value)" style="flex:1;">' +
-            '<input class="sm-input" value="' + _smEsc(it.url || '') + '" placeholder="URL" oninput="smSetSubItem(' + si + ',' + sj + ',' + ij + ',\'url\',this.value)" style="flex:2;">' +
+            '<input class="sm-input" value="' + _smEsc(it.name) + '" placeholder="リンク名" oninput="smSetSubItem(' + si + ',' + sj + ',' + ij + ',\'name\',this.value)" style="flex:1;' + (it.disabled ? 'opacity:.5;text-decoration:line-through;' : '') + '">' +
+            '<input class="sm-input" value="' + _smEsc(it.url || '') + '" placeholder="URL" oninput="smSetSubItem(' + si + ',' + sj + ',' + ij + ',\'url\',this.value)" style="flex:2;' + (it.disabled ? 'opacity:.5;' : '') + '">' +
+            disabledBtn +
             '<button class="sm-del-btn" onclick="smDelSubItem(' + si + ',' + sj + ',' + ij + ')" title="削除">✕</button>' +
             '</div>';
         }).join('');
@@ -3304,9 +3135,11 @@ function smRender() {
     } else if (!isPhonetic) {
       // 通常リンクリスト
       itemsHtml = (sec.items || []).map(function(it, ij) {
+        var disabledBtn = '<button class="sm-toggle-btn' + (it.disabled ? ' on' : '') + '" onclick="smToggleDisabled(' + si + ',' + ij + ')" title="' + (it.disabled ? '有効に戻す' : '無効にする') + '">' + (it.disabled ? '🚫 無効' : '有効') + '</button>';
         return '<div style="display:flex;gap:6px;align-items:center;padding:5px 0;border-bottom:1px solid var(--border);">' +
-          '<input class="sm-input" value="' + _smEsc(it.name) + '" placeholder="リンク名" oninput="smSetItem(' + si + ',' + ij + ',\'name\',this.value)" style="flex:1;">' +
-          '<input class="sm-input" value="' + _smEsc(it.url || '') + '" placeholder="URL (https://...)" oninput="smSetItem(' + si + ',' + ij + ',\'url\',this.value)" style="flex:2;">' +
+          '<input class="sm-input" value="' + _smEsc(it.name) + '" placeholder="リンク名" oninput="smSetItem(' + si + ',' + ij + ',\'name\',this.value)" style="flex:1;' + (it.disabled ? 'opacity:.5;text-decoration:line-through;' : '') + '">' +
+          '<input class="sm-input" value="' + _smEsc(it.url || '') + '" placeholder="URL (https://...)" oninput="smSetItem(' + si + ',' + ij + ',\'url\',this.value)" style="flex:2;' + (it.disabled ? 'opacity:.5;' : '') + '">' +
+          disabledBtn +
           '<button class="sm-del-btn" onclick="smDelItem(' + si + ',' + ij + ')" title="削除">✕</button>' +
           '</div>';
       }).join('');
@@ -3362,6 +3195,12 @@ function smAddCategory() {
 function smSetItem(si, ij, key, val) { if (_smData[si] && _smData[si].items && _smData[si].items[ij]) _smData[si].items[ij][key] = val; }
 function smDelItem(si, ij) { _smData[si].items.splice(ij, 1); smRender(); }
 function smAddItem(si) { _smData[si].items = _smData[si].items || []; _smData[si].items.push({ name: '', url: '' }); smRender(); }
+function smToggleDisabled(si, ij) {
+  if (_smData[si] && _smData[si].items && _smData[si].items[ij]) {
+    _smData[si].items[ij].disabled = !_smData[si].items[ij].disabled;
+    smRender();
+  }
+}
 
 // サブカテゴリ操作
 function smSetSub(si, sj, key, val) { if (_smData[si].subSections[sj]) _smData[si].subSections[sj][key] = val; }
@@ -3370,6 +3209,10 @@ function smAddSub(si) { _smData[si].subSections = _smData[si].subSections || [];
 function smSetSubItem(si, sj, ij, key, val) { if (_smData[si].subSections[sj] && _smData[si].subSections[sj].items[ij]) _smData[si].subSections[sj].items[ij][key] = val; }
 function smDelSubItem(si, sj, ij) { _smData[si].subSections[sj].items.splice(ij, 1); smRender(); }
 function smAddSubItem(si, sj) { _smData[si].subSections[sj].items = _smData[si].subSections[sj].items || []; _smData[si].subSections[sj].items.push({ name: '', url: '' }); smRender(); }
+function smToggleSubDisabled(si, sj, ij) {
+  var item = _smData[si] && _smData[si].subSections && _smData[si].subSections[sj] && _smData[si].subSections[sj].items && _smData[si].subSections[sj].items[ij];
+  if (item) { _smData[si].subSections[sj].items[ij].disabled = !item.disabled; smRender(); }
+}
 
 // =============================================================================
 // PDF → 画像変換（PDF.js使用）

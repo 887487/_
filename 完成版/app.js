@@ -1,11 +1,7 @@
 // =====================================================
-// データ読み込み（localStorageから）
+// データ読み込み（IndexedDB から非同期で初期化）
 // =====================================================
-let scripts;
-try {
-  const saved = localStorage.getItem('talkScripts');
-  scripts = saved ? JSON.parse(saved) : {};
-} catch(e) { scripts = {}; }
+let scripts = {};
 
 // ページ遷移履歴スタック（← → ナビゲーション用）
 let historyStack = [];
@@ -796,3 +792,29 @@ function renderStepText(text) {
     return '<' + slash + tag + safeAttrs + '>';
   });
 }
+
+// =====================================================
+// 起動時: IDB から scripts を非同期ロード
+// common-utils.js の initAppData() が完了してから描画する
+// =====================================================
+(function initScriptPage() {
+  var doInit = window.initAppData ? window.initAppData() : Promise.resolve();
+  doInit.then(function() {
+    var cached = window._appCache && window._appCache.scripts;
+    if (cached && Object.keys(cached).length) {
+      Object.assign(scripts, cached);
+    }
+    renderHome();
+    renderScriptSidebar();
+    if (typeof renderHearing === 'function') renderHearing();
+  });
+
+  // BroadcastChannel で他タブからの更新を受け取る
+  window.reloadScripts = function() {
+    var cached = window._appCache && window._appCache.scripts;
+    if (!cached) return;
+    Object.keys(scripts).forEach(function(k){ delete scripts[k]; });
+    Object.assign(scripts, cached);
+    render();
+  };
+})();
