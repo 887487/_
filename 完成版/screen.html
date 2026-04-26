@@ -794,8 +794,11 @@ const esc = s => !s ? '' : String(s)
   .replace(/&/g,'&amp;').replace(/</g,'&lt;')
   .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 
-// localStorage からメールテンプレートを読み込む（ホットスポットの表示に使用）
+// メールテンプレートを取得（IDB _appCache 優先、localStorage フォールバック）
 function _loadMailTemplates() {
+  if (window._appCache && window._appCache.mailTemplates && window._appCache.mailTemplates.length) {
+    return window._appCache.mailTemplates;
+  }
   try { const s = localStorage.getItem('mailTemplates'); return s ? JSON.parse(s) : []; }
   catch(e) { return []; }
 }
@@ -883,6 +886,10 @@ async function triggerImportLocal() {
 
 // フォールバック用 input（非表示）
 document.addEventListener('DOMContentLoaded', function() {
+  // IDB から共有データを読み込む（メールテンプレート等）
+  (window.initAppData ? window.initAppData() : Promise.resolve()).then(function() {
+    if (window.renderHearing) window.renderHearing();
+  });
   if (window.renderHearing) window.renderHearing();
   const inp = document.createElement('input');
   inp.type    = 'file';
@@ -918,9 +925,10 @@ function _applyImportedData(text) {
         try { const bc=new BroadcastChannel('tool_data_update');bc.postMessage({type:'scriptsUpdated',ts:Date.now()});bc.close(); } catch(e){}
       }
       if (Array.isArray(raw.mailTemplates)) {
-        let curM = []; try { const c = localStorage.getItem('mailTemplates'); if(c) curM = JSON.parse(c); } catch(e) {}
+        let curM = (window._appCache && window._appCache.mailTemplates) ? window._appCache.mailTemplates : [];
         const merged = typeof _mergeMail === 'function' ? _mergeMail(curM, raw.mailTemplates) : raw.mailTemplates;
-        localStorage.setItem('mailTemplates', JSON.stringify(merged));
+        if (window._appCache) window._appCache.mailTemplates = merged;
+        if (window.idbSetAppData) window.idbSetAppData('mailTemplates', merged);
         try { const bc=new BroadcastChannel('tool_data_update');bc.postMessage({type:'mailDataUpdated',ts:Date.now()});bc.close(); } catch(e){}
       }
       if (Array.isArray(raw.updateHistory) && raw.updateHistory.length > 0) {
