@@ -332,6 +332,66 @@
 /* textarea resize: normal に戻す */
 .step-text, .step-memo, .mail-input { resize: vertical; }
 
+/* ── リッチテキストエディタ（contenteditable） ── */
+.step-rich {
+  min-height: 72px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 13px;
+  line-height: 1.7;
+  background: var(--bg);
+  color: var(--text);
+  outline: none;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-y: auto;
+  transition: border-color .15s;
+  cursor: text;
+}
+.step-rich:focus { border-color: var(--accent); }
+.step-rich:empty::before {
+  content: attr(data-placeholder);
+  color: var(--text3);
+  pointer-events: none;
+}
+/* 表スタイル（インライン表示） */
+.step-rich table { border-collapse: collapse; margin: 6px 0; width: auto; }
+.step-rich th, .step-rich td {
+  border: 1px solid #aaa;
+  padding: 4px 8px;
+  font-size: 12px;
+  vertical-align: top;
+  white-space: pre-wrap;
+}
+.step-rich th { background: #eef0ff; font-weight: 700; text-align: center; }
+
+/* 固定テキスト編集エリア */
+.fixed-text-section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-bottom: 12px;
+}
+.fixed-text-section .field-label { font-size: 11px; font-weight: 700; color: var(--text2); margin-bottom: 4px; margin-top: 10px; }
+.fixed-text-section .field-label:first-child { margin-top: 0; }
+.fixed-text-rich {
+  min-height: 36px;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 13px;
+  line-height: 1.7;
+  background: var(--bg);
+  color: var(--text);
+  outline: none;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.fixed-text-rich:focus { border-color: var(--accent); }
+.fixed-text-rich:empty::before { content: attr(data-placeholder); color: var(--text3); pointer-events: none; }
+
 /* ホットスポットリスト：このセクションのみスクロール */
 #scrRsHsList {
   max-height: 320px;
@@ -822,6 +882,24 @@ body.dnd-xlsx-hover::after {
       <div class="editor-scroll" id="editorScroll">
         <div class="empty-state"><div class="empty-icon">📋</div><div>左のリストからスクリプトを選んでください</div></div>
       </div>
+      <!-- 固定テキスト編集（常時表示） -->
+      <div style="padding:12px 16px;border-top:1px solid var(--border);flex-shrink:0;">
+        <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px;">📌 固定テキスト設定</div>
+        <div class="fixed-text-section">
+          <div class="field-label">オープニングトーク</div>
+          <div class="fixed-text-rich" id="fixedOpening" contenteditable="true" data-placeholder="オープニングテキストを入力…" oninput="saveFixedTexts()"></div>
+          <div class="field-label">クロージング（デフォルト）</div>
+          <div class="fixed-text-rich" id="fixedClosingDefault" contenteditable="true" data-placeholder="クロージングデフォルトテキスト…" oninput="saveFixedTexts()"></div>
+          <div class="field-label">クロージング（不明点なし）</div>
+          <div class="fixed-text-rich" id="fixedClosingNone" contenteditable="true" data-placeholder="不明点なし時のテキスト…" oninput="saveFixedTexts()"></div>
+          <div class="field-label">クロージング（不明点あり）</div>
+          <div class="fixed-text-rich" id="fixedClosingAsk" contenteditable="true" data-placeholder="不明点あり時のテキスト…" oninput="saveFixedTexts()"></div>
+          <div style="margin-top:10px;display:flex;gap:8px;justify-content:flex-end;">
+            <button class="btn btn-primary" onclick="saveFixedTexts(true)" style="font-size:12px;">💾 固定テキストを保存</button>
+          </div>
+          <div id="fixedTextStatus" style="display:none;margin-top:8px;padding:6px 10px;border-radius:5px;font-size:12px;"></div>
+        </div>
+      </div>
     </div>
     <div class="preview-wrap">
       <div class="preview-top">フロー構造</div>
@@ -851,7 +929,10 @@ body.dnd-xlsx-hover::after {
       <!-- ── ヒアリングタブ ヘッダーバー ── -->
       <div style="display:flex;align-items:center;justify-content:space-between;">
         <div style="font-size:14px;font-weight:700;color:var(--text);">📋 ヒアリング設定</div>
-        <button class="btn btn-primary" onclick="hrSave()" style="font-size:12px;">💾 保存して反映</button>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-primary" onclick="hrSave()" style="font-size:12px;">💾 保存して反映</button>
+          <button class="btn btn-secondary" onclick="hrWriteToFile()" style="font-size:12px;" title="common-utils.js の HEARING_QUESTIONS_DEFAULT / HEARING_POLICIES_DEFAULT を現在の内容で上書きします">📝 jsファイルに書き込む</button>
+        </div>
       </div>
       <div id="hrSaveStatus" style="display:none;padding:8px 12px;border-radius:6px;font-size:12px;"></div>
 
@@ -1161,7 +1242,11 @@ body.dnd-xlsx-hover::after {
   <!-- ===== 更新履歴タブ（モーダル廃止・インライン編集） ===== -->
   <div class="tab-panel tab-panel-history" id="tabHistory">
     <div style="max-width:900px;margin:0 auto;">
-      <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:16px;">📝 更新履歴</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+        <div style="font-size:14px;font-weight:700;color:var(--text);">📝 更新履歴</div>
+        <button class="btn btn-secondary" onclick="histWriteToFile()" style="font-size:12px;" title="common-utils.js に更新履歴を書き込む">📝 jsファイルに書き込む</button>
+      </div>
+      <div id="histWriteStatus" style="display:none;margin-bottom:12px;padding:8px 12px;border-radius:6px;font-size:12px;"></div>
       <div style="background:var(--white);border:1px solid var(--border);border-radius:10px;overflow:hidden;">
         <div id="adminHistoryPanel"></div>
       </div>
@@ -1174,6 +1259,7 @@ body.dnd-xlsx-hover::after {
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
         <div style="font-size:14px;font-weight:700;color:var(--text);">☰ サイドメニュー編集</div>
         <div style="display:flex;gap:8px;">
+          <button class="btn btn-primary" onclick="smSave()" style="font-size:12px;">💾 保存して反映</button>
           <button class="btn btn-secondary" onclick="smWriteToFile()" style="font-size:12px;" title="common-utils.js の DEFAULT_SIDE_MENU_DATA を現在の内容で上書きします">📝 jsファイルに書き込む</button>
         </div>
       </div>
@@ -1700,6 +1786,7 @@ function switchTab(tab){
     if(btn)btn.classList.toggle('active',t===tab);
   });
   if(tab==='hearing'&&window.renderHearing){ window.renderHearing(); _hrQEditorRender(); _hrEditorRender(); }
+  if(tab==='script'){ loadFixedTexts(); }
   if(tab==='history')renderAdminHistoryPanel();
   if(tab==='screen')initScreenEditor();
   if(tab==='imglib'){ _imgLibAllItems = []; _imgLibRender(); }
@@ -1770,6 +1857,7 @@ let data = {};
   render();
   renderMailSidebar();
   if (typeof renderAdminHistoryPanel === 'function') renderAdminHistoryPanel();
+  if (typeof loadFixedTexts === 'function') loadFixedTexts();
 });
 function ensureColors(){let ci=0;Object.values(data).forEach(cat=>{if(!cat.color)cat.color=CAT_COLORS[ci%CAT_COLORS.length];ci++;});}
 let currentCat=null,currentSubKey=null,currentIdx=null;
@@ -1958,8 +2046,8 @@ function renderEditor(){
     }else{cho=`<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span class="end-tag">✓ ここで終了</span><button class="add-choice-btn" style="width:auto;padding:5px 14px" onclick="addChoice(${si})">選択肢を追加して分岐させる</button></div>`;}
     sh+=`<div class="step-card ${cardCls}"><div class="step-head">${badge}${endBadge}<span class="step-head-spacer"></span>${si>0?`<button class="step-del-btn" onclick="delStep(${si})">🗑 このステップを削除</button>`:''}</div>
     <div class="step-body"><div class="field-label">トーク内容</div>
-    <div class="fmt-bar"><button class="fmt-btn" type="button" onclick="fmtStep(${si},'bold')"><b>B</b> 太字</button><button class="fmt-btn" type="button" onclick="fmtStep(${si},'red')"><span class="fmt-red">A</span> 赤字</button><button class="fmt-btn" type="button" onclick="fmtStep(${si},'red-bold')"><span class="fmt-red"><b>A</b></span> 赤太字</button><button class="fmt-btn" type="button" onclick="fmtStep(${si},'clear')">✕ 解除</button><button class="fmt-btn" type="button" onclick="openTableEditor(${si})" title="表をビジュアル編集して挿入">⊞ 表</button></div>
-    <div class="ta-wrap"><textarea class="step-text" id="stepTa_${si}" placeholder="オペレーターが話す内容を入力…" oninput="updST(${si},this.value)">${esc(step.text||'')}</textarea></div>
+    <div class="fmt-bar"><button class="fmt-btn" type="button" onclick="fmtRich(${si},'bold')"><b>B</b> 太字</button><button class="fmt-btn" type="button" onclick="fmtRich(${si},'red')"><span class="fmt-red">A</span> 赤字</button><button class="fmt-btn" type="button" onclick="fmtRich(${si},'red-bold')"><span class="fmt-red"><b>A</b></span> 赤太字</button><button class="fmt-btn" type="button" onclick="fmtRich(${si},'clear')">✕ 解除</button><button class="fmt-btn" type="button" onclick="openTableEditor(${si})" title="表をビジュアル編集して挿入">⊞ 表</button></div>
+    <div class="ta-wrap"><div class="step-rich" id="stepRich_${si}" contenteditable="true" data-placeholder="オペレーターが話す内容を入力…" oninput="updSTRich(${si})" onkeydown="richKeydown(event,${si})">${renderStepHtml(step.text||'')}</div><textarea class="step-text" id="stepTa_${si}" style="display:none">${esc(step.text||'')}</textarea></div>
     <div class="tbl-inline-panel" id="tblPanel_${si}">
       <div class="tbl-inline-title">⊞ 表を作成</div>
       <div class="tbl-modal-controls">
@@ -2043,7 +2131,70 @@ function addCategory(){
 function getEditItem(){const cat=data[currentCat];const list=currentSubKey&&cat.sub&&cat.sub[currentSubKey]?cat.sub[currentSubKey].list:cat.list||[];return list[currentIdx];}
 function updTitle(v){getEditItem().title=v;save();renderSidebar();renderPreview();}
 function updST(si,v){getEditItem().steps[si].text=v;save();renderPreview();}
-function fmtStep(si,type){const ta=document.getElementById('stepTa_'+si);if(!ta)return;const start=ta.selectionStart,end=ta.selectionEnd,val=ta.value,sel=val.slice(start,end);if(!sel&&type!=='clear')return;let wrapped=sel;if(type==='bold')wrapped='<b>'+sel+'</b>';if(type==='red')wrapped='<span style="color:#e63946">'+sel+'</span>';if(type==='red-bold')wrapped='<span style="color:#e63946"><b>'+sel+'</b></span>';if(type==='clear')wrapped=sel.replace(/<[^>]+>/g,'');const newVal=val.slice(0,start)+wrapped+val.slice(end);ta.value=newVal;getEditItem().steps[si].text=newVal;save();renderPreview();const newEnd=start+wrapped.length;ta.setSelectionRange(newEnd,newEnd);ta.focus();}
+
+// ── リッチエディタ用ヘルパー ──
+function renderStepHtml(text){if(!text)return '';return text.replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/&lt;(\/?(b|strong|em|i|u|span|table|thead|tbody|tr|th|td|br|p))([^&>]*)&gt;/gi,function(_,a,b,c){return '<'+a+c+'>';});}
+
+function serializeRichHtml(html){
+  return html.replace(/<br\s*\/?>/gi,'\n').replace(/<div>/gi,'\n').replace(/<\/div>/gi,'').replace(/&nbsp;/g,' ').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&amp;/g,'&');
+}
+
+function updSTRich(si){
+  var el=document.getElementById('stepRich_'+si);if(!el)return;
+  var text=serializeRichHtml(el.innerHTML);
+  var ta=document.getElementById('stepTa_'+si);if(ta)ta.value=text;
+  getEditItem().steps[si].text=text;save();renderPreview();
+}
+
+function richKeydown(e,si){
+  if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();document.execCommand('insertHTML',false,'<br>');}
+}
+
+function fmtRich(si,type){
+  var el=document.getElementById('stepRich_'+si);if(!el)return;el.focus();
+  var sel=window.getSelection();if(!sel||sel.isCollapsed)return;
+  var t=sel.toString();
+  if(type==='bold')document.execCommand('insertHTML',false,'<b>'+t+'</b>');
+  else if(type==='red')document.execCommand('insertHTML',false,'<span style="color:#e63946">'+t+'</span>');
+  else if(type==='red-bold')document.execCommand('insertHTML',false,'<span style="color:#e63946"><b>'+t+'</b></span>');
+  else if(type==='clear'){var d=document.createElement('div');d.appendChild(sel.getRangeAt(0).cloneContents());document.execCommand('insertHTML',false,d.textContent);}
+  updSTRich(si);
+}
+
+function _richInsertHtml(si,html){
+  var el=document.getElementById('stepRich_'+si);if(!el)return;
+  el.focus();
+  var sel=window.getSelection();
+  if(sel&&sel.rangeCount>0){var r=sel.getRangeAt(0);r.deleteContents();var d=document.createElement('div');d.innerHTML=html;var f=document.createDocumentFragment();while(d.firstChild)f.appendChild(d.firstChild);r.insertNode(f);r.collapse(false);sel.removeAllRanges();sel.addRange(r);}
+  else{el.innerHTML+=html;}
+  updSTRich(si);
+}
+
+function fmtStep(si,type){fmtRich(si,type);}// 後方互換
+
+// ── 固定テキスト（オープニング/クロージング）──
+var FIXED_TEXT_DEFAULTS={opening:'お電話 ありがとうございます。NHKONE窓口 担当●●でございます。',closingDefault:'ご案内は以上となりますが、そのほか確認されたいことなどはございませんでしょうか？',closingNone:'ありがとうございます。 それでは本日●●がご案内いたしました。それでは失礼いたします。',closingAsk:'○○○についてでございますね。（お問い合わせ内容に回答）'};
+
+function loadFixedTexts(){
+  var ft=(window._appCache&&window._appCache.fixedTexts)||FIXED_TEXT_DEFAULTS;
+  ['opening','closingDefault','closingNone','closingAsk'].forEach(function(k){
+    var id='fixed'+k.charAt(0).toUpperCase()+k.slice(1);
+    var el=document.getElementById(id);if(el)el.innerHTML=ft[k]?ft[k].replace(/\n/g,'<br>'):FIXED_TEXT_DEFAULTS[k].replace(/\n/g,'<br>');
+  });
+}
+
+function saveFixedTexts(showToast){
+  var ft={};
+  ['opening','closingDefault','closingNone','closingAsk'].forEach(function(k){
+    var id='fixed'+k.charAt(0).toUpperCase()+k.slice(1);
+    var el=document.getElementById(id);ft[k]=el?serializeRichHtml(el.innerHTML):FIXED_TEXT_DEFAULTS[k];
+  });
+  window._appCache.fixedTexts=ft;
+  window.idbSetAppData('fixedTexts',ft).then(function(){
+    try{var bc=new BroadcastChannel('tool_data_update');bc.postMessage({type:'fixedTextsUpdated',data:ft});bc.close();}catch(e){}
+    if(showToast){var st=document.getElementById('fixedTextStatus');if(st){st.style.display='block';st.style.background='#e8f5e9';st.style.color='#2e7d32';st.style.border='1px solid #a5d6a7';st.textContent='✅ 固定テキストを保存しました';setTimeout(function(){st.style.display='none';},2500);}toast('✅ 固定テキストを保存しました');}
+  });
+}
 // 表挿入（デフォルト2行3列）
 // =============================================================================
 // インライン表エディタ（各ステップカード内に展開）
@@ -2218,17 +2369,7 @@ function confirmTblPanelInsert(si) {
   }
   html += '</table>\n';
 
-  var ta = document.getElementById('stepTa_' + si);
-  if (ta) {
-    var start  = ta.selectionStart;
-    var newVal = ta.value.slice(0, start) + html + ta.value.slice(ta.selectionEnd);
-    ta.value   = newVal;
-    getEditItem().steps[si].text = newVal;
-    save();
-    renderPreview();
-    ta.focus();
-    ta.setSelectionRange(start + html.length, start + html.length);
-  }
+  _richInsertHtml(si, html);
   closeTblPanel(si);
 }
 function addStep(){getEditItem().steps.push({text:'',choices:[]});save();renderEditor();renderPreview();setTimeout(()=>{const c=document.querySelectorAll('#editorScroll .step-card');if(c.length)c[c.length-1].scrollIntoView({behavior:'smooth',block:'start'});},60);}
@@ -3062,6 +3203,66 @@ function smReset() {
   toast('↩ デフォルト設定に戻しました');
 }
 
+// common-utils.js の DEFAULT_SIDE_MENU_DATA を現在の内容で上書きする
+var _smDirHandle = null;
+
+function _smSetStatus(msg, type) {
+  var el = document.getElementById('smWriteStatus');
+  if (!el) return;
+  el.style.display = msg ? 'block' : 'none';
+  el.style.background = type === 'ok'  ? '#e8f5e9' : type === 'err' ? '#ffeaea' : 'var(--accent-lt)';
+  el.style.color      = type === 'ok'  ? '#2e7d32' : type === 'err' ? '#c62828' : 'var(--accent)';
+  el.style.border     = '1px solid ' + (type === 'ok' ? '#a5d6a7' : type === 'err' ? '#ef9a9a' : 'var(--accent)');
+  el.textContent = msg;
+}
+
+async function smWriteToFile() {
+  if (!_smData) smLoad();
+  if (!window.showDirectoryPicker) {
+    _smSetStatus('❌ このブラウザは File System Access API 非対応です（Chrome/Edge をご使用ください）', 'err');
+    return;
+  }
+  _smSetStatus('⏳ common-utils.js が含まれるフォルダを選択してください…', 'info');
+  try {
+    if (!_smDirHandle) {
+      _smDirHandle = await window.showDirectoryPicker({ mode: 'readwrite' });
+    } else {
+      var perm = await _smDirHandle.requestPermission({ mode: 'readwrite' });
+      if (perm !== 'granted') _smDirHandle = await window.showDirectoryPicker({ mode: 'readwrite' });
+    }
+    var fileHandle;
+    try { fileHandle = await _smDirHandle.getFileHandle('common-utils.js', { create: false }); }
+    catch(e) { _smSetStatus('❌ 選択したフォルダに common-utils.js が見つかりません', 'err'); _smDirHandle = null; return; }
+
+    var file = await fileHandle.getFile();
+    var src  = await file.text();
+
+    var START = 'window.DEFAULT_SIDE_MENU_DATA = ';
+    var END   = '\n\nwindow.loadSideMenuData';
+    var si = src.indexOf(START), ei = src.indexOf(END, si);
+    if (si === -1 || ei === -1) { _smSetStatus('❌ DEFAULT_SIDE_MENU_DATA が見つかりません', 'err'); return; }
+
+    var indented = JSON.stringify(_smData, null, 2).split('\n').map(function(l, i){ return i ? '  ' + l : l; }).join('\n');
+    var newSrc = src.slice(0, si) + START + indented + ';' + src.slice(ei);
+
+    var writable = await fileHandle.createWritable();
+    await writable.write(newSrc);
+    await writable.close();
+
+    window.DEFAULT_SIDE_MENU_DATA = JSON.parse(JSON.stringify(_smData));
+    // IDB にも保存
+    window._appCache.sideMenuData = JSON.parse(JSON.stringify(_smData));
+    window.idbSetAppData('sideMenuData', _smData);
+    try { var bc=new BroadcastChannel('tool_data_update'); bc.postMessage({type:'sideMenuUpdated',data:JSON.parse(JSON.stringify(_smData))}); bc.close(); } catch(e) {}
+    _smSetStatus('✅ common-utils.js に書き込みました', 'ok');
+    toast('✅ common-utils.js にサイドメニューを書き込みました');
+  } catch(e) {
+    if (e.name === 'AbortError') { _smSetStatus('', ''); }
+    else { _smSetStatus('❌ 書き込みエラー: ' + e.message, 'err'); }
+    _smDirHandle = null;
+  }
+}
+
 
 // =============================================================================
 // ヒアリングデータ保存（IndexedDB）
@@ -3097,6 +3298,120 @@ function hrSave() {
   }).catch(function(e) {
     _hrSetStatus('❌ 保存失敗: ' + e.message, 'err');
   });
+}
+
+// ── common-utils.js へのヒアリングデータ直接書き込み ──
+var _hrDirHandle = null;
+
+async function hrWriteToFile() {
+  if (!window.showDirectoryPicker) {
+    _hrSetStatus('❌ このブラウザは File System Access API 非対応です（Chrome/Edge をご使用ください）', 'err'); return;
+  }
+  var questions = window._appCache.hearingQuestions || [];
+  var policies  = window._appCache.hearingPolicies  || [];
+  _hrSetStatus('⏳ common-utils.js が含まれるフォルダを選択してください…', 'info');
+  try {
+    if (!_hrDirHandle) {
+      _hrDirHandle = await window.showDirectoryPicker({ mode: 'readwrite' });
+    } else {
+      var perm = await _hrDirHandle.requestPermission({ mode: 'readwrite' });
+      if (perm !== 'granted') _hrDirHandle = await window.showDirectoryPicker({ mode: 'readwrite' });
+    }
+    var fileHandle;
+    try { fileHandle = await _hrDirHandle.getFileHandle('common-utils.js', { create: false }); }
+    catch(e) { _hrSetStatus('❌ 選択したフォルダに common-utils.js が見つかりません', 'err'); _hrDirHandle = null; return; }
+
+    var file = await fileHandle.getFile();
+    var src  = await file.text();
+
+    // HEARING_QUESTIONS_DEFAULT を置換
+    var QS = 'var HEARING_QUESTIONS_DEFAULT = ';
+    var QE = ';\nvar HEARING_POLICIES_DEFAULT';
+    var qs = src.indexOf(QS), qe = src.indexOf(QE, qs);
+    if (qs === -1 || qe === -1) { _hrSetStatus('❌ HEARING_QUESTIONS_DEFAULT が見つかりません', 'err'); return; }
+    var qi = JSON.stringify(questions, null, 2).split('\n').map(function(l,i){return i?'  '+l:l;}).join('\n');
+    src = src.slice(0, qs) + QS + qi + src.slice(qe);
+
+    // HEARING_POLICIES_DEFAULT を置換
+    var PS = 'var HEARING_POLICIES_DEFAULT = ';
+    var PE = ';\n// localStorage';
+    var ps = src.indexOf(PS), pe = src.indexOf(PE, ps);
+    if (ps === -1 || pe === -1) { _hrSetStatus('❌ HEARING_POLICIES_DEFAULT が見つかりません', 'err'); return; }
+    var pi = JSON.stringify(policies, null, 2).split('\n').map(function(l,i){return i?'  '+l:l;}).join('\n');
+    src = src.slice(0, ps) + PS + pi + src.slice(pe);
+
+    var writable = await fileHandle.createWritable();
+    await writable.write(src);
+    await writable.close();
+
+    _hrSetStatus('✅ common-utils.js に書き込みました（質問 ' + questions.length + ' 件 / 方針 ' + policies.length + ' 件）', 'ok');
+    toast('✅ common-utils.js にヒアリングデータを書き込みました');
+  } catch(e) {
+    if (e.name === 'AbortError') { _hrSetStatus('', ''); }
+    else { _hrSetStatus('❌ 書き込みエラー: ' + e.message, 'err'); }
+    _hrDirHandle = null;
+  }
+}
+
+// ── 更新履歴の common-utils.js 書き込み ──
+var _histDirHandle = null;
+
+function _histSetStatus(msg, type) {
+  var el = document.getElementById('histWriteStatus');
+  if (!el) return;
+  el.style.display = msg ? 'block' : 'none';
+  el.style.background = type === 'ok' ? '#e8f5e9' : type === 'err' ? '#ffeaea' : 'var(--accent-lt)';
+  el.style.color      = type === 'ok' ? '#2e7d32' : type === 'err' ? '#c62828' : 'var(--accent)';
+  el.style.border     = '1px solid ' + (type === 'ok' ? '#a5d6a7' : type === 'err' ? '#ef9a9a' : 'var(--accent)');
+  el.textContent = msg;
+}
+
+async function histWriteToFile() {
+  if (!window.showDirectoryPicker) {
+    _histSetStatus('❌ このブラウザは File System Access API 非対応です', 'err'); return;
+  }
+  var hist = loadHistory();
+  _histSetStatus('⏳ common-utils.js が含まれるフォルダを選択してください…', 'info');
+  try {
+    if (!_histDirHandle) {
+      _histDirHandle = await window.showDirectoryPicker({ mode: 'readwrite' });
+    } else {
+      var perm = await _histDirHandle.requestPermission({ mode: 'readwrite' });
+      if (perm !== 'granted') _histDirHandle = await window.showDirectoryPicker({ mode: 'readwrite' });
+    }
+    var fileHandle;
+    try { fileHandle = await _histDirHandle.getFileHandle('common-utils.js', { create: false }); }
+    catch(e) { _histSetStatus('❌ 選択したフォルダに common-utils.js が見つかりません', 'err'); _histDirHandle = null; return; }
+
+    var file = await fileHandle.getFile();
+    var src  = await file.text();
+
+    // UPDATE_HISTORY_DEFAULT を挿入・置換（なければ既存マーカー付近に追加）
+    var HS = 'var UPDATE_HISTORY_DEFAULT = ';
+    var HE = ';\n// ';
+    var hs = src.indexOf(HS);
+    var hi = JSON.stringify(hist, null, 2).split('\n').map(function(l,i){return i?'  '+l:l;}).join('\n');
+    if (hs !== -1) {
+      var he = src.indexOf(HE, hs);
+      if (he !== -1) src = src.slice(0, hs) + HS + hi + ';' + src.slice(he);
+    } else {
+      // 末尾の BroadcastChannel ブロックの直前に挿入
+      var insertAt = src.indexOf('\n// ⑪ BroadcastChannel');
+      if (insertAt === -1) insertAt = src.length;
+      src = src.slice(0, insertAt) + '\nvar UPDATE_HISTORY_DEFAULT = ' + hi + ';\n' + src.slice(insertAt);
+    }
+
+    var writable = await fileHandle.createWritable();
+    await writable.write(src);
+    await writable.close();
+
+    _histSetStatus('✅ common-utils.js に書き込みました（' + hist.length + ' 件）', 'ok');
+    toast('✅ common-utils.js に更新履歴を書き込みました');
+  } catch(e) {
+    if (e.name === 'AbortError') { _histSetStatus('', ''); }
+    else { _histSetStatus('❌ 書き込みエラー: ' + e.message, 'err'); }
+    _histDirHandle = null;
+  }
 }
 
 
@@ -4085,7 +4400,7 @@ function scrCropSelClear(){_scrCropSel=null;var ab=document.getElementById('scrA
 function _scrRsRenderHsList(scr){
   var el=document.getElementById('scrRsHsList');if(!el)return;
   if(!scr||!scr.hotspots||!scr.hotspots.length){el.innerHTML='<div style="font-size:11px;color:var(--muted);padding:4px 0;">ホットスポットなし</div>';return;}
-  var mailTpls=[];try{var ms=localStorage.getItem('mailTemplates');if(ms)mailTpls=JSON.parse(ms);}catch(e){}
+  var mailTpls = (window._appCache && window._appCache.mailTemplates) ? window._appCache.mailTemplates : [];
   var curPat=screenPatterns.find(function(p){return p.id===_scrCurrentPatId;});
   var allCurScreens=curPat?curPat.screens:[];
   var otherScreens=allCurScreens.filter(function(s){return s.id!==scr.id;});
