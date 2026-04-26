@@ -2601,8 +2601,8 @@ function exportJSON(){
         var combined = {
           version: 3, // v3: imageLib を別マップとして保持
           exportedAt: new Date().toISOString(),
-          talkScripts: data,
-          mailTemplates: mailData,
+          talkScripts: (window._appCache && Object.keys(window._appCache.scripts||{}).length) ? window._appCache.scripts : data,
+          mailTemplates: (window._appCache && window._appCache.mailTemplates && window._appCache.mailTemplates.length) ? window._appCache.mailTemplates : mailData,
           screenData: cloned,   // lib:xxx 参照のまま
           imageLib: imageLib,   // 使用画像の実データ（重複なし）
           updateHistory: loadHistory()
@@ -2823,8 +2823,8 @@ function addMailCategory(){
 // ===================================================================
 // 更新履歴（モーダル廃止・インライン編集・カレンダーポップアップ）
 // ===================================================================
-function loadHistory(){try{const s=localStorage.getItem('updateHistory');return s?JSON.parse(s):[];}catch(e){return[];}}
-function _saveHistory(arr){try{localStorage.setItem('updateHistory',JSON.stringify(arr));}catch(e){toast('❌ 履歴保存失敗: '+e.message);}}
+function loadHistory(){ return window._appCache ? (window._appCache.updateHistory || []) : []; }
+function _saveHistory(arr){ window._appCache.updateHistory = arr; window.idbSetAppData('updateHistory', arr); }
 
 /**
  * 更新履歴パネルを描画する。
@@ -3283,7 +3283,7 @@ function convertPdfToImages(file, scale, callback) {
 // ===================================================================
 var _imgLibDB = null;
 var _IMG_DB_NAME = 'screenFlowDB';
-var _IMG_DB_VER  = 3; // v3: imageLib ストアを追加（v2 互換）
+var _IMG_DB_VER  = 4; // v4: appData ストアを追加（common-utils.js と統一）
 
 function _imgLibOpen() {
   if (_imgLibDB) return Promise.resolve(_imgLibDB);
@@ -3293,6 +3293,7 @@ function _imgLibOpen() {
       var db = e.target.result;
       if (!db.objectStoreNames.contains('patterns'))  db.createObjectStore('patterns');
       if (!db.objectStoreNames.contains('imageLib'))  db.createObjectStore('imageLib');
+      if (!db.objectStoreNames.contains('appData'))   db.createObjectStore('appData');
     };
     req.onsuccess = function(e) {
       _imgLibDB = e.target.result;

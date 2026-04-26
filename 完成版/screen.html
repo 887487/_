@@ -691,7 +691,7 @@ html[data-theme="dark"] .modal-box { background: var(--surface); border: 1px sol
 // base64 画像を含む大容量データを localStorage の代わりに保存する
 // ============================================================
 const _IDB_DB_NAME  = 'screenFlowDB';
-const _IDB_DB_VER   = 3; // v3: imageLib ストアを追加
+const _IDB_DB_VER   = 4; // v4: appData ストアを追加（common-utils.js と統一）
 const _IDB_STORE    = 'patterns';
 const _IDB_DATA_KEY = 'data';
 
@@ -704,6 +704,7 @@ function _idbOpen() {
       var db = e.target.result;
       if (!db.objectStoreNames.contains(_IDB_STORE))  db.createObjectStore(_IDB_STORE);
       if (!db.objectStoreNames.contains('imageLib'))   db.createObjectStore('imageLib');
+      if (!db.objectStoreNames.contains('appData'))    db.createObjectStore('appData');
     };
     req.onsuccess = function(e) {
       _idbInstance = e.target.result;

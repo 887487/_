@@ -1505,7 +1505,7 @@ document.addEventListener('DOMContentLoaded', function () {
   if (typeof idbSetScreenData === 'function') return; // 既に定義済みならスキップ
 
   var IDB_NAME    = 'screenFlowDB';
-  var IDB_VER     = 3;
+  var IDB_VER     = 4;
   var IDB_STORE   = 'patterns';
   var IDB_KEY     = 'data';
   var _db         = null;
@@ -1518,6 +1518,7 @@ document.addEventListener('DOMContentLoaded', function () {
         var db = e.target.result;
         if (!db.objectStoreNames.contains(IDB_STORE)) db.createObjectStore(IDB_STORE);
         if (!db.objectStoreNames.contains('imageLib')) db.createObjectStore('imageLib');
+        if (!db.objectStoreNames.contains('appData'))  db.createObjectStore('appData');
       };
       req.onsuccess = function (e) {
         _db = e.target.result;
