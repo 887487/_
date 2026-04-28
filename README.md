@@ -1,4 +1,7 @@
 https://887487.github.io/_/
+
+* ヒアリング欄にメモ機能
+
 * screen.html メールモーダルボタンを画像上部に並べて表示する
   
 * admin.html 起動時に、JSファイルとjsonファイルを指定する
