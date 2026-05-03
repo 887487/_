@@ -332,7 +332,90 @@
 /* textarea resize: normal に戻す */
 .step-text, .step-memo, .mail-input { resize: vertical; }
 
-/* ── リッチテキストエディタ（contenteditable） ── */
+/* ── ヒアリング質問カード内のボタン→結果テキスト行 ── */
+.hr-result-rows { display: flex; flex-direction: column; gap: 2px; padding: 4px 0 2px 4px; }
+.hr-result-row  { display: flex; align-items: center; gap: 8px; padding: 2px 0; }
+.hr-result-btn-chip {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 56px; padding: 2px 8px; border-radius: 10px;
+  font-size: 10px; font-weight: 700; flex-shrink: 0;
+  background: var(--accent-lt); color: var(--accent); border: 1px solid var(--accent);
+}
+.hr-result-arrow { font-size: 11px; color: var(--text4); flex-shrink: 0; }
+.hr-result-input {
+  flex: 1; font-size: 11px; padding: 3px 7px;
+  border: 1px solid var(--border); border-radius: 4px;
+  background: var(--bg); color: var(--text); font-family: inherit;
+  min-width: 0;
+}
+.hr-result-input:focus { outline: none; border-color: var(--accent); }
+.hr-result-placeholder { font-size: 10px; color: var(--text4); font-style: italic; }
+
+/* ── パターン登録セクション ── */
+.hr-pat-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 8px; padding: 10px 12px;
+  display: flex; flex-direction: column; gap: 6px;
+}
+.hr-pat-card-hd { display: flex; align-items: center; gap: 8px; }
+.hr-pat-name-text { font-size: 12px; font-weight: 700; color: var(--text); flex: 1; }
+.hr-pat-cond-summary { font-size: 10px; color: var(--text3); padding-left: 4px; line-height: 1.5; }
+
+/* ── パターン登録モーダル ── */
+#hrPatModal {
+  display: none; position: fixed; inset: 0; z-index: 7000;
+  background: rgba(0,0,0,.55); align-items: center; justify-content: center;
+}
+#hrPatModal.open { display: flex; }
+.hr-pat-modal-box {
+  background: var(--surface); border-radius: 14px;
+  width: min(92vw, 720px); max-height: 90vh;
+  display: flex; flex-direction: column;
+  box-shadow: 0 24px 64px rgba(0,0,0,.3); overflow: hidden;
+}
+.hr-pat-modal-hd {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 18px; border-bottom: 1px solid var(--border); flex-shrink: 0;
+}
+.hr-pat-modal-title { font-size: 14px; font-weight: 700; }
+.hr-pat-modal-body { flex: 1; overflow-y: auto; padding: 16px 18px; display: flex; flex-direction: column; gap: 18px; }
+.hr-pat-section-label {
+  font-size: 11px; font-weight: 700; color: var(--text2);
+  margin-bottom: 8px; padding-bottom: 4px; border-bottom: 1px solid var(--border2);
+}
+/* トリガーボタングリッド */
+.hr-pat-trigger-group { margin-bottom: 10px; }
+.hr-pat-trigger-qlabel { font-size: 11px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+.hr-pat-trigger-btns { display: flex; flex-wrap: wrap; gap: 6px; }
+.hr-pat-trig-btn {
+  padding: 4px 12px; border-radius: 12px; border: 1px solid var(--border);
+  background: var(--surface2); color: var(--text2); font-size: 11px;
+  cursor: pointer; font-family: inherit; transition: all .12s;
+}
+.hr-pat-trig-btn.selected {
+  background: var(--accent); color: #fff; border-color: var(--accent); font-weight: 700;
+}
+/* ターゲット質問リスト */
+.hr-pat-target-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 6px 0; border-bottom: 1px solid var(--border2);
+}
+.hr-pat-target-row:last-child { border-bottom: none; }
+.hr-pat-target-qlabel { font-size: 12px; color: var(--text); flex: 1; }
+.hr-pat-target-sel {
+  display: flex; gap: 4px; flex-shrink: 0;
+}
+.hr-pat-target-btn {
+  padding: 3px 10px; border-radius: 10px; border: 1px solid var(--border);
+  background: var(--surface2); color: var(--text3); font-size: 10px;
+  cursor: pointer; font-family: inherit; font-weight: 600; transition: all .12s;
+}
+.hr-pat-target-btn.show-on  { background: #d8f5e3; color: #1a7a3a; border-color: #1a7a3a; }
+.hr-pat-target-btn.hide-on  { background: var(--danger-lt); color: var(--danger); border-color: var(--danger); }
+.hr-pat-modal-ft {
+  padding: 12px 18px; border-top: 1px solid var(--border);
+  display: flex; justify-content: flex-end; gap: 8px; flex-shrink: 0;
+}
 .step-rich {
   min-height: 72px;
   padding: 8px 10px;
@@ -366,110 +449,31 @@
 }
 .step-rich th { background: #eef0ff; font-weight: 700; text-align: center; }
 
-/* ── 固定項目（オープニング・クロージング）サイドバーアイテム ── */
-.fixed-items-section {
-  border-bottom: 2px solid var(--border);
-  padding: 6px 0 8px;
-  background: var(--surface2);
-}
-.fixed-items-label {
-  font-size: 10px;
-  font-weight: 700;
-  color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: .5px;
-  padding: 4px 12px 2px;
-}
-.fixed-item-row {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  padding: 0 10px;
-  height: 34px;
-  cursor: pointer;
-  border-left: 3px solid transparent;
-  transition: background .12s, border-color .12s;
-  border-radius: 0 4px 4px 0;
-}
-.fixed-item-row:hover { background: var(--accent-lt); }
-.fixed-item-row.active {
-  background: var(--accent-lt);
-  border-left-color: var(--accent);
-}
-.fixed-item-row.active .fixed-item-label-text { color: var(--accent); font-weight: 700; }
-.fixed-item-icon { font-size: 15px; flex-shrink: 0; }
-.fixed-item-label-text { font-size: 12px; font-weight: 600; color: var(--text); flex: 1; }
-.fixed-item-badge {
-  font-size: 9px;
-  background: var(--accent-lt);
-  color: var(--accent);
-  border: 1px solid var(--accent);
-  border-radius: 10px;
-  padding: 1px 5px;
-  font-weight: 700;
-  flex-shrink: 0;
-}
-
-/* ── 固定テキスト エディタパネル（editorScrollに表示）── */
-.fixed-item-editor {
-  padding: 20px 20px 32px;
-  max-width: 680px;
-}
-.fixed-item-editor-hd {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 16px;
-  padding-bottom: 12px;
-  border-bottom: 2px solid var(--border);
-}
-.fixed-item-editor-hd-icon { font-size: 24px; }
-.fixed-item-editor-hd-title { font-size: 16px; font-weight: 700; color: var(--text); flex: 1; }
-.fixed-item-editor-hd-badge {
-  font-size: 10px;
-  background: var(--accent-lt);
-  color: var(--accent);
-  border: 1px solid var(--accent);
-  border-radius: 10px;
-  padding: 2px 8px;
-  font-weight: 700;
-}
-.fixed-item-field-block {
+/* 固定テキスト編集エリア */
+.fixed-text-section {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 10px;
   padding: 14px 16px;
   margin-bottom: 12px;
 }
-.fixed-item-field-label {
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--text2);
-  margin-bottom: 6px;
+.fixed-text-section .field-label { font-size: 11px; font-weight: 700; color: var(--text2); margin-bottom: 4px; margin-top: 10px; }
+.fixed-text-section .field-label:first-child { margin-top: 0; }
+.fixed-text-rich {
+  min-height: 36px;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 13px;
+  line-height: 1.7;
+  background: var(--bg);
+  color: var(--text);
+  outline: none;
+  white-space: pre-wrap;
+  word-break: break-word;
 }
-.fixed-item-field-desc {
-  font-size: 11px;
-  color: var(--text3);
-  margin-bottom: 8px;
-  line-height: 1.5;
-}
-.fixed-item-save-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-top: 16px;
-}
-#fixedItemStatusInline {
-  font-size: 12px;
-  color: var(--green);
-  font-weight: 600;
-  opacity: 0;
-  transition: opacity .3s;
-}
-#fixedItemStatusInline.show { opacity: 1; }
-
-/* ── 固定テキスト-section：既存セクションは不要になるが互換用に残す ── */
-.fixed-text-section { display: none !important; }
+.fixed-text-rich:focus { border-color: var(--accent); }
+.fixed-text-rich:empty::before { content: attr(data-placeholder); color: var(--text3); pointer-events: none; }
 
 /* ホットスポットリスト：このセクションのみスクロール */
 #scrRsHsList {
@@ -961,9 +965,24 @@ body.dnd-xlsx-hover::after {
       <div class="editor-scroll" id="editorScroll">
         <div class="empty-state"><div class="empty-icon">📋</div><div>左のリストからスクリプトを選んでください</div></div>
       </div>
-      <!-- 固定テキスト編集（オープニング・クロージングをサイドバーから選択して表示） -->
-      <!-- IDs fixedOpening / fixedClosingDefault / fixedClosingNone / fixedClosingAsk は
-           selectFixedItem() が editorScroll 内に動的に生成するため、ここでは不要 -->
+      <!-- 固定テキスト編集（常時表示） -->
+      <div style="padding:12px 16px;border-top:1px solid var(--border);flex-shrink:0;">
+        <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px;">📌 固定テキスト設定</div>
+        <div class="fixed-text-section">
+          <div class="field-label">オープニングトーク</div>
+          <div class="fixed-text-rich" id="fixedOpening" contenteditable="true" data-placeholder="オープニングテキストを入力…" oninput="saveFixedTexts()"></div>
+          <div class="field-label">クロージング（デフォルト）</div>
+          <div class="fixed-text-rich" id="fixedClosingDefault" contenteditable="true" data-placeholder="クロージングデフォルトテキスト…" oninput="saveFixedTexts()"></div>
+          <div class="field-label">クロージング（不明点なし）</div>
+          <div class="fixed-text-rich" id="fixedClosingNone" contenteditable="true" data-placeholder="不明点なし時のテキスト…" oninput="saveFixedTexts()"></div>
+          <div class="field-label">クロージング（不明点あり）</div>
+          <div class="fixed-text-rich" id="fixedClosingAsk" contenteditable="true" data-placeholder="不明点あり時のテキスト…" oninput="saveFixedTexts()"></div>
+          <div style="margin-top:10px;display:flex;gap:8px;justify-content:flex-end;">
+            <button class="btn btn-primary" onclick="saveFixedTexts(true)" style="font-size:12px;">💾 固定テキストを保存</button>
+          </div>
+          <div id="fixedTextStatus" style="display:none;margin-top:8px;padding:6px 10px;border-radius:5px;font-size:12px;"></div>
+        </div>
+      </div>
     </div>
     <div class="preview-wrap">
       <div class="preview-top">フロー構造</div>
@@ -1036,6 +1055,19 @@ body.dnd-xlsx-hover::after {
         <div id="hrEditorList" style="display:flex;flex-direction:column;gap:10px;"></div>
       </div>
 
+      <!-- ── 表示/非表示パターン登録 ── -->
+      <div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+          <div style="font-size:13px;font-weight:700;color:var(--text);">🎯 表示/非表示パターン登録</div>
+          <button class="btn btn-primary" style="font-size:11px;" onclick="_hrPatOpen(-1)">＋ パターンを追加</button>
+        </div>
+        <div style="font-size:11px;color:var(--text3);margin-bottom:10px;">
+          ボタンの組み合わせに応じて質問の表示/非表示を切り替えるパターンを登録します。<br>
+          複数のパターンが同時に該当する場合はすべて適用されます（後勝ち）。showIfより優先されます。
+        </div>
+        <div id="hrPatList" style="display:flex;flex-direction:column;gap:8px;"></div>
+      </div>
+
     </div>
   </div>
 
@@ -1083,6 +1115,39 @@ body.dnd-xlsx-hover::after {
     <div style="padding:12px 18px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;flex-shrink:0;">
       <button class="btn btn-secondary" onclick="_hrQCloseModal()">キャンセル</button>
       <button class="btn btn-primary"   onclick="_hrQModalSave()">💾 保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 表示/非表示パターン登録モーダル ===== -->
+<div id="hrPatModal" onclick="if(event.target===this)_hrPatClose()">
+  <div class="hr-pat-modal-box">
+    <div class="hr-pat-modal-hd">
+      <span class="hr-pat-modal-title">🎯 表示/非表示パターンを登録</span>
+      <button onclick="_hrPatClose()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text3);">✕</button>
+    </div>
+    <div class="hr-pat-modal-body">
+      <!-- パターン名 -->
+      <div>
+        <div class="hr-pat-section-label">📌 パターン名</div>
+        <input id="hrPatModalName" type="text" placeholder="例：世帯・移行あり" style="width:100%;font-size:12px;padding:7px 10px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);font-family:inherit;box-sizing:border-box;">
+      </div>
+      <!-- トリガー条件 -->
+      <div>
+        <div class="hr-pat-section-label">🔘 トリガー条件（このボタンが選択されているとき）</div>
+        <div style="font-size:10px;color:var(--text3);margin-bottom:10px;">各質問からボタンを1つクリックして選択。複数質問にまたがる条件はすべてAND（すべて一致）で評価されます。</div>
+        <div id="hrPatModalTriggers"></div>
+      </div>
+      <!-- ターゲット質問 -->
+      <div>
+        <div class="hr-pat-section-label">👁 質問の表示/非表示設定</div>
+        <div style="font-size:10px;color:var(--text3);margin-bottom:10px;">トリガー条件が満たされたとき、各質問をどう制御するかを設定してください。「設定なし」は showIf の通常条件に従います。</div>
+        <div id="hrPatModalTargets"></div>
+      </div>
+    </div>
+    <div class="hr-pat-modal-ft">
+      <button class="btn btn-secondary" onclick="_hrPatClose()">キャンセル</button>
+      <button class="btn btn-primary"   onclick="_hrPatSave()">💾 保存</button>
     </div>
   </div>
 </div>
@@ -1670,7 +1735,7 @@ function _hrQEditorRender() {
     badge.style.cssText = 'font-size:9px;padding:1px 6px;border-radius:10px;background:' + (q.builtin?'#dfe4ea':'#d8f5e3') + ';color:var(--text3);flex-shrink:0;';
     var lbl = document.createElement('span');
     lbl.textContent = q.label;
-    lbl.style.cssText = 'font-size:11px;color:var(--text);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
+    lbl.style.cssText = 'font-size:12px;font-weight:700;color:var(--text);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
     var enaWrap = document.createElement('label');
     enaWrap.style.cssText = 'display:flex;align-items:center;gap:3px;font-size:10px;color:var(--text2);cursor:pointer;flex-shrink:0;';
     var enaChk = document.createElement('input'); enaChk.type='checkbox'; enaChk.checked = q.enabled !== false;
@@ -1688,6 +1753,55 @@ function _hrQEditorRender() {
     }
     hd.appendChild(editBtn);
     card.appendChild(hd);
+
+    // ── ボタン名 → ヒアリング結果表示テキスト 行 ──
+    if (q.type === 'bool') {
+      var rRows = document.createElement('div'); rRows.className = 'hr-result-rows';
+      [
+        {label: q.trueLabel  || 'はい',   key: 'trueResult',  val: q.trueResult  || ''},
+        {label: q.falseLabel || 'いいえ', key: 'falseResult', val: q.falseResult || ''}
+      ].forEach(function(b) {
+        var row = document.createElement('div'); row.className = 'hr-result-row';
+        var chip = document.createElement('span'); chip.className = 'hr-result-btn-chip'; chip.textContent = b.label;
+        var arrow = document.createElement('span'); arrow.className = 'hr-result-arrow'; arrow.textContent = '→';
+        var inp = document.createElement('input'); inp.type='text'; inp.className='hr-result-input';
+        inp.value = b.val; inp.placeholder = 'コピー時の表示テキスト（空欄＝ボタン名をそのまま使用）';
+        inp.dataset.qi = qi; inp.dataset.key = b.key;
+        inp.oninput = (function(qi2, bkey){ return function() {
+          var qs2 = _hrGetQuestions(); if (!qs2[qi2]) return;
+          qs2[qi2][bkey] = this.value; _hrQuestionsSave(qs2);
+        }; })(qi, b.key);
+        row.appendChild(chip); row.appendChild(arrow); row.appendChild(inp);
+        rRows.appendChild(row);
+      });
+      card.appendChild(rRows);
+    } else if (q.type === 'str') {
+      var rRows2 = document.createElement('div'); rRows2.className = 'hr-result-rows';
+      (q.options || []).forEach(function(opt, oi) {
+        var row = document.createElement('div'); row.className = 'hr-result-row';
+        var chip = document.createElement('span'); chip.className = 'hr-result-btn-chip'; chip.textContent = opt.l || '（無名）';
+        var arrow = document.createElement('span'); arrow.className = 'hr-result-arrow'; arrow.textContent = '→';
+        var inp = document.createElement('input'); inp.type='text'; inp.className='hr-result-input';
+        inp.value = opt.r || ''; inp.placeholder = 'コピー時の表示テキスト（空欄＝ボタン名をそのまま使用）';
+        inp.oninput = (function(qi2, oi2){ return function() {
+          var qs2 = _hrGetQuestions(); if (!qs2[qi2] || !qs2[qi2].options[oi2]) return;
+          qs2[qi2].options[oi2].r = this.value; _hrQuestionsSave(qs2);
+        }; })(qi, oi);
+        row.appendChild(chip); row.appendChild(arrow); row.appendChild(inp);
+        rRows2.appendChild(row);
+      });
+      if (!(q.options||[]).length) {
+        var ph = document.createElement('div'); ph.className='hr-result-placeholder'; ph.textContent='選択肢を追加すると結果テキストを設定できます';
+        rRows2.appendChild(ph);
+      }
+      card.appendChild(rRows2);
+    } else if (q.type === 'text') {
+      var tNote = document.createElement('div');
+      tNote.style.cssText='font-size:10px;color:var(--text4);padding-left:4px;font-style:italic;';
+      tNote.textContent='テキスト入力型 — ユーザーの入力値がそのまま結果に使用されます';
+      card.appendChild(tNote);
+    }
+
     // 表示条件サマリ
     if (q.showIf && q.showIf.length) {
       var cSumm = document.createElement('div');
@@ -1849,7 +1963,7 @@ function switchTab(tab){
     if(panel)panel.classList.toggle('active',t===tab);
     if(btn)btn.classList.toggle('active',t===tab);
   });
-  if(tab==='hearing'&&window.renderHearing){ window.renderHearing(); _hrQEditorRender(); _hrEditorRender(); }
+  if(tab==='hearing'&&window.renderHearing){ window.renderHearing(); _hrQEditorRender(); _hrEditorRender(); _hrPatRender(); }
   if(tab==='script'){ loadFixedTexts(); }
   if(tab==='history')renderAdminHistoryPanel();
   if(tab==='screen')initScreenEditor();
@@ -1924,26 +2038,13 @@ let data = {};
   if (typeof loadFixedTexts === 'function') loadFixedTexts();
 });
 function ensureColors(){let ci=0;Object.values(data).forEach(cat=>{if(!cat.color)cat.color=CAT_COLORS[ci%CAT_COLORS.length];ci++;});}
-let currentCat=null,currentSubKey=null,currentIdx=null,currentFixedItem=null;
+let currentCat=null,currentSubKey=null,currentIdx=null;
 
 function render(){renderSidebar();if(currentCat&&currentIdx!==null){const cat=data[currentCat];if(!cat){currentCat=null;currentSubKey=null;currentIdx=null;showEmpty();return;}const list=currentSubKey&&cat.sub&&cat.sub[currentSubKey]?cat.sub[currentSubKey].list:cat.list||[];if(!list[currentIdx]){currentCat=null;currentSubKey=null;currentIdx=null;showEmpty();}else{renderEditor();renderPreview();}}}
-function showEmpty(){currentFixedItem=null;document.getElementById('editorScroll').innerHTML='<div class="empty-state"><div class="empty-icon">📋</div><div>左のリストからスクリプトを選んでください</div></div>';document.getElementById('previewScroll').innerHTML='<div style="color:var(--muted);font-size:11px;text-align:center;padding-top:20px">スクリプトを選ぶと<br>フローが表示されます</div>';}
+function showEmpty(){document.getElementById('editorScroll').innerHTML='<div class="empty-state"><div class="empty-icon">📋</div><div>左のリストからスクリプトを選んでください</div></div>';document.getElementById('previewScroll').innerHTML='<div style="color:var(--muted);font-size:11px;text-align:center;padding-top:20px">スクリプトを選ぶと<br>フローが表示されます</div>';}
 
 function renderSidebar(){
-  // ── 固定項目（先頭に常時表示）──
-  let h=`<div class="fixed-items-section">
-    <div class="fixed-items-label">固定トーク</div>
-    <div class="fixed-item-row${currentFixedItem==='opening'?' active':''}" onclick="selectFixedItem('opening')">
-      <span class="fixed-item-icon">🎙</span>
-      <span class="fixed-item-label-text">オープニングトーク</span>
-      <span class="fixed-item-badge">固定</span>
-    </div>
-    <div class="fixed-item-row${currentFixedItem==='closing'?' active':''}" onclick="selectFixedItem('closing')">
-      <span class="fixed-item-icon">🔚</span>
-      <span class="fixed-item-label-text">クロージングトーク</span>
-      <span class="fixed-item-badge">固定</span>
-    </div>
-  </div>`;
+  let h='';
   Object.entries(data).forEach(([key,cat])=>{
     h+=`<div class="cat-block${_collapsedCats[key]?' collapsed':''}" data-cat-key="${key}">
       <div class="cat-header" onclick="toggleCatAcc(event,'${key}')" style="cursor:pointer;">
@@ -2173,84 +2274,8 @@ function renderPreview(){
   document.getElementById('previewScroll').innerHTML=h;
 }
 
-function selectScript(k,i){currentFixedItem=null;currentCat=k;currentSubKey=null;currentIdx=i;renderSidebar();renderEditor();renderPreview();}
-function selectSubScript(k,subKey,i){currentFixedItem=null;currentCat=k;currentSubKey=subKey;currentIdx=i;renderSidebar();renderEditor();renderPreview();}
-
-// ── 固定テキスト選択（サイドバーの「オープニング」「クロージング」クリック）──
-function selectFixedItem(key){
-  currentFixedItem=key;
-  currentCat=null;currentSubKey=null;currentIdx=null;
-  renderSidebar();
-  renderFixedItemEditor(key);
-  document.getElementById('previewScroll').innerHTML='<div style="color:var(--muted);font-size:11px;text-align:center;padding-top:20px">固定テキストには<br>フロープレビューはありません</div>';
-}
-
-function renderFixedItemEditor(key){
-  var ft=(window._appCache&&window._appCache.fixedTexts)||{};
-  var defaults=window.FIXED_TEXT_DEFAULTS||{opening:'',closingDefault:'',closingNone:'',closingAsk:''};
-  function val(k){return (ft[k]!==undefined?ft[k]:defaults[k])||'';}
-  function toHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');}
-
-  var html='';
-  if(key==='opening'){
-    html=`<div class="fixed-item-editor">
-      <div class="fixed-item-editor-hd">
-        <span class="fixed-item-editor-hd-icon">🎙</span>
-        <span class="fixed-item-editor-hd-title">オープニングトーク</span>
-        <span class="fixed-item-editor-hd-badge">固定テキスト</span>
-      </div>
-      <div class="fixed-item-field-block">
-        <div class="fixed-item-field-label">オープニングトーク文言</div>
-        <div class="fixed-item-field-desc">電話受付時の第一声として表示されます。「●●」は担当者名を入力してください。</div>
-        <div class="fixed-text-rich" id="fixedOpening" contenteditable="true"
-             data-placeholder="オープニングテキストを入力…" oninput="saveFixedTexts()"
-             style="min-height:52px;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;line-height:1.7;background:var(--bg);color:var(--text);outline:none;white-space:pre-wrap;word-break:break-word;"
-        >${toHtml(val('opening'))}</div>
-      </div>
-      <div class="fixed-item-save-row">
-        <button class="btn btn-primary" onclick="saveFixedTexts(true)" style="font-size:12px;">💾 保存</button>
-        <span id="fixedItemStatusInline"></span>
-      </div>
-    </div>`;
-  } else {
-    html=`<div class="fixed-item-editor">
-      <div class="fixed-item-editor-hd">
-        <span class="fixed-item-editor-hd-icon">🔚</span>
-        <span class="fixed-item-editor-hd-title">クロージングトーク</span>
-        <span class="fixed-item-editor-hd-badge">固定テキスト</span>
-      </div>
-      <div class="fixed-item-field-block">
-        <div class="fixed-item-field-label">クロージング（デフォルト）</div>
-        <div class="fixed-item-field-desc">対応完了前に表示される標準のクロージング文言です。</div>
-        <div class="fixed-text-rich" id="fixedClosingDefault" contenteditable="true"
-             data-placeholder="クロージングデフォルトテキスト…" oninput="saveFixedTexts()"
-             style="min-height:44px;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;line-height:1.7;background:var(--bg);color:var(--text);outline:none;white-space:pre-wrap;word-break:break-word;"
-        >${toHtml(val('closingDefault'))}</div>
-      </div>
-      <div class="fixed-item-field-block">
-        <div class="fixed-item-field-label">クロージング（不明点なし）</div>
-        <div class="fixed-item-field-desc">「不明点なし」選択時に表示されます。</div>
-        <div class="fixed-text-rich" id="fixedClosingNone" contenteditable="true"
-             data-placeholder="不明点なし時のテキスト…" oninput="saveFixedTexts()"
-             style="min-height:44px;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;line-height:1.7;background:var(--bg);color:var(--text);outline:none;white-space:pre-wrap;word-break:break-word;"
-        >${toHtml(val('closingNone'))}</div>
-      </div>
-      <div class="fixed-item-field-block">
-        <div class="fixed-item-field-label">クロージング（不明点あり）</div>
-        <div class="fixed-item-field-desc">「不明点あり」選択時に表示されます。「○○○」を実際の対応内容に置き換えてください。</div>
-        <div class="fixed-text-rich" id="fixedClosingAsk" contenteditable="true"
-             data-placeholder="不明点あり時のテキスト…" oninput="saveFixedTexts()"
-             style="min-height:44px;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;line-height:1.7;background:var(--bg);color:var(--text);outline:none;white-space:pre-wrap;word-break:break-word;"
-        >${toHtml(val('closingAsk'))}</div>
-      </div>
-      <div class="fixed-item-save-row">
-        <button class="btn btn-primary" onclick="saveFixedTexts(true)" style="font-size:12px;">💾 保存</button>
-        <span id="fixedItemStatusInline"></span>
-      </div>
-    </div>`;
-  }
-  document.getElementById('editorScroll').innerHTML=html;
-}
+function selectScript(k,i){currentCat=k;currentSubKey=null;currentIdx=i;renderSidebar();renderEditor();renderPreview();}
+function selectSubScript(k,subKey,i){currentCat=k;currentSubKey=subKey;currentIdx=i;renderSidebar();renderEditor();renderPreview();}
 function addSubCat(catKey){if(!data[catKey].sub)data[catKey].sub={};const subKey='sub_'+Date.now();data[catKey].sub[subKey]={name:'新しいサブカテゴリ',list:[]};save();renderSidebar();initSortables();setTimeout(()=>{const inputs=document.querySelectorAll('.sub-cat-header .cat-name-display');if(inputs.length)inputs[inputs.length-1].dispatchEvent(new MouseEvent('dblclick'));},80);}
 function renameSubCat(catKey,subKey,v){data[catKey].sub[subKey].name=v;save();}
 function deleteSubCat(catKey,subKey){if(!confirm('このサブカテゴリを削除しますか？'))return;delete data[catKey].sub[subKey];if(currentCat===catKey&&currentSubKey===subKey){currentSubKey=null;currentIdx=null;showEmpty();}save();renderSidebar();initSortables();}
@@ -2332,11 +2357,8 @@ function loadFixedTexts(){
   var ft=(window._appCache&&window._appCache.fixedTexts)||FIXED_TEXT_DEFAULTS;
   ['opening','closingDefault','closingNone','closingAsk'].forEach(function(k){
     var id='fixed'+k.charAt(0).toUpperCase()+k.slice(1);
-    var el=document.getElementById(id);
-    if(el) el.innerHTML=ft[k]?ft[k].replace(/\n/g,'<br>'):FIXED_TEXT_DEFAULTS[k].replace(/\n/g,'<br>');
+    var el=document.getElementById(id);if(el)el.innerHTML=ft[k]?ft[k].replace(/\n/g,'<br>'):FIXED_TEXT_DEFAULTS[k].replace(/\n/g,'<br>');
   });
-  // エディタが表示中なら再描画して最新値を反映
-  if(currentFixedItem) renderFixedItemEditor(currentFixedItem);
 }
 
 function saveFixedTexts(showToast){
@@ -2348,12 +2370,7 @@ function saveFixedTexts(showToast){
   window._appCache.fixedTexts=ft;
   window.idbSetAppData('fixedTexts',ft).then(function(){
     try{var bc=new BroadcastChannel('tool_data_update');bc.postMessage({type:'fixedTextsUpdated',data:ft});bc.close();}catch(e){}
-    if(showToast){
-      // エディタ内のインライン表示
-      var inlineSt=document.getElementById('fixedItemStatusInline');
-      if(inlineSt){inlineSt.textContent='✅ 保存しました';inlineSt.classList.add('show');setTimeout(function(){inlineSt.classList.remove('show');},2200);}
-      toast('✅ 固定テキストを保存しました');
-    }
+    if(showToast){var st=document.getElementById('fixedTextStatus');if(st){st.style.display='block';st.style.background='#e8f5e9';st.style.color='#2e7d32';st.style.border='1px solid #a5d6a7';st.textContent='✅ 固定テキストを保存しました';setTimeout(function(){st.style.display='none';},2500);}toast('✅ 固定テキストを保存しました');}
   });
 }
 // 表挿入（デフォルト2行3列）
@@ -3442,19 +3459,214 @@ function _hrSetStatus(msg, type) {
   el.textContent = msg;
 }
 
+// ===================================================================
+// 表示/非表示パターン管理
+// ===================================================================
+var _hrPatEditIdx = -1; // -1 = 新規
+// パターン内でどのボタンが選択されているか { field: value }
+var _hrPatModalSel = {};
+// パターン内でターゲット質問の設定 { questionId: 'show'|'hide'|null }
+var _hrPatModalTargetState = {};
+
+function _hrPatsLoad() { return window._appCache.hearingPatterns || []; }
+function _hrPatsSave(arr) {
+  window._appCache.hearingPatterns = arr;
+  window.idbSetAppData('hearingPatterns', arr);
+}
+
+/** パターン一覧を描画 */
+function _hrPatRender() {
+  var el = document.getElementById('hrPatList'); if (!el) return;
+  var pats = _hrPatsLoad();
+  if (!pats.length) {
+    el.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:12px;background:var(--surface);border:1px dashed var(--border);border-radius:8px;text-align:center;">パターンがありません。「＋ パターンを追加」から登録してください。</div>';
+    return;
+  }
+  el.innerHTML = '';
+  pats.forEach(function(pat, pi) {
+    var card = document.createElement('div'); card.className = 'hr-pat-card';
+    var hd = document.createElement('div'); hd.className = 'hr-pat-card-hd';
+    var nameEl = document.createElement('span'); nameEl.className = 'hr-pat-name-text';
+    nameEl.textContent = '🎯 ' + (pat.name || '（名前なし）');
+    var editBtn = document.createElement('button');
+    editBtn.textContent = '✏️ 編集'; editBtn.style.cssText = 'font-size:11px;padding:2px 8px;border:1px solid var(--border);border-radius:4px;background:var(--surface2);cursor:pointer;font-family:inherit;';
+    editBtn.onclick = (function(i){ return function(){ _hrPatOpen(i); }; })(pi);
+    var delBtn = document.createElement('button');
+    delBtn.textContent = '🗑'; delBtn.style.cssText = 'font-size:11px;padding:2px 6px;border:1px solid var(--border);border-radius:4px;background:var(--surface2);cursor:pointer;font-family:inherit;';
+    delBtn.onclick = (function(i){ return function(){ _hrPatDelete(i); }; })(pi);
+    hd.appendChild(nameEl); hd.appendChild(editBtn); hd.appendChild(delBtn);
+    card.appendChild(hd);
+    // 条件サマリ
+    if (pat.conditions && pat.conditions.length) {
+      var condEl = document.createElement('div'); condEl.className = 'hr-pat-cond-summary';
+      condEl.textContent = '🔘 トリガー: ' + pat.conditions.map(function(c) { return c.field + ' = ' + c.value; }).join(' AND ');
+      card.appendChild(condEl);
+    }
+    if (pat.targets && pat.targets.length) {
+      var qs2 = _hrGetQuestions();
+      var tEl = document.createElement('div'); tEl.className = 'hr-pat-cond-summary';
+      tEl.textContent = '👁 対象: ' + pat.targets.map(function(t) {
+        var q = qs2.find(function(q2){ return q2.id === t.id; });
+        return (q ? q.label : t.id) + '→' + (t.show ? '表示' : '非表示');
+      }).join(' / ');
+      card.appendChild(tEl);
+    }
+    el.appendChild(card);
+  });
+}
+
+/** パターン編集モーダルを開く */
+function _hrPatOpen(idx) {
+  _hrPatEditIdx = idx;
+  var pats = _hrPatsLoad();
+  var pat  = idx >= 0 ? pats[idx] : null;
+  _hrPatModalSel = {};
+  _hrPatModalTargetState = {};
+  if (pat) {
+    (pat.conditions || []).forEach(function(c) { _hrPatModalSel[c.field] = c.value; });
+    (pat.targets || []).forEach(function(t) { _hrPatModalTargetState[t.id] = t.show ? 'show' : 'hide'; });
+  }
+  document.getElementById('hrPatModalName').value = pat ? (pat.name || '') : '';
+  _hrPatModalRenderTriggers();
+  _hrPatModalRenderTargets();
+  document.getElementById('hrPatModal').classList.add('open');
+}
+
+function _hrPatClose() { document.getElementById('hrPatModal').classList.remove('open'); }
+
+/** トリガーボタングリッドを描画 */
+function _hrPatModalRenderTriggers() {
+  var el = document.getElementById('hrPatModalTriggers'); if (!el) return;
+  var qs = _hrGetQuestions();
+  el.innerHTML = '';
+  qs.forEach(function(q) {
+    if (!q.enabled) return;
+    // ボタンのある型のみ
+    var buttons = [];
+    if (q.type === 'bool') {
+      buttons = [
+        { label: q.trueLabel  || 'はい',   value: 'true'  },
+        { label: q.falseLabel || 'いいえ', value: 'false' }
+      ];
+    } else if (q.type === 'str') {
+      buttons = (q.options || []).map(function(o) { return { label: o.l, value: o.v }; });
+    }
+    if (!buttons.length) return;
+    var group = document.createElement('div'); group.className = 'hr-pat-trigger-group';
+    var qLbl = document.createElement('div'); qLbl.className = 'hr-pat-trigger-qlabel';
+    qLbl.textContent = '■ ' + q.label;
+    var btnsRow = document.createElement('div'); btnsRow.className = 'hr-pat-trigger-btns';
+    buttons.forEach(function(b) {
+      var btn = document.createElement('button'); btn.className = 'hr-pat-trig-btn';
+      btn.textContent = b.label;
+      if (_hrPatModalSel[q.field] === b.value) btn.classList.add('selected');
+      btn.onclick = (function(field, val, btnEl) { return function() {
+        // 同じ質問の選択を解除してトグル
+        if (_hrPatModalSel[field] === val) {
+          delete _hrPatModalSel[field];
+          btnEl.classList.remove('selected');
+        } else {
+          _hrPatModalSel[field] = val;
+          // 同じ質問の他ボタンを解除
+          btnsRow.querySelectorAll('.hr-pat-trig-btn').forEach(function(b2) { b2.classList.remove('selected'); });
+          btnEl.classList.add('selected');
+        }
+      }; })(q.field, b.value, btn);
+      btnsRow.appendChild(btn);
+    });
+    group.appendChild(qLbl); group.appendChild(btnsRow);
+    el.appendChild(group);
+  });
+  if (!el.children.length) {
+    el.innerHTML = '<div style="font-size:11px;color:var(--text3);">質問が登録されていません。先に質問を追加してください。</div>';
+  }
+}
+
+/** ターゲット質問リストを描画 */
+function _hrPatModalRenderTargets() {
+  var el = document.getElementById('hrPatModalTargets'); if (!el) return;
+  var qs = _hrGetQuestions();
+  el.innerHTML = '';
+  qs.forEach(function(q) {
+    if (!q.enabled) return;
+    var row = document.createElement('div'); row.className = 'hr-pat-target-row';
+    var lbl = document.createElement('div'); lbl.className = 'hr-pat-target-qlabel'; lbl.textContent = q.label;
+    var sel = document.createElement('div'); sel.className = 'hr-pat-target-sel';
+    var cur = _hrPatModalTargetState[q.id] || null;
+    [
+      { label: '表示',    key: 'show',  cls: 'show-on' },
+      { label: '非表示',  key: 'hide',  cls: 'hide-on' },
+      { label: '設定なし', key: null,   cls: ''         }
+    ].forEach(function(opt) {
+      var btn = document.createElement('button'); btn.className = 'hr-pat-target-btn';
+      btn.textContent = opt.label;
+      if (cur === opt.key) btn.classList.add(opt.cls || 'show-on');
+      btn.onclick = (function(qid, k, btnEl) { return function() {
+        _hrPatModalTargetState[qid] = k;
+        sel.querySelectorAll('.hr-pat-target-btn').forEach(function(b) {
+          b.classList.remove('show-on','hide-on');
+        });
+        if (k) btnEl.classList.add(k === 'show' ? 'show-on' : 'hide-on');
+      }; })(q.id, opt.key, btn);
+      sel.appendChild(btn);
+    });
+    row.appendChild(lbl); row.appendChild(sel);
+    el.appendChild(row);
+  });
+  if (!el.children.length) {
+    el.innerHTML = '<div style="font-size:11px;color:var(--text3);">対象となる質問がありません。</div>';
+  }
+}
+
+/** パターンを保存 */
+function _hrPatSave() {
+  var name = document.getElementById('hrPatModalName').value.trim() || '（名前なし）';
+  var conditions = Object.keys(_hrPatModalSel).map(function(field) {
+    return { field: field, value: _hrPatModalSel[field] };
+  });
+  var targets = Object.keys(_hrPatModalTargetState)
+    .filter(function(id) { return _hrPatModalTargetState[id] !== null; })
+    .map(function(id) { return { id: id, show: _hrPatModalTargetState[id] === 'show' }; });
+  var pats = _hrPatsLoad();
+  if (_hrPatEditIdx >= 0 && pats[_hrPatEditIdx]) {
+    pats[_hrPatEditIdx] = { id: pats[_hrPatEditIdx].id, name: name, conditions: conditions, targets: targets };
+  } else {
+    pats.push({ id: 'pat_' + Date.now(), name: name, conditions: conditions, targets: targets });
+  }
+  _hrPatsSave(pats);
+  _hrPatRender();
+  _hrPatClose();
+  if (window.renderHearing) window.renderHearing();
+  toast('✅ パターンを保存しました');
+}
+
+/** パターンを削除 */
+function _hrPatDelete(idx) {
+  var pats = _hrPatsLoad();
+  if (!pats[idx]) return;
+  if (!confirm('「' + (pats[idx].name || '（名前なし）') + '」を削除しますか？')) return;
+  pats.splice(idx, 1);
+  _hrPatsSave(pats);
+  _hrPatRender();
+  if (window.renderHearing) window.renderHearing();
+  toast('🗑 パターンを削除しました');
+}
+
 function hrSave() {
   var questions = window._appCache.hearingQuestions || [];
   var policies  = window._appCache.hearingPolicies  || [];
+  var patterns  = window._appCache.hearingPatterns  || [];
   Promise.all([
     window.idbSetAppData('hearingQuestions', questions),
     window.idbSetAppData('hearingPolicies',  policies),
+    window.idbSetAppData('hearingPatterns',  patterns),
   ]).then(function() {
     try {
       var bc = new BroadcastChannel('tool_data_update');
-      bc.postMessage({ type: 'hearingUpdated', questions: questions, policies: policies });
+      bc.postMessage({ type: 'hearingUpdated', questions: questions, policies: policies, patterns: patterns });
       bc.close();
     } catch(e) {}
-    _hrSetStatus('✅ 保存しました（質問 ' + questions.length + ' 件 / 対応方針 ' + policies.length + ' 件）', 'ok');
+    _hrSetStatus('✅ 保存しました（質問 ' + questions.length + ' 件 / 対応方針 ' + policies.length + ' 件 / パターン ' + patterns.length + ' 件）', 'ok');
     toast('✅ ヒアリングデータを保存しました');
   }).catch(function(e) {
     _hrSetStatus('❌ 保存失敗: ' + e.message, 'err');
