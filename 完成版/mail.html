@@ -408,25 +408,14 @@ function showDetail(id) {
       <div class="detail-body">
         <div>
           <div class="field-label">件名</div>
-          <div class="field-copy-row">
-            <div class="subject-row">
-              <span class="subject-text">${esc(t.subject||'（件名なし）')}</span>
-            </div>
-            <div class="copy-btn-col">
-              <button class="copy-btn" id="copySubjBtn" onclick="mailCopyField('${id}','subject')">📋 件名コピー</button>
-              <button class="copy-btn" id="copyAllBtn"  onclick="mailCopyField('${id}','all')">📋 全文コピー</button>
-            </div>
+          <div class="subject-row">
+            <span class="subject-text">${esc(t.subject||'（件名なし）')}</span>
           </div>
         </div>
         <div>
           <div class="field-label">本文</div>
-          <div class="field-copy-row">
-            <div class="body-wrap">
-              <div class="body-text">${esc(t.body||'')}</div>
-            </div>
-            <div class="copy-btn-col">
-              <button class="copy-btn" id="copyBodyBtn" onclick="mailCopyField('${id}','body')">📋 本文コピー</button>
-            </div>
+          <div class="body-wrap">
+            <div class="body-text">${esc(t.body||'')}</div>
           </div>
         </div>
       </div>

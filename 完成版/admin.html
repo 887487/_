@@ -92,8 +92,11 @@
   padding: 0 6px 0 10px;  /* 左インデント削減 */
   gap: 5px;
 }
+/* メールタブ：件名表示のため高さを自動に */
+#mailSidebarScroll .script-item { height: auto; min-height: 36px; padding: 4px 6px 4px 10px; }
 /* スクリプト名テキスト（左寄せ） */
 .script-item-name { margin-left: 0; }
+.script-item-sub { font-size: 10px; color: var(--text3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .sub-cat-block { margin-left: 6px; }
 /* アコーディオン開閉 */
 .cat-block.collapsed > .script-list-ul,
@@ -292,18 +295,16 @@
   transition: background .12s; margin-top: 6px;
 }
 .sm-add-btn:hover { background: var(--accent); color: #fff; }
-.sm-toggle-btn {
-  height: 26px; padding: 0 8px; flex-shrink: 0;
-  background: var(--surface2); border: 1px solid var(--border);
-  border-radius: 4px; color: var(--text3);
-  font-size: 11px; font-family: inherit; cursor: pointer;
-  transition: background .12s, color .12s, border-color .12s;
-  white-space: nowrap;
+.sm-toggle-btn { display: none !important; }
+/* 📎 ファイル添付ボタン */
+.sm-file-attach-btn {
+  background: var(--surface2); border: 1px solid var(--border); border-radius: 4px;
+  padding: 2px 6px; font-size: 13px; cursor: pointer; flex-shrink: 0;
+  transition: background .12s; height: 26px;
 }
-.sm-toggle-btn:hover { border-color: var(--accent); color: var(--accent); }
-.sm-toggle-btn.on {
-  background: #ffeaea; border-color: #e74c3c; color: #c0392b; font-weight: 700;
-}
+.sm-file-attach-btn:hover { background: var(--accent-lt); border-color: var(--accent); }
+/* URL欄のドロップゾーンハイライト */
+.sm-url-dz-over > .sm-url-input { border-color: var(--accent) !important; background: var(--accent-lt) !important; }
 .tab-panel-sidemenu { display: none; }
 
 .hist-del-btn {
@@ -450,15 +451,30 @@
 .step-rich th { background: #eef0ff; font-weight: 700; text-align: center; }
 
 /* 固定テキスト編集エリア */
-.fixed-text-section {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 14px 16px;
-  margin-bottom: 12px;
-}
-.fixed-text-section .field-label { font-size: 11px; font-weight: 700; color: var(--text2); margin-bottom: 4px; margin-top: 10px; }
-.fixed-text-section .field-label:first-child { margin-top: 0; }
+/* ── 固定項目（オープニング・クロージング）サイドバー ── */
+.fixed-items-section{border-bottom:2px solid var(--border);padding:4px 0 6px;background:var(--surface2);}
+.fixed-items-label{font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;padding:4px 12px 2px;}
+.fixed-item-row{display:flex;align-items:center;gap:7px;padding:0 10px;height:32px;cursor:pointer;border-left:3px solid transparent;transition:background .12s,border-color .12s;}
+.fixed-item-row:hover{background:var(--accent-lt);}
+.fixed-item-row.active{background:var(--accent-lt);border-left-color:var(--accent);}
+.fixed-item-row.active .fixed-item-label-text{color:var(--accent);font-weight:700;}
+.fixed-item-icon{font-size:14px;flex-shrink:0;}
+.fixed-item-label-text{font-size:12px;font-weight:600;color:var(--text);flex:1;}
+.fixed-item-badge{font-size:9px;background:var(--accent-lt);color:var(--accent);border:1px solid var(--accent);border-radius:10px;padding:1px 5px;font-weight:700;flex-shrink:0;}
+/* ── 固定テキスト動的エディタ ── */
+.fixed-item-editor{padding:20px 20px 32px;max-width:680px;}
+.fixed-item-editor-hd{display:flex;align-items:center;gap:10px;margin-bottom:16px;padding-bottom:12px;border-bottom:2px solid var(--border);}
+.fixed-item-editor-hd-icon{font-size:24px;}
+.fixed-item-editor-hd-title{font-size:16px;font-weight:700;color:var(--text);flex:1;}
+.fixed-item-editor-hd-badge{font-size:10px;background:var(--accent-lt);color:var(--accent);border:1px solid var(--accent);border-radius:10px;padding:2px 8px;font-weight:700;}
+.fixed-item-field-block{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:12px;}
+.fixed-item-field-label{font-size:11px;font-weight:700;color:var(--text2);margin-bottom:6px;}
+.fixed-item-field-desc{font-size:11px;color:var(--text3);margin-bottom:8px;line-height:1.5;}
+.fixed-item-save-row{display:flex;align-items:center;gap:10px;margin-top:16px;}
+#fixedItemStatusInline{font-size:12px;color:var(--green);font-weight:600;opacity:0;transition:opacity .3s;}
+#fixedItemStatusInline.show{opacity:1;}
+/* 旧静的セクションは非表示 */
+.fixed-text-section { display:none!important; }
 .fixed-text-rich {
   min-height: 36px;
   padding: 6px 10px;
@@ -957,6 +973,20 @@ body.dnd-xlsx-hover::after {
   <div class="tab-panel active" id="tabScript">
     <div class="sidebar">
       <div class="sidebar-top"><span class="sidebar-top-label">カテゴリ / スクリプト</span></div>
+      <!-- 固定トーク：サイドバー先頭に常時表示 -->
+      <div class="fixed-items-section" id="fixedItemsSection">
+        <div class="fixed-items-label">固定トーク</div>
+        <div class="fixed-item-row" id="fixedRowOpening" onclick="selectFixedItem('opening')">
+          <span class="fixed-item-icon">🎙</span>
+          <span class="fixed-item-label-text">オープニングトーク</span>
+          <span class="fixed-item-badge">固定</span>
+        </div>
+        <div class="fixed-item-row" id="fixedRowClosing" onclick="selectFixedItem('closing')">
+          <span class="fixed-item-icon">🔚</span>
+          <span class="fixed-item-label-text">クロージングトーク</span>
+          <span class="fixed-item-badge">固定</span>
+        </div>
+      </div>
       <div class="sidebar-scroll" id="sidebarScroll"
            ondragover="catDragOver(event,'script')" ondrop="catDrop(event,'script')"></div>
       <button class="add-cat-btn" onclick="openAddCat()">＋ カテゴリを追加</button>
@@ -964,24 +994,6 @@ body.dnd-xlsx-hover::after {
     <div class="editor-wrap">
       <div class="editor-scroll" id="editorScroll">
         <div class="empty-state"><div class="empty-icon">📋</div><div>左のリストからスクリプトを選んでください</div></div>
-      </div>
-      <!-- 固定テキスト編集（常時表示） -->
-      <div style="padding:12px 16px;border-top:1px solid var(--border);flex-shrink:0;">
-        <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px;">📌 固定テキスト設定</div>
-        <div class="fixed-text-section">
-          <div class="field-label">オープニングトーク</div>
-          <div class="fixed-text-rich" id="fixedOpening" contenteditable="true" data-placeholder="オープニングテキストを入力…" oninput="saveFixedTexts()"></div>
-          <div class="field-label">クロージング（デフォルト）</div>
-          <div class="fixed-text-rich" id="fixedClosingDefault" contenteditable="true" data-placeholder="クロージングデフォルトテキスト…" oninput="saveFixedTexts()"></div>
-          <div class="field-label">クロージング（不明点なし）</div>
-          <div class="fixed-text-rich" id="fixedClosingNone" contenteditable="true" data-placeholder="不明点なし時のテキスト…" oninput="saveFixedTexts()"></div>
-          <div class="field-label">クロージング（不明点あり）</div>
-          <div class="fixed-text-rich" id="fixedClosingAsk" contenteditable="true" data-placeholder="不明点あり時のテキスト…" oninput="saveFixedTexts()"></div>
-          <div style="margin-top:10px;display:flex;gap:8px;justify-content:flex-end;">
-            <button class="btn btn-primary" onclick="saveFixedTexts(true)" style="font-size:12px;">💾 固定テキストを保存</button>
-          </div>
-          <div id="fixedTextStatus" style="display:none;margin-top:8px;padding:6px 10px;border-radius:5px;font-size:12px;"></div>
-        </div>
       </div>
     </div>
     <div class="preview-wrap">
@@ -1242,12 +1254,6 @@ body.dnd-xlsx-hover::after {
     <aside class="sidebar" id="scrUnifiedSidebar">
       <div class="sidebar-top" style="display:flex;align-items:center;justify-content:space-between;padding-right:8px;">
         <span class="sidebar-top-label">パターン / 画面</span>
-        <!-- Excel (.xlsx) インポートボタン -->
-        <label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer;font-size:11px;font-weight:600;color:var(--accent);white-space:nowrap;padding:3px 8px;border:1px solid var(--accent);border-radius:5px;transition:background .12s;" title="Excel (.xlsx) の埋め込み画像をシートごとにインポート"
-               onmouseover="this.style.background='var(--accent-lt)'" onmouseout="this.style.background=''">
-          📊 Excelインポート
-          <input type="file" accept=".xlsx" style="display:none" onchange="_xlsxFileInputChange(this)">
-        </label>
       </div>
       <div class="sidebar-scroll" id="scrUnifiedList"></div>
       <button class="add-cat-btn" onclick="scrAddPatternInline()">＋ パターンを追加</button>
@@ -2038,7 +2044,69 @@ let data = {};
   if (typeof loadFixedTexts === 'function') loadFixedTexts();
 });
 function ensureColors(){let ci=0;Object.values(data).forEach(cat=>{if(!cat.color)cat.color=CAT_COLORS[ci%CAT_COLORS.length];ci++;});}
-let currentCat=null,currentSubKey=null,currentIdx=null;
+let currentCat=null,currentSubKey=null,currentIdx=null,currentFixedItem=null;
+
+function showEmpty(){
+  currentFixedItem=null;
+  // サイドバーのアクティブ状態を解除
+  ['fixedRowOpening','fixedRowClosing'].forEach(function(id){var el=document.getElementById(id);if(el)el.classList.remove('active');});
+  document.getElementById('editorScroll').innerHTML='<div class="empty-state"><div class="empty-icon">📋</div><div>左のリストからスクリプトを選んでください</div></div>';
+  document.getElementById('previewScroll').innerHTML='<div style="color:var(--muted);font-size:11px;text-align:center;padding-top:20px">スクリプトを選ぶと<br>フローが表示されます</div>';
+}
+function selectScript(k,i){currentFixedItem=null;['fixedRowOpening','fixedRowClosing'].forEach(function(id){var el=document.getElementById(id);if(el)el.classList.remove('active');});currentCat=k;currentSubKey=null;currentIdx=i;renderSidebar();renderEditor();renderPreview();}
+function selectSubScript(k,subKey,i){currentFixedItem=null;['fixedRowOpening','fixedRowClosing'].forEach(function(id){var el=document.getElementById(id);if(el)el.classList.remove('active');});currentCat=k;currentSubKey=subKey;currentIdx=i;renderSidebar();renderEditor();renderPreview();}
+
+// ── 固定テキスト選択（サイドバー → エディタに動的描画） ──
+function selectFixedItem(key){
+  currentFixedItem=key;
+  currentCat=null;currentSubKey=null;currentIdx=null;
+  // サイドバーのアクティブ状態を更新
+  document.getElementById('fixedRowOpening').classList.toggle('active',key==='opening');
+  document.getElementById('fixedRowClosing').classList.toggle('active',key==='closing');
+  renderSidebar();
+  renderFixedItemEditor(key);
+  document.getElementById('previewScroll').innerHTML='<div style="color:var(--muted);font-size:11px;text-align:center;padding-top:20px">固定テキストには<br>フロープレビューはありません</div>';
+}
+
+function renderFixedItemEditor(key){
+  var ft=(window._appCache&&window._appCache.fixedTexts)||FIXED_TEXT_DEFAULTS;
+  function val(k){return (ft[k]!==undefined?ft[k]:FIXED_TEXT_DEFAULTS[k])||'';}
+  function toHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');}
+  var richStyle='min-height:44px;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;line-height:1.7;background:var(--bg);color:var(--text);outline:none;white-space:pre-wrap;word-break:break-word;';
+  var html='';
+  if(key==='opening'){
+    html='<div class="fixed-item-editor">'+
+      '<div class="fixed-item-editor-hd"><span class="fixed-item-editor-hd-icon">🎙</span><span class="fixed-item-editor-hd-title">オープニングトーク</span><span class="fixed-item-editor-hd-badge">固定テキスト</span></div>'+
+      '<div class="fixed-item-field-block">'+
+        '<div class="fixed-item-field-label">オープニングトーク文言</div>'+
+        '<div class="fixed-item-field-desc">電話受付時の第一声として表示されます。「●●」は担当者名を入力してください。</div>'+
+        '<div class="fixed-text-rich" id="fixedOpening" contenteditable="true" data-placeholder="オープニングテキストを入力…" oninput="saveFixedTexts()" style="'+richStyle+'">'+toHtml(val('opening'))+'</div>'+
+      '</div>'+
+      '<div class="fixed-item-save-row"><button class="btn btn-primary" onclick="saveFixedTexts(true)" style="font-size:12px;">💾 保存</button><span id="fixedItemStatusInline"></span></div>'+
+    '</div>';
+  } else {
+    html='<div class="fixed-item-editor">'+
+      '<div class="fixed-item-editor-hd"><span class="fixed-item-editor-hd-icon">🔚</span><span class="fixed-item-editor-hd-title">クロージングトーク</span><span class="fixed-item-editor-hd-badge">固定テキスト</span></div>'+
+      '<div class="fixed-item-field-block">'+
+        '<div class="fixed-item-field-label">クロージング（デフォルト）</div>'+
+        '<div class="fixed-item-field-desc">対応完了前の標準クロージング文言です。</div>'+
+        '<div class="fixed-text-rich" id="fixedClosingDefault" contenteditable="true" data-placeholder="クロージングデフォルトテキスト…" oninput="saveFixedTexts()" style="'+richStyle+'">'+toHtml(val('closingDefault'))+'</div>'+
+      '</div>'+
+      '<div class="fixed-item-field-block">'+
+        '<div class="fixed-item-field-label">クロージング（不明点なし）</div>'+
+        '<div class="fixed-item-field-desc">「不明点なし」選択時に表示されます。</div>'+
+        '<div class="fixed-text-rich" id="fixedClosingNone" contenteditable="true" data-placeholder="不明点なし時のテキスト…" oninput="saveFixedTexts()" style="'+richStyle+'">'+toHtml(val('closingNone'))+'</div>'+
+      '</div>'+
+      '<div class="fixed-item-field-block">'+
+        '<div class="fixed-item-field-label">クロージング（不明点あり）</div>'+
+        '<div class="fixed-item-field-desc">「不明点あり」選択時に表示されます。</div>'+
+        '<div class="fixed-text-rich" id="fixedClosingAsk" contenteditable="true" data-placeholder="不明点あり時のテキスト…" oninput="saveFixedTexts()" style="'+richStyle+'">'+toHtml(val('closingAsk'))+'</div>'+
+      '</div>'+
+      '<div class="fixed-item-save-row"><button class="btn btn-primary" onclick="saveFixedTexts(true)" style="font-size:12px;">💾 保存</button><span id="fixedItemStatusInline"></span></div>'+
+    '</div>';
+  }
+  document.getElementById('editorScroll').innerHTML=html;
+}
 
 function render(){renderSidebar();if(currentCat&&currentIdx!==null){const cat=data[currentCat];if(!cat){currentCat=null;currentSubKey=null;currentIdx=null;showEmpty();return;}const list=currentSubKey&&cat.sub&&cat.sub[currentSubKey]?cat.sub[currentSubKey].list:cat.list||[];if(!list[currentIdx]){currentCat=null;currentSubKey=null;currentIdx=null;showEmpty();}else{renderEditor();renderPreview();}}}
 function showEmpty(){document.getElementById('editorScroll').innerHTML='<div class="empty-state"><div class="empty-icon">📋</div><div>左のリストからスクリプトを選んでください</div></div>';document.getElementById('previewScroll').innerHTML='<div style="color:var(--muted);font-size:11px;text-align:center;padding-top:20px">スクリプトを選ぶと<br>フローが表示されます</div>';}
@@ -2354,23 +2422,26 @@ function fmtStep(si,type){fmtRich(si,type);}// 後方互換
 var FIXED_TEXT_DEFAULTS={opening:'お電話 ありがとうございます。NHKONE窓口 担当●●でございます。',closingDefault:'ご案内は以上となりますが、そのほか確認されたいことなどはございませんでしょうか？',closingNone:'ありがとうございます。 それでは本日●●がご案内いたしました。それでは失礼いたします。',closingAsk:'○○○についてでございますね。（お問い合わせ内容に回答）'};
 
 function loadFixedTexts(){
-  var ft=(window._appCache&&window._appCache.fixedTexts)||FIXED_TEXT_DEFAULTS;
-  ['opening','closingDefault','closingNone','closingAsk'].forEach(function(k){
-    var id='fixed'+k.charAt(0).toUpperCase()+k.slice(1);
-    var el=document.getElementById(id);if(el)el.innerHTML=ft[k]?ft[k].replace(/\n/g,'<br>'):FIXED_TEXT_DEFAULTS[k].replace(/\n/g,'<br>');
-  });
+  // エディタが動的に描画されている場合のみ更新
+  if(currentFixedItem) renderFixedItemEditor(currentFixedItem);
 }
 
 function saveFixedTexts(showToast){
-  var ft={};
+  // キャッシュの既存値をベースに（描画されていない項目は保持）
+  var ft=window._appCache.fixedTexts ? JSON.parse(JSON.stringify(window._appCache.fixedTexts)) : {};
   ['opening','closingDefault','closingNone','closingAsk'].forEach(function(k){
     var id='fixed'+k.charAt(0).toUpperCase()+k.slice(1);
-    var el=document.getElementById(id);ft[k]=el?serializeRichHtml(el.innerHTML):FIXED_TEXT_DEFAULTS[k];
+    var el=document.getElementById(id);
+    if(el) ft[k]=serializeRichHtml(el.innerHTML);
   });
   window._appCache.fixedTexts=ft;
   window.idbSetAppData('fixedTexts',ft).then(function(){
     try{var bc=new BroadcastChannel('tool_data_update');bc.postMessage({type:'fixedTextsUpdated',data:ft});bc.close();}catch(e){}
-    if(showToast){var st=document.getElementById('fixedTextStatus');if(st){st.style.display='block';st.style.background='#e8f5e9';st.style.color='#2e7d32';st.style.border='1px solid #a5d6a7';st.textContent='✅ 固定テキストを保存しました';setTimeout(function(){st.style.display='none';},2500);}toast('✅ 固定テキストを保存しました');}
+    if(showToast){
+      var inlineSt=document.getElementById('fixedItemStatusInline');
+      if(inlineSt){inlineSt.textContent='✅ 保存しました';inlineSt.classList.add('show');setTimeout(function(){inlineSt.classList.remove('show');},2200);}
+      toast('✅ 固定テキストを保存しました');
+    }
   });
 }
 // 表挿入（デフォルト2行3列）
@@ -2871,8 +2942,9 @@ window._processImportText = function(text, noReload) {
 };
 
 function exportJSON(){
+  // screenPatterns が空なら localStorage インデックスを読む（スクリーンタブ未開封時対策）
   var inMem = (typeof screenPatterns!=='undefined'&&screenPatterns&&screenPatterns.length)
-    ? screenPatterns : null;
+    ? screenPatterns : (typeof scrLoadIndex==='function' ? scrLoadIndex() : null);
 
   function _doExport(rawPatterns) {
     _importProgressShow('エクスポート準備中…', '使用画像を収集しています', 10);
@@ -3024,7 +3096,8 @@ function renderMailSidebar(){
     h+=`<ul class="mail-list-ul" data-cat="${cat.key}" data-sub="">`;
     mailData.filter(t=>t.catKey===cat.key&&!t.subCatKey).forEach(t=>{
       const active=mId===t.id;
-      h+=`<li class="script-item${active?' active':''}" data-mail-id="${t.id}" onclick="selectMailTemplate('${t.id}')"><span class="drag-handle">⠿</span><div class="script-item-dot"></div><span class="script-item-name">${esc(t.title||'（タイトルなし）')}</span><button class="script-del" onclick="event.stopPropagation();deleteMailTemplate('${t.id}')">✕</button></li>`;
+      const subj=t.subject?`<span class="script-item-sub">${esc(t.subject)}</span>`:'';
+      h+=`<li class="script-item${active?' active':''}" data-mail-id="${t.id}" onclick="selectMailTemplate('${t.id}')"><span class="drag-handle">⠿</span><div class="script-item-dot"></div><span class="script-item-name" style="display:flex;flex-direction:column;gap:1px;min-width:0;"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(t.title||'（タイトルなし）')}</span>${subj}</span><button class="script-del" onclick="event.stopPropagation();deleteMailTemplate('${t.id}')">✕</button></li>`;
     });
     h+=`</ul>`;
     getMailSubCats(cat.key).forEach(sub=>{
@@ -3040,7 +3113,8 @@ function renderMailSidebar(){
         <ul class="mail-list-ul" data-cat="${cat.key}" data-sub="${sub.key}">`;
       mailData.filter(t=>t.catKey===cat.key&&t.subCatKey===sub.key).forEach(t=>{
         const active=mId===t.id;
-        h+=`<li class="script-item${active?' active':''}" data-mail-id="${t.id}" onclick="selectMailTemplate('${t.id}')"><span class="drag-handle">⠿</span><div class="script-item-dot"></div><span class="script-item-name">${esc(t.title||'（タイトルなし）')}</span><button class="script-del" onclick="event.stopPropagation();deleteMailTemplate('${t.id}')">✕</button></li>`;
+        const subj=t.subject?`<span class="script-item-sub">${esc(t.subject)}</span>`:'';
+        h+=`<li class="script-item${active?' active':''}" data-mail-id="${t.id}" onclick="selectMailTemplate('${t.id}')"><span class="drag-handle">⠿</span><div class="script-item-dot"></div><span class="script-item-name" style="display:flex;flex-direction:column;gap:1px;min-width:0;"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(t.title||'（タイトルなし）')}</span>${subj}</span><button class="script-del" onclick="event.stopPropagation();deleteMailTemplate('${t.id}')">✕</button></li>`;
       });
       h+=`</ul></div>`;
     });
@@ -3789,7 +3863,7 @@ async function histWriteToFile() {
 
 
 function smRender() {
-  if (!_smData) smLoad();  // 初回のみ読み込む（追加・編集中は上書きしない）
+  if (!_smData) smLoad();
   var list = document.getElementById('smCatList');
   if (!list) return;
 
@@ -3798,16 +3872,34 @@ function smRender() {
     var isPhonetic = sec.type === 'phonetic';
     var itemsHtml = '';
 
+    // ── アイテム1行の共通HTML生成（トグル廃止・📎ファイル添付付き）──
+    function _itemRow(it, nameOnInput, urlOnInput, delBtn) {
+      var fileInfo = '';
+      if (it.fileId) {
+        fileInfo = '<span style="font-size:10px;color:var(--accent);margin-left:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:80px;" title="添付ファイルあり">📎</span>';
+      }
+      return '<div style="display:flex;flex-wrap:wrap;gap:4px;align-items:center;padding:5px 0;border-bottom:1px solid var(--border);">' +
+        '<input class="sm-input" value="' + _smEsc(it.name) + '" placeholder="リンク名" oninput="' + nameOnInput + '" style="flex:1;min-width:80px;">' +
+        '<div style="flex:2;min-width:120px;position:relative;">' +
+          '<input class="sm-input sm-url-input" value="' + _smEsc(it.url || '') + '" placeholder="URL (https://...) またはファイルD&D" oninput="' + urlOnInput + '" style="width:100%;box-sizing:border-box;padding-right:28px;">' +
+          fileInfo +
+        '</div>' +
+        '<button class="sm-file-attach-btn" onclick="' + delBtn.replace(/"/g,"'") + '_smAttachFile(event,this)" title="ファイルを添付" style="flex-shrink:0;">📎</button>' +
+        '<button class="sm-del-btn" onclick="' + delBtn + '" style="flex-shrink:0;">✕</button>' +
+        '</div>';
+    }
+
     if (isLinksSub) {
-      // サブセクション表示
       itemsHtml = (sec.subSections || []).map(function(sub, sj) {
         var subItems = (sub.items || []).map(function(it, ij) {
-          var disabledBtn = '<button class="sm-toggle-btn' + (it.disabled ? ' on' : '') + '" onclick="smToggleSubDisabled(' + si + ',' + sj + ',' + ij + ')" title="' + (it.disabled ? '有効に戻す' : '無効にする') + '">' + (it.disabled ? '🚫 無効' : '有効') + '</button>';
-          return '<div style="display:flex;gap:6px;align-items:center;padding:4px 0;border-bottom:1px solid var(--border);">' +
-            '<input class="sm-input" value="' + _smEsc(it.name) + '" placeholder="リンク名" oninput="smSetSubItem(' + si + ',' + sj + ',' + ij + ',\'name\',this.value)" style="flex:1;' + (it.disabled ? 'opacity:.5;text-decoration:line-through;' : '') + '">' +
-            '<input class="sm-input" value="' + _smEsc(it.url || '') + '" placeholder="URL" oninput="smSetSubItem(' + si + ',' + sj + ',' + ij + ',\'url\',this.value)" style="flex:2;' + (it.disabled ? 'opacity:.5;' : '') + '">' +
-            disabledBtn +
-            '<button class="sm-del-btn" onclick="smDelSubItem(' + si + ',' + sj + ',' + ij + ')" title="削除">✕</button>' +
+          return '<div style="display:flex;flex-wrap:wrap;gap:4px;align-items:center;padding:4px 0;border-bottom:1px solid var(--border);">' +
+            '<input class="sm-input" value="' + _smEsc(it.name) + '" placeholder="リンク名" oninput="smSetSubItem(' + si + ',' + sj + ',' + ij + ',\'name\',this.value)" style="flex:1;min-width:80px;">' +
+            '<div style="flex:2;min-width:120px;">' +
+              '<input class="sm-input sm-url-input" value="' + _smEsc(it.url || '') + '" placeholder="URL またはファイルD&D" oninput="smSetSubItem(' + si + ',' + sj + ',' + ij + ',\'url\',this.value)" style="width:100%;box-sizing:border-box;">' +
+              (it.fileId ? '<span style="font-size:10px;color:var(--accent);">📎</span>' : '') +
+            '</div>' +
+            '<button class="sm-file-attach-btn" onclick="_smAttachFileAt(event,' + si + ',' + sj + ',' + ij + ')" title="ファイルを添付">📎</button>' +
+            '<button class="sm-del-btn" onclick="smDelSubItem(' + si + ',' + sj + ',' + ij + ')">✕</button>' +
             '</div>';
         }).join('');
         return '<div style="margin-bottom:8px;background:var(--surface2);border-radius:6px;padding:8px;">' +
@@ -3821,14 +3913,18 @@ function smRender() {
       itemsHtml += '<button class="sm-add-btn" onclick="smAddSub(' + si + ')" style="margin-top:6px;">＋ サブカテゴリを追加</button>';
 
     } else if (!isPhonetic) {
-      // 通常リンクリスト
       itemsHtml = (sec.items || []).map(function(it, ij) {
-        var disabledBtn = '<button class="sm-toggle-btn' + (it.disabled ? ' on' : '') + '" onclick="smToggleDisabled(' + si + ',' + ij + ')" title="' + (it.disabled ? '有効に戻す' : '無効にする') + '">' + (it.disabled ? '🚫 無効' : '有効') + '</button>';
-        return '<div style="display:flex;gap:6px;align-items:center;padding:5px 0;border-bottom:1px solid var(--border);">' +
-          '<input class="sm-input" value="' + _smEsc(it.name) + '" placeholder="リンク名" oninput="smSetItem(' + si + ',' + ij + ',\'name\',this.value)" style="flex:1;' + (it.disabled ? 'opacity:.5;text-decoration:line-through;' : '') + '">' +
-          '<input class="sm-input" value="' + _smEsc(it.url || '') + '" placeholder="URL (https://...)" oninput="smSetItem(' + si + ',' + ij + ',\'url\',this.value)" style="flex:2;' + (it.disabled ? 'opacity:.5;' : '') + '">' +
-          disabledBtn +
-          '<button class="sm-del-btn" onclick="smDelItem(' + si + ',' + ij + ')" title="削除">✕</button>' +
+        return '<div style="display:flex;flex-wrap:wrap;gap:4px;align-items:center;padding:5px 0;border-bottom:1px solid var(--border);">' +
+          '<input class="sm-input" value="' + _smEsc(it.name) + '" placeholder="リンク名" oninput="smSetItem(' + si + ',' + ij + ',\'name\',this.value)" style="flex:1;min-width:80px;">' +
+          '<div style="flex:2;min-width:120px;position:relative;" ' +
+            'ondragover="event.preventDefault();this.classList.add(\'sm-url-dz-over\')" ' +
+            'ondragleave="this.classList.remove(\'sm-url-dz-over\')" ' +
+            'ondrop="this.classList.remove(\'sm-url-dz-over\');_smDropFileOnItem(event,' + si + ',' + ij + ')">' +
+            '<input class="sm-input sm-url-input" value="' + _smEsc(it.url || '') + '" placeholder="URL (https://...) またはファイルD&D" oninput="smSetItem(' + si + ',' + ij + ',\'url\',this.value)" style="width:100%;box-sizing:border-box;">' +
+            (it.fileId ? '<span style="position:absolute;right:4px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--accent);" title="' + _smEsc(it.fileName||'添付ファイルあり') + '">📎</span>' : '') +
+          '</div>' +
+          '<button class="sm-file-attach-btn" onclick="_smAttachFileAt(event,' + si + ',-1,' + ij + ')" title="ファイルを添付">📎</button>' +
+          '<button class="sm-del-btn" onclick="smDelItem(' + si + ',' + ij + ')">✕</button>' +
           '</div>';
       }).join('');
       itemsHtml += '<button class="sm-add-btn" onclick="smAddItem(' + si + ')">＋ リンクを追加</button>';
@@ -3852,6 +3948,65 @@ function smRender() {
 
 function _smEsc(s) {
   return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── ファイルD&Dでアイテムに添付 ──
+function _smDropFileOnItem(event, si, ij) {
+  event.preventDefault();
+  var file = event.dataTransfer && event.dataTransfer.files && event.dataTransfer.files[0];
+  if (!file) return;
+  _smReadAndAttach(file, si, -1, ij);
+}
+// 📎ボタンからファイル選択
+function _smAttachFileAt(event, si, sj, ij) {
+  event.stopPropagation();
+  var inp = document.createElement('input'); inp.type='file'; inp.style.display='none';
+  inp.onchange = function() {
+    var file = inp.files[0]; if (!file) return;
+    _smReadAndAttach(file, si, sj, ij);
+  };
+  document.body.appendChild(inp); inp.click();
+  setTimeout(function(){ document.body.removeChild(inp); }, 5000);
+}
+function _smReadAndAttach(file, si, sj, ij) {
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var fileObj = {
+      id:       'smf_' + Date.now() + '_' + Math.random().toString(36).substr(2,6),
+      name:     file.name,
+      mimeType: file.type || _smGuessMime ? _smGuessMime(file.name) : 'application/octet-stream',
+      size:     file.size,
+      dataUrl:  e.target.result,
+      addedAt:  new Date().toISOString()
+    };
+    window.idbSaveMenuFile(fileObj).then(function() {
+      if (!_smData) return;
+      if (sj >= 0) {
+        // サブカテゴリアイテム
+        if (_smData[si] && _smData[si].subSections && _smData[si].subSections[sj] && _smData[si].subSections[sj].items[ij]) {
+          _smData[si].subSections[sj].items[ij].fileId   = fileObj.id;
+          _smData[si].subSections[sj].items[ij].fileName = fileObj.name;
+          _smData[si].subSections[sj].items[ij].url      = '';
+        }
+      } else {
+        // 通常アイテム
+        if (_smData[si] && _smData[si].items && _smData[si].items[ij]) {
+          _smData[si].items[ij].fileId   = fileObj.id;
+          _smData[si].items[ij].fileName = fileObj.name;
+          _smData[si].items[ij].url      = '';
+        }
+      }
+      smRender();
+      toast('📎 ファイル「' + fileObj.name + '」を添付しました');
+    });
+  };
+  reader.readAsDataURL(file);
+}
+
+function _smGuessMime(name) {
+  var ext = (name||'').split('.').pop().toLowerCase();
+  var map = {pdf:'application/pdf',xlsx:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',xls:'application/vnd.ms-excel',docx:'application/vnd.openxmlformats-officedocument.wordprocessingml.document',doc:'application/msword',pptx:'application/vnd.openxmlformats-officedocument.presentationml.presentation',ppt:'application/vnd.ms-powerpoint',png:'image/png',jpg:'image/jpeg',jpeg:'image/jpeg',zip:'application/zip',txt:'text/plain'};
+  return map[ext] || 'application/octet-stream';
 }
 
 // カテゴリ操作
