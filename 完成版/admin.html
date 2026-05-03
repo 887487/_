@@ -366,31 +366,110 @@
 }
 .step-rich th { background: #eef0ff; font-weight: 700; text-align: center; }
 
-/* 固定テキスト編集エリア */
-.fixed-text-section {
+/* ── 固定項目（オープニング・クロージング）サイドバーアイテム ── */
+.fixed-items-section {
+  border-bottom: 2px solid var(--border);
+  padding: 6px 0 8px;
+  background: var(--surface2);
+}
+.fixed-items-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  padding: 4px 12px 2px;
+}
+.fixed-item-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 10px;
+  height: 34px;
+  cursor: pointer;
+  border-left: 3px solid transparent;
+  transition: background .12s, border-color .12s;
+  border-radius: 0 4px 4px 0;
+}
+.fixed-item-row:hover { background: var(--accent-lt); }
+.fixed-item-row.active {
+  background: var(--accent-lt);
+  border-left-color: var(--accent);
+}
+.fixed-item-row.active .fixed-item-label-text { color: var(--accent); font-weight: 700; }
+.fixed-item-icon { font-size: 15px; flex-shrink: 0; }
+.fixed-item-label-text { font-size: 12px; font-weight: 600; color: var(--text); flex: 1; }
+.fixed-item-badge {
+  font-size: 9px;
+  background: var(--accent-lt);
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 10px;
+  padding: 1px 5px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+/* ── 固定テキスト エディタパネル（editorScrollに表示）── */
+.fixed-item-editor {
+  padding: 20px 20px 32px;
+  max-width: 680px;
+}
+.fixed-item-editor-hd {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid var(--border);
+}
+.fixed-item-editor-hd-icon { font-size: 24px; }
+.fixed-item-editor-hd-title { font-size: 16px; font-weight: 700; color: var(--text); flex: 1; }
+.fixed-item-editor-hd-badge {
+  font-size: 10px;
+  background: var(--accent-lt);
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 10px;
+  padding: 2px 8px;
+  font-weight: 700;
+}
+.fixed-item-field-block {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 10px;
   padding: 14px 16px;
   margin-bottom: 12px;
 }
-.fixed-text-section .field-label { font-size: 11px; font-weight: 700; color: var(--text2); margin-bottom: 4px; margin-top: 10px; }
-.fixed-text-section .field-label:first-child { margin-top: 0; }
-.fixed-text-rich {
-  min-height: 36px;
-  padding: 6px 10px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  font-size: 13px;
-  line-height: 1.7;
-  background: var(--bg);
-  color: var(--text);
-  outline: none;
-  white-space: pre-wrap;
-  word-break: break-word;
+.fixed-item-field-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text2);
+  margin-bottom: 6px;
 }
-.fixed-text-rich:focus { border-color: var(--accent); }
-.fixed-text-rich:empty::before { content: attr(data-placeholder); color: var(--text3); pointer-events: none; }
+.fixed-item-field-desc {
+  font-size: 11px;
+  color: var(--text3);
+  margin-bottom: 8px;
+  line-height: 1.5;
+}
+.fixed-item-save-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 16px;
+}
+#fixedItemStatusInline {
+  font-size: 12px;
+  color: var(--green);
+  font-weight: 600;
+  opacity: 0;
+  transition: opacity .3s;
+}
+#fixedItemStatusInline.show { opacity: 1; }
+
+/* ── 固定テキスト-section：既存セクションは不要になるが互換用に残す ── */
+.fixed-text-section { display: none !important; }
 
 /* ホットスポットリスト：このセクションのみスクロール */
 #scrRsHsList {
@@ -882,24 +961,9 @@ body.dnd-xlsx-hover::after {
       <div class="editor-scroll" id="editorScroll">
         <div class="empty-state"><div class="empty-icon">📋</div><div>左のリストからスクリプトを選んでください</div></div>
       </div>
-      <!-- 固定テキスト編集（常時表示） -->
-      <div style="padding:12px 16px;border-top:1px solid var(--border);flex-shrink:0;">
-        <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px;">📌 固定テキスト設定</div>
-        <div class="fixed-text-section">
-          <div class="field-label">オープニングトーク</div>
-          <div class="fixed-text-rich" id="fixedOpening" contenteditable="true" data-placeholder="オープニングテキストを入力…" oninput="saveFixedTexts()"></div>
-          <div class="field-label">クロージング（デフォルト）</div>
-          <div class="fixed-text-rich" id="fixedClosingDefault" contenteditable="true" data-placeholder="クロージングデフォルトテキスト…" oninput="saveFixedTexts()"></div>
-          <div class="field-label">クロージング（不明点なし）</div>
-          <div class="fixed-text-rich" id="fixedClosingNone" contenteditable="true" data-placeholder="不明点なし時のテキスト…" oninput="saveFixedTexts()"></div>
-          <div class="field-label">クロージング（不明点あり）</div>
-          <div class="fixed-text-rich" id="fixedClosingAsk" contenteditable="true" data-placeholder="不明点あり時のテキスト…" oninput="saveFixedTexts()"></div>
-          <div style="margin-top:10px;display:flex;gap:8px;justify-content:flex-end;">
-            <button class="btn btn-primary" onclick="saveFixedTexts(true)" style="font-size:12px;">💾 固定テキストを保存</button>
-          </div>
-          <div id="fixedTextStatus" style="display:none;margin-top:8px;padding:6px 10px;border-radius:5px;font-size:12px;"></div>
-        </div>
-      </div>
+      <!-- 固定テキスト編集（オープニング・クロージングをサイドバーから選択して表示） -->
+      <!-- IDs fixedOpening / fixedClosingDefault / fixedClosingNone / fixedClosingAsk は
+           selectFixedItem() が editorScroll 内に動的に生成するため、ここでは不要 -->
     </div>
     <div class="preview-wrap">
       <div class="preview-top">フロー構造</div>
@@ -1860,13 +1924,26 @@ let data = {};
   if (typeof loadFixedTexts === 'function') loadFixedTexts();
 });
 function ensureColors(){let ci=0;Object.values(data).forEach(cat=>{if(!cat.color)cat.color=CAT_COLORS[ci%CAT_COLORS.length];ci++;});}
-let currentCat=null,currentSubKey=null,currentIdx=null;
+let currentCat=null,currentSubKey=null,currentIdx=null,currentFixedItem=null;
 
 function render(){renderSidebar();if(currentCat&&currentIdx!==null){const cat=data[currentCat];if(!cat){currentCat=null;currentSubKey=null;currentIdx=null;showEmpty();return;}const list=currentSubKey&&cat.sub&&cat.sub[currentSubKey]?cat.sub[currentSubKey].list:cat.list||[];if(!list[currentIdx]){currentCat=null;currentSubKey=null;currentIdx=null;showEmpty();}else{renderEditor();renderPreview();}}}
-function showEmpty(){document.getElementById('editorScroll').innerHTML='<div class="empty-state"><div class="empty-icon">📋</div><div>左のリストからスクリプトを選んでください</div></div>';document.getElementById('previewScroll').innerHTML='<div style="color:var(--muted);font-size:11px;text-align:center;padding-top:20px">スクリプトを選ぶと<br>フローが表示されます</div>';}
+function showEmpty(){currentFixedItem=null;document.getElementById('editorScroll').innerHTML='<div class="empty-state"><div class="empty-icon">📋</div><div>左のリストからスクリプトを選んでください</div></div>';document.getElementById('previewScroll').innerHTML='<div style="color:var(--muted);font-size:11px;text-align:center;padding-top:20px">スクリプトを選ぶと<br>フローが表示されます</div>';}
 
 function renderSidebar(){
-  let h='';
+  // ── 固定項目（先頭に常時表示）──
+  let h=`<div class="fixed-items-section">
+    <div class="fixed-items-label">固定トーク</div>
+    <div class="fixed-item-row${currentFixedItem==='opening'?' active':''}" onclick="selectFixedItem('opening')">
+      <span class="fixed-item-icon">🎙</span>
+      <span class="fixed-item-label-text">オープニングトーク</span>
+      <span class="fixed-item-badge">固定</span>
+    </div>
+    <div class="fixed-item-row${currentFixedItem==='closing'?' active':''}" onclick="selectFixedItem('closing')">
+      <span class="fixed-item-icon">🔚</span>
+      <span class="fixed-item-label-text">クロージングトーク</span>
+      <span class="fixed-item-badge">固定</span>
+    </div>
+  </div>`;
   Object.entries(data).forEach(([key,cat])=>{
     h+=`<div class="cat-block${_collapsedCats[key]?' collapsed':''}" data-cat-key="${key}">
       <div class="cat-header" onclick="toggleCatAcc(event,'${key}')" style="cursor:pointer;">
@@ -2096,8 +2173,84 @@ function renderPreview(){
   document.getElementById('previewScroll').innerHTML=h;
 }
 
-function selectScript(k,i){currentCat=k;currentSubKey=null;currentIdx=i;renderSidebar();renderEditor();renderPreview();}
-function selectSubScript(k,subKey,i){currentCat=k;currentSubKey=subKey;currentIdx=i;renderSidebar();renderEditor();renderPreview();}
+function selectScript(k,i){currentFixedItem=null;currentCat=k;currentSubKey=null;currentIdx=i;renderSidebar();renderEditor();renderPreview();}
+function selectSubScript(k,subKey,i){currentFixedItem=null;currentCat=k;currentSubKey=subKey;currentIdx=i;renderSidebar();renderEditor();renderPreview();}
+
+// ── 固定テキスト選択（サイドバーの「オープニング」「クロージング」クリック）──
+function selectFixedItem(key){
+  currentFixedItem=key;
+  currentCat=null;currentSubKey=null;currentIdx=null;
+  renderSidebar();
+  renderFixedItemEditor(key);
+  document.getElementById('previewScroll').innerHTML='<div style="color:var(--muted);font-size:11px;text-align:center;padding-top:20px">固定テキストには<br>フロープレビューはありません</div>';
+}
+
+function renderFixedItemEditor(key){
+  var ft=(window._appCache&&window._appCache.fixedTexts)||{};
+  var defaults=window.FIXED_TEXT_DEFAULTS||{opening:'',closingDefault:'',closingNone:'',closingAsk:''};
+  function val(k){return (ft[k]!==undefined?ft[k]:defaults[k])||'';}
+  function toHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');}
+
+  var html='';
+  if(key==='opening'){
+    html=`<div class="fixed-item-editor">
+      <div class="fixed-item-editor-hd">
+        <span class="fixed-item-editor-hd-icon">🎙</span>
+        <span class="fixed-item-editor-hd-title">オープニングトーク</span>
+        <span class="fixed-item-editor-hd-badge">固定テキスト</span>
+      </div>
+      <div class="fixed-item-field-block">
+        <div class="fixed-item-field-label">オープニングトーク文言</div>
+        <div class="fixed-item-field-desc">電話受付時の第一声として表示されます。「●●」は担当者名を入力してください。</div>
+        <div class="fixed-text-rich" id="fixedOpening" contenteditable="true"
+             data-placeholder="オープニングテキストを入力…" oninput="saveFixedTexts()"
+             style="min-height:52px;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;line-height:1.7;background:var(--bg);color:var(--text);outline:none;white-space:pre-wrap;word-break:break-word;"
+        >${toHtml(val('opening'))}</div>
+      </div>
+      <div class="fixed-item-save-row">
+        <button class="btn btn-primary" onclick="saveFixedTexts(true)" style="font-size:12px;">💾 保存</button>
+        <span id="fixedItemStatusInline"></span>
+      </div>
+    </div>`;
+  } else {
+    html=`<div class="fixed-item-editor">
+      <div class="fixed-item-editor-hd">
+        <span class="fixed-item-editor-hd-icon">🔚</span>
+        <span class="fixed-item-editor-hd-title">クロージングトーク</span>
+        <span class="fixed-item-editor-hd-badge">固定テキスト</span>
+      </div>
+      <div class="fixed-item-field-block">
+        <div class="fixed-item-field-label">クロージング（デフォルト）</div>
+        <div class="fixed-item-field-desc">対応完了前に表示される標準のクロージング文言です。</div>
+        <div class="fixed-text-rich" id="fixedClosingDefault" contenteditable="true"
+             data-placeholder="クロージングデフォルトテキスト…" oninput="saveFixedTexts()"
+             style="min-height:44px;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;line-height:1.7;background:var(--bg);color:var(--text);outline:none;white-space:pre-wrap;word-break:break-word;"
+        >${toHtml(val('closingDefault'))}</div>
+      </div>
+      <div class="fixed-item-field-block">
+        <div class="fixed-item-field-label">クロージング（不明点なし）</div>
+        <div class="fixed-item-field-desc">「不明点なし」選択時に表示されます。</div>
+        <div class="fixed-text-rich" id="fixedClosingNone" contenteditable="true"
+             data-placeholder="不明点なし時のテキスト…" oninput="saveFixedTexts()"
+             style="min-height:44px;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;line-height:1.7;background:var(--bg);color:var(--text);outline:none;white-space:pre-wrap;word-break:break-word;"
+        >${toHtml(val('closingNone'))}</div>
+      </div>
+      <div class="fixed-item-field-block">
+        <div class="fixed-item-field-label">クロージング（不明点あり）</div>
+        <div class="fixed-item-field-desc">「不明点あり」選択時に表示されます。「○○○」を実際の対応内容に置き換えてください。</div>
+        <div class="fixed-text-rich" id="fixedClosingAsk" contenteditable="true"
+             data-placeholder="不明点あり時のテキスト…" oninput="saveFixedTexts()"
+             style="min-height:44px;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;line-height:1.7;background:var(--bg);color:var(--text);outline:none;white-space:pre-wrap;word-break:break-word;"
+        >${toHtml(val('closingAsk'))}</div>
+      </div>
+      <div class="fixed-item-save-row">
+        <button class="btn btn-primary" onclick="saveFixedTexts(true)" style="font-size:12px;">💾 保存</button>
+        <span id="fixedItemStatusInline"></span>
+      </div>
+    </div>`;
+  }
+  document.getElementById('editorScroll').innerHTML=html;
+}
 function addSubCat(catKey){if(!data[catKey].sub)data[catKey].sub={};const subKey='sub_'+Date.now();data[catKey].sub[subKey]={name:'新しいサブカテゴリ',list:[]};save();renderSidebar();initSortables();setTimeout(()=>{const inputs=document.querySelectorAll('.sub-cat-header .cat-name-display');if(inputs.length)inputs[inputs.length-1].dispatchEvent(new MouseEvent('dblclick'));},80);}
 function renameSubCat(catKey,subKey,v){data[catKey].sub[subKey].name=v;save();}
 function deleteSubCat(catKey,subKey){if(!confirm('このサブカテゴリを削除しますか？'))return;delete data[catKey].sub[subKey];if(currentCat===catKey&&currentSubKey===subKey){currentSubKey=null;currentIdx=null;showEmpty();}save();renderSidebar();initSortables();}
@@ -2179,8 +2332,11 @@ function loadFixedTexts(){
   var ft=(window._appCache&&window._appCache.fixedTexts)||FIXED_TEXT_DEFAULTS;
   ['opening','closingDefault','closingNone','closingAsk'].forEach(function(k){
     var id='fixed'+k.charAt(0).toUpperCase()+k.slice(1);
-    var el=document.getElementById(id);if(el)el.innerHTML=ft[k]?ft[k].replace(/\n/g,'<br>'):FIXED_TEXT_DEFAULTS[k].replace(/\n/g,'<br>');
+    var el=document.getElementById(id);
+    if(el) el.innerHTML=ft[k]?ft[k].replace(/\n/g,'<br>'):FIXED_TEXT_DEFAULTS[k].replace(/\n/g,'<br>');
   });
+  // エディタが表示中なら再描画して最新値を反映
+  if(currentFixedItem) renderFixedItemEditor(currentFixedItem);
 }
 
 function saveFixedTexts(showToast){
@@ -2192,7 +2348,12 @@ function saveFixedTexts(showToast){
   window._appCache.fixedTexts=ft;
   window.idbSetAppData('fixedTexts',ft).then(function(){
     try{var bc=new BroadcastChannel('tool_data_update');bc.postMessage({type:'fixedTextsUpdated',data:ft});bc.close();}catch(e){}
-    if(showToast){var st=document.getElementById('fixedTextStatus');if(st){st.style.display='block';st.style.background='#e8f5e9';st.style.color='#2e7d32';st.style.border='1px solid #a5d6a7';st.textContent='✅ 固定テキストを保存しました';setTimeout(function(){st.style.display='none';},2500);}toast('✅ 固定テキストを保存しました');}
+    if(showToast){
+      // エディタ内のインライン表示
+      var inlineSt=document.getElementById('fixedItemStatusInline');
+      if(inlineSt){inlineSt.textContent='✅ 保存しました';inlineSt.classList.add('show');setTimeout(function(){inlineSt.classList.remove('show');},2200);}
+      toast('✅ 固定テキストを保存しました');
+    }
   });
 }
 // 表挿入（デフォルト2行3列）
