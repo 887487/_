@@ -837,23 +837,41 @@ window._smFileAction = function(id) {
   window.idbGetMenuFile(id).then(function(f) {
     if (!f) { alert('ファイルが見つかりません（ID: ' + id + '）'); return; }
     window._smCurrentFile = f;
-    var isPdf  = f.mimeType === 'application/pdf';
-    var isImg  = (f.mimeType || '').startsWith('image/');
-    var modal  = document.getElementById('smFileModal');
-    var titleEl= document.getElementById('smFileModalTitle');
-    var subEl  = document.getElementById('smFileModalSub');
-    var viewBtn= document.getElementById('smFileModalViewBtn');
-    if (!modal) return;
-    titleEl.textContent = f.name;
-    if (isPdf || isImg) {
-      subEl.textContent   = 'このファイルをどのように開きますか？';
-      viewBtn.style.display = '';
-      viewBtn.textContent = isPdf ? '🌐 ブラウザで閲覧' : '🖼️ 画像を表示';
-    } else {
-      subEl.textContent   = 'このファイルはブラウザで直接閲覧できません。ダウンロードしてください。';
-      viewBtn.style.display = 'none';
+    var isPdf = f.mimeType === 'application/pdf';
+    var isImg = (f.mimeType || '').startsWith('image/');
+
+    // PDF → 別タブで開く
+    if (isPdf) {
+      var tab = window.open('', '_blank');
+      if (tab) {
+        tab.document.write(
+          '<html><head><title>' + f.name.replace(/</g,'&lt;') + '</title></head>' +
+          '<body style="margin:0;padding:0;">' +
+          '<embed src="' + f.dataUrl + '" type="application/pdf" width="100%" height="100%" style="position:fixed;inset:0;width:100%;height:100%;">' +
+          '</body></html>'
+        );
+        tab.document.close();
+      }
+      return;
     }
-    modal.classList.add('open');
+
+    // 画像 → 別タブで開く
+    if (isImg) {
+      var imgTab = window.open('', '_blank');
+      if (imgTab) {
+        imgTab.document.write(
+          '<html><head><title>' + f.name.replace(/</g,'&lt;') + '</title></head>' +
+          '<body style="margin:0;background:#111;display:flex;align-items:center;justify-content:center;min-height:100vh;">' +
+          '<img src="' + f.dataUrl + '" style="max-width:100%;max-height:100vh;object-fit:contain;">' +
+          '</body></html>'
+        );
+        imgTab.document.close();
+      }
+      return;
+    }
+
+    // その他 → 即ダウンロード
+    window._smDownloadFile();
   }).catch(function(e) {
     alert('ファイルの読み込みに失敗しました: ' + (e && e.message || e));
   });
