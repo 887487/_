@@ -104,7 +104,26 @@ function _migrateFromLocalStorage() {
  * 各ページの DOMContentLoaded で await / .then() して使う。
  */
 window.initAppData = function() {
-  var keys = ['scripts','mailTemplates','mailCatMeta','updateHistory','hearingQuestions','hearingPolicies','hearingPatterns','sideMenuData'];
+  // ── data.js の APP_STATIC_DATA を優先適用（sideMenu・hearing・履歴・固定テキスト）──
+  var sd = window.APP_STATIC_DATA;
+  if (sd) {
+    if (sd.sideMenuData     != null) window._appCache.sideMenuData     = sd.sideMenuData;
+    if (sd.hearingQuestions != null) window._appCache.hearingQuestions = sd.hearingQuestions;
+    if (sd.hearingPolicies  != null) window._appCache.hearingPolicies  = sd.hearingPolicies;
+    if (sd.hearingPatterns  != null) window._appCache.hearingPatterns  = sd.hearingPatterns;
+    if (sd.updateHistory    != null) window._appCache.updateHistory    = sd.updateHistory;
+    if (sd.fixedTexts       != null) window._appCache.fixedTexts       = sd.fixedTexts;
+    // 添付ファイルを IDB sideMenuFiles に復元（fileId をキーに保存）
+    if (sd.sideMenuFiles) {
+      Object.keys(sd.sideMenuFiles).forEach(function(id) {
+        var f = sd.sideMenuFiles[id];
+        window.idbSaveMenuFile(Object.assign({}, f, { id: id }));
+      });
+    }
+  }
+
+  // scripts / mailTemplates / mailCatMeta は IDB から読む
+  var keys = ['scripts','mailTemplates','mailCatMeta'];
   return _appIdbOpen().then(function(db) {
     return new Promise(function(resolve) {
       var tx    = db.transaction('appData', 'readonly');
@@ -118,6 +137,24 @@ window.initAppData = function() {
       });
     });
   }).then(function(result) {
+    // data.js がない場合は IDB からヒアリング・サイドメニュー等も読む（後方互換）
+    if (!sd) {
+      var legacyKeys = ['updateHistory','hearingQuestions','hearingPolicies','hearingPatterns','sideMenuData','fixedTexts'];
+      return _appIdbOpen().then(function(db) {
+        return new Promise(function(resolve2) {
+          var tx2    = db.transaction('appData', 'readonly');
+          var store2 = tx2.objectStore('appData');
+          var left2  = legacyKeys.length;
+          legacyKeys.forEach(function(k) {
+            var r = store2.get(k);
+            r.onsuccess = function(e) { result[k] = e.target.result; if (!--left2) resolve2(result); };
+            r.onerror   = function()  { result[k] = null;            if (!--left2) resolve2(result); };
+          });
+        });
+      });
+    }
+    return result;
+  }).then(function(result) {
     var needsMigration = keys.some(function(k) { return result[k] == null; });
     if (needsMigration) return _migrateFromLocalStorage().then(function() { return result; });
     return result;
@@ -125,6 +162,12 @@ window.initAppData = function() {
     keys.forEach(function(k) {
       if (result[k] != null) window._appCache[k] = result[k];
     });
+    // data.js なし時の legacy keys も反映
+    if (!sd) {
+      ['updateHistory','hearingQuestions','hearingPolicies','hearingPatterns','sideMenuData','fixedTexts'].forEach(function(k) {
+        if (result[k] != null) window._appCache[k] = result[k];
+      });
+    }
     return window._appCache;
   });
 };
@@ -414,6 +457,11 @@ function _processImportText(text, noReload) {
               window._pendingImgLib = raw.imageLib;
             } else {
               window._pendingImgLib = null;
+            }
+            // 添付ファイルを IDB へ復元
+            if (Array.isArray(raw.sideMenuFiles) && raw.sideMenuFiles.length && window.idbSaveMenuFile) {
+              Promise.all(raw.sideMenuFiles.map(function(f){ return window.idbSaveMenuFile(f); }))
+                .catch(function(e){ console.warn('sideMenuFiles restore error:', e); });
             }
             if (Array.isArray(raw.updateHistory) && raw.updateHistory.length > 0) {
               _mergeHistory(raw.updateHistory);
@@ -2114,5 +2162,29 @@ document.addEventListener('DOMContentLoaded', function () {
       if (typeof window.renderHearing === 'function') window.renderHearing();
     }
   };
+})();
+
+// =============================================================================
+// 同期URL自動フェッチ（ビューアページ用: script/mail/screen.html）
+// admin.html は自前で DOMContentLoaded で処理するため除外
+// =============================================================================
+(function() {
+  document.addEventListener('DOMContentLoaded', function() {
+    // admin.html 判定（タブパネルがあるか）
+    if (document.getElementById('tabScript') || document.getElementById('tabBtnScript')) return;
+    var syncUrl  = localStorage.getItem('syncUrl')  || '';
+    var syncIntv = parseInt(localStorage.getItem('syncInterval') || '0');
+    if (!syncUrl) return;
+    function _doSync() {
+      fetch(syncUrl, { cache: 'no-store' })
+        .then(function(r) { return r.ok ? r.text() : Promise.reject('HTTP ' + r.status); })
+        .then(function(text) {
+          if (typeof window._processImportText === 'function') window._processImportText(text, true);
+        })
+        .catch(function(e) { console.warn('[sync] fetch failed:', e); });
+    }
+    setTimeout(_doSync, 1500);
+    if (syncIntv) setInterval(_doSync, syncIntv * 1000);
+  });
 })();
 

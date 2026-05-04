@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="style.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.2/Sortable.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="data.js" onerror="void(0)"></script>
   <script src="common-utils.js"></script>
   <style>
 /* ============================================================
@@ -27,6 +28,14 @@
 }
 .tbl-inline-panel.open { display: flex; }
 .tbl-inline-title { font-size: 12px; font-weight: 700; color: var(--accent); }
+/* 文字揃えセパレータ */
+.fmt-sep { width: 1px; height: 18px; background: var(--border); margin: 0 2px; display: inline-block; align-self: center; }
+/* セル選択ハイライト */
+.tbl-preview td.sel-cell, .tbl-preview th.sel-cell { outline: 2px solid var(--accent); background: var(--accent-lt) !important; }
+/* セル結合ボタン行 */
+.tbl-merge-row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.tbl-merge-btn { height: 24px; padding: 0 8px; border: 1px solid var(--border); border-radius: 4px; background: var(--surface2); font-size: 11px; cursor: pointer; font-family: inherit; transition: background .12s; }
+.tbl-merge-btn:hover { background: var(--accent-lt); border-color: var(--accent); }
 .tbl-modal-controls {
   display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
   font-size: 12px; color: var(--text2);
@@ -955,10 +964,11 @@ body.dnd-xlsx-hover::after {
     <button class="tab-btn" id="tabBtnHistory" onclick="switchTab('history')">📝 更新履歴</button>
   </div>
   <div class="hd-right" style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
-    <button class="nav-btn" onclick="openNamedTab('index.html','scriptTab')">📋 スクリプト</button>
+    <button class="nav-btn" onclick="openNamedTab('script.html','scriptTab')">📋 スクリプト</button>
     <button class="nav-btn" onclick="openNamedTab('mail.html','mailTab')">✉️ メール</button>
     <button class="nav-btn" onclick="openNamedTab('screen.html','screenFlowTab')">🖥️ 画面遷移</button>
     <span style="width:1px;height:20px;background:rgba(255,255,255,.25);margin:0 4px;flex-shrink:0;"></span>
+    <button class="nav-btn" onclick="openSyncUrlModal()" title="他PCからのJSON自動取得設定">🔄 同期URL</button>
     <input type="file" id="importFile" accept=".json" style="display:none" onchange="importJSON(this)">
     <span id="dirtyIndicator" style="visibility:hidden;display:inline-flex;align-items:center;gap:4px;background:#e07a00;color:white;font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;">⚠️ 未保存</span>
     <button class="btn btn-primary" onclick="saveAllManual()">💾 保存して反映</button>
@@ -1025,8 +1035,7 @@ body.dnd-xlsx-hover::after {
       <div style="display:flex;align-items:center;justify-content:space-between;">
         <div style="font-size:14px;font-weight:700;color:var(--text);">📋 ヒアリング設定</div>
         <div style="display:flex;gap:8px;">
-          <button class="btn btn-primary" onclick="hrSave()" style="font-size:12px;">💾 保存して反映</button>
-          <button class="btn btn-secondary" onclick="hrWriteToFile()" style="font-size:12px;" title="common-utils.js の HEARING_QUESTIONS_DEFAULT / HEARING_POLICIES_DEFAULT を現在の内容で上書きします">📝 jsファイルに書き込む</button>
+          <button class="btn btn-secondary" onclick="exportDataJS()" style="font-size:12px;" title="data.js にヒアリングデータを書き出します">📥 data.js を保存</button>
         </div>
       </div>
       <div id="hrSaveStatus" style="display:none;padding:8px 12px;border-radius:6px;font-size:12px;"></div>
@@ -1127,6 +1136,39 @@ body.dnd-xlsx-hover::after {
     <div style="padding:12px 18px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;flex-shrink:0;">
       <button class="btn btn-secondary" onclick="_hrQCloseModal()">キャンセル</button>
       <button class="btn btn-primary"   onclick="_hrQModalSave()">💾 保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 同期URL モーダル ===== -->
+<div id="syncUrlModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:8000;align-items:center;justify-content:center;"
+     onclick="if(event.target===this)closeSyncUrlModal()">
+  <div style="background:var(--surface);border-radius:14px;padding:26px 28px 22px;width:min(90vw,500px);box-shadow:0 16px 48px rgba(0,0,0,.3);">
+    <div style="font-size:15px;font-weight:700;margin-bottom:8px;">🔄 同期URL設定</div>
+    <p style="font-size:12px;color:var(--text3);margin:0 0 14px;line-height:1.6;">
+      PC1でエクスポートしたJSONファイルをWebサーバー・Dropbox・Google Driveの公開URL等に置き、そのURLを設定します。<br>
+      ページ読み込み時に自動取得＆インポートします。<strong>CORS許可が必要です。</strong>
+    </p>
+    <div style="margin-bottom:10px;">
+      <label style="font-size:11px;font-weight:700;color:var(--text2);display:block;margin-bottom:4px;">JSON ファイルの公開URL</label>
+      <input id="syncUrlInput" type="url" placeholder="https://example.com/data.json"
+        style="width:100%;box-sizing:border-box;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;background:var(--bg);color:var(--text);font-family:inherit;">
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+      <label style="font-size:11px;font-weight:700;color:var(--text2);">自動取得間隔</label>
+      <select id="syncIntervalSel" style="font-size:12px;padding:4px 8px;border:1px solid var(--border);border-radius:5px;background:var(--bg);color:var(--text);font-family:inherit;">
+        <option value="0">手動のみ（自動取得しない）</option>
+        <option value="60">1分ごと</option>
+        <option value="300">5分ごと</option>
+        <option value="600">10分ごと</option>
+        <option value="1800">30分ごと</option>
+      </select>
+    </div>
+    <div id="syncUrlStatus" style="font-size:11px;color:var(--text3);min-height:16px;margin-bottom:14px;"></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;">
+      <button class="btn btn-secondary" onclick="closeSyncUrlModal()">キャンセル</button>
+      <button class="btn btn-secondary" onclick="testSyncUrl()">🔍 今すぐ取得テスト</button>
+      <button class="btn btn-primary"   onclick="saveSyncUrl()">💾 保存</button>
     </div>
   </div>
 </div>
@@ -1379,7 +1421,7 @@ body.dnd-xlsx-hover::after {
     <div style="max-width:900px;margin:0 auto;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
         <div style="font-size:14px;font-weight:700;color:var(--text);">📝 更新履歴</div>
-        <button class="btn btn-secondary" onclick="histWriteToFile()" style="font-size:12px;" title="common-utils.js に更新履歴を書き込む">📝 jsファイルに書き込む</button>
+        <button class="btn btn-primary" onclick="exportDataJS()" style="font-size:12px;" title="data.js に更新履歴を書き込む">💾 data.js を保存</button>
       </div>
       <div id="histWriteStatus" style="display:none;margin-bottom:12px;padding:8px 12px;border-radius:6px;font-size:12px;"></div>
       <div style="background:var(--white);border:1px solid var(--border);border-radius:10px;overflow:hidden;">
@@ -1394,8 +1436,7 @@ body.dnd-xlsx-hover::after {
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
         <div style="font-size:14px;font-weight:700;color:var(--text);">☰ サイドメニュー編集</div>
         <div style="display:flex;gap:8px;">
-          <button class="btn btn-primary" onclick="smSave()" style="font-size:12px;">💾 保存して反映</button>
-          <button class="btn btn-secondary" onclick="smWriteToFile()" style="font-size:12px;" title="common-utils.js の DEFAULT_SIDE_MENU_DATA を現在の内容で上書きします">📝 jsファイルに書き込む</button>
+          <button class="btn btn-secondary" onclick="exportDataJS()" style="font-size:12px;" title="data.js にサイドメニューデータを書き出します">📥 data.js を保存</button>
         </div>
       </div>
       <div id="smWriteStatus" style="display:none;margin-bottom:12px;padding:8px 12px;border-radius:6px;font-size:12px;"></div>
@@ -2082,7 +2123,6 @@ function renderFixedItemEditor(key){
         '<div class="fixed-item-field-desc">電話受付時の第一声として表示されます。「●●」は担当者名を入力してください。</div>'+
         '<div class="fixed-text-rich" id="fixedOpening" contenteditable="true" data-placeholder="オープニングテキストを入力…" oninput="saveFixedTexts()" style="'+richStyle+'">'+toHtml(val('opening'))+'</div>'+
       '</div>'+
-      '<div class="fixed-item-save-row"><button class="btn btn-primary" onclick="saveFixedTexts(true)" style="font-size:12px;">💾 保存</button><span id="fixedItemStatusInline"></span></div>'+
     '</div>';
   } else {
     html='<div class="fixed-item-editor">'+
@@ -2102,7 +2142,6 @@ function renderFixedItemEditor(key){
         '<div class="fixed-item-field-desc">「不明点あり」選択時に表示されます。</div>'+
         '<div class="fixed-text-rich" id="fixedClosingAsk" contenteditable="true" data-placeholder="不明点あり時のテキスト…" oninput="saveFixedTexts()" style="'+richStyle+'">'+toHtml(val('closingAsk'))+'</div>'+
       '</div>'+
-      '<div class="fixed-item-save-row"><button class="btn btn-primary" onclick="saveFixedTexts(true)" style="font-size:12px;">💾 保存</button><span id="fixedItemStatusInline"></span></div>'+
     '</div>';
   }
   document.getElementById('editorScroll').innerHTML=html;
@@ -2292,7 +2331,7 @@ function renderEditor(){
     }else{cho=`<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span class="end-tag">✓ ここで終了</span><button class="add-choice-btn" style="width:auto;padding:5px 14px" onclick="addChoice(${si})">選択肢を追加して分岐させる</button></div>`;}
     sh+=`<div class="step-card ${cardCls}"><div class="step-head">${badge}${endBadge}<span class="step-head-spacer"></span>${si>0?`<button class="step-del-btn" onclick="delStep(${si})">🗑 このステップを削除</button>`:''}</div>
     <div class="step-body"><div class="field-label">トーク内容</div>
-    <div class="fmt-bar"><button class="fmt-btn" type="button" onclick="fmtRich(${si},'bold')"><b>B</b> 太字</button><button class="fmt-btn" type="button" onclick="fmtRich(${si},'red')"><span class="fmt-red">A</span> 赤字</button><button class="fmt-btn" type="button" onclick="fmtRich(${si},'red-bold')"><span class="fmt-red"><b>A</b></span> 赤太字</button><button class="fmt-btn" type="button" onclick="fmtRich(${si},'clear')">✕ 解除</button><button class="fmt-btn" type="button" onclick="openTableEditor(${si})" title="表をビジュアル編集して挿入">⊞ 表</button></div>
+    <div class="fmt-bar"><button class="fmt-btn" type="button" onclick="fmtRich(${si},'bold')"><b>B</b> 太字</button><button class="fmt-btn" type="button" onclick="fmtRich(${si},'red')"><span class="fmt-red">A</span> 赤字</button><button class="fmt-btn" type="button" onclick="fmtRich(${si},'red-bold')"><span class="fmt-red"><b>A</b></span> 赤太字</button><button class="fmt-btn" type="button" onclick="fmtRich(${si},'clear')">✕ 解除</button><span class="fmt-sep"></span><button class="fmt-btn" type="button" onclick="fmtRich(${si},'alignLeft')"   title="左揃え">⬅</button><button class="fmt-btn" type="button" onclick="fmtRich(${si},'alignCenter')" title="中央揃え">↔</button><button class="fmt-btn" type="button" onclick="fmtRich(${si},'alignRight')"  title="右揃え">➡</button><span class="fmt-sep"></span><button class="fmt-btn" type="button" onclick="openTableEditor(${si})" title="表をビジュアル編集して挿入">⊞ 表</button></div>
     <div class="ta-wrap"><div class="step-rich" id="stepRich_${si}" contenteditable="true" data-placeholder="オペレーターが話す内容を入力…" oninput="updSTRich(${si})" onkeydown="richKeydown(event,${si})">${renderStepHtml(step.text||'')}</div><textarea class="step-text" id="stepTa_${si}" style="display:none">${esc(step.text||'')}</textarea></div>
     <div class="tbl-inline-panel" id="tblPanel_${si}">
       <div class="tbl-inline-title">⊞ 表を作成</div>
@@ -2307,6 +2346,13 @@ function renderEditor(){
           <table class="tbl-preview" id="tblPreview_${si}"></table>
         </div>
         <div class="tbl-modal-row-btns" id="tblRowBtns_${si}"></div>
+      </div>
+      <div class="tbl-merge-row">
+        <span style="font-size:11px;color:var(--text2);font-weight:700;">セル結合：</span>
+        <button class="tbl-merge-btn" onclick="tblMergeRight(${si})"  title="選択セルを右に結合">→ 右に結合</button>
+        <button class="tbl-merge-btn" onclick="tblMergeDown(${si})"   title="選択セルを下に結合">↓ 下に結合</button>
+        <button class="tbl-merge-btn" onclick="tblMergeSplit(${si})"  title="結合を解除">✕ 解除</button>
+        <span style="font-size:10px;color:var(--text3);">セルをクリックで選択</span>
       </div>
       <div class="tbl-inline-footer">
         <button class="btn btn-secondary" onclick="closeTblPanel(${si})">キャンセル</button>
@@ -2404,6 +2450,9 @@ function fmtRich(si,type){
   else if(type==='red')document.execCommand('insertHTML',false,'<span style="color:#e63946">'+t+'</span>');
   else if(type==='red-bold')document.execCommand('insertHTML',false,'<span style="color:#e63946"><b>'+t+'</b></span>');
   else if(type==='clear'){var d=document.createElement('div');d.appendChild(sel.getRangeAt(0).cloneContents());document.execCommand('insertHTML',false,d.textContent);}
+  else if(type==='alignLeft')  { el.focus(); document.execCommand('justifyLeft',  false, null); }
+  else if(type==='alignCenter'){ el.focus(); document.execCommand('justifyCenter', false, null); }
+  else if(type==='alignRight') { el.focus(); document.execCommand('justifyRight',  false, null); }
   updSTRich(si);
 }
 
@@ -2495,6 +2544,13 @@ function _tblPanelBuild(si, rows, cols, hasHeader, saved) {
   if (!tbl) return;
   tbl.innerHTML = '';
 
+  function _cellClick(cell) {
+    // 同じパネル内のすべてのセルの選択を解除してから選択
+    var panel = cell.closest('.tbl-inline-panel');
+    if (panel) panel.querySelectorAll('.sel-cell').forEach(function(c){ c.classList.remove('sel-cell'); });
+    cell.classList.add('sel-cell');
+  }
+
   if (hasHeader) {
     var thead = tbl.createTHead();
     var hr = thead.insertRow();
@@ -2503,6 +2559,7 @@ function _tblPanelBuild(si, rows, cols, hasHeader, saved) {
       th.contentEditable = 'true';
       th.setAttribute('data-placeholder', '見出し' + (c + 1));
       th.textContent = (saved && saved.header && saved.header[c] != null) ? saved.header[c] : '';
+      th.onclick = (function(cell){ return function(){ _cellClick(cell); }; })(th);
       hr.appendChild(th);
     }
   }
@@ -2514,10 +2571,62 @@ function _tblPanelBuild(si, rows, cols, hasHeader, saved) {
       td.contentEditable = 'true';
       td.setAttribute('data-placeholder', '内容');
       td.textContent = (saved && saved.rows && saved.rows[r] && saved.rows[r][ci] != null) ? saved.rows[r][ci] : '';
+      td.onclick = (function(cell){ return function(){ _cellClick(cell); }; })(td);
     }
   }
   _tblPanelUpdateRowBtns(si, rows, hasHeader);
   _tblPanelUpdateColBtns(si, cols);
+}
+
+function _tblGetSelectedCell(si) {
+  var tbl = document.getElementById('tblPreview_' + si);
+  if (!tbl) return null;
+  return tbl.querySelector('.sel-cell');
+}
+
+function tblMergeRight(si) {
+  var cell = _tblGetSelectedCell(si);
+  if (!cell) { alert('先に結合するセルをクリックして選択してください'); return; }
+  var row = cell.parentElement;
+  var cells = Array.from(row.cells);
+  var idx = cells.indexOf(cell);
+  if (idx < 0 || idx >= cells.length - 1) return;
+  // 次のセルの中身を結合してから削除
+  var nextCell = cells[idx + 1];
+  if (nextCell.textContent) cell.textContent = cell.textContent + ' ' + nextCell.textContent;
+  var cs = parseInt(cell.getAttribute('colspan') || '1');
+  var ns = parseInt(nextCell.getAttribute('colspan') || '1');
+  cell.setAttribute('colspan', cs + ns);
+  nextCell.remove();
+}
+
+function tblMergeDown(si) {
+  var cell = _tblGetSelectedCell(si);
+  if (!cell) { alert('先に結合するセルをクリックして選択してください'); return; }
+  var row = cell.parentElement;
+  var cellIdx = Array.from(row.cells).indexOf(cell);
+  var nextRow = row.nextElementSibling;
+  if (!nextRow) return;
+  var nextCell = nextRow.cells[cellIdx];
+  if (!nextCell) return;
+  if (nextCell.textContent) cell.textContent = cell.textContent + ' ' + nextCell.textContent;
+  var rs = parseInt(cell.getAttribute('rowspan') || '1');
+  var ns = parseInt(nextCell.getAttribute('rowspan') || '1');
+  cell.setAttribute('rowspan', rs + ns);
+  nextCell.remove();
+}
+
+function tblMergeSplit(si) {
+  var cell = _tblGetSelectedCell(si);
+  if (!cell) { alert('先に解除するセルをクリックして選択してください'); return; }
+  cell.removeAttribute('colspan');
+  cell.removeAttribute('rowspan');
+  // 簡易リビルドでテーブル構造を正規化
+  var cols = parseInt(document.getElementById('tblCol_' + si).value) || 3;
+  var rows = parseInt(document.getElementById('tblRow_' + si).value) || 2;
+  var hasHeader = document.getElementById('tblHead_' + si).checked;
+  var saved = _tblPanelGetData(si);
+  _tblPanelBuild(si, rows, cols, hasHeader, saved);
 }
 
 function _tblPanelGetData(si) {
@@ -2601,18 +2710,25 @@ function _tblPanelUpdateColBtns(si, cols) {
 }
 
 function confirmTblPanelInsert(si) {
-  var d         = _tblPanelGetData(si);
+  var tbl       = document.getElementById('tblPreview_' + si);
   var hasHeader = document.getElementById('tblHead_' + si).checked;
   var _esc = function(s) { return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); };
+  var _cellHtml = function(cell, tag) {
+    var attrs = '';
+    var cs = cell.getAttribute('colspan'); if (cs && cs !== '1') attrs += ' colspan="' + cs + '"';
+    var rs = cell.getAttribute('rowspan'); if (rs && rs !== '1') attrs += ' rowspan="' + rs + '"';
+    var align = cell.style.textAlign; if (align) attrs += ' style="text-align:' + align + '"';
+    return '<' + tag + attrs + '>' + _esc(cell.textContent) + '</' + tag + '>';
+  };
 
   var html = '\n<table>\n';
-  if (hasHeader && d.header) {
-    html += '<thead><tr>' + d.header.map(function(v) { return '<th>' + _esc(v) + '</th>'; }).join('') + '</tr></thead>\n';
+  if (hasHeader && tbl.tHead && tbl.tHead.rows[0]) {
+    html += '<thead><tr>' + Array.from(tbl.tHead.rows[0].cells).map(function(c){ return _cellHtml(c,'th'); }).join('') + '</tr></thead>\n';
   }
-  if (d.rows.length) {
+  if (tbl.tBodies[0] && tbl.tBodies[0].rows.length) {
     html += '<tbody>';
-    d.rows.forEach(function(row) {
-      html += '<tr>' + row.map(function(v) { return '<td>' + _esc(v) + '</td>'; }).join('') + '</tr>\n';
+    Array.from(tbl.tBodies[0].rows).forEach(function(row) {
+      html += '<tr>' + Array.from(row.cells).map(function(c){ return _cellHtml(c,'td'); }).join('') + '</tr>\n';
     });
     html += '</tbody>';
   }
@@ -2885,17 +3001,29 @@ function _notifyTabs(){
   // タイムスタンプはBroadcastChannelで通知するため localStorage は不要
 }
 function saveAllManual(){
-  // 全データを IndexedDB (appData ストア) に保存する
+  // ── 全データを IndexedDB に保存 ──
   window._appCache.scripts       = data;
   window._appCache.mailTemplates = mailData;
   window._appCache.mailCatMeta   = mailCatMeta || {cats:[],subs:{}};
 
+  // 固定テキスト（エディタが開いていれば DOM から最新値を読む）
+  saveFixedTexts(false);
+
+  // ヒアリング・サイドメニューは各タブの最新キャッシュをそのまま使用
+  var hrQuestions = window._appCache.hearingQuestions || [];
+  var hrPolicies  = window._appCache.hearingPolicies  || [];
+  var hrPatterns  = window._appCache.hearingPatterns  || [];
+  var smData      = _smData || window._appCache.sideMenuData;
+
   Promise.all([
-    window.idbSetAppData('scripts',       data),
-    window.idbSetAppData('mailTemplates', mailData),
-    window.idbSetAppData('mailCatMeta',   mailCatMeta || {cats:[],subs:{}}),
+    window.idbSetAppData('scripts',          data),
+    window.idbSetAppData('mailTemplates',    mailData),
+    window.idbSetAppData('mailCatMeta',      mailCatMeta || {cats:[],subs:{}}),
+    window.idbSetAppData('hearingQuestions', hrQuestions),
+    window.idbSetAppData('hearingPolicies',  hrPolicies),
+    window.idbSetAppData('hearingPatterns',  hrPatterns),
+    smData ? window.idbSetAppData('sideMenuData', smData) : Promise.resolve(),
   ]).then(function() {
-    // 画面遷移インデックスも保存
     scrSaveIndex();
     _notifyTabs();
     markClean();
@@ -2916,16 +3044,17 @@ function saveAllManual(){
 window._processImportText = function(text, noReload) {
   try {
     var raw = JSON.parse(text);
-    var impScripts = null, impMail = null, impHistory = null, impScreen = null;
+    var impScripts = null, impMail = null, impHistory = null, impScreen = null, impMenuFiles = null;
 
     if (raw && (raw.version === 3 || raw.version === 2 || raw.version === 1) && raw.talkScripts && raw.mailTemplates) {
-      impScripts = raw.talkScripts;
-      impMail    = raw.mailTemplates;
-      impHistory = Array.isArray(raw.updateHistory) ? raw.updateHistory : null;
+      impScripts   = raw.talkScripts;
+      impMail      = raw.mailTemplates;
+      impHistory   = Array.isArray(raw.updateHistory) ? raw.updateHistory : null;
       if ((raw.version === 2 || raw.version === 3) && Array.isArray(raw.screenData)) impScreen = raw.screenData;
-      // v3: imageLib を pending にセット
       if (raw.version === 3 && Array.isArray(raw.imageLib)) window._pendingImgLib = raw.imageLib;
       else window._pendingImgLib = null;
+      // 添付ファイルを復元
+      if (Array.isArray(raw.sideMenuFiles) && raw.sideMenuFiles.length) impMenuFiles = raw.sideMenuFiles;
     } else if (Array.isArray(raw)) {
       impMail = raw;
     } else if (Object.keys(raw).every(function(k){ return raw[k] && raw[k].name && Array.isArray(raw[k].list); })) {
@@ -2935,6 +3064,17 @@ window._processImportText = function(text, noReload) {
     }
 
     if (!confirm('現在のデータをインポートしたデータで上書きします。よろしいですか？')) return;
+
+    // 添付ファイルを先に IDB へ保存（idbSaveMenuFile は common-utils.js が提供）
+    if (impMenuFiles && window.idbSaveMenuFile) {
+      var saveAll = impMenuFiles.map(function(f) { return window.idbSaveMenuFile(f); });
+      Promise.all(saveAll).then(function() {
+        toast('📎 添付ファイル ' + impMenuFiles.length + ' 件を復元しました');
+      }).catch(function(e) {
+        toast('⚠️ 添付ファイルの一部が復元できませんでした: ' + (e && e.message || e));
+      });
+    }
+
     applyImport(impScripts, impMail, {}, [], impHistory, impScreen);
   } catch(err) {
     toast('❌ 読み込みに失敗しました: ' + err.message);
@@ -2989,55 +3129,59 @@ function exportJSON(){
 
       Promise.all(compressPromises).then(function(imageLib) {
         _importProgressUpdate('エクスポート準備中…', 'ファイルを生成中…', 85);
-        var combined = {
-          version: 3, // v3: imageLib を別マップとして保持
-          exportedAt: new Date().toISOString(),
-          talkScripts: (window._appCache && Object.keys(window._appCache.scripts||{}).length) ? window._appCache.scripts : data,
-          mailTemplates: (window._appCache && window._appCache.mailTemplates && window._appCache.mailTemplates.length) ? window._appCache.mailTemplates : mailData,
-          screenData: cloned,   // lib:xxx 参照のまま
-          imageLib: imageLib,   // 使用画像の実データ（重複なし）
-          updateHistory: loadHistory()
-        };
-        var json = JSON.stringify(combined);
-        var sizeMB = (json.length / 1024 / 1024).toFixed(1);
-        var blob = new Blob([json], {type:'application/json'});
-        var _now = new Date();
-        var _pad = function(n){return String(n).padStart(2,'0');};
-        var _fname = _now.getFullYear()+'-'+_pad(_now.getMonth()+1)+'-'+_pad(_now.getDate())+
-                     '-'+_pad(_now.getHours())+'-'+_pad(_now.getMinutes())+'.json';
 
-        // showSaveFilePicker が使えれば admin.html 直下（同一ディレクトリ）を初期候補に
-        if (window.showSaveFilePicker) {
-          window.showSaveFilePicker({
-            suggestedName: _fname,
-            startIn: 'downloads', // file:// 環境では無視されることがあるが指定しておく
-            types: [{ description: 'JSON ファイル', accept: {'application/json': ['.json']} }]
-          }).then(function(fh) {
-            return fh.createWritable().then(function(writable) {
-              return writable.write(blob).then(function(){ return writable.close(); });
+        // sideMenuFiles（添付ファイル）もエクスポートに含める
+        var sideMenuFilesPromise = window.idbGetAllMenuFiles ? window.idbGetAllMenuFiles() : Promise.resolve([]);
+        sideMenuFilesPromise.then(function(menuFiles) {
+          var combined = {
+            version: 3, // v3: imageLib を別マップとして保持
+            exportedAt: new Date().toISOString(),
+            talkScripts: (window._appCache && Object.keys(window._appCache.scripts||{}).length) ? window._appCache.scripts : data,
+            mailTemplates: (window._appCache && window._appCache.mailTemplates && window._appCache.mailTemplates.length) ? window._appCache.mailTemplates : mailData,
+            screenData: cloned,
+            imageLib: imageLib,
+            updateHistory: loadHistory(),
+            sideMenuFiles: menuFiles || []   // ← 添付ファイル（base64含む）
+          };
+          var json = JSON.stringify(combined);
+          var sizeMB = (json.length / 1024 / 1024).toFixed(1);
+          var blob = new Blob([json], {type:'application/json'});
+          var _now = new Date();
+          var _pad = function(n){return String(n).padStart(2,'0');};
+          var _fname = _now.getFullYear()+'-'+_pad(_now.getMonth()+1)+'-'+_pad(_now.getDate())+
+                       '-'+_pad(_now.getHours())+'-'+_pad(_now.getMinutes())+'.json';
+
+          if (window.showSaveFilePicker) {
+            window.showSaveFilePicker({
+              suggestedName: _fname,
+              startIn: 'downloads',
+              types: [{ description: 'JSON ファイル', accept: {'application/json': ['.json']} }]
+            }).then(function(fh) {
+              return fh.createWritable().then(function(writable) {
+                return writable.write(blob).then(function(){ return writable.close(); });
+              });
+            }).then(function() {
+              _importProgressHide();
+              toast('📥 エクスポートしました（' + sizeMB + ' MB）');
+            }).catch(function(err) {
+              if (err && err.name === 'AbortError') { _importProgressHide(); return; }
+              _doFallbackDownload(blob, _fname, sizeMB);
             });
-          }).then(function() {
+          } else {
+            _doFallbackDownload(blob, _fname, sizeMB);
+          }
+          function _doFallbackDownload(blob, fname, sizeMB) {
+            var el = document.createElement('a');
+            el.href = URL.createObjectURL(blob);
+            el.download = fname;
+            el.style.display = 'none';
+            document.body.appendChild(el);
+            el.click();
+            setTimeout(function(){ document.body.removeChild(el); URL.revokeObjectURL(el.href); }, 100);
             _importProgressHide();
             toast('📥 エクスポートしました（' + sizeMB + ' MB）');
-          }).catch(function(err) {
-            if (err && err.name === 'AbortError') { _importProgressHide(); return; } // キャンセル
-            // showSaveFilePicker 失敗時はフォールバック
-            _doFallbackDownload(blob, _fname, sizeMB);
-          });
-        } else {
-          _doFallbackDownload(blob, _fname, sizeMB);
-        }
-        function _doFallbackDownload(blob, fname, sizeMB) {
-          var el = document.createElement('a');
-          el.href = URL.createObjectURL(blob);
-          el.download = fname;
-          el.style.display = 'none';
-          document.body.appendChild(el);
-          el.click();
-          setTimeout(function(){ document.body.removeChild(el); URL.revokeObjectURL(el.href); }, 100);
-          _importProgressHide();
-          toast('📥 エクスポートしました（' + sizeMB + ' MB）');
-        }
+          }
+        });
       });
     }).catch(function(err) {
       _importProgressHide();
@@ -3443,7 +3587,7 @@ function smSave() {
       bc.postMessage({ type: 'sideMenuUpdated', data: JSON.parse(JSON.stringify(_smData)) });
       bc.close();
     } catch(e) {}
-    toast('✅ サイドメニューを保存しました');
+    exportDataJS(true);
   });
   smRender();
 }
@@ -3726,6 +3870,80 @@ function _hrPatDelete(idx) {
   toast('🗑 パターンを削除しました');
 }
 
+// ===================================================================
+// 同期URL機能（他PCからのJSON自動取得）
+// ===================================================================
+var _syncTimer = null;
+
+function openSyncUrlModal() {
+  var url  = localStorage.getItem('syncUrl')  || '';
+  var intv = localStorage.getItem('syncInterval') || '0';
+  document.getElementById('syncUrlInput').value = url;
+  document.getElementById('syncIntervalSel').value = intv;
+  document.getElementById('syncUrlStatus').textContent = '';
+  document.getElementById('syncUrlModal').style.display = 'flex';
+}
+function closeSyncUrlModal() {
+  document.getElementById('syncUrlModal').style.display = 'none';
+}
+function saveSyncUrl() {
+  var url  = document.getElementById('syncUrlInput').value.trim();
+  var intv = document.getElementById('syncIntervalSel').value;
+  localStorage.setItem('syncUrl', url);
+  localStorage.setItem('syncInterval', intv);
+  _startSyncTimer();
+  closeSyncUrlModal();
+  toast(url ? '✅ 同期URL を保存しました' : '✅ 同期URL を解除しました');
+}
+function testSyncUrl() {
+  var url = document.getElementById('syncUrlInput').value.trim();
+  if (!url) { document.getElementById('syncUrlStatus').textContent = 'URLを入力してください'; return; }
+  document.getElementById('syncUrlStatus').textContent = '⏳ 取得中…';
+  _fetchAndImportSync(url, function(ok, msg) {
+    document.getElementById('syncUrlStatus').textContent = ok ? '✅ 成功: ' + msg : '❌ ' + msg;
+  });
+}
+function _fetchAndImportSync(url, cb) {
+  fetch(url, { cache: 'no-store' })
+    .then(function(r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.text();
+    })
+    .then(function(text) {
+      try {
+        var raw = JSON.parse(text);
+        if (!(raw && raw.talkScripts)) { cb && cb(false, 'JSONの形式が正しくありません'); return; }
+        // 自動インポート（確認ダイアログなし）
+        if (Array.isArray(raw.sideMenuFiles) && raw.sideMenuFiles.length && window.idbSaveMenuFile) {
+          Promise.all(raw.sideMenuFiles.map(function(f){ return window.idbSaveMenuFile(f); })).catch(function(){});
+        }
+        if (raw.version === 3 && Array.isArray(raw.imageLib)) window._pendingImgLib = raw.imageLib;
+        applyImport(raw.talkScripts, raw.mailTemplates, {}, [],
+          Array.isArray(raw.updateHistory) ? raw.updateHistory : null,
+          Array.isArray(raw.screenData)    ? raw.screenData    : null);
+        cb && cb(true, '取得・適用しました');
+        toast('🔄 同期URLからデータを取得しました');
+      } catch(e) { cb && cb(false, 'パース失敗: ' + e.message); }
+    })
+    .catch(function(e) { cb && cb(false, e.message); });
+}
+function _startSyncTimer() {
+  if (_syncTimer) { clearInterval(_syncTimer); _syncTimer = null; }
+  var url  = localStorage.getItem('syncUrl')  || '';
+  var intv = parseInt(localStorage.getItem('syncInterval') || '0');
+  if (!url || !intv) return;
+  _syncTimer = setInterval(function() { _fetchAndImportSync(url, null); }, intv * 1000);
+}
+// ページ読み込み時に同期URL取得を実行
+document.addEventListener('DOMContentLoaded', function() {
+  var url  = localStorage.getItem('syncUrl')  || '';
+  var intv = parseInt(localStorage.getItem('syncInterval') || '0');
+  if (url) {
+    setTimeout(function() { _fetchAndImportSync(url, null); }, 2000);
+    if (intv) _startSyncTimer();
+  }
+});
+
 function hrSave() {
   var questions = window._appCache.hearingQuestions || [];
   var policies  = window._appCache.hearingPolicies  || [];
@@ -3741,9 +3959,62 @@ function hrSave() {
       bc.close();
     } catch(e) {}
     _hrSetStatus('✅ 保存しました（質問 ' + questions.length + ' 件 / 対応方針 ' + policies.length + ' 件 / パターン ' + patterns.length + ' 件）', 'ok');
-    toast('✅ ヒアリングデータを保存しました');
+    exportDataJS(true);
   }).catch(function(e) {
     _hrSetStatus('❌ 保存失敗: ' + e.message, 'err');
+  });
+}
+
+// =============================================================================
+// data.js エクスポート
+// サイドメニュー・添付ファイル・ヒアリング・更新履歴・固定テキストを
+// data.js として出力。HTML ファイルと同じフォルダに配置で次回起動から反映。
+// =============================================================================
+function exportDataJS(silent) {
+  var sideMenuData = window._appCache.sideMenuData || window.DEFAULT_SIDE_MENU_DATA;
+
+  window.idbGetAllMenuFiles().then(function(allFiles) {
+    // 添付ファイルを { fileId: { name, mimeType, size, dataUrl, addedAt } } に変換
+    var sideMenuFiles = {};
+    (allFiles || []).forEach(function(f) {
+      sideMenuFiles[f.id] = {
+        name:     f.name,
+        mimeType: f.mimeType,
+        size:     f.size,
+        dataUrl:  f.dataUrl,
+        addedAt:  f.addedAt
+      };
+    });
+
+    var payload = {
+      generatedAt:      new Date().toISOString(),
+      sideMenuData:     sideMenuData,
+      sideMenuFiles:    sideMenuFiles,
+      hearingQuestions: window._appCache.hearingQuestions || [],
+      hearingPolicies:  window._appCache.hearingPolicies  || [],
+      hearingPatterns:  window._appCache.hearingPatterns  || [],
+      updateHistory:    loadHistory(),
+      fixedTexts:       window._appCache.fixedTexts       || {}
+    };
+
+    var js =
+      '// ツール設定ファイル — サイドメニュー・ヒアリング・更新履歴・固定テキスト\n' +
+      '// admin.html の「💾 保存して反映」で更新します。\n' +
+      '// このファイルを HTML ファイルと同じフォルダに上書き配置してください。\n' +
+      'window.APP_STATIC_DATA = ' + JSON.stringify(payload, null, 2) + ';\n';
+
+    var blob = new Blob([js], { type: 'text/javascript' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'data.js';
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function() { document.body.removeChild(a); URL.revokeObjectURL(a.href); }, 200);
+    if (!silent) toast('📥 data.js をダウンロードしました');
+    else         toast('💾 保存しました — data.js をフォルダに上書きしてください');
+  }).catch(function(err) {
+    toast('❌ data.js 出力失敗: ' + (err && err.message || err));
   });
 }
 
@@ -3899,6 +4170,7 @@ function smRender() {
               (it.fileId ? '<span style="font-size:10px;color:var(--accent);">📎</span>' : '') +
             '</div>' +
             '<button class="sm-file-attach-btn" onclick="_smAttachFileAt(event,' + si + ',' + sj + ',' + ij + ')" title="ファイルを添付">📎</button>' +
+            (it.fileId ? '<button class="sm-del-btn" style="color:var(--danger);" onclick="_smDetachFile(' + si + ',' + sj + ',' + ij + ')" title="添付ファイルを削除">🗑</button>' : '') +
             '<button class="sm-del-btn" onclick="smDelSubItem(' + si + ',' + sj + ',' + ij + ')">✕</button>' +
             '</div>';
         }).join('');
@@ -3924,6 +4196,7 @@ function smRender() {
             (it.fileId ? '<span style="position:absolute;right:4px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--accent);" title="' + _smEsc(it.fileName||'添付ファイルあり') + '">📎</span>' : '') +
           '</div>' +
           '<button class="sm-file-attach-btn" onclick="_smAttachFileAt(event,' + si + ',-1,' + ij + ')" title="ファイルを添付">📎</button>' +
+          (it.fileId ? '<button class="sm-del-btn" style="color:var(--danger);" onclick="_smDetachFile(' + si + ',-1,' + ij + ')" title="添付ファイルを削除">🗑</button>' : '') +
           '<button class="sm-del-btn" onclick="smDelItem(' + si + ',' + ij + ')">✕</button>' +
           '</div>';
       }).join('');
@@ -3968,6 +4241,27 @@ function _smAttachFileAt(event, si, sj, ij) {
   document.body.appendChild(inp); inp.click();
   setTimeout(function(){ document.body.removeChild(inp); }, 5000);
 }
+// 添付ファイルのみ削除（アイテム行自体は残す）
+function _smDetachFile(si, sj, ij) {
+  if (!confirm('添付ファイルを削除しますか？（アイテム行は残ります）')) return;
+  if (!_smData) return;
+  var it = null;
+  if (sj >= 0) {
+    it = _smData[si] && _smData[si].subSections && _smData[si].subSections[sj] && _smData[si].subSections[sj].items[ij];
+  } else {
+    it = _smData[si] && _smData[si].items && _smData[si].items[ij];
+  }
+  if (!it) return;
+  var fileId = it.fileId;
+  delete it.fileId;
+  delete it.fileName;
+  if (fileId && window.idbDeleteMenuFile) {
+    window.idbDeleteMenuFile(fileId).catch(function(){});
+  }
+  smRender();
+  toast('🗑 添付ファイルを削除しました');
+}
+
 function _smReadAndAttach(file, si, sj, ij) {
   var reader = new FileReader();
   reader.onload = function(e) {
