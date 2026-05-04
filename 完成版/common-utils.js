@@ -14,19 +14,20 @@
 
 // =============================================================================
 // ⓪ 統合 IndexedDB レイヤー
-//    全データを screenFlowDB（v4）の appData ストアで管理する。
+//    全データを screenFlowDB（v5）の appData ストアで管理する。
 //    localStorage は darkMode と hearingState のみ継続使用。
 // =============================================================================
 var _APP_IDB_INST = null;
 function _appIdbOpen() {
   if (_APP_IDB_INST) return Promise.resolve(_APP_IDB_INST);
   return new Promise(function(resolve, reject) {
-    var req = indexedDB.open('screenFlowDB', 4);
+    var req = indexedDB.open('screenFlowDB', 5);
     req.onupgradeneeded = function(e) {
       var db = e.target.result;
-      if (!db.objectStoreNames.contains('patterns'))  db.createObjectStore('patterns');
-      if (!db.objectStoreNames.contains('imageLib'))   db.createObjectStore('imageLib');
-      if (!db.objectStoreNames.contains('appData'))    db.createObjectStore('appData');
+      if (!db.objectStoreNames.contains('patterns'))      db.createObjectStore('patterns');
+      if (!db.objectStoreNames.contains('imageLib'))       db.createObjectStore('imageLib');
+      if (!db.objectStoreNames.contains('appData'))        db.createObjectStore('appData');
+      if (!db.objectStoreNames.contains('sideMenuFiles')) db.createObjectStore('sideMenuFiles');
     };
     req.onsuccess = function(e) {
       _APP_IDB_INST = e.target.result;
@@ -669,6 +670,301 @@ window.openAdminWithAuth = function () {
 };
 
 // =============================================================================
+// 添付ファイル機能 — sideMenuFiles IDB 操作
+// =============================================================================
+
+/** ファイルを IDB sideMenuFiles に保存 */
+window.idbSaveMenuFile = function(fileObj) {
+  return _appIdbOpen().then(function(db) {
+    return new Promise(function(resolve, reject) {
+      var tx  = db.transaction('sideMenuFiles', 'readwrite');
+      tx.objectStore('sideMenuFiles').put(fileObj, fileObj.id);
+      tx.oncomplete = function() { resolve(); };
+      tx.onerror    = function(e) { reject(e.target.error); };
+    });
+  });
+};
+
+/** IDB から全ファイルを取得 */
+window.idbGetAllMenuFiles = function() {
+  return _appIdbOpen().then(function(db) {
+    return new Promise(function(resolve, reject) {
+      var tx  = db.transaction('sideMenuFiles', 'readonly');
+      var req = tx.objectStore('sideMenuFiles').getAll();
+      req.onsuccess = function(e) { resolve(e.target.result || []); };
+      req.onerror   = function(e) { reject(e.target.error); };
+    });
+  });
+};
+
+/** IDB から特定ファイルを取得 */
+window.idbGetMenuFile = function(id) {
+  return _appIdbOpen().then(function(db) {
+    return new Promise(function(resolve, reject) {
+      var tx  = db.transaction('sideMenuFiles', 'readonly');
+      var req = tx.objectStore('sideMenuFiles').get(id);
+      req.onsuccess = function(e) { resolve(e.target.result || null); };
+      req.onerror   = function(e) { reject(e.target.error); };
+    });
+  });
+};
+
+/** IDB から特定ファイルを削除 */
+window.idbDeleteMenuFile = function(id) {
+  return _appIdbOpen().then(function(db) {
+    return new Promise(function(resolve, reject) {
+      var tx  = db.transaction('sideMenuFiles', 'readwrite');
+      tx.objectStore('sideMenuFiles').delete(id);
+      tx.oncomplete = function() { resolve(); };
+      tx.onerror    = function(e) { reject(e.target.error); };
+    });
+  });
+};
+
+// =============================================================================
+// 添付ファイル機能 — CSS インジェクション
+// =============================================================================
+(function() {
+  var css =
+    /* ドロップゾーン */
+    '.sm-files-dz{border:2px dashed var(--border,#dfe4ea);border-radius:8px;padding:12px;margin:8px 10px 4px;text-align:center;font-size:11px;color:var(--text3,#999);cursor:pointer;transition:border-color .15s,background .15s;}' +
+    '.sm-files-dz:hover,.sm-files-dz.drag-over{border-color:var(--accent,#3742fa);background:var(--accent-lt,#eef0ff);color:var(--accent,#3742fa);}' +
+    '.sm-files-dz-icon{font-size:20px;display:block;margin-bottom:3px;}' +
+    /* ファイルリスト */
+    '.sm-files-list{list-style:none;margin:0;padding:0 0 6px;}' +
+    '.sm-file-item{display:flex;align-items:center;gap:5px;padding:5px 10px 5px 12px;border-bottom:1px solid var(--border2,#f0f0f0);font-size:12px;}' +
+    '.sm-file-item:last-child{border-bottom:none;}' +
+    '.sm-file-icon{font-size:15px;flex-shrink:0;}' +
+    '.sm-file-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--accent,#3742fa);cursor:pointer;font-weight:600;}' +
+    '.sm-file-name:hover{text-decoration:underline;}' +
+    '.sm-file-size{font-size:10px;color:var(--text3,#999);flex-shrink:0;}' +
+    '.sm-file-del{flex-shrink:0;background:none;border:none;cursor:pointer;color:var(--text3,#999);font-size:13px;padding:2px 4px;border-radius:4px;}' +
+    '.sm-file-del:hover{color:#e74c3c;}' +
+    /* ファイルアクションモーダル */
+    '#smFileModal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9900;align-items:center;justify-content:center;}' +
+    '#smFileModal.open{display:flex;}' +
+    '.sm-file-modal-box{background:var(--surface,#fff);border-radius:14px;padding:26px 26px 20px;min-width:260px;max-width:320px;width:88%;box-shadow:0 12px 40px rgba(0,0,0,.25);}' +
+    '.sm-file-modal-title{font-size:13px;font-weight:700;color:var(--text,#2f3542);margin:0 0 5px;word-break:break-all;line-height:1.5;}' +
+    '.sm-file-modal-sub{font-size:11px;color:var(--text3,#999);margin:0 0 16px;}' +
+    '.sm-file-modal-btns{display:flex;flex-direction:column;gap:7px;}' +
+    '.sm-file-modal-btn{padding:9px 0;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;transition:opacity .15s;font-family:inherit;}' +
+    '.sm-file-modal-btn:hover{opacity:.85;}' +
+    '.sm-file-modal-btn.view{background:var(--accent,#3742fa);color:#fff;}' +
+    '.sm-file-modal-btn.dl{background:var(--surface2,#f1f2f6);color:var(--text,#2f3542);border:1px solid var(--border,#dfe4ea);}' +
+    '.sm-file-modal-btn.cancel{background:none;color:var(--text3,#999);font-weight:400;font-size:12px;padding:5px 0;}' +
+    /* PDF ビューアモーダル */
+    '#smPdfViewer{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9910;flex-direction:column;}' +
+    '#smPdfViewer.open{display:flex;}' +
+    '.sm-pdf-toolbar{height:46px;background:var(--header-bg,#2f3542);color:#fff;display:flex;align-items:center;padding:0 14px;gap:10px;flex-shrink:0;}' +
+    '.sm-pdf-toolbar-title{flex:1;font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}' +
+    '.sm-pdf-toolbar-btn{background:rgba(255,255,255,.18);border:none;color:#fff;border-radius:6px;padding:5px 11px;font-size:12px;cursor:pointer;font-weight:600;font-family:inherit;}' +
+    '.sm-pdf-toolbar-btn:hover{background:rgba(255,255,255,.28);}' +
+    '#smPdfFrame{flex:1;width:100%;border:none;background:#fff;}';
+  var el = document.createElement('style');
+  el.id = 'smFilesStyle';
+  el.textContent = css;
+  (document.head || document.documentElement).appendChild(el);
+})();
+
+// =============================================================================
+// 添付ファイル機能 — モーダル DOM 注入
+// =============================================================================
+(function() {
+  function _inject() {
+    if (!document.getElementById('smFileModal')) {
+      var m = document.createElement('div');
+      m.id = 'smFileModal';
+      m.innerHTML =
+        '<div class="sm-file-modal-box">' +
+          '<p class="sm-file-modal-title" id="smFileModalTitle"></p>' +
+          '<p class="sm-file-modal-sub"  id="smFileModalSub"></p>' +
+          '<div class="sm-file-modal-btns">' +
+            '<button class="sm-file-modal-btn view"   id="smFileModalViewBtn" onclick="window._smViewPdf()" style="display:none">🌐 ブラウザで閲覧</button>' +
+            '<button class="sm-file-modal-btn dl"     id="smFileModalDlBtn"   onclick="window._smDownloadFile()">⬇ ダウンロード</button>' +
+            '<button class="sm-file-modal-btn cancel"                         onclick="window._smCloseFileModal()">キャンセル</button>' +
+          '</div>' +
+        '</div>';
+      m.addEventListener('click', function(e){ if(e.target===m) window._smCloseFileModal(); });
+      document.body.appendChild(m);
+    }
+    if (!document.getElementById('smPdfViewer')) {
+      var v = document.createElement('div');
+      v.id = 'smPdfViewer';
+      v.innerHTML =
+        '<div class="sm-pdf-toolbar">' +
+          '<span class="sm-pdf-toolbar-title" id="smPdfViewerTitle"></span>' +
+          '<button class="sm-pdf-toolbar-btn" onclick="window._smDownloadFile()">⬇ DL</button>' +
+          '<button class="sm-pdf-toolbar-btn" onclick="window._smClosePdfViewer()">✕ 閉じる</button>' +
+        '</div>' +
+        '<iframe id="smPdfFrame" src="about:blank"></iframe>';
+      document.body.appendChild(v);
+    }
+  }
+  if (document.body) { _inject(); }
+  else { document.addEventListener('DOMContentLoaded', _inject); }
+})();
+
+// =============================================================================
+// 添付ファイル機能 — ファイルアクション
+// =============================================================================
+
+/** MIMEタイプ → アイコン */
+window._smMimeIcon = function(mime) {
+  if (!mime) return '📄';
+  if (mime === 'application/pdf') return '📕';
+  if (mime.includes('sheet') || mime.includes('excel') || mime.includes('csv')) return '📊';
+  if (mime.includes('word') || mime.includes('document')) return '📝';
+  if (mime.includes('presentation') || mime.includes('powerpoint')) return '📑';
+  if (mime.includes('image')) return '🖼️';
+  if (mime.includes('zip') || mime.includes('compressed')) return '📦';
+  return '📄';
+};
+
+/** ファイルサイズ表示 */
+window._smFormatSize = function(bytes) {
+  if (!bytes) return '';
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024*1024) return (bytes/1024).toFixed(1) + ' KB';
+  return (bytes/1024/1024).toFixed(1) + ' MB';
+};
+
+/** 現在操作中のファイル */
+window._smCurrentFile = null;
+
+/** ファイル名クリック → アクション選択モーダル */
+window._smFileAction = function(id) {
+  if (!window.idbGetMenuFile) { alert('ファイル機能が初期化されていません'); return; }
+  window.idbGetMenuFile(id).then(function(f) {
+    if (!f) { alert('ファイルが見つかりません（ID: ' + id + '）'); return; }
+    window._smCurrentFile = f;
+    var isPdf  = f.mimeType === 'application/pdf';
+    var isImg  = (f.mimeType || '').startsWith('image/');
+    var modal  = document.getElementById('smFileModal');
+    var titleEl= document.getElementById('smFileModalTitle');
+    var subEl  = document.getElementById('smFileModalSub');
+    var viewBtn= document.getElementById('smFileModalViewBtn');
+    if (!modal) return;
+    titleEl.textContent = f.name;
+    if (isPdf || isImg) {
+      subEl.textContent   = 'このファイルをどのように開きますか？';
+      viewBtn.style.display = '';
+      viewBtn.textContent = isPdf ? '🌐 ブラウザで閲覧' : '🖼️ 画像を表示';
+    } else {
+      subEl.textContent   = 'このファイルはブラウザで直接閲覧できません。ダウンロードしてください。';
+      viewBtn.style.display = 'none';
+    }
+    modal.classList.add('open');
+  }).catch(function(e) {
+    alert('ファイルの読み込みに失敗しました: ' + (e && e.message || e));
+  });
+};
+
+window._smCloseFileModal = function() {
+  var m = document.getElementById('smFileModal');
+  if (m) m.classList.remove('open');
+};
+
+window._smViewPdf = function() {
+  window._smCloseFileModal();
+  var f = window._smCurrentFile; if (!f) return;
+  var viewer = document.getElementById('smPdfViewer');
+  var frame  = document.getElementById('smPdfFrame');
+  var title  = document.getElementById('smPdfViewerTitle');
+  if (!viewer || !frame) return;
+  if (title) title.textContent = f.name;
+  frame.src = f.dataUrl;
+  viewer.classList.add('open');
+};
+
+window._smClosePdfViewer = function() {
+  var v = document.getElementById('smPdfViewer');
+  var f = document.getElementById('smPdfFrame');
+  if (v) v.classList.remove('open');
+  if (f) f.src = 'about:blank';
+};
+
+window._smDownloadFile = function() {
+  window._smCloseFileModal();
+  var f = window._smCurrentFile; if (!f) return;
+  var a = document.createElement('a');
+  a.href     = f.dataUrl;
+  a.download = f.name;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(function(){ document.body.removeChild(a); }, 100);
+};
+
+window._smDeleteFile = function(id) {
+  if (!confirm('このファイルを削除しますか？')) return;
+  window.idbDeleteMenuFile(id).then(function() {
+    window._renderSideMenuFileList();
+  });
+};
+
+// =============================================================================
+// 添付ファイル機能 — サイドメニューファイルリスト描画
+// =============================================================================
+window._renderSideMenuFileList = function() {
+  var listEl = document.getElementById('smFilesList'); if (!listEl) return;
+  window.idbGetAllMenuFiles().then(function(files) {
+    if (!files || !files.length) {
+      listEl.innerHTML = '<li style="padding:7px 14px;font-size:11px;color:var(--text3,#999)">ファイルがありません</li>';
+      return;
+    }
+    files.sort(function(a,b){ return (b.addedAt||'').localeCompare(a.addedAt||''); });
+    var _e = function(s){ return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); };
+    listEl.innerHTML = files.map(function(f) {
+      return '<li class="sm-file-item">' +
+        '<span class="sm-file-icon">' + window._smMimeIcon(f.mimeType) + '</span>' +
+        '<span class="sm-file-name" onclick="window._smFileAction(\'' + _e(f.id) + '\')" title="' + _e(f.name) + '">' + _e(f.name) + '</span>' +
+        '<span class="sm-file-size">' + window._smFormatSize(f.size) + '</span>' +
+        '<button class="sm-file-del" onclick="window._smDeleteFile(\'' + _e(f.id) + '\')" title="削除">🗑</button>' +
+      '</li>';
+    }).join('');
+  }).catch(function() {
+    listEl.innerHTML = '<li style="padding:7px 14px;font-size:11px;color:var(--text3,#999)">読み込みエラー</li>';
+  });
+};
+
+// =============================================================================
+// 添付ファイル機能 — D&D ハンドラ
+// =============================================================================
+window._smHandleDrop = function(event) {
+  event.preventDefault();
+  event.stopPropagation();
+  var files = event.dataTransfer && event.dataTransfer.files;
+  if (!files || !files.length) return;
+  Array.prototype.forEach.call(files, _smSaveFile);
+};
+
+window._smHandleFileInput = function(input) {
+  var files = input.files; if (!files || !files.length) return;
+  Array.prototype.forEach.call(files, _smSaveFile);
+  input.value = '';
+};
+
+function _smSaveFile(file) {
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var fileObj = {
+      id:       'smf_' + Date.now() + '_' + Math.random().toString(36).substr(2,6),
+      name:     file.name,
+      mimeType: file.type || _smGuessMime(file.name),
+      size:     file.size,
+      dataUrl:  e.target.result,
+      addedAt:  new Date().toISOString()
+    };
+    window.idbSaveMenuFile(fileObj);
+  };
+  reader.readAsDataURL(file);
+}
+
+function _smGuessMime(name) {
+  var ext = (name||'').split('.').pop().toLowerCase();
+  return {pdf:'application/pdf',xlsx:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',xls:'application/vnd.ms-excel',csv:'text/csv',docx:'application/vnd.openxmlformats-officedocument.wordprocessingml.document',doc:'application/msword',pptx:'application/vnd.openxmlformats-officedocument.presentationml.presentation',ppt:'application/vnd.ms-powerpoint',png:'image/png',jpg:'image/jpeg',jpeg:'image/jpeg',gif:'image/gif',zip:'application/zip',txt:'text/plain'}[ext] || 'application/octet-stream';
+}
+
+// =============================================================================
 // ⑤ サイドメニュー HTML 構築・更新履歴描画
 // =============================================================================
 window.renderHistory = function () {
@@ -793,6 +1089,9 @@ function _buildSideMenuHTML(isDark) {
           if (it.disabled) {
             return '<li><span class="sm-link-disabled">' + (it.name || '') + '<em class="sm-disabled-badge">無効</em></span></li>';
           }
+          if (it.fileId) {
+            return '<li><a href="javascript:void(0)" onclick="window._smFileAction(\'' + it.fileId.replace(/'/g,"\\'") + '\')" style="display:flex;align-items:center;gap:4px;">📎 ' + it.name + '</a></li>';
+          }
           return '<li><a href="' + (it.url || '#') + '" target="_blank">' + it.name + '</a></li>';
         }).join('');
         html += '<li class="sub-acc-item">' +
@@ -835,6 +1134,9 @@ function _buildSideMenuHTML(isDark) {
       var lis = (sec.items || []).map(function(it) {
         if (it.disabled) {
           return '<li><span class="sm-link-disabled">' + (it.name || '') + '<em class="sm-disabled-badge">無効</em></span></li>';
+        }
+        if (it.fileId) {
+          return '<li><a href="javascript:void(0)" onclick="window._smFileAction(\'' + it.fileId.replace(/'/g,"\\'") + '\')" style="display:flex;align-items:center;gap:4px;">📎 ' + it.name + '</a></li>';
         }
         return '<li><a href="' + (it.url || '#') + '" target="_blank">' + it.name + '</a></li>';
       }).join('');
@@ -1431,14 +1733,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
   var m = document.getElementById('sideMenu');
   if (m) {
-    // 現在の設定を読み込む（'1' のときのみダーク）
     var saved  = localStorage.getItem('darkMode');
-    var isDark = saved === '1'; // 要件：デフォルトはオフ（OS設定には追従しない）
+    var isDark = saved === '1';
     m.innerHTML = _buildSideMenuHTML(isDark);
     window.renderHistory();
     window.addEventListener('storage', function (e) {
       if (e.key === 'updateHistory') window.renderHistory();
-      // 他タブでサイドメニューが更新されたら即再描画
       if (e.key === 'sideMenuData') {
         var isDarkNow = localStorage.getItem('darkMode') === '1';
         m.innerHTML = _buildSideMenuHTML(isDarkNow);
@@ -1469,6 +1769,9 @@ document.addEventListener('DOMContentLoaded', function () {
 // =============================================================================
 (function () {
   function _handleDrop(e) {
+    // 添付ファイルドロップゾーン上へのドロップは無視
+    var dz = document.getElementById('smFilesDropZone');
+    if (dz && (e.target === dz || dz.contains(e.target))) return;
     e.preventDefault();
     e.stopPropagation();
     document.body.classList.remove('dnd-json-hover');
@@ -1484,7 +1787,8 @@ document.addEventListener('DOMContentLoaded', function () {
     reader.readAsText(file);
   }
   function _handleDragOver(e) {
-    // items[].type は dragover 時点で空になる場合があるため types で判定する
+    var dz = document.getElementById('smFilesDropZone');
+    if (dz && (e.target === dz || dz.contains(e.target))) return;
     var types = Array.from(e.dataTransfer.types || []);
     if (!types.includes('Files')) return;
     e.preventDefault();
