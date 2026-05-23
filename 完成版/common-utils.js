@@ -113,12 +113,18 @@ window.initAppData = function() {
     if (sd.hearingPatterns  != null) window._appCache.hearingPatterns  = sd.hearingPatterns;
     if (sd.updateHistory    != null) window._appCache.updateHistory    = sd.updateHistory;
     if (sd.fixedTexts       != null) window._appCache.fixedTexts       = sd.fixedTexts;
-    // 添付ファイルを IDB sideMenuFiles に復元（fileId をキーに保存）
     if (sd.sideMenuFiles) {
       Object.keys(sd.sideMenuFiles).forEach(function(id) {
         var f = sd.sideMenuFiles[id];
         window.idbSaveMenuFile(Object.assign({}, f, { id: id }));
       });
+    }
+  }
+  // common-utils.js 直書きの DEFAULT_UPDATE_HISTORY をキャッシュにセット
+  // （APP_STATIC_DATA が存在する場合はそちらを優先）
+  if (!window._appCache.updateHistory || !window._appCache.updateHistory.length) {
+    if (window.DEFAULT_UPDATE_HISTORY && window.DEFAULT_UPDATE_HISTORY.length) {
+      window._appCache.updateHistory = window.DEFAULT_UPDATE_HISTORY;
     }
   }
 
@@ -1054,7 +1060,10 @@ window.renderHistory = function () {
   if (!panel) return;
   var arr = window._appCache.updateHistory || [];
   if (!arr || arr.length === 0) {
-    arr = [{ id: 'h_default_1', content: '初版作成', author: '菅原', approver: '-', date: '2026/03/08' }];
+    arr = window.DEFAULT_UPDATE_HISTORY || [];
+  }
+  if (!arr || arr.length === 0) {
+    arr = [{ id: 'h_default_1', content: '初版作成', author: '-', approver: '-', date: '2026/03/08' }];
   }
   var td = function (v) {
     return '<td style="padding:6px 8px;border:1px solid var(--border,#e8eaed);text-align:center;color:var(--text,#2f3542);word-break:break-all;">' + (v || '-') + '</td>';
@@ -1078,6 +1087,13 @@ window.renderHistory = function () {
 // =============================================================================
 var SIDE_MENU_DATA_KEY = 'sideMenuData';
 
+// @@UPDATE_HISTORY_START@@
+window.DEFAULT_UPDATE_HISTORY = [
+  { id: 'h_default_1', content: '初版作成', author: '-', approver: '-', date: '2026/03/08' }
+];
+// @@UPDATE_HISTORY_END@@
+
+// @@SIDE_MENU_DATA_START@@
 // デフォルトのサイドメニューデータ（オリジナル全URL入り）
 window.DEFAULT_SIDE_MENU_DATA = [
   { id: 'linkTools', label: '🔧 ツール', type: 'links', items: [
@@ -1124,6 +1140,7 @@ window.DEFAULT_SIDE_MENU_DATA = [
     { name: '郵便局HP',               url: 'https://www.post.japanpost.jp/zipcode/index.html' }
   ]}
 ];
+// @@SIDE_MENU_DATA_END@@
 
 window.loadSideMenuData = function() {
   return window._appCache.sideMenuData || null;

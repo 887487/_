@@ -1501,13 +1501,13 @@ body.dnd-xlsx-hover::after {
           <button class="btn btn-secondary" style="font-size:11px;text-align:left;" onclick="exportIndividual('sidemenu')" title="data.js を再生成してダウンロードします">☰ サイドメニュー → data.js</button>
           <button class="btn btn-secondary" style="font-size:11px;text-align:left;" onclick="exportIndividual('history')" title="data.js を再生成してダウンロードします">📝 更新履歴 → data.js</button>
         </div>
-        <div style="font-size:10px;color:var(--text3);margin-top:6px;">※ サイドメニュー・更新履歴は data.js に書き出します。ダウンロードされたファイルを HTML と同じフォルダに上書き配置すると即時反映されます。</div>
+        <div style="font-size:10px;color:var(--text3);margin-top:6px;">※ サイドメニュー・更新履歴は common-utils.js を書き換えてダウンロードします。同フォルダに上書き配置すると即時反映されます。</div>
       </div>
 
       <!-- 個別インポート -->
       <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;">
         <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:4px;">📥 個別インポート</div>
-        <div style="font-size:10px;color:var(--text3);margin-bottom:10px;">※ サイドメニュー・更新履歴はインポート後に data.js が自動ダウンロードされます。同フォルダに上書き配置で即時反映。</div>
+        <div style="font-size:10px;color:var(--text3);margin-bottom:10px;">※ サイドメニュー・更新履歴はインポート後に common-utils.js が自動ダウンロードされます。同フォルダに上書き配置で即時反映。</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
           <label class="btn btn-secondary" style="font-size:11px;text-align:left;cursor:pointer;">
             📋 スクリプト（JSON）<input type="file" accept=".json" style="display:none" onchange="importIndividual('script',this)">
@@ -4029,22 +4029,66 @@ function exportIndividual(type) {
     _dl(JSON.stringify(obj, null, 2), 'hearing_'+_ts+'.json');
     toast('📥 ヒアリングをエクスポートしました');
   } else if (type === 'sidemenu') {
-    // サイドメニューは data.js 経由で即時反映するため exportDataJS() を使う
     var sm = _smData || window._appCache.sideMenuData || window.DEFAULT_SIDE_MENU_DATA;
     window._appCache.sideMenuData = sm;
-    window.idbSetAppData('sideMenuData', sm).then(function() {
-      exportDataJS(); // data.js を再生成してダウンロード
-    });
-    toast('📥 data.js を生成しました。同フォルダに上書き配置してください。');
+    window.idbSetAppData('sideMenuData', sm);
+    _exportToCommonUtils('sidemenu', sm);
   } else if (type === 'history') {
-    // 更新履歴も data.js 経由で即時反映するため exportDataJS() を使う
     var hist = loadHistory();
     window._appCache.updateHistory = hist;
-    window.idbSetAppData('updateHistory', hist).then(function() {
-      exportDataJS(); // data.js を再生成してダウンロード
-    });
-    toast('📥 data.js を生成しました。同フォルダに上書き配置してください。');
+    window.idbSetAppData('updateHistory', hist);
+    _exportToCommonUtils('history', hist);
   }
+}
+
+/**
+ * common-utils.js を fetch で取得し、マーカー区間を新しいデータで置換してダウンロードする。
+ * type: 'sidemenu' | 'history'
+ */
+function _exportToCommonUtils(type, newData) {
+  var startMarker = type === 'sidemenu' ? '// @@SIDE_MENU_DATA_START@@' : '// @@UPDATE_HISTORY_START@@';
+  var endMarker   = type === 'sidemenu' ? '// @@SIDE_MENU_DATA_END@@'   : '// @@UPDATE_HISTORY_END@@';
+  var newBlock;
+  if (type === 'sidemenu') {
+    newBlock = startMarker + '\n// デフォルトのサイドメニューデータ（オリジナル全URL入り）\nwindow.DEFAULT_SIDE_MENU_DATA = ' +
+               JSON.stringify(newData, null, 2) + ';\n' + endMarker;
+  } else {
+    newBlock = startMarker + '\nwindow.DEFAULT_UPDATE_HISTORY = ' +
+               JSON.stringify(newData, null, 2) + ';\n' + endMarker;
+  }
+
+  fetch('common-utils.js?_=' + Date.now())
+    .then(function(r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.text();
+    })
+    .then(function(src) {
+      var re = new RegExp(startMarker.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '[\\s\\S]*?' + endMarker.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+      if (!re.test(src)) {
+        throw new Error('common-utils.js 内にマーカーが見つかりません。ファイルが古い可能性があります。');
+      }
+      var updated = src.replace(re, newBlock);
+      var blob = new Blob([updated], { type: 'text/javascript' });
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'common-utils.js';
+      a.style.display = 'none';
+      document.body.appendChild(a); a.click();
+      setTimeout(function() { document.body.removeChild(a); URL.revokeObjectURL(a.href); }, 200);
+      toast('✅ common-utils.js をダウンロードしました。同フォルダに上書き配置してください。');
+    })
+    .catch(function(e) {
+      // fetch 失敗時（file:// 等）はスニペットをクリップボードにコピー
+      var label = type === 'sidemenu' ? 'DEFAULT_SIDE_MENU_DATA' : 'DEFAULT_UPDATE_HISTORY';
+      var snippet = newBlock;
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(snippet).then(function() {
+          toast('⚠️ common-utils.js の取得に失敗しました（' + e.message + '）。\n置換用スニペットをクリップボードにコピーしました。common-utils.js の ' + label + ' 区間を手動で置き換えてください。');
+        });
+      } else {
+        toast('⚠️ common-utils.js の取得に失敗しました: ' + e.message + '\nファイルを直接編集してください。');
+      }
+    });
 }
 
 // 個別インポート
@@ -4090,11 +4134,9 @@ function importIndividual(type, input) {
         if (!confirm('サイドメニューデータを上書きインポートします。よろしいですか？')) return;
         _smData = smImport;
         window._appCache.sideMenuData = smImport;
-        window.idbSetAppData('sideMenuData', smImport).then(function() {
-          exportDataJS(); // data.js を再生成 → 上書き配置で即時反映
-        });
+        window.idbSetAppData('sideMenuData', smImport);
         smRender();
-        toast('✅ インポートしました。ダウンロードされた data.js を同フォルダに上書き配置してください。');
+        _exportToCommonUtils('sidemenu', smImport);
         closeSaveModal();
       } else if (type === 'history') {
         var histImport = raw.updateHistory || (Array.isArray(raw) ? raw : null);
@@ -4102,12 +4144,10 @@ function importIndividual(type, input) {
         if (!confirm('更新履歴を上書きインポートします。よろしいですか？')) return;
         _saveHistory(histImport);
         window._appCache.updateHistory = histImport;
-        window.idbSetAppData('updateHistory', histImport).then(function() {
-          exportDataJS(); // data.js を再生成 → 上書き配置で即時反映
-        });
+        window.idbSetAppData('updateHistory', histImport);
         renderAdminHistoryPanel();
         if (window.renderHistory) window.renderHistory();
-        toast('✅ インポートしました。ダウンロードされた data.js を同フォルダに上書き配置してください。');
+        _exportToCommonUtils('history', histImport);
         closeSaveModal();
       }
     } catch(err) { toast('❌ 読み込みに失敗しました: ' + err.message); }
