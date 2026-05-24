@@ -994,6 +994,7 @@ body.dnd-json-hover::after {
   border-collapse: collapse;
   margin: 8px 0;
   font-size: 12px;
+  table-layout: fixed;
 }
 .step-card-body th,
 .step-card-body td {

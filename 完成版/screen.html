@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>🖥｜画面遷移</title>
+<title>画面遷移ツール</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 <script src="common-utils.js"></script>
@@ -293,7 +293,7 @@ html[data-theme="dark"] .pv-mail-btn { color: #f0a060; border-color: #c06820; }
 html[data-theme="dark"] .pv-mail-btn:hover { background: rgba(230,126,34,.25); }
 .pv-hs { position: absolute; border: 2px solid var(--accent); background: rgba(37,99,235,.10); border-radius: 2px; cursor: pointer; transition: background .1s; }
 .pv-hs:hover { background: rgba(37,99,235,.24); }
-.pv-tooltip { position: absolute; bottom: calc(100% + 4px); left: 0; background: rgba(0,0,0,.8); color: #fff; font-size: 12px; padding: 4px 7px; border-radius: 4px; white-space: pre; pointer-events: none; opacity: 0; transition: opacity .12s; z-index: 10; transform-origin: bottom left; }
+.pv-tooltip { position: absolute; bottom: calc(100% + 4px); left: 0; background: rgba(0,0,0,.8); color: #fff; font-size: 12px; padding: 4px 7px; border-radius: 4px; white-space: pre-wrap; word-break: break-word; max-width: 220px; min-width: 60px; pointer-events: none; opacity: 0; transition: opacity .12s; z-index: 10; transform-origin: bottom left; box-sizing: border-box; }
 .pv-hs:hover .pv-tooltip { opacity: 1; }
 /* 備考ラベル：ホットスポット左上に常時表示 */
 /* ── 遷移履歴サイドバー（右）── */
@@ -467,7 +467,7 @@ html[data-theme="dark"] .modal-box { background: var(--surface); border: 1px sol
 <header class="hd">
   <div class="hd-left">
     <button id="menuBtn" onclick="toggleSideMenu()">☰</button>
-    <button class="hd-title-btn" onclick="switchTab('flow')" title="フロー図へ">🖥️｜画面遷移</button>
+    <button class="hd-title-btn" onclick="switchTab('flow')" title="フロー図へ">🖥️ 画面遷移ツール</button>
     <button class="help-circle-btn" onclick="openScreenHelp()" title="使い方マニュアル">?</button>
   </div>
   <div class="hd-center">
@@ -1100,6 +1100,13 @@ function renderSidebar() {
     }
   }
 
+  // 画像が0件のパターンは表示しない
+  displayPatterns = displayPatterns.filter(p => p.screens.length > 0);
+  if (!displayPatterns.length) {
+    list.innerHTML = '<div style="padding:14px;color:var(--text3,#aaa);font-size:12px;">表示できるパターンがありません</div>';
+    return;
+  }
+
   // アコーディオン展開状態を保存（再描画時に維持）
   const openSet = new Set();
   list.querySelectorAll('.sb-acc-body.open').forEach(function(body) {
@@ -1154,7 +1161,7 @@ function renderSidebar() {
              tabindex="0" role="button">
           <span class="sb-acc-arrow${isOpen ? '" style="transform:rotate(90deg)' : ''}">▶</span>
           <span class="sb-cat-dot" style="background:${color}"></span>
-          <span class="sb-acc-label">${esc(p.name)}<span class="sb-acc-count">（${p.screens.length}件）</span></span>
+          <span class="sb-acc-label" onclick="event.stopPropagation();startPreviewFromSidebar('${p.screens[0].id}','${p.id}');sbFocusSet('scrHdr_${p.id}')" style="cursor:pointer;flex:1;">${esc(p.name)}<span class="sb-acc-count">（${p.screens.length}件）</span></span>
         </div>
         <div class="sb-acc-body${isOpen ? ' open' : ''}">
           ${emptyMsg}
@@ -1371,6 +1378,12 @@ function renderPvCanvas(screen) {
       const label = document.getElementById('pvZoomLabel');
       if (label) label.textContent = Math.round(_pvZoom * 100) + '%';
       document.getElementById('pvZoomCtrl').style.display = 'flex';
+      // ⑤ ツールチップのスケール逆補正（画像サイズに依存しない固定表示）
+      const inv = 1 / _pvZoom;
+      canvas.querySelectorAll('.pv-tooltip').forEach(t => {
+        t.style.transform = `scale(${inv})`;
+        t.style.transformOrigin = 'bottom left';
+      });
     };
     img.src = src;
   });
