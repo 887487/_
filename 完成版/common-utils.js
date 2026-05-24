@@ -1257,7 +1257,7 @@ window.DEFAULT_SIDE_MENU_DATA = [
             "url": "file://tohoku/share/拠点/仙台青葉/00_事業所/NGH/業務資料/マニュアル関連/【NGH】事業所紹介_20260401.pdf"
           },
           {
-            "name": "CMマニュアル",
+            "name": "【NGH】CMマニュアル",
             "url": "file://tohoku/share/拠点/仙台青葉/00_事業所/NGH/業務資料/マニュアル関連/【NGH】CMマニュアル_20260430.pdf"
           },
           {
@@ -1304,6 +1304,10 @@ window.DEFAULT_SIDE_MENU_DATA = [
       {
         "name": "郵便局HP",
         "url": "https://www.post.japanpost.jp/zipcode/index.html"
+      },
+      {
+        "name": "e-typing",
+        "url": "https://www.e-typing.ne.jp/roma/check/"
       }
     ]
   }
@@ -1406,7 +1410,7 @@ function _buildSideMenuHTML(isDark) {
           return '<li><a href="javascript:void(0)" onclick="window._smFileAction(\'' + it.fileId.replace(/'/g,"\\'") + '\')" style="display:flex;align-items:center;gap:4px;">📎 ' + it.name + '</a></li>';
         }
         var manualBtn = (it.manualUrl) ?
-          '<a href="' + (it.manualUrl||'')+'" target="_blank" title="マニュアルをブラウザで閲覧" style="border:1px solid var(--accent,#4361ee);border-radius:4px;color:var(--accent,#4361ee);font-size:10px;padding:1px 6px;line-height:1.5;flex-shrink:0;white-space:nowrap;text-decoration:none;background:none;">📕 マニュアル</a>' : '';
+          '<a href="' + (it.manualUrl||'')+'" target="_blank" title="マニュアルをブラウザで閲覧" style="border:1px solid var(--accent,#4361ee);border-radius:4px;color:var(--accent,#4361ee);font-size:10px;padding:1px 6px;line-height:1.5;flex-shrink:0;white-space:nowrap;text-decoration:none;background:none;">📕 マニュアル</a>　' : '';
         return '<li style="display:flex;align-items:center;gap:4px;">' + '<a href="' + (it.url || '#') + '" target="_blank" style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + it.name + '</a>' + manualBtn + '</li>';
       }).join('');
       html += '<div class="side-section"><div class="side-section-header" onclick="toggleAccordion(\'' + secId + '\')">' +
