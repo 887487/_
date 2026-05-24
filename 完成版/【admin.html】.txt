@@ -1,0 +1,56 @@
+【ヒアリングチェックシート】
+	　値を復元する
+
+【admin.html】
+	データの個別エクスポート、個別インポート、統合エクスポートに対応　…スクリプト(json)／メール(json)／画面遷移(json)／ヒアリング(json)／サイドメニュー(js)／更新履歴(js)
+
+【サイドメニュー】
+	添付されているExcelファイルのDLボタンを表示
+
+--------------------------------------------------
+
+🔧 ツール
+	Genesys（https://login.mypurecloud.jp/#/authenticate-adv/org/tci-gp1）
+	Trans-CRM（https://ctssvr501.cloud.contact-link.jp/cts_nhk_net/login/index.php）
+	LINE WORKS（https://talk.worksmobile.com/#/）
+	対話要約AI（https://tci-dcc-support-summaryai02.spiral-site.com/summary_nhk）
+	SpeechVisualizer（http://tci-ami-web16/SpeechVisualizer/）
+	新Transpeech（https://transpeech.jp/login）
+	
+📄 資料
+	NHKONE 関連資料
+		コールセンターについて（file://tohoku/share/拠点/仙台青葉/00_事業所/NGH/業務資料/マニュアル関連/NHK ONE 関連資料/【NHK ONE】コールセンターについて_20260410.pdf）
+		サービス概要・世帯での利用（file://tohoku/share/拠点/仙台青葉/00_事業所/NGH/業務資料/マニュアル関連/NHK ONE 関連資料/【NHK ONE】サービス概要・世帯での利用_20250908.pdf）
+		学校での利用（file://tohoku/share/拠点/仙台青葉/00_事業所/NGH/業務資料/マニュアル関連/NHK ONE 関連資料/【NHK ONE】学校での利用_20260102.pdf）
+		事業での利用（file://tohoku/share/拠点/仙台青葉/00_事業所/NGH/業務資料/マニュアル関連/NHK ONE 関連資料/【NHK ONE】事業での利用_20250904.pdf）
+		ユーザーお困りポイント（file://tohoku/share/拠点/仙台青葉/00_事業所/NGH/業務資料/マニュアル関連/NHK ONE 関連資料/【世帯アカウント】ユーザーお困りポイント_20250908.pdf）
+		アカウント登録導線説明資料（file://tohoku/share/拠点/仙台青葉/00_事業所/NGH/業務資料/マニュアル関連/NHK ONE 関連資料/【NHK ONE】アカウント登録導線説明資料.pdf）
+		受信料アカウント全国説明会資料（file://tohoku/share/拠点/仙台青葉/00_事業所/NGH/業務資料/マニュアル関連/NHK ONE 関連資料/【確定版】20251110_受信料アカウント全国説明会資料_1117修正.pdf）
+		J→S転送対応フロー（file://tohoku/share/拠点/仙台青葉/00_事業所/NGH/業務資料/マニュアル関連/NHK ONE 関連資料/S⇔J転送/J→S転送受け/【NGH版】J→S転送受けフロー_20260520.pdf）
+		S→J転送対応フロー（file://tohoku/share/拠点/仙台青葉/00_事業所/NGH/業務資料/マニュアル関連/NHK ONE 関連資料/S⇔J転送/S→J転送/【NGH用】S→J転送対応フロー_20260520.pdf）
+		PW+ログインID忘れのユーザー対応（file://tohoku/share/拠点/仙台青葉/00_事業所/NGH/業務資料/マニュアル関連/NHK ONE 関連資料/【NGH版】PW+ログインID忘れのユーザー対応.pdf）
+
+	応対品質
+		クレーム対応のポイント（file://tohoku/share/拠点/仙台青葉/00_事業所/NGH/業務資料/マニュアル関連/応対品質/クレーム対応のポイント.pdf）
+		わかりやすい伝え方・話し方（ロジカルシンキング）（file://tohoku/share/拠点/仙台青葉/00_事業所/NGH/業務資料/マニュアル関連/応対品質/わかりやすい伝え方・話し方（ロジカルシンキング）.pdf）
+		高齢者対応（file://tohoku/share/拠点/仙台青葉/00_事業所/NGH/業務資料/マニュアル関連/応対品質/高齢者対応.pdf）
+
+	研修
+		【NGH】事業所紹介（file://tohoku/share/拠点/仙台青葉/00_事業所/NGH/業務資料/マニュアル関連/【NGH】事業所紹介_20260401.pdf）
+		【NGH】CMマニュアル（file://tohoku/share/拠点/仙台青葉/00_事業所/NGH/業務資料/マニュアル関連/【NGH】CMマニュアル_20260430.pdf）
+		【LINE WORKS】インストールと活用方法（file://tohoku/share/拠点/仙台青葉/00_事業所/NGH/業務資料/マニュアル関連/各種ツール/【LINE WORKS】インストールと活用方法.pdf）
+		【NGH】Genesys Cloud利用マニュアル（file://tohoku/share/拠点/仙台青葉/00_事業所/NGH/業務資料/マニュアル関連/各種ツール/【NGH】Genesys Cloud利用マニュアル_20251029.pdf）
+		【NGH】対話要約AIマニュアル（file://tohoku/share/拠点/仙台青葉/00_事業所/NGH/業務資料/マニュアル関連/各種ツール/【NGH】対話要約AIマニュアル_20250819.pdf）
+		【trans-CRM】利用マニュアル（file://tohoku/share/拠点/仙台青葉/00_事業所/NGH/業務資料/マニュアル関連/各種ツール/【trans-CRM】利用マニュアル_20260410.pdf）
+		【transpeech】AmiVoice Operator Agent利用マニュアル（file://tohoku/share/拠点/仙台青葉/00_事業所/NGH/業務資料/マニュアル関連/各種ツール/【transpeech】AmiVoice Operator Agent利用マニュアル.pdf）
+		【新transpeech】マニュアル（file://tohoku/share/拠点/仙台青葉/00_事業所/NGH/業務資料/マニュアル関連/各種ツール/【新transpeech】マニュアル_20260317_軽量版.pdf）
+
+🌐 関連サイト
+	NHK HP（https://www.nhk.or.jp/）
+	NHKONEインフォメーション（https://www.nhk.or.jp/nhkone/）
+	ヘルプセンター（https://www.nhk.or.jp/nhkone/help/）
+	NHK for school（https://www.nhk.or.jp/school/）
+	全国のNHK放送局（https://www.nhk.or.jp/info/pr/nationwide-nhk/）
+	各放送局営業窓口一覧（https://www.nhk-cs.jp/jushinryo/menjo/window.html
+	学校コード検索HP（https://edu-data.jp/）
+	郵便局HP（https://www.post.japanpost.jp/zipcode/index.html）
