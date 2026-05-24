@@ -120,11 +120,25 @@ window.initAppData = function() {
       });
     }
   }
-  // common-utils.js 直書きの DEFAULT_UPDATE_HISTORY をキャッシュにセット
-  // （APP_STATIC_DATA が存在する場合はそちらを優先）
+  // common-utils.js 直書きのデフォルト値をキャッシュにセット（APP_STATIC_DATA優先）
   if (!window._appCache.updateHistory || !window._appCache.updateHistory.length) {
     if (window.DEFAULT_UPDATE_HISTORY && window.DEFAULT_UPDATE_HISTORY.length) {
       window._appCache.updateHistory = window.DEFAULT_UPDATE_HISTORY;
+    }
+  }
+  if (!window._appCache.hearingQuestions || !window._appCache.hearingQuestions.length) {
+    if (window.DEFAULT_HEARING_QUESTIONS && window.DEFAULT_HEARING_QUESTIONS.length) {
+      window._appCache.hearingQuestions = window.DEFAULT_HEARING_QUESTIONS;
+    }
+  }
+  if (!window._appCache.hearingPolicies || !window._appCache.hearingPolicies.length) {
+    if (window.DEFAULT_HEARING_POLICIES && window.DEFAULT_HEARING_POLICIES.length) {
+      window._appCache.hearingPolicies = window.DEFAULT_HEARING_POLICIES;
+    }
+  }
+  if (!window._appCache.hearingPatterns || !window._appCache.hearingPatterns.length) {
+    if (window.DEFAULT_HEARING_PATTERNS && window.DEFAULT_HEARING_PATTERNS.length) {
+      window._appCache.hearingPatterns = window.DEFAULT_HEARING_PATTERNS;
     }
   }
 
@@ -471,7 +485,8 @@ function _processImportText(text, noReload) {
               imported.mail    = true;
               raw = Object.assign({}, raw, { talkScripts: mergedScripts, mailTemplates: mergedMail });
 
-              // 画面遷移
+              // 画面遷移：IDB書き込み完了後にbroadcast（screen.htmlへの即時反映）
+              var screenSavePromise = Promise.resolve();
               if ((raw.version === 2 || raw.version === 3) && Array.isArray(raw.screenData)) {
                 var curScreenData = null;
                 try {
@@ -485,9 +500,16 @@ function _processImportText(text, noReload) {
                 imported.screen = true;
                 imported.screenData = mergedScreen;
                 raw = Object.assign({}, raw, { screenData: mergedScreen });
+                if (typeof idbSetScreenData === 'function') {
+                  screenSavePromise = idbSetScreenData(mergedScreen).then(function() {
+                    try { var _bsc=new BroadcastChannel('tool_data_update'); _bsc.postMessage({type:'screenDataUpdated',ts:Date.now()}); _bsc.close(); } catch(e) {}
+                  }).catch(function() {
+                    try { var _bsc=new BroadcastChannel('tool_data_update'); _bsc.postMessage({type:'screenDataUpdated',ts:Date.now()}); _bsc.close(); } catch(e) {}
+                  });
+                }
               }
 
-              // v3: imageLib を IDB に直接保存（idbSetScreenData 非依存）
+              // v3: imageLib を IDB に直接保存
               if (raw.version === 3 && Array.isArray(raw.imageLib) && raw.imageLib.length) {
                 _saveImageLibToIdb(raw.imageLib);
               }
@@ -504,21 +526,19 @@ function _processImportText(text, noReload) {
                 imported.history = true;
               }
 
-              // ヒアリング
-              if (Array.isArray(raw.hearingQuestions)) { window._appCache.hearingQuestions = raw.hearingQuestions; window.idbSetAppData('hearingQuestions', raw.hearingQuestions); }
-              if (Array.isArray(raw.hearingPolicies))  { window._appCache.hearingPolicies  = raw.hearingPolicies;  window.idbSetAppData('hearingPolicies',  raw.hearingPolicies); }
-              if (Array.isArray(raw.hearingPatterns))  { window._appCache.hearingPatterns  = raw.hearingPatterns;  window.idbSetAppData('hearingPatterns',  raw.hearingPatterns); }
-
-              // 全タブに一括通知
-              _broadcastAllDataUpdated();
+              // スクリプト・メール を他タブへ通知
+              try { var _bcs3=new BroadcastChannel('tool_data_update'); _bcs3.postMessage({type:'scriptsUpdated',ts:Date.now()}); _bcs3.close(); } catch(e) {}
+              try { var _bcm=new BroadcastChannel('tool_data_update'); _bcm.postMessage({type:'mailDataUpdated',ts:Date.now()}); _bcm.close(); } catch(e) {}
 
               _importProgressUpdate('データを反映中…', '', 80);
-              setTimeout(function () {
-                try {
-                  if (noReload) { _applyImportedDataToPage(imported, raw); } else { location.reload(); }
-                } catch(e) { console.error('applyImport error:', e); }
-                _importProgressHide();
-              }, 0);
+              screenSavePromise.then(function() {
+                setTimeout(function () {
+                  try {
+                    if (noReload) { _applyImportedDataToPage(imported, raw); } else { location.reload(); }
+                  } catch(e) { console.error('applyImport error:', e); }
+                  _importProgressHide();
+                }, 0);
+              });
             } catch(err2) { _importProgressHide(); alert('結合処理に失敗しました: ' + err2.message); }
           }, 0);
         }
@@ -1140,6 +1160,63 @@ window.DEFAULT_UPDATE_HISTORY = [
 ];
 // @@UPDATE_HISTORY_END@@
 
+// @@HEARING_START@@
+window.DEFAULT_HEARING_QUESTIONS = [
+  {id:'q_usage', label:'用途', field:'usage', type:'str',
+   options:[{l:'世帯',v:'世帯'},{l:'学校',v:'学校'},{l:'事業',v:'事業'}],
+   showIf:[], builtin:true, enabled:true,
+   resets:['isMigration','oldPlusId','migMailConfirmed','migMailUsable','isAccountPerson','sAccountCreated','authCodeIssue','authCodeResult','jAccountCreated','jAuthCodeIssue','sjLinked','sjLoginlessResult']},
+  {id:'q_isMigration', label:'移行対象者ですか？', field:'isMigration', type:'bool',
+   trueLabel:'はい', falseLabel:'いいえ',
+   showIf:[[{field:'usage',op:'eq',value:'世帯'}]], builtin:true, enabled:true,
+   resets:['oldPlusId','migMailConfirmed','migMailUsable','sAccountCreated','authCodeIssue','authCodeResult','jAccountCreated','jAuthCodeIssue','sjLinked','sjLoginlessResult']},
+  {id:'q_oldPlusId', label:'2025/8/15時点で旧プラスのIDは発行されていましたか？', field:'oldPlusId', type:'bool',
+   trueLabel:'はい(わからない)', falseLabel:'いいえ',
+   showIf:[[{field:'usage',op:'eq',value:'世帯'},{field:'isMigration',op:'true'}]], builtin:true, enabled:true, resets:['migMailConfirmed','migMailUsable']},
+  {id:'q_migMailConfirmed', label:'7月/9月/10月に送信している移行案内メールは確認されていますか？', field:'migMailConfirmed', type:'bool',
+   trueLabel:'はい', falseLabel:'いいえ(わからない)',
+   showIf:[[{field:'usage',op:'eq',value:'世帯'},{field:'isMigration',op:'true'},{field:'oldPlusId',op:'true'}]], builtin:true, enabled:true, resets:['migMailUsable']},
+  {id:'q_migMailUsable', label:'移行案内メールを受信しているメールアドレスは現在も使用可能ですか？', field:'migMailUsable', type:'bool',
+   trueLabel:'はい', falseLabel:'いいえ',
+   showIf:[[{field:'usage',op:'eq',value:'世帯'},{field:'isMigration',op:'true'},{field:'oldPlusId',op:'true'},{field:'migMailConfirmed',op:'true'}]], builtin:true, enabled:true, resets:[]},
+  {id:'q_isAccountPerson', label:'入電者はアカウント担当者ですか？', field:'isAccountPerson', type:'bool',
+   trueLabel:'はい', falseLabel:'いいえ',
+   showIf:[[{field:'usage',op:'in',value:'学校,事業'}]], builtin:true, enabled:true,
+   resets:['sAccountCreated','authCodeIssue','authCodeResult','jAccountCreated','jAuthCodeIssue','sjLinked','sjLoginlessResult']},
+  {id:'q_sAccountCreated', label:'Sアカは作成済みですか？', field:'sAccountCreated', type:'bool',
+   trueLabel:'はい', falseLabel:'いいえ',
+   showIf:[[{field:'usage',op:'notnull'}]], builtin:true, enabled:true,
+   resets:['authCodeIssue','authCodeResult','jAccountCreated','jAuthCodeIssue','sjLinked','sjLoginlessResult']},
+  {id:'q_authCodeIssue', label:'認証コード未着ですか？（Sアカいいえ時）', field:'authCodeIssue', type:'str',
+   options:[{l:'移行エラーメール受信',v:'移行エラーメール受信'},{l:'新規エラーメール受信',v:'新規エラーメール受信'},{l:'メール受信なし',v:'メール受信なし'}],
+   showIf:[[{field:'sAccountCreated',op:'false'}]], builtin:true, enabled:true, resets:['authCodeResult']},
+  {id:'q_authCodeResult', label:'PWをお忘れの方はこちらから認証コードが届くか（Sアカ）', field:'authCodeResult', type:'str',
+   options:[{l:'認証コード受信',v:'認証コード受信'},{l:'認証コード未着(任意情報なし)',v:'認証コード未着(任意情報なし)'},{l:'認証コード未着(任意情報あり)',v:'認証コード未着(任意情報あり)'}],
+   showIf:[[{field:'authCodeIssue',op:'in',value:'移行エラーメール受信,新規エラーメール受信'}]], builtin:true, enabled:true, resets:[]},
+  {id:'q_sjLinked', label:'S-J連携済みですか？', field:'sjLinked', type:'str',
+   options:[{l:'連携済み',v:'連携済み'},{l:'未連携',v:'未連携'},{l:'未確認（再連携が必要です）',v:'再連携必要'},{l:'ログイン不可',v:'ログイン不可'}],
+   showIf:[[{field:'usage',op:'eq',value:'世帯'},{field:'sAccountCreated',op:'true'}]], builtin:true, enabled:true,
+   resets:['jAccountCreated','jAuthCodeIssue','sjLoginlessResult']},
+  {id:'q_sjLoginlessResult', label:'PWをお忘れの方はこちらから認証コードが届くか（ログイン不可）', field:'sjLoginlessResult', type:'str',
+   options:[{l:'認証コード受信',v:'認証コード受信'},{l:'認証コード未着(任意情報なし)',v:'認証コード未着(任意情報なし)'},{l:'認証コード未着(任意情報あり)',v:'認証コード未着(任意情報あり)'}],
+   showIf:[[{field:'usage',op:'eq',value:'世帯'},{field:'sAccountCreated',op:'true'},{field:'sjLinked',op:'eq',value:'ログイン不可'}]], builtin:true, enabled:true, resets:[]},
+  {id:'q_jAccountCreated', label:'Jアカは作成済みですか？', field:'jAccountCreated', type:'bool',
+   trueLabel:'はい', falseLabel:'いいえ',
+   showIf:[
+     [{field:'usage',op:'eq',value:'世帯'},{field:'sAccountCreated',op:'true'},{field:'isMigration',op:'true'},{field:'oldPlusId',op:'true'},{field:'migMailConfirmed',op:'true'},{field:'migMailUsable',op:'true'},{field:'sjLinked',op:'in',value:'未連携,再連携必要'}],
+     [{field:'usage',op:'eq',value:'世帯'},{field:'sAccountCreated',op:'true'},{field:'isMigration',op:'neq',value:'true'},{field:'sjLinked',op:'in',value:'未連携,再連携必要'}]
+   ], builtin:true, enabled:true, resets:['jAuthCodeIssue']},
+  {id:'q_jAuthCodeIssue', label:'認証コード未着ですか？（Jアカいいえ時）', field:'jAuthCodeIssue', type:'str',
+   options:[{l:'Jアカ重複メール受信',v:'Jアカ重複メール受信'},{l:'メール受信なし',v:'メール受信なし'}],
+   showIf:[
+     [{field:'usage',op:'eq',value:'世帯'},{field:'sAccountCreated',op:'true'},{field:'isMigration',op:'true'},{field:'oldPlusId',op:'true'},{field:'migMailConfirmed',op:'true'},{field:'migMailUsable',op:'true'},{field:'sjLinked',op:'in',value:'未連携,再連携必要'},{field:'jAccountCreated',op:'false'}],
+     [{field:'usage',op:'eq',value:'世帯'},{field:'sAccountCreated',op:'true'},{field:'isMigration',op:'neq',value:'true'},{field:'sjLinked',op:'in',value:'未連携,再連携必要'},{field:'jAccountCreated',op:'false'}]
+   ], builtin:true, enabled:true, resets:[]}
+];
+window.DEFAULT_HEARING_POLICIES  = [];
+window.DEFAULT_HEARING_PATTERNS  = [];
+// @@HEARING_END@@
+
 // @@SIDE_MENU_DATA_START@@
 // デフォルトのサイドメニューデータ（オリジナル全URL入り）
 window.DEFAULT_SIDE_MENU_DATA = [
@@ -1406,8 +1483,8 @@ function _buildSideMenuHTML(isDark) {
           return '<li><a href="javascript:void(0)" onclick="window._smFileAction(\'' + it.fileId.replace(/'/g,"\\'") + '\')" style="display:flex;align-items:center;gap:4px;">📎 ' + it.name + '</a></li>';
         }
         var manualBtn = (it.manualUrl) ?
-          ' <button onclick="window._smOpenManualPdf(event,\'' + (it.manualUrl||'').replace(/'/g,"\\'") + '\')" title="マニュアルをブラウザで閲覧" style="background:none;border:1px solid var(--accent,#4361ee);border-radius:4px;color:var(--accent,#4361ee);font-size:10px;padding:1px 5px;cursor:pointer;font-family:inherit;line-height:1.4;flex-shrink:0;vertical-align:middle;">📕 マニュアル</button>' : '';
-        return '<li style="display:flex;align-items:center;gap:4px;"><a href="' + (it.url || '#') + '" target="_blank" style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + it.name + '</a>' + manualBtn + '</li>';
+          ' <button onclick="window._smOpenManualPdf(event,\'' + (it.manualUrl||'').replace(/'/g,"\\'") + '\')" title="マニュアルをブラウザで閲覧" style="background:none;border:1px solid var(--accent,#4361ee);border-radius:4px;color:var(--accent,#4361ee);font-size:10px;padding:1px 5px;cursor:pointer;font-family:inherit;line-height:1.4;flex-shrink:0;margin-left:auto;">📕</button>' : '';
+        return '<li style="display:flex;align-items:center;gap:4px;"><a href="' + (it.url || '#') + '" target="_blank" style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + it.name + '</a>' + manualBtn + '</li>';
       }).join('');
       html += '<div class="side-section"><div class="side-section-header" onclick="toggleAccordion(\'' + secId + '\')">' +
         sec.label + ' <span class="arrow" style="display:inline-block;transition:transform .2s">▶</span></div>' +
@@ -1616,22 +1693,45 @@ function calcPolicies(s) {
 
 // ===================================================================
 // ヒアリング質問定義（データ駆動式）
-// localStorage に 'hearingQuestionsDef_v1' があればそちらを使用する。
-// デフォルト項目数 = 0（admin.htmlで追加管理）
+// common-utils.js の @@HEARING_START@@ マーカー内の DEFAULT_HEARING_QUESTIONS を優先。
+// admin.html で編集した内容は localStorage に上書き保存される。
 // ===================================================================
-var HEARING_QUESTIONS_DEFAULT = [];  // jsファイルに直書き管理。admin.html の「📝 jsファイルに書き込む」で更新する。
-var HEARING_POLICIES_DEFAULT  = [];  // jsファイルに直書き管理。admin.html の「📝 jsファイルに書き込む」で更新する。
-// localStorage キーは後方互換のため定義のみ残す（読み書きには使用しない）
+// HEARING_QUESTIONS_DEFAULT は @@HEARING_START@@ ブロックで定義された window.DEFAULT_HEARING_QUESTIONS を参照
+var HEARING_QUESTIONS_DEFAULT = window.DEFAULT_HEARING_QUESTIONS || [];
+var HEARING_POLICIES_DEFAULT  = window.DEFAULT_HEARING_POLICIES  || [];
 var HEARING_QUESTIONS_KEY = 'hearingQuestionsDef_v1';
 
 function _hrQuestionsLoad() {
-  return JSON.parse(JSON.stringify(window._appCache.hearingQuestions || []));
+  try {
+    var s = localStorage.getItem(HEARING_QUESTIONS_KEY);
+    if (!s) return null;
+    var saved = JSON.parse(s);
+    var base = window.DEFAULT_HEARING_QUESTIONS || HEARING_QUESTIONS_DEFAULT;
+    // 組み込み質問は DEFAULT をベースに localStorage の enabled/label/options/showIf を上書き
+    var result = base.map(function(def) {
+      var ov = saved.find(function(x){ return x.id === def.id; });
+      if (ov) return Object.assign({}, def, {enabled: ov.enabled, label: ov.label, options: ov.options || def.options, showIf: ov.showIf || def.showIf});
+      return Object.assign({}, def);
+    });
+    // カスタム質問（DEFAULT にない項目）を追記
+    saved.forEach(function(ov) {
+      if (!base.find(function(x){ return x.id === ov.id; })) result.push(ov);
+    });
+    return result;
+  } catch(e) { return null; }
 }
 function _hrQuestionsSave(list) {
-  window._appCache.hearingQuestions = JSON.parse(JSON.stringify(list || []));
-  window.idbSetAppData('hearingQuestions', window._appCache.hearingQuestions);
+  var toSave = list.map(function(q) {
+    return {id:q.id, enabled:q.enabled, label:q.label, options:q.options||[], showIf:q.showIf||[], builtin:!!q.builtin, field:q.field, type:q.type, trueLabel:q.trueLabel||'はい', falseLabel:q.falseLabel||'いいえ', resets:q.resets||[]};
+  });
+  try { localStorage.setItem(HEARING_QUESTIONS_KEY, JSON.stringify(toSave)); } catch(e) {}
+  // IDB にも同期（admin → 他ページへの反映）
+  if (window._appCache) window._appCache.hearingQuestions = list;
+  if (window.idbSetAppData) window.idbSetAppData('hearingQuestions', list);
 }
-function _hrGetQuestions() { return _hrQuestionsLoad(); }
+function _hrGetQuestions() {
+  return _hrQuestionsLoad() || (window.DEFAULT_HEARING_QUESTIONS && window.DEFAULT_HEARING_QUESTIONS.length ? window.DEFAULT_HEARING_QUESTIONS.slice() : HEARING_QUESTIONS_DEFAULT.slice());
+}
 
 function _hrEvalShowIf(showIf, s) {
   if (!showIf || !showIf.length) return true;

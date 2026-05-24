@@ -1098,11 +1098,9 @@ body.dnd-xlsx-hover::after {
         <label style="font-size:11px;font-weight:700;color:var(--text2);">質問ラベル</label>
         <input id="hrQModalLabel" type="text" style="margin-top:4px;width:100%;font-size:12px;padding:6px 8px;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text);font-family:inherit;box-sizing:border-box;">
       </div>
+      <!-- フィールド名は非表示（内部IDは自動生成） -->
+      <input id="hrQModalField" type="hidden">
       <div style="display:flex;gap:8px;">
-        <div style="flex:1;">
-          <label style="font-size:11px;font-weight:700;color:var(--text2);">フィールド名（内部ID）</label>
-          <input id="hrQModalField" type="text" style="margin-top:4px;width:100%;font-size:12px;padding:6px 8px;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text);font-family:inherit;box-sizing:border-box;">
-        </div>
         <div style="flex:1;">
           <label style="font-size:11px;font-weight:700;color:var(--text2);">タイプ</label>
           <select id="hrQModalType" onchange="_hrQModalRefreshTypeUI(null)" style="margin-top:4px;width:100%;font-size:12px;padding:6px 8px;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text);font-family:inherit;box-sizing:border-box;">
@@ -1122,8 +1120,8 @@ body.dnd-xlsx-hover::after {
         <button onclick="_hrQModalAddOption()" style="margin-top:4px;font-size:10px;padding:2px 10px;border:1px solid var(--accent);border-radius:4px;background:var(--surface);cursor:pointer;color:var(--accent);font-family:inherit;">＋ 選択肢を追加</button>
       </div>
       <div>
-        <label style="font-size:11px;font-weight:700;color:var(--text2);">表示条件（複数グループはOR、グループ内はAND）</label>
-        <div style="font-size:10px;color:var(--text3);margin-bottom:6px;">条件なし = 常に表示</div>
+        <label style="font-size:11px;font-weight:700;color:var(--text2);">表示条件</label>
+        <div style="font-size:10px;color:var(--text3);margin-bottom:6px;">条件なし = 常に表示　／　グループ内 = AND（すべて一致）　／　グループ間 = OR（いずれか一致）</div>
         <div id="hrQModalConditions" style="margin-top:6px;"></div>
       </div>
     </div>
@@ -1465,7 +1463,7 @@ body.dnd-xlsx-hover::after {
 <!-- ===== 保存して反映 モーダル ===== -->
 <div id="saveModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:8500;align-items:center;justify-content:center;"
      onclick="if(event.target===this)closeSaveModal()">
-  <div style="background:var(--surface);border-radius:14px;width:min(92vw,620px);max-height:90vh;display:flex;flex-direction:column;box-shadow:0 24px 64px rgba(0,0,0,.3);overflow:hidden;">
+  <div style="background:var(--surface);border-radius:14px;width:min(92vw,560px);max-height:90vh;display:flex;flex-direction:column;box-shadow:0 24px 64px rgba(0,0,0,.3);overflow:hidden;">
     <!-- ヘッダー -->
     <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--border);flex-shrink:0;">
       <span style="font-size:15px;font-weight:700;">💾 保存して反映</span>
@@ -1473,53 +1471,47 @@ body.dnd-xlsx-hover::after {
     </div>
     <!-- ボディ -->
     <div style="flex:1;overflow-y:auto;padding:18px 20px;display:flex;flex-direction:column;gap:14px;">
-      <!-- 保存ステータス -->
       <div id="saveModalStatus" style="display:none;padding:8px 12px;border-radius:6px;font-size:12px;font-weight:600;"></div>
 
-      <!-- 統合エクスポート -->
+      <!-- エクスポート対象チェックボックス -->
       <div style="background:var(--accent-lt);border:1px solid var(--accent);border-radius:10px;padding:14px 16px;">
-        <div style="font-size:13px;font-weight:700;color:var(--accent);margin-bottom:6px;">📦 統合エクスポート（推奨）</div>
-        <div style="font-size:11px;color:var(--text3);margin-bottom:10px;">スクリプト・メール・画面遷移・ヒアリング・更新履歴・サイドメニューを1ファイルにまとめてダウンロードします。</div>
-        <button class="btn btn-primary" style="font-size:12px;" onclick="saveAndExportAll()">💾 保存 ＆ 統合エクスポート（JSON）</button>
-      </div>
+        <div style="font-size:13px;font-weight:700;color:var(--accent);margin-bottom:10px;">📦 エクスポートするデータを選択</div>
 
-      <!-- 個別エクスポート -->
-      <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;">
-        <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:10px;">📤 個別エクスポート</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-          <button class="btn btn-secondary" style="font-size:11px;text-align:left;" onclick="exportIndividual('script')">📋 スクリプト（JSON）</button>
-          <button class="btn btn-secondary" style="font-size:11px;text-align:left;" onclick="exportIndividual('mail')">✉️ メール（JSON）</button>
-          <button class="btn btn-secondary" style="font-size:11px;text-align:left;" onclick="exportIndividual('screen')">🖥 画面遷移（JSON）</button>
-          <button class="btn btn-secondary" style="font-size:11px;text-align:left;" onclick="exportIndividual('hearing')">📋 ヒアリング（JSON）</button>
-          <button class="btn btn-secondary" style="font-size:11px;text-align:left;" onclick="exportIndividual('sidemenu')" title="common-utils.js のDEFAULT_SIDE_MENU_DATAを書き換えてダウンロード">☰ サイドメニュー → common-utils.js</button>
-          <button class="btn btn-secondary" style="font-size:11px;text-align:left;" onclick="exportIndividual('history')" title="common-utils.js のDEFAULT_UPDATE_HISTORYを書き換えてダウンロード">📝 更新履歴 → common-utils.js</button>
+        <div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:6px;">JSON ファイル（スクリプト・メール・画面遷移をまとめて出力）</div>
+        <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px;padding:10px 12px;background:var(--surface);border-radius:8px;border:1px solid var(--border);">
+          <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;"><input type="checkbox" id="chkExScript"  checked style="width:14px;height:14px;cursor:pointer;"> 📋 スクリプト</label>
+          <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;"><input type="checkbox" id="chkExMail"    checked style="width:14px;height:14px;cursor:pointer;"> ✉️ メール</label>
+          <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;"><input type="checkbox" id="chkExScreen"  checked style="width:14px;height:14px;cursor:pointer;"> 🖥 画面遷移</label>
         </div>
-        <div style="font-size:10px;color:var(--text3);margin-top:6px;">※ サイドメニュー・更新履歴は common-utils.js を書き換えてダウンロードします。同フォルダに上書き配置すると即時反映されます。</div>
+
+        <div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:6px;">common-utils.js（ヒアリング・サイドメニュー・更新履歴を書き換えて出力）</div>
+        <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px;padding:10px 12px;background:var(--surface);border-radius:8px;border:1px solid var(--border);">
+          <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;"><input type="checkbox" id="chkExHearing" checked style="width:14px;height:14px;cursor:pointer;"> 📋 ヒアリング</label>
+          <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;"><input type="checkbox" id="chkExSideMenu" checked style="width:14px;height:14px;cursor:pointer;"> ☰ サイドメニュー</label>
+          <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;"><input type="checkbox" id="chkExHistory" checked style="width:14px;height:14px;cursor:pointer;"> 📝 更新履歴</label>
+          <div style="font-size:10px;color:var(--text3);margin-top:2px;">※ 3項目のうちいずれかにチェックがある場合、1つの common-utils.js にまとめて出力されます。</div>
+        </div>
+
+        <button class="btn btn-primary" style="font-size:12px;width:100%;" onclick="saveAndExportSelected()">💾 保存 ＆ チェックしたデータをエクスポート</button>
       </div>
 
-      <!-- 個別インポート -->
+      <!-- 個別インポート（スクリプト・メール・画面遷移のみ） -->
       <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;">
-        <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:4px;">📥 個別インポート</div>
-        <div style="font-size:10px;color:var(--text3);margin-bottom:10px;">※ サイドメニュー・更新履歴は JSON でインポート後に common-utils.js が自動ダウンロードされます。同フォルダに上書き配置で即時反映。</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-          <label class="btn btn-secondary" style="font-size:11px;text-align:left;cursor:pointer;">
-            📋 スクリプト（JSON）<input type="file" accept=".json" style="display:none" onchange="importIndividual('script',this)">
+        <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:4px;">📥 個別インポート（JSON）</div>
+        <div style="font-size:10px;color:var(--text3);margin-bottom:10px;">スクリプト・メール・画面遷移の JSON ファイルを個別にインポートします。</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <label class="btn btn-secondary" style="font-size:11px;cursor:pointer;flex:1;text-align:center;">
+            📋 スクリプト<input type="file" accept=".json" style="display:none" onchange="importIndividual('script',this)">
           </label>
-          <label class="btn btn-secondary" style="font-size:11px;text-align:left;cursor:pointer;">
-            ✉️ メール（JSON）<input type="file" accept=".json" style="display:none" onchange="importIndividual('mail',this)">
+          <label class="btn btn-secondary" style="font-size:11px;cursor:pointer;flex:1;text-align:center;">
+            ✉️ メール<input type="file" accept=".json" style="display:none" onchange="importIndividual('mail',this)">
           </label>
-          <label class="btn btn-secondary" style="font-size:11px;text-align:left;cursor:pointer;">
-            🖥 画面遷移（JSON）<input type="file" accept=".json" style="display:none" onchange="importIndividual('screen',this)">
+          <label class="btn btn-secondary" style="font-size:11px;cursor:pointer;flex:1;text-align:center;">
+            🖥 画面遷移<input type="file" accept=".json" style="display:none" onchange="importIndividual('screen',this)">
           </label>
-          <label class="btn btn-secondary" style="font-size:11px;text-align:left;cursor:pointer;">
-            📋 ヒアリング（JSON）<input type="file" accept=".json" style="display:none" onchange="importIndividual('hearing',this)">
-          </label>
-          <label class="btn btn-secondary" style="font-size:11px;text-align:left;cursor:pointer;" title="JSONでインポート → common-utils.js を自動生成">
-            ☰ サイドメニュー（JSON → common-utils.js）<input type="file" accept=".json" style="display:none" onchange="importIndividual('sidemenu',this)">
-          </label>
-          <label class="btn btn-secondary" style="font-size:11px;text-align:left;cursor:pointer;" title="JSONでインポート → common-utils.js を自動生成">
-            📝 更新履歴（JSON → common-utils.js）<input type="file" accept=".json" style="display:none" onchange="importIndividual('history',this)">
-          </label>
+        </div>
+        <div style="margin-top:10px;padding:8px 10px;background:var(--surface2);border-radius:6px;font-size:10px;color:var(--text3);">
+          ℹ️ ヒアリング・サイドメニュー・更新履歴は <strong>common-utils.js</strong> から自動読み込みのため個別インポート不要です。
         </div>
       </div>
     </div>
@@ -3935,12 +3927,26 @@ function closeSaveModal() {
   document.getElementById('saveModal').style.display = 'none';
 }
 
-// 統合エクスポート：元の saveAllManual と同じロジックをそのまま実行してからモーダルを閉じる
-function saveAndExportAll() {
+// チェックボックスで選択されたデータをエクスポート
+function saveAndExportSelected() {
   var st = document.getElementById('saveModalStatus');
   if (st) { st.textContent = '⏳ 保存中…'; st.style.display = 'block'; st.style.background = 'var(--accent-lt)'; st.style.color = 'var(--accent)'; st.style.border = '1px solid var(--accent)'; }
 
-  // ── _appCache を最新化 ──
+  var chkScript  = document.getElementById('chkExScript');
+  var chkMail    = document.getElementById('chkExMail');
+  var chkScreen  = document.getElementById('chkExScreen');
+  var chkHearing = document.getElementById('chkExHearing');
+  var chkSideMenu= document.getElementById('chkExSideMenu');
+  var chkHistory = document.getElementById('chkExHistory');
+
+  var doScript  = chkScript  && chkScript.checked;
+  var doMail    = chkMail    && chkMail.checked;
+  var doScreen  = chkScreen  && chkScreen.checked;
+  var doHearing = chkHearing && chkHearing.checked;
+  var doSideMenu= chkSideMenu&& chkSideMenu.checked;
+  var doHistory = chkHistory && chkHistory.checked;
+  var doCommon  = doHearing || doSideMenu || doHistory;
+
   window._appCache.scripts       = data;
   window._appCache.mailTemplates = mailData;
   window._appCache.mailCatMeta   = mailCatMeta || {cats:[],subs:{}};
@@ -3949,11 +3955,7 @@ function saveAndExportAll() {
   var hrPolicies  = window._appCache.hearingPolicies  || [];
   var hrPatterns  = window._appCache.hearingPatterns  || [];
   var smData      = _smData || window._appCache.sideMenuData;
-
-  // サイドメニュー/更新履歴の変更検知
-  var smChanged = smData && (JSON.stringify(smData) !== JSON.stringify(window.DEFAULT_SIDE_MENU_DATA));
-  var histData  = window._appCache.updateHistory || [];
-  var histChanged = histData.length > 0 && (JSON.stringify(histData) !== JSON.stringify(window.DEFAULT_UPDATE_HISTORY || []));
+  var histData    = window._appCache.updateHistory || [];
 
   Promise.all([
     window.idbSetAppData('scripts',          data),
@@ -3968,16 +3970,115 @@ function saveAndExportAll() {
     _notifyTabs();
     markClean();
     closeSaveModal();
-    exportJSON(); // 統合JSONをダウンロード
-    // 変更があれば common-utils.js も自動エクスポート
-    if (smChanged)   { setTimeout(function(){ _exportToCommonUtils('sidemenu', smData); }, 800); }
-    if (histChanged) { setTimeout(function(){ _exportToCommonUtils('history', histData); }, smChanged ? 1600 : 800); }
-    if (smChanged || histChanged) {
-      setTimeout(function(){ toast('⚠️ サイドメニュー/更新履歴の変更を検知。common-utils.js もダウンロードされます。同フォルダに上書き配置してください。'); }, 400);
+
+    // JSONエクスポート（スクリプト・メール・画面遷移）
+    if (doScript || doMail || doScreen) {
+      _exportJsonSelected(doScript, doMail, doScreen);
+    }
+    // common-utils.js エクスポート（ヒアリング・サイドメニュー・更新履歴）
+    if (doCommon) {
+      var delay = (doScript || doMail || doScreen) ? 800 : 0;
+      setTimeout(function() {
+        _exportAllToCommonUtils(
+          doHearing  ? {questions: hrQuestions, policies: hrPolicies, patterns: hrPatterns} : null,
+          doSideMenu ? smData : null,
+          doHistory  ? histData : null
+        );
+      }, delay);
     }
   }).catch(function(e) {
     if (st) { st.textContent = '❌ 保存失敗: ' + e.message; st.style.background = '#ffeaea'; st.style.color = '#c62828'; st.style.border = '1px solid #ef9a9a'; }
   });
+}
+
+// 旧 saveAndExportAll（後方互換）
+function saveAndExportAll() { saveAndExportSelected(); }
+
+/**
+ * 選択されたデータ種別でJSONをエクスポート
+ */
+function _exportJsonSelected(doScript, doMail, doScreen) {
+  var _now = new Date();
+  var _pad = function(n){return String(n).padStart(2,'0');};
+  var _ts  = _now.getFullYear()+'-'+_pad(_now.getMonth()+1)+'-'+_pad(_now.getDate())+'_'+_pad(_now.getHours())+_pad(_now.getMinutes());
+
+  if (doScreen) {
+    // 画面遷移を含む場合は既存の exportJSON() を使う（imageLib対応）
+    exportJSON();
+    return;
+  }
+  // スクリプト・メールのみ
+  var obj = { version: 1, exportedAt: new Date().toISOString() };
+  if (doScript) obj.talkScripts    = window._appCache.scripts || data;
+  if (doMail)   obj.mailTemplates  = window._appCache.mailTemplates || mailData;
+  var blob = new Blob([JSON.stringify(obj, null, 2)], {type:'application/json'});
+  var a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = (doScript && doMail ? 'all' : doScript ? 'scripts' : 'mail') + '_' + _ts + '.json';
+  a.style.display = 'none'; document.body.appendChild(a); a.click();
+  setTimeout(function(){ document.body.removeChild(a); URL.revokeObjectURL(a.href); }, 200);
+  toast('📥 JSONをエクスポートしました');
+}
+
+/**
+ * ヒアリング・サイドメニュー・更新履歴を1つの common-utils.js にまとめてエクスポート。
+ * null を渡した項目は既存の内容を保持する。
+ */
+function _exportAllToCommonUtils(hearingData, smData, histData) {
+  fetch('common-utils.js?_=' + Date.now())
+    .then(function(r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.text();
+    })
+    .then(function(src) {
+      var updated = src;
+
+      // 更新履歴
+      if (histData !== null && histData !== undefined) {
+        var startH = '// @@UPDATE_HISTORY_START@@', endH = '// @@UPDATE_HISTORY_END@@';
+        var reH = new RegExp(startH.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + '[\\s\\S]*?' + endH.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'));
+        var blockH = startH + '\nwindow.DEFAULT_UPDATE_HISTORY = ' + JSON.stringify(histData, null, 2) + ';\n' + endH;
+        if (reH.test(updated)) updated = updated.replace(reH, blockH);
+      }
+
+      // ヒアリング
+      if (hearingData !== null && hearingData !== undefined) {
+        var startHr = '// @@HEARING_START@@', endHr = '// @@HEARING_END@@';
+        var reHr = new RegExp(startHr.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + '[\\s\\S]*?' + endHr.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'));
+        var blockHr = startHr + '\nwindow.DEFAULT_HEARING_QUESTIONS = ' + JSON.stringify(hearingData.questions || [], null, 2) + ';\n' +
+          'window.DEFAULT_HEARING_POLICIES  = ' + JSON.stringify(hearingData.policies  || [], null, 2) + ';\n' +
+          'window.DEFAULT_HEARING_PATTERNS  = ' + JSON.stringify(hearingData.patterns  || [], null, 2) + ';\n' + endHr;
+        if (reHr.test(updated)) updated = updated.replace(reHr, blockHr);
+      }
+
+      // サイドメニュー
+      if (smData !== null && smData !== undefined) {
+        var startS = '// @@SIDE_MENU_DATA_START@@', endS = '// @@SIDE_MENU_DATA_END@@';
+        var reS = new RegExp(startS.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + '[\\s\\S]*?' + endS.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'));
+        var blockS = startS + '\n// デフォルトのサイドメニューデータ（オリジナル全URL入り）\nwindow.DEFAULT_SIDE_MENU_DATA = ' + JSON.stringify(smData, null, 2) + ';\n' + endS;
+        if (reS.test(updated)) updated = updated.replace(reS, blockS);
+      }
+
+      var blob = new Blob([updated], {type:'text/javascript'});
+      var a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+      a.download = 'common-utils.js'; a.style.display='none';
+      document.body.appendChild(a); a.click();
+      setTimeout(function(){ document.body.removeChild(a); URL.revokeObjectURL(a.href); }, 200);
+      toast('✅ common-utils.js をエクスポートしました。同フォルダに上書き配置してください。');
+    })
+    .catch(function(e) {
+      // fetch失敗時はクリップボードへスニペットをコピー
+      if (navigator.clipboard) {
+        var snippet = '// ヒアリング・サイドメニュー・更新履歴のスニペット\n' +
+          (histData   ? 'window.DEFAULT_UPDATE_HISTORY = ' + JSON.stringify(histData, null, 2) + ';\n' : '') +
+          (hearingData? 'window.DEFAULT_HEARING_QUESTIONS = ' + JSON.stringify(hearingData.questions||[], null, 2) + ';\n' : '') +
+          (smData     ? 'window.DEFAULT_SIDE_MENU_DATA = ' + JSON.stringify(smData, null, 2) + ';\n' : '');
+        navigator.clipboard.writeText(snippet).then(function() {
+          toast('⚠️ common-utils.js の取得失敗。スニペットをクリップボードにコピーしました。手動で common-utils.js を編集してください。');
+        });
+      } else {
+        toast('⚠️ common-utils.js の取得失敗: ' + e.message);
+      }
+    });
 }
 
 // 個別エクスポート
