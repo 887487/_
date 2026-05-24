@@ -1031,9 +1031,6 @@ body.dnd-xlsx-hover::after {
       <!-- ── ヒアリングタブ ヘッダーバー ── -->
       <div style="display:flex;align-items:center;justify-content:space-between;">
         <div style="font-size:14px;font-weight:700;color:var(--text);">📋 ヒアリング設定</div>
-        <div style="display:flex;gap:8px;">
-          <button class="btn btn-secondary" onclick="exportDataJS()" style="font-size:12px;" title="data.js にヒアリングデータを書き出します">📥 data.js を保存</button>
-        </div>
       </div>
       <div id="hrSaveStatus" style="display:none;padding:8px 12px;border-radius:6px;font-size:12px;"></div>
 
@@ -1219,7 +1216,7 @@ body.dnd-xlsx-hover::after {
 </div>
 
 <!-- ===== 画像ライブラリ（画面遷移タブ内オーバーレイパネル） ===== -->
-<div id="imgLibPanel" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.45);align-items:flex-start;justify-content:center;padding:20px 0;">
+<div id="imgLibPanel" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.45);align-items:flex-start;justify-content:center;padding-top:calc(var(--header-h, 48px) + 12px);padding-bottom:20px;">
   <div style="background:var(--surface);border-radius:14px;width:min(96vw,980px);max-height:90vh;display:flex;flex-direction:column;box-shadow:0 24px 64px rgba(0,0,0,.3);overflow:hidden;">
     <!-- ヘッダー -->
     <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 18px;border-bottom:1px solid var(--border);flex-shrink:0;background:var(--surface2);">
@@ -1395,7 +1392,6 @@ body.dnd-xlsx-hover::after {
     <div style="max-width:900px;margin:0 auto;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
         <div style="font-size:14px;font-weight:700;color:var(--text);">📝 更新履歴</div>
-        <button class="btn btn-primary" onclick="exportDataJS()" style="font-size:12px;" title="data.js に更新履歴を書き込む">💾 data.js を保存</button>
       </div>
       <div id="histWriteStatus" style="display:none;margin-bottom:12px;padding:8px 12px;border-radius:6px;font-size:12px;"></div>
       <div style="background:var(--white);border:1px solid var(--border);border-radius:10px;overflow:hidden;">
@@ -1409,9 +1405,6 @@ body.dnd-xlsx-hover::after {
     <div style="max-width:720px;margin:0 auto;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
         <div style="font-size:14px;font-weight:700;color:var(--text);">☰ サイドメニュー編集</div>
-        <div style="display:flex;gap:8px;">
-          <button class="btn btn-secondary" onclick="exportDataJS()" style="font-size:12px;" title="data.js にサイドメニューデータを書き出します">📥 data.js を保存</button>
-        </div>
       </div>
       <div id="smWriteStatus" style="display:none;margin-bottom:12px;padding:8px 12px;border-radius:6px;font-size:12px;"></div>
       <div style="font-size:11px;color:var(--text3);margin-bottom:14px;">各カテゴリ内の項目を編集できます。名前・URLをクリックして直接編集してください。</div>
@@ -1498,8 +1491,8 @@ body.dnd-xlsx-hover::after {
           <button class="btn btn-secondary" style="font-size:11px;text-align:left;" onclick="exportIndividual('mail')">✉️ メール（JSON）</button>
           <button class="btn btn-secondary" style="font-size:11px;text-align:left;" onclick="exportIndividual('screen')">🖥 画面遷移（JSON）</button>
           <button class="btn btn-secondary" style="font-size:11px;text-align:left;" onclick="exportIndividual('hearing')">📋 ヒアリング（JSON）</button>
-          <button class="btn btn-secondary" style="font-size:11px;text-align:left;" onclick="exportIndividual('sidemenu')" title="data.js を再生成してダウンロードします">☰ サイドメニュー → data.js</button>
-          <button class="btn btn-secondary" style="font-size:11px;text-align:left;" onclick="exportIndividual('history')" title="data.js を再生成してダウンロードします">📝 更新履歴 → data.js</button>
+          <button class="btn btn-secondary" style="font-size:11px;text-align:left;" onclick="exportIndividual('sidemenu')" title="common-utils.js のDEFAULT_SIDE_MENU_DATAを書き換えてダウンロード">☰ サイドメニュー → common-utils.js</button>
+          <button class="btn btn-secondary" style="font-size:11px;text-align:left;" onclick="exportIndividual('history')" title="common-utils.js のDEFAULT_UPDATE_HISTORYを書き換えてダウンロード">📝 更新履歴 → common-utils.js</button>
         </div>
         <div style="font-size:10px;color:var(--text3);margin-top:6px;">※ サイドメニュー・更新履歴は common-utils.js を書き換えてダウンロードします。同フォルダに上書き配置すると即時反映されます。</div>
       </div>
@@ -1507,7 +1500,7 @@ body.dnd-xlsx-hover::after {
       <!-- 個別インポート -->
       <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;">
         <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:4px;">📥 個別インポート</div>
-        <div style="font-size:10px;color:var(--text3);margin-bottom:10px;">※ サイドメニュー・更新履歴はインポート後に common-utils.js が自動ダウンロードされます。同フォルダに上書き配置で即時反映。</div>
+        <div style="font-size:10px;color:var(--text3);margin-bottom:10px;">※ サイドメニュー・更新履歴は JSON でインポート後に common-utils.js が自動ダウンロードされます。同フォルダに上書き配置で即時反映。</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
           <label class="btn btn-secondary" style="font-size:11px;text-align:left;cursor:pointer;">
             📋 スクリプト（JSON）<input type="file" accept=".json" style="display:none" onchange="importIndividual('script',this)">
@@ -1521,11 +1514,11 @@ body.dnd-xlsx-hover::after {
           <label class="btn btn-secondary" style="font-size:11px;text-align:left;cursor:pointer;">
             📋 ヒアリング（JSON）<input type="file" accept=".json" style="display:none" onchange="importIndividual('hearing',this)">
           </label>
-          <label class="btn btn-secondary" style="font-size:11px;text-align:left;cursor:pointer;" title="JSON → インポート後に data.js を自動生成">
-            ☰ サイドメニュー（JSON）<input type="file" accept=".json" style="display:none" onchange="importIndividual('sidemenu',this)">
+          <label class="btn btn-secondary" style="font-size:11px;text-align:left;cursor:pointer;" title="JSONでインポート → common-utils.js を自動生成">
+            ☰ サイドメニュー（JSON → common-utils.js）<input type="file" accept=".json" style="display:none" onchange="importIndividual('sidemenu',this)">
           </label>
-          <label class="btn btn-secondary" style="font-size:11px;text-align:left;cursor:pointer;" title="JSON → インポート後に data.js を自動生成">
-            📝 更新履歴（JSON）<input type="file" accept=".json" style="display:none" onchange="importIndividual('history',this)">
+          <label class="btn btn-secondary" style="font-size:11px;text-align:left;cursor:pointer;" title="JSONでインポート → common-utils.js を自動生成">
+            📝 更新履歴（JSON → common-utils.js）<input type="file" accept=".json" style="display:none" onchange="importIndividual('history',this)">
           </label>
         </div>
       </div>
@@ -3957,6 +3950,11 @@ function saveAndExportAll() {
   var hrPatterns  = window._appCache.hearingPatterns  || [];
   var smData      = _smData || window._appCache.sideMenuData;
 
+  // サイドメニュー/更新履歴の変更検知
+  var smChanged = smData && (JSON.stringify(smData) !== JSON.stringify(window.DEFAULT_SIDE_MENU_DATA));
+  var histData  = window._appCache.updateHistory || [];
+  var histChanged = histData.length > 0 && (JSON.stringify(histData) !== JSON.stringify(window.DEFAULT_UPDATE_HISTORY || []));
+
   Promise.all([
     window.idbSetAppData('scripts',          data),
     window.idbSetAppData('mailTemplates',    mailData),
@@ -3970,7 +3968,13 @@ function saveAndExportAll() {
     _notifyTabs();
     markClean();
     closeSaveModal();
-    exportJSON(); // 保存完了後にエクスポート開始
+    exportJSON(); // 統合JSONをダウンロード
+    // 変更があれば common-utils.js も自動エクスポート
+    if (smChanged)   { setTimeout(function(){ _exportToCommonUtils('sidemenu', smData); }, 800); }
+    if (histChanged) { setTimeout(function(){ _exportToCommonUtils('history', histData); }, smChanged ? 1600 : 800); }
+    if (smChanged || histChanged) {
+      setTimeout(function(){ toast('⚠️ サイドメニュー/更新履歴の変更を検知。common-utils.js もダウンロードされます。同フォルダに上書き配置してください。'); }, 400);
+    }
   }).catch(function(e) {
     if (st) { st.textContent = '❌ 保存失敗: ' + e.message; st.style.background = '#ffeaea'; st.style.color = '#c62828'; st.style.border = '1px solid #ef9a9a'; }
   });

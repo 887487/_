@@ -409,6 +409,37 @@ function _mergeScreenData(current, incoming) {
   return merged;
 }
 
+/**
+ * imageLib 配列を IDB の imageLib ストアに直接保存する。
+ * idbSetScreenData に依存しないため、どのページからでも呼び出せる。
+ */
+function _saveImageLibToIdb(libItems) {
+  if (!Array.isArray(libItems) || !libItems.length) return;
+  _appIdbOpen().then(function(db) {
+    var tx = db.transaction('imageLib', 'readwrite');
+    var store = tx.objectStore('imageLib');
+    libItems.forEach(function(item) {
+      if (item && item.id) {
+        store.put(item, item.id);
+      }
+    });
+    tx.oncomplete = function() {
+      try { var bc = new BroadcastChannel('tool_data_update'); bc.postMessage({type:'imageLibUpdated',ts:Date.now()}); bc.close(); } catch(e) {}
+    };
+  }).catch(function(e){ console.warn('_saveImageLibToIdb failed:', e); });
+}
+
+/**
+ * 全タブに全データ更新を通知する。
+ */
+function _broadcastAllDataUpdated() {
+  try {
+    var bc = new BroadcastChannel('tool_data_update');
+    bc.postMessage({ type: 'allDataUpdated', ts: Date.now() });
+    bc.close();
+  } catch(e) {}
+}
+
 function _processImportText(text, noReload) {
   try {
     _importProgressShow('JSONを解析中…', 'ファイルを確認しています', 20);
@@ -424,64 +455,71 @@ function _processImportText(text, noReload) {
           if (!confirm('インポートしたデータを現在のデータに差分結合します（重複は上書き、新規は追加）。よろしいですか？')) return;
           _importProgressShow('データを結合中…', 'スクリプト・メール', 50);
           setTimeout(function () {
-            // スクリプト：カテゴリ key 単位で結合
-            var curScripts = {};
-            var curScripts = window._appCache.scripts || {};
-            var mergedScripts = _mergeScripts(curScripts, raw.talkScripts);
-            window._appCache.scripts = mergedScripts;
-            window.idbSetAppData('scripts', mergedScripts);
-            // 他タブ通知用に scriptsUpdated BC を送信
-            try { var _bcs2=new BroadcastChannel('tool_data_update'); _bcs2.postMessage({type:'scriptsUpdated',ts:Date.now()}); _bcs2.close(); } catch(e) {}
-            // メール：id 単位で結合
-            var curMail = [];
-            var curMail = window._appCache.mailTemplates || [];
-            var mergedMail = _mergeMail(curMail, raw.mailTemplates);
-            window._appCache.mailTemplates = mergedMail;
-            window.idbSetAppData('mailTemplates', mergedMail);
-            imported.scripts = true;
-            imported.mail    = true;
-            // _applyImportedDataToPage でメール反映に使う raw を差分結合後データで上書き
-            raw = Object.assign({}, raw, { talkScripts: mergedScripts, mailTemplates: mergedMail });
-            if ((raw.version === 2 || raw.version === 3) && Array.isArray(raw.screenData)) {
-              // 画面遷移：パターン id 単位で結合
-              // in-memory patterns を優先（screen.htmlではlocalStorageのindexが古い可能性あり）
-              var curScreenData = null;
-              try {
-                if (typeof patterns !== 'undefined' && Array.isArray(patterns) && patterns.length) {
-                  curScreenData = patterns; // screen.htmlのin-memory patternsを使用
-                } else {
-                  var csd = localStorage.getItem('screenFlowIndex'); if(csd) curScreenData = JSON.parse(csd);
-                }
-              } catch(e) {}
-              var mergedScreen = _mergeScreenData(curScreenData, raw.screenData);
-              imported.screen = true;
-              imported.screenData = mergedScreen;
-              raw = Object.assign({}, raw, { screenData: mergedScreen });
-            }
-            // v3: imageLib を pending にセット（idbSetScreenData 内で処理）
-            if (raw.version === 3 && Array.isArray(raw.imageLib)) {
-              window._pendingImgLib = raw.imageLib;
-            } else {
-              window._pendingImgLib = null;
-            }
-            // 添付ファイルを IDB へ復元
-            if (Array.isArray(raw.sideMenuFiles) && raw.sideMenuFiles.length && window.idbSaveMenuFile) {
-              Promise.all(raw.sideMenuFiles.map(function(f){ return window.idbSaveMenuFile(f); }))
-                .catch(function(e){ console.warn('sideMenuFiles restore error:', e); });
-            }
-            if (Array.isArray(raw.updateHistory) && raw.updateHistory.length > 0) {
-              _mergeHistory(raw.updateHistory);
-              imported.history = true;
-            }
-            _importProgressUpdate('データを反映中…', '', 80);
-            setTimeout(function () {
-              if (noReload) {
-                _applyImportedDataToPage(imported, raw);
-              } else {
-                location.reload();
+            try {
+              // スクリプト：カテゴリ key 単位で結合
+              var curScripts = window._appCache.scripts || {};
+              var mergedScripts = _mergeScripts(curScripts, raw.talkScripts);
+              window._appCache.scripts = mergedScripts;
+              window.idbSetAppData('scripts', mergedScripts);
+              try { var _bcs2=new BroadcastChannel('tool_data_update'); _bcs2.postMessage({type:'scriptsUpdated',ts:Date.now()}); _bcs2.close(); } catch(e) {}
+              // メール：id 単位で結合
+              var curMail = window._appCache.mailTemplates || [];
+              var mergedMail = _mergeMail(curMail, raw.mailTemplates);
+              window._appCache.mailTemplates = mergedMail;
+              window.idbSetAppData('mailTemplates', mergedMail);
+              imported.scripts = true;
+              imported.mail    = true;
+              raw = Object.assign({}, raw, { talkScripts: mergedScripts, mailTemplates: mergedMail });
+
+              // 画面遷移
+              if ((raw.version === 2 || raw.version === 3) && Array.isArray(raw.screenData)) {
+                var curScreenData = null;
+                try {
+                  if (typeof patterns !== 'undefined' && Array.isArray(patterns) && patterns.length) {
+                    curScreenData = patterns;
+                  } else {
+                    var csd = localStorage.getItem('screenFlowIndex'); if(csd) curScreenData = JSON.parse(csd);
+                  }
+                } catch(e) {}
+                var mergedScreen = _mergeScreenData(curScreenData, raw.screenData);
+                imported.screen = true;
+                imported.screenData = mergedScreen;
+                raw = Object.assign({}, raw, { screenData: mergedScreen });
               }
-              _importProgressHide();
-            }, 0);
+
+              // v3: imageLib を IDB に直接保存（idbSetScreenData 非依存）
+              if (raw.version === 3 && Array.isArray(raw.imageLib) && raw.imageLib.length) {
+                _saveImageLibToIdb(raw.imageLib);
+              }
+              window._pendingImgLib = null;
+
+              // 添付ファイル
+              if (Array.isArray(raw.sideMenuFiles) && raw.sideMenuFiles.length && window.idbSaveMenuFile) {
+                Promise.all(raw.sideMenuFiles.map(function(f){ return window.idbSaveMenuFile(f); })).catch(function(){});
+              }
+
+              // 更新履歴
+              if (Array.isArray(raw.updateHistory) && raw.updateHistory.length > 0) {
+                _mergeHistory(raw.updateHistory);
+                imported.history = true;
+              }
+
+              // ヒアリング
+              if (Array.isArray(raw.hearingQuestions)) { window._appCache.hearingQuestions = raw.hearingQuestions; window.idbSetAppData('hearingQuestions', raw.hearingQuestions); }
+              if (Array.isArray(raw.hearingPolicies))  { window._appCache.hearingPolicies  = raw.hearingPolicies;  window.idbSetAppData('hearingPolicies',  raw.hearingPolicies); }
+              if (Array.isArray(raw.hearingPatterns))  { window._appCache.hearingPatterns  = raw.hearingPatterns;  window.idbSetAppData('hearingPatterns',  raw.hearingPatterns); }
+
+              // 全タブに一括通知
+              _broadcastAllDataUpdated();
+
+              _importProgressUpdate('データを反映中…', '', 80);
+              setTimeout(function () {
+                try {
+                  if (noReload) { _applyImportedDataToPage(imported, raw); } else { location.reload(); }
+                } catch(e) { console.error('applyImport error:', e); }
+                _importProgressHide();
+              }, 0);
+            } catch(err2) { _importProgressHide(); alert('結合処理に失敗しました: ' + err2.message); }
           }, 0);
         }
         // ===== メールテンプレート単体配列 =====
@@ -490,37 +528,46 @@ function _processImportText(text, noReload) {
           if (!confirm('現在のデータをインポートしたデータで上書きします。よろしいですか？')) return;
           _importProgressShow('データを保存中…', 'メールテンプレート', 60);
           setTimeout(function () {
-            window._appCache.mailTemplates = raw;
-            window.idbSetAppData('mailTemplates', raw);
-            imported.mail = true;
-            _importProgressUpdate('データを反映中…', '', 85);
-            setTimeout(function () {
-              if (noReload) { _applyImportedDataToPage(imported, raw); } else { location.reload(); }
-              _importProgressHide();
-            }, 0);
+            try {
+              window._appCache.mailTemplates = raw;
+              window.idbSetAppData('mailTemplates', raw);
+              imported.mail = true;
+              _broadcastAllDataUpdated();
+              _importProgressUpdate('データを反映中…', '', 85);
+              setTimeout(function () {
+                try {
+                  if (noReload) { _applyImportedDataToPage(imported, raw); } else { location.reload(); }
+                } catch(e) {}
+                _importProgressHide();
+              }, 0);
+            } catch(err2) { _importProgressHide(); alert('保存に失敗しました: ' + err2.message); }
           }, 0);
         }
         // ===== トークスクリプト単体オブジェクト =====
         else {
           var keys = Object.keys(raw);
           var valid = keys.length > 0 && keys.every(function (k) {
-            return raw[k].name && (Array.isArray(raw[k].list) || raw[k].sub);
+            return raw[k] && raw[k].name && (Array.isArray(raw[k].list) || raw[k].sub);
           });
           if (valid) {
             _importProgressHide();
             if (!confirm('現在のデータをインポートしたデータで上書きします。よろしいですか？')) return;
             _importProgressShow('データを保存中…', 'スクリプト', 60);
             setTimeout(function () {
-              window._appCache.scripts = raw;
-              window.idbSetAppData('scripts', raw);
-              imported.scripts = true;
-              // 他タブにスクリプト更新を通知
-              try { var _bcs=new BroadcastChannel('tool_data_update'); _bcs.postMessage({type:'scriptsUpdated',ts:Date.now()}); _bcs.close(); } catch(e) {}
-              _importProgressUpdate('データを反映中…', '', 85);
-              setTimeout(function () {
-                if (noReload) { _applyImportedDataToPage(imported, raw); } else { location.reload(); }
-                _importProgressHide();
-              }, 0);
+              try {
+                window._appCache.scripts = raw;
+                window.idbSetAppData('scripts', raw).then(function() {
+                  imported.scripts = true;
+                  _broadcastAllDataUpdated();
+                  _importProgressUpdate('データを反映中…', '', 85);
+                  setTimeout(function () {
+                    try {
+                      if (noReload) { _applyImportedDataToPage(imported, raw); } else { location.reload(); }
+                    } catch(e) { console.error('applyImport error:', e); }
+                    _importProgressHide();
+                  }, 0);
+                }).catch(function(e) { _importProgressHide(); alert('IDB保存に失敗しました: ' + e.message); });
+              } catch(err2) { _importProgressHide(); alert('保存に失敗しました: ' + err2.message); }
             }, 0);
           } else {
             _importProgressHide();
@@ -1239,7 +1286,7 @@ function _buildSideMenuHTML(isDark) {
         }
         var manualBtn = (it.manualUrl) ?
           ' <button onclick="window._smOpenManualPdf(event,\'' + (it.manualUrl||'').replace(/'/g,"\\'") + '\')" title="マニュアルをブラウザで閲覧" style="background:none;border:1px solid var(--accent,#4361ee);border-radius:4px;color:var(--accent,#4361ee);font-size:10px;padding:1px 5px;cursor:pointer;font-family:inherit;line-height:1.4;flex-shrink:0;vertical-align:middle;">📕 マニュアル</button>' : '';
-        return '<li style="display:flex;align-items:center;gap:4px;"><a href="' + (it.url || '#') + '" target="_blank" style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + it.name + '</a>' + manualBtn + '</li>';
+        return '<li style="display:flex;align-items:center;gap:4px;"><a href="' + (it.url || '#') + '" target="_blank" style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + it.name + '</a>' + manualBtn + '</li>';
       }).join('');
       html += '<div class="side-section"><div class="side-section-header" onclick="toggleAccordion(\'' + secId + '\')">' +
         sec.label + ' <span class="arrow" style="display:inline-block;transition:transform .2s">▶</span></div>' +
@@ -2186,6 +2233,49 @@ document.addEventListener('DOMContentLoaded', function () {
         sideMenuEl.innerHTML = _buildSideMenuHTML(isDarkNow);
         window.renderHistory();
       }
+    }
+
+    // ── 全データ更新（どのページからのインポートでも全タブに反映） ──
+    if (type === 'allDataUpdated') {
+      // スクリプト
+      if (typeof window.reloadScripts === 'function') { window.reloadScripts(); }
+      // メール
+      try {
+        var _mt2 = window._appCache.mailTemplates;
+        if (_mt2 && typeof templates !== 'undefined' && Array.isArray(templates)) {
+          templates.length = 0; _mt2.forEach(function(t){ templates.push(t); });
+          if (typeof renderSidebar === 'function') renderSidebar();
+          if (typeof showList === 'function') showList(typeof currentCat !== 'undefined' ? currentCat : '__all__');
+        }
+      } catch(e) {}
+      // 画面遷移
+      if (typeof idbGetScreenData === 'function') {
+        idbGetScreenData().then(function(scrData) {
+          if (!Array.isArray(scrData) || !scrData.length) return;
+          if (typeof patterns !== 'undefined') {
+            patterns.length = 0; scrData.forEach(function(p){ patterns.push(p); });
+            if (typeof _pvImgCache !== 'undefined') { Object.keys(_pvImgCache).forEach(function(k){ delete _pvImgCache[k]; }); }
+            if (typeof renderSidebar === 'function') renderSidebar();
+            if (typeof renderFlow === 'function') renderFlow();
+          }
+        }).catch(function(){});
+      }
+      // ヒアリング
+      if (typeof window.renderHearing === 'function') window.renderHearing();
+      // サイドメニュー・更新履歴
+      window.idbGetAppData('scripts').then(function(sc) {
+        if (sc) window._appCache.scripts = sc;
+        return window.idbGetAppData('mailTemplates');
+      }).then(function(mt) {
+        if (mt) window._appCache.mailTemplates = mt;
+      }).catch(function(){});
+    }
+
+    // ── 画像ライブラリ更新 ──
+    if (type === 'imageLibUpdated') {
+      // screen.html / admin.html の画像キャッシュをクリア
+      try { if (typeof _pvImgCache !== 'undefined') { Object.keys(_pvImgCache).forEach(function(k){ delete _pvImgCache[k]; }); } } catch(e) {}
+      try { if (typeof _imgLibAllItems !== 'undefined') { _imgLibAllItems = []; if (typeof _imgLibRender === 'function') _imgLibRender(); } } catch(e) {}
     }
 
     // ── ヒアリング更新 ──
