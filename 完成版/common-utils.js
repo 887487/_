@@ -127,6 +127,11 @@ window.initAppData = function() {
       window._appCache.updateHistory = window.DEFAULT_UPDATE_HISTORY;
     }
   }
+  if (!window._appCache.hearingQuestions || !window._appCache.hearingQuestions.length) {
+    if (typeof HEARING_QUESTIONS_DEFAULT !== 'undefined' && HEARING_QUESTIONS_DEFAULT.length) {
+      window._appCache.hearingQuestions = JSON.parse(JSON.stringify(HEARING_QUESTIONS_DEFAULT));
+    }
+  }
 
   // scripts / mailTemplates / mailCatMeta は IDB から読む
   var keys = ['scripts','mailTemplates','mailCatMeta'];
@@ -1627,8 +1632,61 @@ function calcPolicies(s) {
 // localStorage に 'hearingQuestionsDef_v1' があればそちらを使用する。
 // デフォルト項目数 = 0（admin.htmlで追加管理）
 // ===================================================================
-var HEARING_QUESTIONS_DEFAULT = [];  // jsファイルに直書き管理。admin.html の「📝 jsファイルに書き込む」で更新する。
-var HEARING_POLICIES_DEFAULT  = [];  // jsファイルに直書き管理。admin.html の「📝 jsファイルに書き込む」で更新する。
+// @@HEARING_QUESTIONS_START@@
+var HEARING_QUESTIONS_DEFAULT = [
+  {id:'q_usage', label:'用途', field:'usage', type:'str',
+   options:[{l:'世帯',v:'世帯'},{l:'学校',v:'学校'},{l:'事業',v:'事業'}],
+   showIf:[], builtin:true, enabled:true,
+   resets:['isMigration','oldPlusId','migMailConfirmed','migMailUsable','isAccountPerson','sAccountCreated','authCodeIssue','authCodeResult','jAccountCreated','jAuthCodeIssue','sjLinked','sjLoginlessResult']},
+  {id:'q_isMigration', label:'移行対象者ですか？', field:'isMigration', type:'bool',
+   trueLabel:'はい', falseLabel:'いいえ',
+   showIf:[[{field:'usage',op:'eq',value:'世帯'}]], builtin:true, enabled:true,
+   resets:['oldPlusId','migMailConfirmed','migMailUsable','sAccountCreated','authCodeIssue','authCodeResult','jAccountCreated','jAuthCodeIssue','sjLinked','sjLoginlessResult']},
+  {id:'q_oldPlusId', label:'2025/8/15時点で旧プラスのIDは発行されていましたか？', field:'oldPlusId', type:'bool',
+   trueLabel:'はい(わからない)', falseLabel:'いいえ',
+   showIf:[[{field:'usage',op:'eq',value:'世帯'},{field:'isMigration',op:'true'}]], builtin:true, enabled:true, resets:['migMailConfirmed','migMailUsable']},
+  {id:'q_migMailConfirmed', label:'7月/9月/10月に送信している移行案内メールは確認されていますか？', field:'migMailConfirmed', type:'bool',
+   trueLabel:'はい', falseLabel:'いいえ(わからない)',
+   showIf:[[{field:'usage',op:'eq',value:'世帯'},{field:'isMigration',op:'true'},{field:'oldPlusId',op:'true'}]], builtin:true, enabled:true, resets:['migMailUsable']},
+  {id:'q_migMailUsable', label:'移行案内メールを受信しているメールアドレスは現在も使用可能ですか？', field:'migMailUsable', type:'bool',
+   trueLabel:'はい', falseLabel:'いいえ',
+   showIf:[[{field:'usage',op:'eq',value:'世帯'},{field:'isMigration',op:'true'},{field:'oldPlusId',op:'true'},{field:'migMailConfirmed',op:'true'}]], builtin:true, enabled:true, resets:[]},
+  {id:'q_isAccountPerson', label:'入電者はアカウント担当者ですか？', field:'isAccountPerson', type:'bool',
+   trueLabel:'はい', falseLabel:'いいえ',
+   showIf:[[{field:'usage',op:'in',value:'学校,事業'}]], builtin:true, enabled:true,
+   resets:['sAccountCreated','authCodeIssue','authCodeResult','jAccountCreated','jAuthCodeIssue','sjLinked','sjLoginlessResult']},
+  {id:'q_sAccountCreated', label:'Sアカは作成済みですか？', field:'sAccountCreated', type:'bool',
+   trueLabel:'はい', falseLabel:'いいえ',
+   showIf:[[{field:'usage',op:'notnull'}]], builtin:true, enabled:true,
+   resets:['authCodeIssue','authCodeResult','jAccountCreated','jAuthCodeIssue','sjLinked','sjLoginlessResult']},
+  {id:'q_authCodeIssue', label:'認証コード未着ですか？（Sアカいいえ時）', field:'authCodeIssue', type:'str',
+   options:[{l:'移行エラーメール受信',v:'移行エラーメール受信'},{l:'新規エラーメール受信',v:'新規エラーメール受信'},{l:'メール受信なし',v:'メール受信なし'}],
+   showIf:[[{field:'sAccountCreated',op:'false'}]], builtin:true, enabled:true, resets:['authCodeResult']},
+  {id:'q_authCodeResult', label:'PWをお忘れの方はこちらから認証コードが届くか（Sアカ）', field:'authCodeResult', type:'str',
+   options:[{l:'認証コード受信',v:'認証コード受信'},{l:'認証コード未着(任意情報なし)',v:'認証コード未着(任意情報なし)'},{l:'認証コード未着(任意情報あり)',v:'認証コード未着(任意情報あり)'}],
+   showIf:[[{field:'authCodeIssue',op:'in',value:'移行エラーメール受信,新規エラーメール受信'}]], builtin:true, enabled:true, resets:[]},
+  {id:'q_sjLinked', label:'S-J連携済みですか？', field:'sjLinked', type:'str',
+   options:[{l:'連携済み',v:'連携済み'},{l:'未連携',v:'未連携'},{l:'未確認（再連携が必要です）',v:'再連携必要'},{l:'ログイン不可',v:'ログイン不可'}],
+   showIf:[[{field:'usage',op:'eq',value:'世帯'},{field:'sAccountCreated',op:'true'}]], builtin:true, enabled:true,
+   resets:['jAccountCreated','jAuthCodeIssue','sjLoginlessResult']},
+  {id:'q_sjLoginlessResult', label:'PWをお忘れの方はこちらから認証コードが届くか（ログイン不可）', field:'sjLoginlessResult', type:'str',
+   options:[{l:'認証コード受信',v:'認証コード受信'},{l:'認証コード未着(任意情報なし)',v:'認証コード未着(任意情報なし)'},{l:'認証コード未着(任意情報あり)',v:'認証コード未着(任意情報あり)'}],
+   showIf:[[{field:'usage',op:'eq',value:'世帯'},{field:'sAccountCreated',op:'true'},{field:'sjLinked',op:'eq',value:'ログイン不可'}]], builtin:true, enabled:true, resets:[]},
+  {id:'q_jAccountCreated', label:'Jアカは作成済みですか？', field:'jAccountCreated', type:'bool',
+   trueLabel:'はい', falseLabel:'いいえ',
+   showIf:[
+     [{field:'usage',op:'eq',value:'世帯'},{field:'sAccountCreated',op:'true'},{field:'isMigration',op:'true'},{field:'oldPlusId',op:'true'},{field:'migMailConfirmed',op:'true'},{field:'migMailUsable',op:'true'},{field:'sjLinked',op:'in',value:'未連携,再連携必要'}],
+     [{field:'usage',op:'eq',value:'世帯'},{field:'sAccountCreated',op:'true'},{field:'isMigration',op:'neq',value:'true'},{field:'sjLinked',op:'in',value:'未連携,再連携必要'}]
+   ], builtin:true, enabled:true, resets:['jAuthCodeIssue']},
+  {id:'q_jAuthCodeIssue', label:'認証コード未着ですか？（Jアカいいえ時）', field:'jAuthCodeIssue', type:'str',
+   options:[{l:'Jアカ重複メール受信',v:'Jアカ重複メール受信'},{l:'メール受信なし',v:'メール受信なし'}],
+   showIf:[
+     [{field:'usage',op:'eq',value:'世帯'},{field:'sAccountCreated',op:'true'},{field:'isMigration',op:'true'},{field:'oldPlusId',op:'true'},{field:'migMailConfirmed',op:'true'},{field:'migMailUsable',op:'true'},{field:'sjLinked',op:'in',value:'未連携,再連携必要'},{field:'jAccountCreated',op:'false'}],
+     [{field:'usage',op:'eq',value:'世帯'},{field:'sAccountCreated',op:'true'},{field:'isMigration',op:'neq',value:'true'},{field:'sjLinked',op:'in',value:'未連携,再連携必要'},{field:'jAccountCreated',op:'false'}]
+   ], builtin:true, enabled:true, resets:[]}
+];
+// @@HEARING_QUESTIONS_END@@
+var HEARING_POLICIES_DEFAULT  = [];
 // localStorage キーは後方互換のため定義のみ残す（読み書きには使用しない）
 var HEARING_QUESTIONS_KEY = 'hearingQuestionsDef_v1';
 
@@ -1639,7 +1697,11 @@ function _hrQuestionsSave(list) {
   window._appCache.hearingQuestions = JSON.parse(JSON.stringify(list || []));
   window.idbSetAppData('hearingQuestions', window._appCache.hearingQuestions);
 }
-function _hrGetQuestions() { return _hrQuestionsLoad(); }
+function _hrGetQuestions() {
+  var cached = _hrQuestionsLoad();
+  if (cached && cached.length) return cached;
+  return JSON.parse(JSON.stringify(HEARING_QUESTIONS_DEFAULT));
+}
 
 function _hrEvalShowIf(showIf, s) {
   if (!showIf || !showIf.length) return true;
