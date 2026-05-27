@@ -127,11 +127,6 @@ window.initAppData = function() {
       window._appCache.updateHistory = window.DEFAULT_UPDATE_HISTORY;
     }
   }
-  if (!window._appCache.hearingQuestions || !window._appCache.hearingQuestions.length) {
-    if (typeof HEARING_QUESTIONS_DEFAULT !== 'undefined' && HEARING_QUESTIONS_DEFAULT.length) {
-      window._appCache.hearingQuestions = JSON.parse(JSON.stringify(HEARING_QUESTIONS_DEFAULT));
-    }
-  }
 
   // scripts / mailTemplates / mailCatMeta は IDB から読む
   var keys = ['scripts','mailTemplates','mailCatMeta'];
@@ -476,8 +471,7 @@ function _processImportText(text, noReload) {
               imported.mail    = true;
               raw = Object.assign({}, raw, { talkScripts: mergedScripts, mailTemplates: mergedMail });
 
-              // 画面遷移 — IDB書き込み完了後にbroadcast（screen.htmlへ即時反映）
-              var _screenSaveP = Promise.resolve();
+              // 画面遷移
               if ((raw.version === 2 || raw.version === 3) && Array.isArray(raw.screenData)) {
                 var curScreenData = null;
                 try {
@@ -491,17 +485,9 @@ function _processImportText(text, noReload) {
                 imported.screen = true;
                 imported.screenData = mergedScreen;
                 raw = Object.assign({}, raw, { screenData: mergedScreen });
-                _screenSaveP = idbSetScreenData(mergedScreen)
-                  .then(function () {
-                    try { var _bc=new BroadcastChannel('tool_data_update'); _bc.postMessage({type:'screenDataUpdated',ts:Date.now()}); _bc.close(); } catch(e2) {}
-                  })
-                  .catch(function (err) {
-                    console.error('[import] idbSetScreenData failed:', err);
-                    try { var _bc=new BroadcastChannel('tool_data_update'); _bc.postMessage({type:'screenDataUpdated',ts:Date.now()}); _bc.close(); } catch(e2) {}
-                  });
               }
 
-              // v3: imageLib を IDB に直接保存
+              // v3: imageLib を IDB に直接保存（idbSetScreenData 非依存）
               if (raw.version === 3 && Array.isArray(raw.imageLib) && raw.imageLib.length) {
                 _saveImageLibToIdb(raw.imageLib);
               }
@@ -523,18 +509,16 @@ function _processImportText(text, noReload) {
               if (Array.isArray(raw.hearingPolicies))  { window._appCache.hearingPolicies  = raw.hearingPolicies;  window.idbSetAppData('hearingPolicies',  raw.hearingPolicies); }
               if (Array.isArray(raw.hearingPatterns))  { window._appCache.hearingPatterns  = raw.hearingPatterns;  window.idbSetAppData('hearingPatterns',  raw.hearingPatterns); }
 
-              // スクリプト・メールを他タブへ通知
-              try { var _bca=new BroadcastChannel('tool_data_update'); _bca.postMessage({type:'mailDataUpdated',ts:Date.now()}); _bca.close(); } catch(e) {}
+              // 全タブに一括通知
+              _broadcastAllDataUpdated();
 
               _importProgressUpdate('データを反映中…', '', 80);
-              _screenSaveP.then(function () {
-                setTimeout(function () {
-                  try {
-                    if (noReload) { _applyImportedDataToPage(imported, raw); } else { location.reload(); }
-                  } catch(e) { console.error('applyImport error:', e); }
-                  _importProgressHide();
-                }, 0);
-              });
+              setTimeout(function () {
+                try {
+                  if (noReload) { _applyImportedDataToPage(imported, raw); } else { location.reload(); }
+                } catch(e) { console.error('applyImport error:', e); }
+                _importProgressHide();
+              }, 0);
             } catch(err2) { _importProgressHide(); alert('結合処理に失敗しました: ' + err2.message); }
           }, 0);
         }
@@ -1273,7 +1257,7 @@ window.DEFAULT_SIDE_MENU_DATA = [
             "url": "file://tohoku/share/拠点/仙台青葉/00_事業所/NGH/業務資料/マニュアル関連/【NGH】事業所紹介_20260401.pdf"
           },
           {
-            "name": "【NGH】CMマニュアル",
+            "name": "CMマニュアル",
             "url": "file://tohoku/share/拠点/仙台青葉/00_事業所/NGH/業務資料/マニュアル関連/【NGH】CMマニュアル_20260430.pdf"
           },
           {
@@ -1324,6 +1308,10 @@ window.DEFAULT_SIDE_MENU_DATA = [
       {
         "name": "e-typing",
         "url": "https://www.e-typing.ne.jp/roma/check/"
+      },
+      {
+        "name": "コンディションチェック",
+        "url": "https://form.qooker.jp/Q/auto/ja/conditohoku/condi/"
       }
     ]
   }
@@ -1639,523 +1627,8 @@ function calcPolicies(s) {
 // localStorage に 'hearingQuestionsDef_v1' があればそちらを使用する。
 // デフォルト項目数 = 0（admin.htmlで追加管理）
 // ===================================================================
-// @@HEARING_QUESTIONS_START@@
-var HEARING_QUESTIONS_DEFAULT = [
-  {
-    "id": "q_usage",
-    "label": "用途",
-    "field": "usage",
-    "type": "str",
-    "options": [
-      {
-        "l": "世帯",
-        "v": "世帯"
-      },
-      {
-        "l": "学校",
-        "v": "学校"
-      },
-      {
-        "l": "事業",
-        "v": "事業"
-      }
-    ],
-    "showIf": [],
-    "builtin": true,
-    "enabled": true,
-    "resets": [
-      "isMigration",
-      "oldPlusId",
-      "migMailConfirmed",
-      "migMailUsable",
-      "isAccountPerson",
-      "sAccountCreated",
-      "authCodeIssue",
-      "authCodeResult",
-      "jAccountCreated",
-      "jAuthCodeIssue",
-      "sjLinked",
-      "sjLoginlessResult"
-    ]
-  },
-  {
-    "id": "q_isMigration",
-    "label": "移行対象者ですか？",
-    "field": "isMigration",
-    "type": "bool",
-    "trueLabel": "はい",
-    "falseLabel": "いいえ",
-    "showIf": [
-      [
-        {
-          "field": "usage",
-          "op": "eq",
-          "value": "世帯"
-        }
-      ]
-    ],
-    "builtin": true,
-    "enabled": true,
-    "resets": [
-      "oldPlusId",
-      "migMailConfirmed",
-      "migMailUsable",
-      "sAccountCreated",
-      "authCodeIssue",
-      "authCodeResult",
-      "jAccountCreated",
-      "jAuthCodeIssue",
-      "sjLinked",
-      "sjLoginlessResult"
-    ]
-  },
-  {
-    "id": "q_oldPlusId",
-    "label": "2025/8/15時点で旧プラスのIDは発行されていましたか？",
-    "field": "oldPlusId",
-    "type": "bool",
-    "trueLabel": "はい(わからない)",
-    "falseLabel": "いいえ",
-    "showIf": [
-      [
-        {
-          "field": "usage",
-          "op": "eq",
-          "value": "世帯"
-        },
-        {
-          "field": "isMigration",
-          "op": "true"
-        }
-      ]
-    ],
-    "builtin": true,
-    "enabled": true,
-    "resets": [
-      "migMailConfirmed",
-      "migMailUsable"
-    ]
-  },
-  {
-    "id": "q_migMailConfirmed",
-    "label": "7月/9月/10月に送信している移行案内メールは確認されていますか？",
-    "field": "migMailConfirmed",
-    "type": "bool",
-    "trueLabel": "はい",
-    "falseLabel": "いいえ(わからない)",
-    "showIf": [
-      [
-        {
-          "field": "usage",
-          "op": "eq",
-          "value": "世帯"
-        },
-        {
-          "field": "isMigration",
-          "op": "true"
-        },
-        {
-          "field": "oldPlusId",
-          "op": "true"
-        }
-      ]
-    ],
-    "builtin": true,
-    "enabled": true,
-    "resets": [
-      "migMailUsable"
-    ]
-  },
-  {
-    "id": "q_migMailUsable",
-    "label": "移行案内メールを受信しているメールアドレスは現在も使用可能ですか？",
-    "field": "migMailUsable",
-    "type": "bool",
-    "trueLabel": "はい",
-    "falseLabel": "いいえ",
-    "showIf": [
-      [
-        {
-          "field": "usage",
-          "op": "eq",
-          "value": "世帯"
-        },
-        {
-          "field": "isMigration",
-          "op": "true"
-        },
-        {
-          "field": "oldPlusId",
-          "op": "true"
-        },
-        {
-          "field": "migMailConfirmed",
-          "op": "true"
-        }
-      ]
-    ],
-    "builtin": true,
-    "enabled": true,
-    "resets": []
-  },
-  {
-    "id": "q_isAccountPerson",
-    "label": "入電者はアカウント担当者ですか？",
-    "field": "isAccountPerson",
-    "type": "bool",
-    "trueLabel": "はい",
-    "falseLabel": "いいえ",
-    "showIf": [
-      [
-        {
-          "field": "usage",
-          "op": "in",
-          "value": "学校,事業"
-        }
-      ]
-    ],
-    "builtin": true,
-    "enabled": true,
-    "resets": [
-      "sAccountCreated",
-      "authCodeIssue",
-      "authCodeResult",
-      "jAccountCreated",
-      "jAuthCodeIssue",
-      "sjLinked",
-      "sjLoginlessResult"
-    ]
-  },
-  {
-    "id": "q_sAccountCreated",
-    "label": "Sアカは作成済みですか？",
-    "field": "sAccountCreated",
-    "type": "bool",
-    "trueLabel": "はい",
-    "falseLabel": "いいえ",
-    "showIf": [
-      [
-        {
-          "field": "usage",
-          "op": "notnull"
-        }
-      ]
-    ],
-    "builtin": true,
-    "enabled": true,
-    "resets": [
-      "authCodeIssue",
-      "authCodeResult",
-      "jAccountCreated",
-      "jAuthCodeIssue",
-      "sjLinked",
-      "sjLoginlessResult"
-    ]
-  },
-  {
-    "id": "q_authCodeIssue",
-    "label": "認証コード未着ですか？（Sアカ）",
-    "field": "authCodeIssue",
-    "type": "str",
-    "options": [
-      {
-        "l": "移行エラーメール受信",
-        "v": "移行エラーメール受信"
-      },
-      {
-        "l": "新規エラーメール受信",
-        "v": "新規エラーメール受信"
-      },
-      {
-        "l": "メール受信なし",
-        "v": "メール受信なし"
-      }
-    ],
-    "showIf": [
-      [
-        {
-          "field": "sAccountCreated",
-          "op": "false"
-        }
-      ]
-    ],
-    "builtin": true,
-    "enabled": true,
-    "resets": [
-      "authCodeResult"
-    ]
-  },
-  {
-    "id": "q_authCodeResult",
-    "label": "PWをお忘れの方はこちらから認証コードが届くか（Sアカ）",
-    "field": "authCodeResult",
-    "type": "str",
-    "options": [
-      {
-        "l": "認証コード受信",
-        "v": "認証コード受信"
-      },
-      {
-        "l": "認証コード未着(任意情報なし)",
-        "v": "認証コード未着(任意情報なし)"
-      },
-      {
-        "l": "認証コード未着(任意情報あり)",
-        "v": "認証コード未着(任意情報あり)"
-      }
-    ],
-    "showIf": [
-      [
-        {
-          "field": "authCodeIssue",
-          "op": "in",
-          "value": "移行エラーメール受信,新規エラーメール受信"
-        }
-      ]
-    ],
-    "builtin": true,
-    "enabled": true,
-    "resets": []
-  },
-  {
-    "id": "q_sjLinked",
-    "label": "S-J連携済みですか？",
-    "field": "sjLinked",
-    "type": "str",
-    "options": [
-      {
-        "l": "連携済み",
-        "v": "連携済み"
-      },
-      {
-        "l": "未連携",
-        "v": "未連携"
-      },
-      {
-        "l": "未確認（再連携が必要です）",
-        "v": "再連携必要"
-      },
-      {
-        "l": "ログイン不可",
-        "v": "ログイン不可"
-      }
-    ],
-    "showIf": [
-      [
-        {
-          "field": "usage",
-          "op": "eq",
-          "value": "世帯"
-        },
-        {
-          "field": "sAccountCreated",
-          "op": "true"
-        }
-      ]
-    ],
-    "builtin": true,
-    "enabled": true,
-    "resets": [
-      "jAccountCreated",
-      "jAuthCodeIssue",
-      "sjLoginlessResult"
-    ]
-  },
-  {
-    "id": "q_sjLoginlessResult",
-    "label": "PWをお忘れの方はこちらから認証コードが届くか（ログイン不可）",
-    "field": "sjLoginlessResult",
-    "type": "str",
-    "options": [
-      {
-        "l": "認証コード受信",
-        "v": "認証コード受信"
-      },
-      {
-        "l": "認証コード未着(任意情報なし)",
-        "v": "認証コード未着(任意情報なし)"
-      },
-      {
-        "l": "認証コード未着(任意情報あり)",
-        "v": "認証コード未着(任意情報あり)"
-      }
-    ],
-    "showIf": [
-      [
-        {
-          "field": "usage",
-          "op": "eq",
-          "value": "世帯"
-        },
-        {
-          "field": "sAccountCreated",
-          "op": "true"
-        },
-        {
-          "field": "sjLinked",
-          "op": "eq",
-          "value": "ログイン不可"
-        }
-      ]
-    ],
-    "builtin": true,
-    "enabled": true,
-    "resets": []
-  },
-  {
-    "id": "q_jAccountCreated",
-    "label": "Jアカは作成済みですか？",
-    "field": "jAccountCreated",
-    "type": "bool",
-    "trueLabel": "はい",
-    "falseLabel": "いいえ",
-    "showIf": [
-      [
-        {
-          "field": "usage",
-          "op": "eq",
-          "value": "世帯"
-        },
-        {
-          "field": "sAccountCreated",
-          "op": "true"
-        },
-        {
-          "field": "isMigration",
-          "op": "true"
-        },
-        {
-          "field": "oldPlusId",
-          "op": "true"
-        },
-        {
-          "field": "migMailConfirmed",
-          "op": "true"
-        },
-        {
-          "field": "migMailUsable",
-          "op": "true"
-        },
-        {
-          "field": "sjLinked",
-          "op": "in",
-          "value": "未連携,再連携必要"
-        }
-      ],
-      [
-        {
-          "field": "usage",
-          "op": "eq",
-          "value": "世帯"
-        },
-        {
-          "field": "sAccountCreated",
-          "op": "true"
-        },
-        {
-          "field": "isMigration",
-          "op": "neq",
-          "value": "true"
-        },
-        {
-          "field": "sjLinked",
-          "op": "in",
-          "value": "未連携,再連携必要"
-        }
-      ]
-    ],
-    "builtin": true,
-    "enabled": true,
-    "resets": [
-      "jAuthCodeIssue"
-    ]
-  },
-  {
-    "id": "q_jAuthCodeIssue",
-    "label": "確認コード未着ですか？（Jアカ）",
-    "field": "jAuthCodeIssue",
-    "type": "str",
-    "options": [
-      {
-        "l": "Jアカ重複メール受信",
-        "v": "Jアカ重複メール受信"
-      },
-      {
-        "l": "メール受信なし",
-        "v": "メール受信なし"
-      }
-    ],
-    "showIf": [
-      [
-        {
-          "field": "usage",
-          "op": "eq",
-          "value": "世帯"
-        },
-        {
-          "field": "sAccountCreated",
-          "op": "true"
-        },
-        {
-          "field": "isMigration",
-          "op": "true"
-        },
-        {
-          "field": "oldPlusId",
-          "op": "true"
-        },
-        {
-          "field": "migMailConfirmed",
-          "op": "true"
-        },
-        {
-          "field": "migMailUsable",
-          "op": "true"
-        },
-        {
-          "field": "sjLinked",
-          "op": "in",
-          "value": "未連携,再連携必要"
-        },
-        {
-          "field": "jAccountCreated",
-          "op": "false"
-        }
-      ],
-      [
-        {
-          "field": "usage",
-          "op": "eq",
-          "value": "世帯"
-        },
-        {
-          "field": "sAccountCreated",
-          "op": "true"
-        },
-        {
-          "field": "isMigration",
-          "op": "neq",
-          "value": "true"
-        },
-        {
-          "field": "sjLinked",
-          "op": "in",
-          "value": "未連携,再連携必要"
-        },
-        {
-          "field": "jAccountCreated",
-          "op": "false"
-        }
-      ]
-    ],
-    "builtin": true,
-    "enabled": true,
-    "resets": []
-  }
-];
-// @@HEARING_QUESTIONS_END@@
-
-var HEARING_POLICIES_DEFAULT  = [];
+var HEARING_QUESTIONS_DEFAULT = [];  // jsファイルに直書き管理。admin.html の「📝 jsファイルに書き込む」で更新する。
+var HEARING_POLICIES_DEFAULT  = [];  // jsファイルに直書き管理。admin.html の「📝 jsファイルに書き込む」で更新する。
 // localStorage キーは後方互換のため定義のみ残す（読み書きには使用しない）
 var HEARING_QUESTIONS_KEY = 'hearingQuestionsDef_v1';
 
@@ -2166,11 +1639,7 @@ function _hrQuestionsSave(list) {
   window._appCache.hearingQuestions = JSON.parse(JSON.stringify(list || []));
   window.idbSetAppData('hearingQuestions', window._appCache.hearingQuestions);
 }
-function _hrGetQuestions() {
-  var cached = _hrQuestionsLoad();
-  if (cached && cached.length) return cached;
-  return JSON.parse(JSON.stringify(HEARING_QUESTIONS_DEFAULT));
-}
+function _hrGetQuestions() { return _hrQuestionsLoad(); }
 
 function _hrEvalShowIf(showIf, s) {
   if (!showIf || !showIf.length) return true;
@@ -2716,36 +2185,118 @@ document.addEventListener('DOMContentLoaded', function () {
 })();
 
 // =============================================================================
-// ⑩ idbSetScreenData / idbGetScreenData スタブ（index/script/mail.html 用）
-//    _appIdbOpen()（v5 共有接続）を使うため IDB バージョン競合が発生しない。
+// ⑩ 画面遷移データの IDB 書き込みスタブ（index.html / mail.html 用）
+//    screen.html / admin.html では各ページで定義された関数が優先される。
+//    index.html / mail.html では idbSetScreenData が未定義のため
+//    ここで直接 IndexedDB に書き込む。
 // =============================================================================
 (function () {
-  if (typeof idbSetScreenData !== 'function') {
-    window.idbSetScreenData = function (data) {
-      if (!data) return Promise.resolve();
-      return _appIdbOpen().then(function (db) {
-        return new Promise(function (resolve, reject) {
-          var tx = db.transaction('patterns', 'readwrite');
-          tx.objectStore('patterns').put(data, 'data');
-          tx.oncomplete = function () { resolve(); };
-          tx.onerror    = function (e) { reject(e.target.error); };
-          tx.onabort    = function (e) { reject(tx.error || e); };
+  if (typeof idbSetScreenData === 'function') return; // 既に定義済みならスキップ
+
+  var IDB_NAME    = 'screenFlowDB';
+  var IDB_VER     = 4;
+  var IDB_STORE   = 'patterns';
+  var IDB_KEY     = 'data';
+  var _db         = null;
+
+  function _open() {
+    if (_db) return Promise.resolve(_db);
+    return new Promise(function (resolve, reject) {
+      var req = indexedDB.open(IDB_NAME, IDB_VER);
+      req.onupgradeneeded = function (e) {
+        var db = e.target.result;
+        if (!db.objectStoreNames.contains(IDB_STORE)) db.createObjectStore(IDB_STORE);
+        if (!db.objectStoreNames.contains('imageLib')) db.createObjectStore('imageLib');
+        if (!db.objectStoreNames.contains('appData'))  db.createObjectStore('appData');
+      };
+      req.onsuccess = function (e) {
+        _db = e.target.result;
+        _db.onclose = function () { _db = null; };
+        _db.onversionchange = function () { _db.close(); _db = null; };
+        resolve(_db);
+      };
+      req.onerror = function (e) { reject(e.target.error); };
+    });
+  }
+
+  // base64 画像を imageLib に保存して lib:xxx に差し替えるヘルパー
+  function _findOrPut(db, dataUrl, name) {
+    return new Promise(function (resolve) {
+      var tx  = db.transaction('imageLib', 'readonly');
+      var req = tx.objectStore('imageLib').getAll();
+      req.onsuccess = function (e) {
+        var items = e.target.result || [];
+        var fp    = dataUrl.slice(0, 256) + '|' + dataUrl.slice(-64) + '|' + dataUrl.length;
+        var found = items.find(function (item) {
+          return item.dataUrl.slice(0, 256) + '|' + item.dataUrl.slice(-64) + '|' + item.dataUrl.length === fp;
+        });
+        if (found) { resolve('lib:' + found.id); return; }
+        // 新規登録
+        var id  = 'lib' + Math.random().toString(36).substr(2, 9);
+        var tx2 = db.transaction('imageLib', 'readwrite');
+        tx2.objectStore('imageLib').put({ id: id, name: name || id, tags: [], dataUrl: dataUrl }, id);
+        tx2.oncomplete = function () { resolve('lib:' + id); };
+        tx2.onerror    = function () { resolve(dataUrl); }; // fallback
+      };
+      req.onerror = function () { resolve(dataUrl); };
+    });
+  }
+
+  window.idbSetScreenData = function (data) {
+    if (!data) return Promise.resolve();
+    return _open().then(function (db) {
+      // v3: _pendingImgLib がある場合は imageLib を先に一括登録してから patterns を保存
+      var pendingLib = window._pendingImgLib;
+      window._pendingImgLib = null;
+
+      if (pendingLib && pendingLib.length) {
+        return new Promise(function(resolve) {
+          var tx = db.transaction('imageLib', 'readonly');
+          var req = tx.objectStore('imageLib').getAllKeys();
+          req.onsuccess = function(e) {
+            var existingIds = new Set(e.target.result || []);
+            var toInsert = pendingLib.filter(function(x){ return !existingIds.has(x.id); });
+            if (!toInsert.length) { resolve(); return; }
+            var tx2 = db.transaction('imageLib', 'readwrite');
+            toInsert.forEach(function(item){ tx2.objectStore('imageLib').put(item, item.id); });
+            tx2.oncomplete = resolve; tx2.onerror = resolve;
+          };
+          req.onerror = function(){ resolve(); };
+        }).then(function() {
+          return new Promise(function(resolve, reject) {
+            var tx = db.transaction(IDB_STORE, 'readwrite');
+            tx.objectStore(IDB_STORE).put(data, IDB_KEY);
+            tx.oncomplete = resolve;
+            tx.onerror    = function(e){ reject(e.target.error); };
+          });
+        });
+      }
+
+      // 通常パス（v1/v2）：base64 を imageLib に移行してから patterns を保存
+      var promises = [];
+      data.forEach(function (p) {
+        (p.screens || []).forEach(function (s) {
+          if (s.imageSrc && !s.imageSrc.startsWith('lib:')) {
+            var dataUrl = s.imageSrc;
+            var name    = s.name || s.id;
+            promises.push(
+              _findOrPut(db, dataUrl, name).then(function (libRef) {
+                s.imageSrc = libRef;
+              })
+            );
+          }
         });
       });
-    };
-  }
-  if (typeof idbGetScreenData !== 'function') {
-    window.idbGetScreenData = function () {
-      return _appIdbOpen().then(function (db) {
+      return Promise.all(promises).then(function () {
         return new Promise(function (resolve, reject) {
-          var tx  = db.transaction('patterns', 'readonly');
-          var req = tx.objectStore('patterns').get('data');
-          req.onsuccess = function (e) { resolve(e.target.result || null); };
-          req.onerror   = function (e) { reject(e.target.error); };
+          var tx  = db.transaction(IDB_STORE, 'readwrite');
+          var req = tx.objectStore(IDB_STORE).put(data, IDB_KEY);
+          tx.oncomplete = resolve;
+          tx.onerror    = function (e) { reject(e.target.error); };
         });
-      }).catch(function () { return null; });
-    };
-  }
+      });
+    });
+  };
 })();
 
 // =============================================================================

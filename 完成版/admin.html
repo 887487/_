@@ -1983,7 +1983,7 @@ function _hrQModalRenderConditions(q) {
     group.forEach(function(cond, ci) {
       var row = document.createElement('div'); row.style.cssText='display:flex;gap:4px;margin-bottom:4px;align-items:center;';
       var fSel = document.createElement('select'); fSel.style.cssText='font-size:10px;padding:2px 4px;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text);font-family:inherit;flex:1;';
-      var HR_FIELDS_ED = HR_FIELDS.filter(function(f){ return f.v !== ''; }).map(function(f){ return {l:f.l, v:f.v}; });
+      var HR_FIELDS_ED = [{l:'usage',v:'usage'},{l:'isMigration',v:'isMigration'},{l:'oldPlusId',v:'oldPlusId'},{l:'migMailConfirmed',v:'migMailConfirmed'},{l:'migMailUsable',v:'migMailUsable'},{l:'isAccountPerson',v:'isAccountPerson'},{l:'sAccountCreated',v:'sAccountCreated'},{l:'authCodeIssue',v:'authCodeIssue'},{l:'authCodeResult',v:'authCodeResult'},{l:'sjLinked',v:'sjLinked'},{l:'sjLoginlessResult',v:'sjLoginlessResult'},{l:'jAccountCreated',v:'jAccountCreated'},{l:'jAuthCodeIssue',v:'jAuthCodeIssue'}];
       var qs2 = _hrGetQuestions(); qs2.filter(function(q){return !q.builtin;}).forEach(function(q){ HR_FIELDS_ED.push({l:q.label,v:q.field}); });
       HR_FIELDS_ED.forEach(function(f){ var o=document.createElement('option'); o.value=f.v; o.textContent=f.l; if(cond.field===f.v)o.selected=true; fSel.appendChild(o); });
       fSel.onchange=(function(gi,ci){ return function(){ var qs=_hrGetQuestions(); qs[_hrQModalIdx].showIf[gi][ci].field=this.value; }; })(gi,ci);
@@ -4042,9 +4042,11 @@ function _exportAllToCommonUtils(hearingData, smData, histData) {
 
       // ヒアリング
       if (hearingData !== null && hearingData !== undefined) {
-        var startHr = '// @@HEARING_QUESTIONS_START@@', endHr = '// @@HEARING_QUESTIONS_END@@';
+        var startHr = '// @@HEARING_START@@', endHr = '// @@HEARING_END@@';
         var reHr = new RegExp(startHr.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + '[\\s\\S]*?' + endHr.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'));
-        var blockHr = startHr + '\nvar HEARING_QUESTIONS_DEFAULT = ' + JSON.stringify(hearingData.questions || [], null, 2) + ';\n' + endHr;
+        var blockHr = startHr + '\nwindow.DEFAULT_HEARING_QUESTIONS = ' + JSON.stringify(hearingData.questions || [], null, 2) + ';\n' +
+          'window.DEFAULT_HEARING_POLICIES  = ' + JSON.stringify(hearingData.policies  || [], null, 2) + ';\n' +
+          'window.DEFAULT_HEARING_PATTERNS  = ' + JSON.stringify(hearingData.patterns  || [], null, 2) + ';\n' + endHr;
         if (reHr.test(updated)) updated = updated.replace(reHr, blockHr);
       }
 
@@ -4066,10 +4068,10 @@ function _exportAllToCommonUtils(hearingData, smData, histData) {
     .catch(function(e) {
       // fetch失敗時はクリップボードへスニペットをコピー
       if (navigator.clipboard) {
-        var snippet =
-          (histData    ? '// @@UPDATE_HISTORY_START@@\nwindow.DEFAULT_UPDATE_HISTORY = '    + JSON.stringify(histData, null, 2)                + ';\n// @@UPDATE_HISTORY_END@@\n\n'       : '') +
-          (hearingData ? '// @@HEARING_QUESTIONS_START@@\nvar HEARING_QUESTIONS_DEFAULT = ' + JSON.stringify(hearingData.questions||[], null, 2) + ';\n// @@HEARING_QUESTIONS_END@@\n\n' : '') +
-          (smData      ? '// @@SIDE_MENU_DATA_START@@\n// デフォルトのサイドメニューデータ（オリジナル全URL入り）\nwindow.DEFAULT_SIDE_MENU_DATA = ' + JSON.stringify(smData, null, 2) + ';\n// @@SIDE_MENU_DATA_END@@\n' : '');
+        var snippet = '// ヒアリング・サイドメニュー・更新履歴のスニペット\n' +
+          (histData   ? 'window.DEFAULT_UPDATE_HISTORY = ' + JSON.stringify(histData, null, 2) + ';\n' : '') +
+          (hearingData? 'window.DEFAULT_HEARING_QUESTIONS = ' + JSON.stringify(hearingData.questions||[], null, 2) + ';\n' : '') +
+          (smData     ? 'window.DEFAULT_SIDE_MENU_DATA = ' + JSON.stringify(smData, null, 2) + ';\n' : '');
         navigator.clipboard.writeText(snippet).then(function() {
           toast('⚠️ common-utils.js の取得失敗。スニペットをクリップボードにコピーしました。手動で common-utils.js を編集してください。');
         });
