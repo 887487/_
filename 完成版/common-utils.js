@@ -1399,8 +1399,7 @@ _phonRow('M','メキシコ','マカロン') + _phonRow('N','ニューヨーク',
 _phonRow('O','大阪','') +
 _phonRow('P','パリ','プリン') +
 _phonRow('Q','クイーン','') + 
-_phonRow('R','ローマ','ロールケーキ') +
-_phonRow('S','スター','') + 
+_phonRow('R','ローマ','ロールケーキ') + _phonRow('S','スター','シュガー') + 
 _phonRow('T','東京','') +
 _phonRow('U','USA','') + 
 _phonRow('V','ヴィクトリー','') +
@@ -1442,8 +1441,7 @@ _phonRow('M','メキシコ','マカロン') + _phonRow('N','ニューヨーク',
 _phonRow('O','大阪','') +
 _phonRow('P','パリ','プリン') +
 _phonRow('Q','クイーン','') + 
-_phonRow('R','ローマ','ロールケーキ') +
-_phonRow('S','スター','') + 
+_phonRow('R','ローマ','ロールケーキ') + _phonRow('S','スター','シュガー') + 
 _phonRow('T','東京','') +
 _phonRow('U','USA','') + 
 _phonRow('V','ヴィクトリー','') +
