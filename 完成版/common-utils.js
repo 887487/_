@@ -1393,8 +1393,7 @@ function _buildSideMenuHTML(isDark) {
         '<th style="padding:6px 8px;border:1px solid var(--border,#e8eaed);text-align:center;font-weight:700;color:var(--text2,#555)">読み方①</th>' +
         '<th style="padding:6px 8px;border:1px solid var(--border,#e8eaed);text-align:center;font-weight:700;color:var(--text2,#555)">読み方②</th>' +
         '</tr></thead><tbody>' +
-_phonRow('A','アメリカ','アップルパイ') + _phonRow('B','ブラジル','バウムクーヘン') + _phonRow('C','チャイナ','チョコレート') + _phonRow('D','デンマーク','ドラヤキ') + _phonRow('E','エジプト','エクレア') + _phonRow('F','フランス','フィナンシェ') + _phonRow('G','グーグル','ガトーショコラ') + _phonRow('H','ホンコン','ホットケーキ') + _phonRow('I','イタリア','イモケンピ') + _phonRow('J','ジャパン','ジャム') + 
-_phonRow('K','キング','') + 
+_phonRow('A','アメリカ','アップルパイ') + _phonRow('B','ブラジル','バウムクーヘン') + _phonRow('C','チャイナ','チョコレート') + _phonRow('D','デンマーク','ドラヤキ') + _phonRow('E','エジプト','エクレア') + _phonRow('F','フランス','フィナンシェ') + _phonRow('G','グーグル','ガトーショコラ') + _phonRow('H','ホンコン','ホットケーキ') + _phonRow('I','イタリア','イモケンピ') + _phonRow('J','ジャパン','ジャム') + _phonRow('K','キング','カステラ') + 
 _phonRow('L','ロンドン','') +
 _phonRow('M','メキシコ','マカロン') + _phonRow('N','ニューヨーク','ナッツ') + 
 _phonRow('O','大阪','') +
@@ -1437,8 +1436,7 @@ _phonRow('W','ワールド','わたあめ') + _phonRow('X','エックス線','')
     '<th style="padding:6px 8px;border:1px solid var(--border,#e8eaed);text-align:center;font-weight:700;color:var(--text2,#555)">読み方①</th>' +
     '<th style="padding:6px 8px;border:1px solid var(--border,#e8eaed);text-align:center;font-weight:700;color:var(--text2,#555)">読み方②</th>' +
     '</tr></thead><tbody>' +
-_phonRow('A','アメリカ','アップルパイ') + _phonRow('B','ブラジル','バウムクーヘン') + _phonRow('C','チャイナ','チョコレート') + _phonRow('D','デンマーク','ドラヤキ') + _phonRow('E','エジプト','エクレア') + _phonRow('F','フランス','フィナンシェ') + _phonRow('G','グーグル','ガトーショコラ') + _phonRow('H','ホンコン','ホットケーキ') + _phonRow('I','イタリア','イモケンピ') + _phonRow('J','ジャパン','ジャム') + 
-_phonRow('K','キング','') + 
+_phonRow('A','アメリカ','アップルパイ') + _phonRow('B','ブラジル','バウムクーヘン') + _phonRow('C','チャイナ','チョコレート') + _phonRow('D','デンマーク','ドラヤキ') + _phonRow('E','エジプト','エクレア') + _phonRow('F','フランス','フィナンシェ') + _phonRow('G','グーグル','ガトーショコラ') + _phonRow('H','ホンコン','ホットケーキ') + _phonRow('I','イタリア','イモケンピ') + _phonRow('J','ジャパン','ジャム') + _phonRow('K','キング','カステラ') + 
 _phonRow('L','ロンドン','') +
 _phonRow('M','メキシコ','マカロン') + _phonRow('N','ニューヨーク','ナッツ') + 
 _phonRow('O','大阪','') +
