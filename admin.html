@@ -560,7 +560,7 @@
   display: inline-block;
   transform-origin: top left;
   position: relative;
-}
+} */
 
 
 
@@ -932,7 +932,7 @@ body.dnd-xlsx-hover::after {
 #scrCenterCanvas { display: none; flex: 1; overflow: auto; position: relative; padding: 20px; box-sizing: border-box; }
 #scrCenterImgWrap { position: relative; display: inline-block; user-select: none; }
 #scrCenterImg { display: block; max-width: 100%; max-height: calc(100vh - 140px); pointer-events: none; vertical-align: top; }
-#scrCenterOverlay { position: absolute; top: 0; left: 0; cursor: crosshair; touch-action: none; display: block; pointer-events: auto; }
+#scrCenterOverlay { position: absolute; top: 0; left: 0; cursor: crosshair; touch-action: none; }
 
   </style>
 </head>
@@ -2040,13 +2040,7 @@ function switchTab(tab){
   if(tab==='hearing'&&window.renderHearing){ window.renderHearing(); _hrQEditorRender(); _hrEditorRender(); _hrPatRender(); }
   if(tab==='script'){ loadFixedTexts(); }
   if(tab==='history')renderAdminHistoryPanel();
-  if(tab==='screen'){
-    initScreenEditor();
-    // タブ表示後に overlay を確実にリサイズ（非同期で layout が確定してから）
-    requestAnimationFrame(function(){
-      if(_scrSelScrId) _scrResizeCenterOverlay();
-    });
-  }
+  if(tab==='screen')initScreenEditor();
   if(tab==='sidemenu'){ _smData = null; smRender(); }
 }
 
@@ -4512,6 +4506,9 @@ function smRender() {
         var manualField =
           '<span style="font-size:10px;color:var(--muted);flex-shrink:0;white-space:nowrap;">📕マニュアルURL:</span>' +
           '<input class="sm-input" value="' + _smEsc(it.manualUrl || '') + '" placeholder="マニュアルPDF URL（任意・空欄で非表示）" oninput="smSetItem(' + si + ',' + ij + ',\'manualUrl\',this.value)" style="flex:2;min-width:100px;" title="マニュアルPDFのURLを入力するとリンク横に閲覧ボタンが表示されます">';
+        var filePathField =
+          '<span style="font-size:10px;color:var(--muted);flex-shrink:0;white-space:nowrap;">📂 ローカルファイルパス:</span>' +
+          '<input class="sm-input" value="' + _smEsc(it.file || '') + '" placeholder="例: ./files/customer.xlsx（空欄で無効）" oninput="smSetItem(' + si + ',' + ij + ',\'file\',this.value)" style="flex:3;min-width:160px;font-family:monospace;" title="HTMLと同じフォルダ基準の相対パス。サーバー不要・file://で直接ダウンロード可能">';
         return '<div style="display:flex;flex-wrap:wrap;gap:4px;align-items:center;padding:5px 0;border-bottom:1px solid var(--border);">' +
           '<input class="sm-input" value="' + _smEsc(it.name) + '" placeholder="リンク名" oninput="smSetItem(' + si + ',' + ij + ',\'name\',this.value)" style="flex:1;min-width:80px;">' +
           '<div style="flex:2;min-width:120px;position:relative;" ' +
@@ -4522,7 +4519,8 @@ function smRender() {
             (it.fileId ? '<span style="position:absolute;right:4px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--accent);" title="' + _smEsc(it.fileName||'添付ファイルあり') + '">📎</span>' : '') +
           '</div>' +
           manualField +
-          '<button class="sm-file-attach-btn" onclick="_smAttachFileAt(event,' + si + ',-1,' + ij + ')" title="ファイルを添付">📎</button>' +
+          filePathField +
+          '<button class="sm-file-attach-btn" onclick="_smAttachFileAt(event,' + si + ',-1,' + ij + ')" title="IDBファイルを添付（file://不要のExcel等に使用）">📎</button>' +
           (it.fileId ? '<button class="sm-del-btn" style="color:var(--danger);" onclick="_smDetachFile(' + si + ',-1,' + ij + ')" title="添付ファイルを削除">🗑</button>' : '') +
           '<button class="sm-del-btn" onclick="smDelItem(' + si + ',' + ij + ')">✕</button>' +
           '</div>';
@@ -5253,21 +5251,14 @@ function _scrUpdateCenterCanvas(){
     img.setAttribute('data-src',scr.imageSrc);
     // lib:xxx 形式を解決してから img.src にセット
     resolveImg(scr.imageSrc).then(function(src){
-      img.onload=function(){
-        requestAnimationFrame(function(){ _scrResizeCenterOverlay();_scrDrawCenterOverlay(null); });
-      };
+      img.onload=function(){_scrResizeCenterOverlay();_scrDrawCenterOverlay(null);};
       img.src=src||'';
     });
-  }else{
-    requestAnimationFrame(function(){ _scrResizeCenterOverlay();_scrDrawCenterOverlay(null); });
-  }
+  }else{_scrResizeCenterOverlay();_scrDrawCenterOverlay(null);}
 }
 function _scrResizeCenterOverlay(){
   var img=document.getElementById('scrCenterImg'),ov=document.getElementById('scrCenterOverlay');
-  if(!img||!ov)return;
-  if(img.offsetWidth===0||img.offsetHeight===0){
-    requestAnimationFrame(_scrResizeCenterOverlay);return;
-  }
+  if(!img||!ov)return;if(img.offsetWidth===0){requestAnimationFrame(_scrResizeCenterOverlay);return;}
   ov.width=img.offsetWidth;ov.height=img.offsetHeight;
   ov.style.width=img.offsetWidth+'px';ov.style.height=img.offsetHeight+'px';
 }
