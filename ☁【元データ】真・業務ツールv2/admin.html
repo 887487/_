@@ -502,9 +502,20 @@
 
 /* ホットスポットリスト：このセクションのみスクロール */
 #scrRsHsList {
-  max-height: 320px;
+  flex: 1;
   overflow-y: auto;
   padding-right: 2px;
+  min-height: 0;
+}
+
+/* ホットスポットセクション：flex:1で下方向に拡大 */
+.scr-rs-hs-section {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  padding: 10px 12px 6px;
+  border-bottom: none;
 }
 
 /* 削除ボタン：右サイドバー下部に固定 */
@@ -644,9 +655,10 @@
 }
 .scr-rs-scroll-area {
   flex: 1;
-  overflow: hidden;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
+  min-height: 0;
 }
 /* ファイル選択ボタン */
 .scr-rs-file-btn {
@@ -1320,16 +1332,8 @@ body.dnd-xlsx-hover::after {
           <!-- スクリーンショット -->
           <div class="scr-rs-always">
             <label class="scr-rs-label">スクリーンショット</label>
-            <!-- D&Dまたはクリックで画像追加（複数選択可） -->
-            <label id="scrRsDropArea" class="scr-dnd-label"
-                 ondragover="event.preventDefault();this.classList.add('drag-over')"
-                 ondragleave="this.classList.remove('drag-over')"
-                 ondrop="event.preventDefault();this.classList.remove('drag-over');scrRsImgDropFromLabel(event)">
-              <span>📂 クリックまたはD&Dで画像・PDFを追加</span>
-              <input type="file" accept="image/*,.pdf" multiple onchange="scrRsImgUpload(event)" style="display:none;">
-            </label>
             <!-- 画像サイズ -->
-            <div class="scr-size-row" style="margin-top:6px;">
+            <div class="scr-size-row">
               <span class="scr-size-lbl">画像:</span>
               <input class="scr-size-input" id="scrCropW" type="number" placeholder="幅">
               <span class="scr-size-lbl">×</span>
@@ -1365,7 +1369,7 @@ body.dnd-xlsx-hover::after {
           <div class="scr-rs-hs-section">
             <label class="scr-rs-label" style="flex-shrink:0;">ホットスポット（遷移エリア）</label>
             <div class="scr-hs-hint" style="flex-shrink:0;">🟦 画像をドラッグして遷移エリアを描いてください</div>
-            <div id="scrRsHsList" style="flex:1;overflow-y:auto;margin-top:4px;min-height:0;"></div>
+            <div id="scrRsHsList" style="flex:1;overflow-y:auto;margin-top:4px;min-height:60px;"></div>
           </div>
 
         </div><!-- /.scr-rs-scroll-area -->
@@ -3139,10 +3143,10 @@ function exportJSON(){
             _importProgressUpdate('エクスポート準備中…',
               (idx+1)+' / '+usedItems.length+' 枚圧縮済み',
               20 + Math.round((idx+1)/usedItems.length * 60));
-            resolve({ id: item.id, name: item.name, tags: item.tags||[], dataUrl: compressed });
+            resolve({ id: item.id, name: item.name, tags: item.tags||[], hotspots: item.hotspots||[], dataUrl: compressed });
           };
           img.onerror = function() {
-            resolve({ id: item.id, name: item.name, tags: item.tags||[], dataUrl: item.dataUrl });
+            resolve({ id: item.id, name: item.name, tags: item.tags||[], hotspots: item.hotspots||[], dataUrl: item.dataUrl });
           };
           img.src = item.dataUrl;
         });
@@ -5542,7 +5546,8 @@ function _scrRsRenderHsList(scr){
   scr.hotspots.forEach(function(hs,hi){
     var isMail=hs.targetType==='mail';
     var isPat= hs.targetType==='pattern';
-    var isScr= !isMail&&!isPat;
+    var isUrl= hs.targetType==='url';
+    var isScr= !isMail&&!isPat&&!isUrl;
     var selBg='background:var(--accent);color:#fff;border-color:var(--accent);font-weight:700;';
     var unselBg='background:var(--surface);color:var(--text);border:1px solid var(--border);';
     // 同パターン内画面の選択肢
@@ -5568,9 +5573,11 @@ function _scrRsRenderHsList(scr){
       +'<div class="scr-toggle-row">'
       +'<button onclick="_scrRsSetHsType('+hi+',\'screen\')" style="flex:1;height:24px;font-size:10px;border-radius:4px;cursor:pointer;font-family:inherit;'+(isScr?selBg:unselBg)+'">🖥 同パターン</button>'
       +'<button onclick="_scrRsSetHsType('+hi+',\'pattern\')" style="flex:1;height:24px;font-size:10px;border-radius:4px;cursor:pointer;font-family:inherit;'+(isPat?selBg:unselBg)+'">🗂 別パターン</button>'
+      +'<button onclick="_scrRsSetHsType('+hi+',\'url\')" style="flex:1;height:24px;font-size:10px;border-radius:4px;cursor:pointer;font-family:inherit;'+(isUrl?selBg:unselBg)+'">🔗 URL</button>'
       +'</div>'
       +'<select class="scr-hs-select" style="display:'+(isScr?'block':'none')+'" onchange="_scrRsHsSet('+hi+',\'targetId\',this.value)"><option value="">— 同パターン内の遷移先 —</option>'+screenOpts+'</select>'
       +'<select class="scr-hs-select" style="display:'+(isPat?'block':'none')+'" onchange="_scrRsHsSet('+hi+',\'targetId\',this.value)"><option value="">— パターン / 画面を選択 —</option>'+patOpts+'</select>'
+      +'<input type="text" class="scr-hs-select" placeholder="https://..." style="display:'+(isUrl?'block':'none')+';" oninput="_scrRsHsSet('+hi+',\'targetId\',this.value)" value="'+esc(isUrl?hs.targetId:'')+'">'
 
       +'<label class="scr-rs-label" style="margin-top:4px;">メモ（任意）</label>'
       +'<textarea class="scr-hs-memo" rows="2" placeholder="メモ（任意）" oninput="_scrRsHsSet('+hi+',\'note\',this.value)">'+esc(hs.note||'')+'</textarea>'
@@ -6275,6 +6282,40 @@ function _imgLibDraw(items, query) {
     replaceLabel.appendChild(replaceInput);
     tdOp.appendChild(replaceLabel);
 
+    // ホットスポット保存ボタン
+    var hsCount = Array.isArray(item.hotspots) ? item.hotspots.length : 0;
+    var saveHsBtn = document.createElement('button');
+    saveHsBtn.textContent = '📍 HS保存' + (hsCount > 0 ? '(' + hsCount + ')' : '');
+    saveHsBtn.title = '現在選択中の画面のホットスポットをライブラリに保存します';
+    saveHsBtn.style.cssText = 'font-size:10px;padding:2px 8px;border:1px solid var(--border);border-radius:4px;background:var(--surface2);cursor:pointer;color:var(--text);font-family:inherit;margin-right:4px;' + (hsCount > 0 ? 'border-color:var(--accent);color:var(--accent);' : '');
+    saveHsBtn.onclick = function() {
+      // 現在選択中の画面のホットスポットを取得
+      var curPat = screenPatterns.find(function(p){ return p.id === _scrCurrentPatId; });
+      var curScr = curPat ? curPat.screens.find(function(s){ return s.id === _scrSelScrId; }) : null;
+      if (!curScr) { toast('❌ 画面を選択してください'); return; }
+      if (curScr.imageSrc !== 'lib:' + item.id) { toast('❌ 選択中の画面はこの画像を使用していません'); return; }
+      var hs = curScr.hotspots || [];
+      if (!confirm(hs.length + '件のホットスポットをライブラリに保存します。\nこの画像をパターンに追加する際に自動的に引き継がれます。')) return;
+      _imgLibOpen().then(function(db) {
+        var tx = db.transaction('imageLib', 'readwrite');
+        var req = tx.objectStore('imageLib').get(item.id);
+        req.onsuccess = function(e) {
+          var rec = e.target.result; if (!rec) return;
+          rec.hotspots = JSON.parse(JSON.stringify(hs));
+          tx.objectStore('imageLib').put(rec, item.id);
+        };
+        tx.oncomplete = function() {
+          item.hotspots = JSON.parse(JSON.stringify(hs));
+          var cached = _imgLibAllItems.find(function(x){ return x.id === item.id; });
+          if (cached) cached.hotspots = item.hotspots;
+          saveHsBtn.textContent = '📍 HS保存(' + hs.length + ')';
+          saveHsBtn.style.borderColor = 'var(--accent)'; saveHsBtn.style.color = 'var(--accent)';
+          toast('✅ ホットスポットをライブラリに保存しました');
+        };
+      });
+    };
+    tdOp.appendChild(saveHsBtn);
+
     var delBtn = document.createElement('button');
     delBtn.textContent = '🗑 削除';
     delBtn.disabled = used;
@@ -6553,12 +6594,16 @@ function _imgLibHideContextMenu() {
 function _imgLibAddToPat(item, patId) {
   var pat = screenPatterns.find(function(p){ return p.id === patId; });
   if (!pat) return;
+  // ライブラリに保存されたホットスポットを引き継ぐ（ID を新規生成して複製）
+  var libHs = Array.isArray(item.hotspots) ? item.hotspots.map(function(hs) {
+    return Object.assign({}, hs, { id: _scrGenId() });
+  }) : [];
   var scr = {
     id: _scrGenId(),
     name: item.name || item.id,
     note: '',
     imageSrc: 'lib:' + item.id,
-    hotspots: []
+    hotspots: libHs
   };
   pat.screens.push(scr);
   scrSaveIndex();

@@ -457,39 +457,26 @@ function _processImportText(text, noReload) {
         if (raw && (raw.version === 3 || raw.version === 2 || raw.version === 1) &&
             'talkScripts' in raw && 'mailTemplates' in raw) {
           _importProgressHide();
-          if (!confirm('インポートしたデータを現在のデータに差分結合します（重複は上書き、新規は追加）。よろしいですか？')) return;
-          _importProgressShow('データを結合中…', 'スクリプト・メール', 50);
+          if (!confirm('現在のデータをインポートしたデータで上書きします。よろしいですか？')) return;
+          _importProgressShow('データを保存中…', 'スクリプト・メール', 50);
           setTimeout(function () {
             try {
-              // スクリプト：カテゴリ key 単位で結合
-              var curScripts = window._appCache.scripts || {};
-              var mergedScripts = _mergeScripts(curScripts, raw.talkScripts);
+              // スクリプト：上書き
+              var mergedScripts = raw.talkScripts;
               window._appCache.scripts = mergedScripts;
               window.idbSetAppData('scripts', mergedScripts);
               try { var _bcs2=new BroadcastChannel('tool_data_update'); _bcs2.postMessage({type:'scriptsUpdated',ts:Date.now()}); _bcs2.close(); } catch(e) {}
-              // メール：id 単位で結合
-              var curMail = window._appCache.mailTemplates || [];
-              var mergedMail = _mergeMail(curMail, raw.mailTemplates);
+              // メール：上書き
+              var mergedMail = raw.mailTemplates;
               window._appCache.mailTemplates = mergedMail;
               window.idbSetAppData('mailTemplates', mergedMail);
               imported.scripts = true;
               imported.mail    = true;
-              raw = Object.assign({}, raw, { talkScripts: mergedScripts, mailTemplates: mergedMail });
 
               // 画面遷移
               if ((raw.version === 2 || raw.version === 3) && Array.isArray(raw.screenData)) {
-                var curScreenData = null;
-                try {
-                  if (typeof patterns !== 'undefined' && Array.isArray(patterns) && patterns.length) {
-                    curScreenData = patterns;
-                  } else {
-                    var csd = localStorage.getItem('screenFlowIndex'); if(csd) curScreenData = JSON.parse(csd);
-                  }
-                } catch(e) {}
-                var mergedScreen = _mergeScreenData(curScreenData, raw.screenData);
                 imported.screen = true;
-                imported.screenData = mergedScreen;
-                raw = Object.assign({}, raw, { screenData: mergedScreen });
+                imported.screenData = raw.screenData;
               }
 
               // v3: imageLib を IDB に直接保存（idbSetScreenData 非依存）
