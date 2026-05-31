@@ -1327,7 +1327,7 @@ function _phonRow(letter, r1, r2) {
   var cell = function (v) {
     return '<td style="padding:6px 8px;border:1px solid var(--border,#e8eaed);text-align:center;color:var(--text,#2f3542)">' + v + '</td>';
   };
-  return '<tr>' + cell(letter) + cell(r1) + cell(r2) + '</tr>';
+  return '<tr>' + cell(letter) + cell(r1) + '</tr>';
 }
 
 function _buildSideMenuHTML(isDark) {
@@ -1377,11 +1377,10 @@ function _buildSideMenuHTML(isDark) {
         sec.label + ' <span class="arrow" style="display:inline-block;transition:transform .2s">▶</span></div>' +
         '<div class="accordion-body" id="' + secId + '" style="padding:10px 12px 14px;"><div style="overflow-x:auto;">' +
         '<table style="width:100%;border-collapse:collapse;font-size:11px;min-width:220px;">' +
-        '<colgroup><col><col style="width:100px"><col style="width:100px"></colgroup>' +
+        '<colgroup><col><col style="width:130px"></colgroup>' +
         '<thead><tr style="background:var(--surface2,#f8f9fa)">' +
         '<th style="padding:6px 8px;border:1px solid var(--border,#e8eaed);text-align:center;font-weight:700;color:var(--text2,#555)">アルファベット</th>' +
-        '<th style="padding:6px 8px;border:1px solid var(--border,#e8eaed);text-align:center;font-weight:700;color:var(--text2,#555)">読み方①</th>' +
-        '<th style="padding:6px 8px;border:1px solid var(--border,#e8eaed);text-align:center;font-weight:700;color:var(--text2,#555)">読み方②</th>' +
+        '<th style="padding:6px 8px;border:1px solid var(--border,#e8eaed);text-align:center;font-weight:700;color:var(--text2,#555)">読み方</th>' +
         '</tr></thead><tbody>' +
 _phonRow('A','アメリカ','アップルパイ') + _phonRow('B','ブラジル','バウムクーヘン') + _phonRow('C','チャイナ','チョコレート') + _phonRow('D','デンマーク','ドラヤキ') + _phonRow('E','エジプト','エクレア') + _phonRow('F','フランス','フィナンシェ') + _phonRow('G','グーグル','ガトーショコラ') + _phonRow('H','ホンコン','ホットケーキ') + _phonRow('I','イタリア','イモケンピ') + _phonRow('J','ジャパン','ジャム') + _phonRow('K','キング','カステラ') + _phonRow('L','ロンドン','ラングドシャ') + _phonRow('M','メキシコ','マカロン') + _phonRow('N','ニューヨーク','ナッツ') + _phonRow('O','大阪','オレンジ') + _phonRow('P','パリ','プリン') + _phonRow('Q','クイーン','') + _phonRow('R','ローマ','ロールケーキ') + _phonRow('S','スター','シュガー') + _phonRow('T','東京','タルト') + _phonRow('U','USA','') + _phonRow('V','ヴィクトリー','バニラ') + _phonRow('W','ワールド','わたあめ') + _phonRow('X','エックス線','') + _phonRow('Y','ヤフー','ヨーグルト') + _phonRow('Z','ゼブラ','ザッハトルテ') + _phonRow('-','ハイフン','■■■') + _phonRow('_','アンダーバー','■■■') +
         '</tbody></table></div></div></div>';
@@ -1412,11 +1411,10 @@ _phonRow('A','アメリカ','アップルパイ') + _phonRow('B','ブラジル',
   html += '<div class="side-section"><div class="side-section-header" onclick="toggleAccordion(\'noticePanel\')">📖フォネティックコード <span class="arrow" style="display:inline-block;transition:transform .2s">▶</span></div>' +
     '<div class="accordion-body" id="noticePanel" style="padding:10px 12px 14px;"><div style="overflow-x:auto;">' +
     '<table style="width:100%;border-collapse:collapse;font-size:11px;min-width:220px;">' +
-    '<colgroup><col><col style="width:100px"><col style="width:100px"></colgroup>' +
+    '<colgroup><col><col style="width:130px"></colgroup>' +
     '<thead><tr style="background:var(--surface2,#f8f9fa)">' +
     '<th style="padding:6px 8px;border:1px solid var(--border,#e8eaed);text-align:center;font-weight:700;color:var(--text2,#555)">アルファベット</th>' +
-    '<th style="padding:6px 8px;border:1px solid var(--border,#e8eaed);text-align:center;font-weight:700;color:var(--text2,#555)">読み方①</th>' +
-    '<th style="padding:6px 8px;border:1px solid var(--border,#e8eaed);text-align:center;font-weight:700;color:var(--text2,#555)">読み方②</th>' +
+    '<th style="padding:6px 8px;border:1px solid var(--border,#e8eaed);text-align:center;font-weight:700;color:var(--text2,#555)">読み方</th>' +
     '</tr></thead><tbody>' +
 _phonRow('A','アメリカ','アップルパイ') + _phonRow('B','ブラジル','バウムクーヘン') + _phonRow('C','チャイナ','チョコレート') + _phonRow('D','デンマーク','ドラヤキ') + _phonRow('E','エジプト','エクレア') + _phonRow('F','フランス','フィナンシェ') + _phonRow('G','グーグル','ガトーショコラ') + _phonRow('H','ホンコン','ホットケーキ') + _phonRow('I','イタリア','イモケンピ') + _phonRow('J','ジャパン','ジャム') + _phonRow('K','キング','カステラ') + _phonRow('L','ロンドン','ラングドシャ') + _phonRow('M','メキシコ','マカロン') + _phonRow('N','ニューヨーク','ナッツ') + _phonRow('O','大阪','オレンジ') + _phonRow('P','パリ','プリン') + _phonRow('Q','クイーン','') + _phonRow('R','ローマ','ロールケーキ') + _phonRow('S','スター','シュガー') + _phonRow('T','東京','タルト') + _phonRow('U','USA','') + _phonRow('V','ヴィクトリー','バニラ') + _phonRow('W','ワールド','わたあめ') + _phonRow('X','エックス線','') + _phonRow('Y','ヤフー','ヨーグルト') + _phonRow('Z','ゼブラ','ザッハトルテ') + _phonRow('-','ハイフン','■■■') + _phonRow('_','アンダーバー','■■■') +
     '</tbody></table></div></div></div>';

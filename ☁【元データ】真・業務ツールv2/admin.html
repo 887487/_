@@ -6286,33 +6286,89 @@ function _imgLibDraw(items, query) {
     var hsCount = Array.isArray(item.hotspots) ? item.hotspots.length : 0;
     var saveHsBtn = document.createElement('button');
     saveHsBtn.textContent = '📍 HS保存' + (hsCount > 0 ? '(' + hsCount + ')' : '');
-    saveHsBtn.title = '現在選択中の画面のホットスポットをライブラリに保存します';
+    saveHsBtn.title = 'この画像を使用している画面のホットスポットをライブラリに保存します';
     saveHsBtn.style.cssText = 'font-size:10px;padding:2px 8px;border:1px solid var(--border);border-radius:4px;background:var(--surface2);cursor:pointer;color:var(--text);font-family:inherit;margin-right:4px;' + (hsCount > 0 ? 'border-color:var(--accent);color:var(--accent);' : '');
     saveHsBtn.onclick = function() {
-      // 現在選択中の画面のホットスポットを取得
-      var curPat = screenPatterns.find(function(p){ return p.id === _scrCurrentPatId; });
-      var curScr = curPat ? curPat.screens.find(function(s){ return s.id === _scrSelScrId; }) : null;
-      if (!curScr) { toast('❌ 画面を選択してください'); return; }
-      if (curScr.imageSrc !== 'lib:' + item.id) { toast('❌ 選択中の画面はこの画像を使用していません'); return; }
-      var hs = curScr.hotspots || [];
-      if (!confirm(hs.length + '件のホットスポットをライブラリに保存します。\nこの画像をパターンに追加する際に自動的に引き継がれます。')) return;
-      _imgLibOpen().then(function(db) {
-        var tx = db.transaction('imageLib', 'readwrite');
-        var req = tx.objectStore('imageLib').get(item.id);
-        req.onsuccess = function(e) {
-          var rec = e.target.result; if (!rec) return;
-          rec.hotspots = JSON.parse(JSON.stringify(hs));
-          tx.objectStore('imageLib').put(rec, item.id);
-        };
-        tx.oncomplete = function() {
-          item.hotspots = JSON.parse(JSON.stringify(hs));
-          var cached = _imgLibAllItems.find(function(x){ return x.id === item.id; });
-          if (cached) cached.hotspots = item.hotspots;
-          saveHsBtn.textContent = '📍 HS保存(' + hs.length + ')';
-          saveHsBtn.style.borderColor = 'var(--accent)'; saveHsBtn.style.color = 'var(--accent)';
-          toast('✅ ホットスポットをライブラリに保存しました');
-        };
+      var libId = item.id;
+      var libRef = 'lib:' + libId;
+
+      // この画像を使用している全画面を収集
+      var usages = [];
+      screenPatterns.forEach(function(p) {
+        (p.screens || []).forEach(function(s) {
+          if (s.imageSrc === libRef) {
+            usages.push({ pat: p, scr: s });
+          }
+        });
       });
+
+      // 実際にHSを書き込む共通処理
+      function doSave(hs) {
+        _imgLibOpen().then(function(db) {
+          var tx = db.transaction('imageLib', 'readwrite');
+          var req = tx.objectStore('imageLib').get(libId);
+          req.onsuccess = function(e) {
+            var rec = e.target.result; if (!rec) return;
+            rec.hotspots = JSON.parse(JSON.stringify(hs));
+            tx.objectStore('imageLib').put(rec, libId);
+          };
+          tx.oncomplete = function() {
+            item.hotspots = JSON.parse(JSON.stringify(hs));
+            var cached = _imgLibAllItems.find(function(x){ return x.id === libId; });
+            if (cached) cached.hotspots = item.hotspots;
+            saveHsBtn.textContent = '📍 HS保存(' + hs.length + ')';
+            saveHsBtn.style.borderColor = 'var(--accent)';
+            saveHsBtn.style.color = 'var(--accent)';
+            toast('✅ ホットスポットをライブラリに保存しました');
+          };
+        });
+      }
+
+      if (usages.length === 0) {
+        // どの画面にも使われていない → 0件保存（クリア）
+        if (!confirm('この画像はどの画面にも使用されていません。\nホットスポットを 0件 でライブラリに保存（クリア）しますか？')) return;
+        doSave([]);
+      } else if (usages.length === 1) {
+        // 1画面のみ → 確認後即保存
+        var hs = usages[0].scr.hotspots || [];
+        if (!confirm('[' + usages[0].pat.name + '] ' + usages[0].scr.name + '\n' +
+            hs.length + '件のホットスポットをライブラリに保存します。\nこの画像をパターンに追加する際に自動的に引き継がれます。')) return;
+        doSave(hs);
+      } else {
+        // 複数画面が同じ画像を使用 → 選択ダイアログを表示
+        var ov = document.createElement('div');
+        ov.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;';
+        var box = document.createElement('div');
+        box.style.cssText = 'background:var(--surface);border-radius:12px;padding:20px 24px;min-width:340px;max-width:480px;box-shadow:0 16px 48px rgba(0,0,0,.35);font-family:inherit;';
+        box.innerHTML = '<div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:6px;">📍 HS保存 — 画面を選択</div>' +
+          '<div style="font-size:11px;color:var(--text3);margin-bottom:14px;">この画像を使用している画面が複数あります。<br>どの画面のホットスポットをライブラリに保存しますか？</div>';
+        usages.forEach(function(u, idx) {
+          var hsLen = (u.scr.hotspots || []).length;
+          var btn = document.createElement('button');
+          btn.style.cssText = 'display:block;width:100%;text-align:left;padding:8px 12px;margin-bottom:6px;border:1px solid var(--border);border-radius:6px;background:var(--surface2);cursor:pointer;font-family:inherit;font-size:12px;color:var(--text);';
+          btn.innerHTML = '<span style="font-weight:600;">' + u.pat.name + '</span>'
+            + ' &rsaquo; ' + u.scr.name
+            + ' <span style="color:var(--text3);font-size:11px;">（HS ' + hsLen + '件）</span>';
+          btn.onmouseover = function(){ this.style.borderColor = 'var(--accent)'; this.style.background = 'var(--accent-lt)'; };
+          btn.onmouseout  = function(){ this.style.borderColor = 'var(--border)';  this.style.background = 'var(--surface2)'; };
+          btn.onclick = function() {
+            document.body.removeChild(ov);
+            var hs = u.scr.hotspots || [];
+            if (!confirm('[' + u.pat.name + '] ' + u.scr.name + '\n' +
+                hs.length + '件のホットスポットをライブラリに保存します。\nこの画像をパターンに追加する際に自動的に引き継がれます。')) return;
+            doSave(hs);
+          };
+          box.appendChild(btn);
+        });
+        var cancelBtn = document.createElement('button');
+        cancelBtn.textContent = 'キャンセル';
+        cancelBtn.style.cssText = 'margin-top:4px;padding:6px 16px;border:1px solid var(--border);border-radius:6px;background:none;cursor:pointer;font-family:inherit;font-size:12px;color:var(--text3);';
+        cancelBtn.onclick = function() { document.body.removeChild(ov); };
+        box.appendChild(cancelBtn);
+        ov.appendChild(box);
+        ov.onclick = function(e) { if (e.target === ov) document.body.removeChild(ov); };
+        document.body.appendChild(ov);
+      }
     };
     tdOp.appendChild(saveHsBtn);
 
