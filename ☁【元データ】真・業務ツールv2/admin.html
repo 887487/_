@@ -1068,7 +1068,7 @@ body.dnd-xlsx-hover::after {
             <button class="btn btn-primary"   style="font-size:11px;" onclick="_hrQAdd()">＋ 質問を追加</button>
           </div>
         </div>
-        <div style="font-size:11px;color:var(--text3);margin-bottom:10px;">🔒 組み込み質問はラベル・表示条件を編集できます（削除不可）。✏️ カスタム質問は全て編集・削除できます。</div>
+        <div style="font-size:11px;color:var(--text3);margin-bottom:10px;">質問のラベル・表示条件・有効/無効を編集できます。不要な質問は削除できます。</div>
         <div id="hrQList" style="display:flex;flex-direction:column;gap:8px;"></div>
       </div>
 
@@ -1226,7 +1226,7 @@ body.dnd-xlsx-hover::after {
 </div>
 
 <!-- ===== 画像ライブラリ（画面遷移タブ内オーバーレイパネル） ===== -->
-<div id="imgLibPanel" style="display:none;position:fixed;inset:0;z-index:600;background:var(--surface);flex-direction:column;">
+<div id="imgLibPanel" style="display:none;position:fixed;top:var(--header-h,60px);left:0;right:0;bottom:0;z-index:600;background:var(--surface);flex-direction:column;">
   <div style="display:flex;flex-direction:column;height:100%;overflow:hidden;">
     <!-- ヘッダー -->
     <div style="display:flex;align-items:center;justify-content:space-between;padding:0 18px;height:48px;border-bottom:1px solid var(--border);flex-shrink:0;background:var(--surface2);">
@@ -1845,8 +1845,7 @@ function _hrQEditorRender() {
     var hd = document.createElement('div');
     hd.style.cssText = 'display:flex;align-items:center;gap:6px;';
     var badge = document.createElement('span');
-    badge.textContent = q.builtin ? '🔒 組み込み' : '✏️ カスタム';
-    badge.style.cssText = 'font-size:9px;padding:1px 6px;border-radius:10px;background:' + (q.builtin?'#dfe4ea':'#d8f5e3') + ';color:var(--text3);flex-shrink:0;';
+    // バッジ非表示（すべてadmin.htmlから編集可能な設計のため）
     var lbl = document.createElement('span');
     lbl.textContent = q.label;
     lbl.style.cssText = 'font-size:12px;font-weight:700;color:var(--text);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
@@ -1858,13 +1857,11 @@ function _hrQEditorRender() {
     var editBtn = document.createElement('button');
     editBtn.textContent='✏️'; editBtn.title='編集'; editBtn.style.cssText='font-size:11px;padding:2px 6px;border:1px solid var(--border);border-radius:4px;background:var(--surface2);cursor:pointer;font-family:inherit;';
     editBtn.onclick=(function(qi){ return function(){ _hrQOpenModal(qi); }; })(qi);
-    hd.appendChild(badge); hd.appendChild(lbl); hd.appendChild(enaWrap);
-    if (!q.builtin) {
-      var delBtn = document.createElement('button');
-      delBtn.textContent='🗑'; delBtn.title='削除'; delBtn.style.cssText='font-size:11px;padding:2px 6px;border:1px solid var(--border);border-radius:4px;background:var(--surface2);cursor:pointer;font-family:inherit;';
-      delBtn.onclick=(function(qi){ return function(){ if(!confirm('この質問を削除しますか？'))return; var qs=_hrGetQuestions(); qs.splice(qi,1); _hrQuestionsSave(qs); _hrQEditorRender(); if(window.renderHearing)window.renderHearing(); }; })(qi);
-      hd.appendChild(delBtn);
-    }
+    hd.appendChild(lbl); hd.appendChild(enaWrap);
+    var delBtn = document.createElement('button');
+    delBtn.textContent='🗑'; delBtn.title='削除'; delBtn.style.cssText='font-size:11px;padding:2px 6px;border:1px solid var(--border);border-radius:4px;background:var(--surface2);cursor:pointer;font-family:inherit;';
+    delBtn.onclick=(function(qi){ return function(){ if(!confirm('この質問を削除しますか？'))return; var qs=_hrGetQuestions(); qs.splice(qi,1); _hrQuestionsSave(qs); _hrQEditorRender(); if(window.renderHearing)window.renderHearing(); }; })(qi);
+    hd.appendChild(delBtn);
     hd.appendChild(editBtn);
     card.appendChild(hd);
 
@@ -1965,10 +1962,10 @@ function _hrQOpenModal(qi) {
   var m = document.getElementById('hrQModal'); if (!m) return;
   document.getElementById('hrQModalLabel').value = q.label || '';
   document.getElementById('hrQModalField').value = q.field || '';
-  document.getElementById('hrQModalField').disabled = !!q.builtin;
+  document.getElementById('hrQModalField').disabled = false;
   var typeSel = document.getElementById('hrQModalType');
   typeSel.value = q.type || 'bool';
-  typeSel.disabled = !!q.builtin;
+  typeSel.disabled = false;
   _hrQModalRefreshTypeUI(q);
   _hrQModalRenderConditions(q);
   m.style.display = 'flex';
@@ -2008,53 +2005,104 @@ function _hrQModalAddOption() {
   qs[_hrQModalIdx].options.push({l:'', v:''});
   _hrQModalRenderOptions(qs[_hrQModalIdx].options);
 }
+/**
+ * hrQModalConditions の DOM を読んで showIf 配列を組み立てる。
+ * グループ = .hrcond-group、条件行 = .hrcond-row
+ */
+function _hrQModalReadShowIf() {
+  var el = document.getElementById('hrQModalConditions'); if (!el) return [];
+  var showIf = [];
+  el.querySelectorAll('.hrcond-group').forEach(function(gEl) {
+    var group = [];
+    gEl.querySelectorAll('.hrcond-row').forEach(function(row) {
+      var fSel  = row.querySelector('[data-role="field"]');
+      var opSel = row.querySelector('[data-role="op"]');
+      var valIn = row.querySelector('[data-role="val"]');
+      if (fSel && opSel && valIn) {
+        group.push({ field: fSel.value, op: opSel.value, value: valIn.value });
+      }
+    });
+    if (group.length) showIf.push(group);
+  });
+  return showIf;
+}
+
 function _hrQModalRenderConditions(q) {
   var el = document.getElementById('hrQModalConditions'); if (!el) return;
   el.innerHTML = '';
   var groups = q.showIf || [];
   groups.forEach(function(group, gi) {
     var gEl = document.createElement('div');
+    gEl.className = 'hrcond-group';
     gEl.style.cssText='background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:8px;margin-bottom:8px;';
     var gHead = document.createElement('div'); gHead.style.cssText='display:flex;align-items:center;gap:6px;margin-bottom:6px;';
     var gLbl = document.createElement('span'); gLbl.textContent='条件グループ '+(gi+1)+'（AND）'; gLbl.style.cssText='font-size:10px;font-weight:700;color:var(--text2);flex:1;';
     var gDel = document.createElement('button'); gDel.textContent='グループ削除'; gDel.style.cssText='font-size:9px;padding:1px 6px;border:1px solid var(--border);border-radius:4px;background:var(--surface);cursor:pointer;font-family:inherit;';
-    gDel.onclick=(function(gi){ return function(){ var qs=_hrGetQuestions(); qs[_hrQModalIdx].showIf.splice(gi,1); _hrQModalRenderConditions(qs[_hrQModalIdx]); }; })(gi);
+    gDel.onclick = function() {
+      var cur = _hrQModalReadShowIf();
+      cur.splice(gi, 1);
+      var qs = _hrGetQuestions(); qs[_hrQModalIdx].showIf = cur;
+      _hrQModalRenderConditions(qs[_hrQModalIdx]);
+    };
     gHead.appendChild(gLbl); gHead.appendChild(gDel); gEl.appendChild(gHead);
     group.forEach(function(cond, ci) {
-      var row = document.createElement('div'); row.style.cssText='display:flex;gap:4px;margin-bottom:4px;align-items:center;';
-      var fSel = document.createElement('select'); fSel.style.cssText='font-size:10px;padding:2px 4px;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text);font-family:inherit;flex:1;';
-      var HR_FIELDS_ED = [{l:'usage',v:'usage'},{l:'isMigration',v:'isMigration'},{l:'oldPlusId',v:'oldPlusId'},{l:'migMailConfirmed',v:'migMailConfirmed'},{l:'migMailUsable',v:'migMailUsable'},{l:'isAccountPerson',v:'isAccountPerson'},{l:'sAccountCreated',v:'sAccountCreated'},{l:'authCodeIssue',v:'authCodeIssue'},{l:'authCodeResult',v:'authCodeResult'},{l:'sjLinked',v:'sjLinked'},{l:'sjLoginlessResult',v:'sjLoginlessResult'},{l:'jAccountCreated',v:'jAccountCreated'},{l:'jAuthCodeIssue',v:'jAuthCodeIssue'}];
-      var qs2 = _hrGetQuestions(); qs2.filter(function(q){return !q.builtin;}).forEach(function(q){ HR_FIELDS_ED.push({l:q.label,v:q.field}); });
+      var row = document.createElement('div');
+      row.className = 'hrcond-row';
+      row.style.cssText='display:flex;gap:4px;margin-bottom:4px;align-items:center;';
+      var fSel = document.createElement('select');
+      fSel.dataset.role = 'field';
+      fSel.style.cssText='font-size:10px;padding:2px 4px;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text);font-family:inherit;flex:1;';
+      var HR_FIELDS_ED = [];
+      var qs2 = _hrGetQuestions(); qs2.forEach(function(q){ HR_FIELDS_ED.push({l:q.label,v:q.field}); });
       HR_FIELDS_ED.forEach(function(f){ var o=document.createElement('option'); o.value=f.v; o.textContent=f.l; if(cond.field===f.v)o.selected=true; fSel.appendChild(o); });
-      fSel.onchange=(function(gi,ci){ return function(){ var qs=_hrGetQuestions(); qs[_hrQModalIdx].showIf[gi][ci].field=this.value; }; })(gi,ci);
-      var opSel = document.createElement('select'); opSel.style.cssText='font-size:10px;padding:2px 4px;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text);font-family:inherit;';
+      var opSel = document.createElement('select');
+      opSel.dataset.role = 'op';
+      opSel.style.cssText='font-size:10px;padding:2px 4px;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text);font-family:inherit;';
       HR_OP_OPTIONS.forEach(function(o){ var el=document.createElement('option'); el.value=o.v; el.textContent=o.l; if(cond.op===o.v)el.selected=true; opSel.appendChild(el); });
-      opSel.onchange=(function(gi,ci){ return function(){ var qs=_hrGetQuestions(); qs[_hrQModalIdx].showIf[gi][ci].op=this.value; }; })(gi,ci);
-      var valIn = document.createElement('input'); valIn.type='text'; valIn.value=cond.value||''; valIn.placeholder='値（inはカンマ区切り）';
+      var valIn = document.createElement('input');
+      valIn.dataset.role = 'val';
+      valIn.type='text'; valIn.value=cond.value||''; valIn.placeholder='値（inはカンマ区切り）';
       valIn.style.cssText='flex:1;font-size:10px;padding:2px 4px;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text);font-family:inherit;';
-      valIn.oninput=(function(gi,ci){ return function(){ var qs=_hrGetQuestions(); qs[_hrQModalIdx].showIf[gi][ci].value=this.value; }; })(gi,ci);
       var cDel = document.createElement('button'); cDel.textContent='✕'; cDel.style.cssText='font-size:10px;padding:2px 5px;border:1px solid var(--border);border-radius:4px;background:var(--surface2);cursor:pointer;font-family:inherit;';
-      cDel.onclick=(function(gi,ci){ return function(){ var qs=_hrGetQuestions(); qs[_hrQModalIdx].showIf[gi].splice(ci,1); _hrQModalRenderConditions(qs[_hrQModalIdx]); }; })(gi,ci);
+      cDel.onclick = (function(gi, ci) { return function() {
+        var cur = _hrQModalReadShowIf();
+        cur[gi].splice(ci, 1);
+        var qs = _hrGetQuestions(); qs[_hrQModalIdx].showIf = cur;
+        _hrQModalRenderConditions(qs[_hrQModalIdx]);
+      }; })(gi, ci);
       row.appendChild(fSel); row.appendChild(opSel); row.appendChild(valIn); row.appendChild(cDel);
       gEl.appendChild(row);
     });
     var addCond = document.createElement('button'); addCond.textContent='＋ AND条件追加'; addCond.style.cssText='font-size:10px;padding:2px 8px;border:1px solid var(--accent);border-radius:4px;background:var(--surface);cursor:pointer;color:var(--accent);font-family:inherit;';
-    addCond.onclick=(function(gi){ return function(){ var qs=_hrGetQuestions(); qs[_hrQModalIdx].showIf[gi].push({field:'usage',op:'eq',value:'世帯'}); _hrQModalRenderConditions(qs[_hrQModalIdx]); }; })(gi);
+    addCond.onclick = (function(gi) { return function() {
+      var cur = _hrQModalReadShowIf();
+      if (!cur[gi]) cur[gi] = [];
+      cur[gi].push({field: (function(){ var qs2=_hrGetQuestions(); return qs2.length ? qs2[0].field : 'usage'; })(), op:'eq', value:''});
+      var qs = _hrGetQuestions(); qs[_hrQModalIdx].showIf = cur;
+      _hrQModalRenderConditions(qs[_hrQModalIdx]);
+    }; })(gi);
     gEl.appendChild(addCond); el.appendChild(gEl);
   });
   var addGrp = document.createElement('button'); addGrp.textContent='＋ ORグループを追加'; addGrp.style.cssText='font-size:10px;padding:3px 10px;border:1px solid var(--border);border-radius:4px;background:var(--surface2);cursor:pointer;font-family:inherit;';
-  addGrp.onclick=function(){ var qs=_hrGetQuestions(); if(!qs[_hrQModalIdx].showIf)qs[_hrQModalIdx].showIf=[]; qs[_hrQModalIdx].showIf.push([{field:'usage',op:'eq',value:'世帯'}]); _hrQModalRenderConditions(qs[_hrQModalIdx]); };
+  addGrp.onclick = function() {
+    var cur = _hrQModalReadShowIf();
+    cur.push([{field: (function(){ var qs2=_hrGetQuestions(); return qs2.length ? qs2[0].field : 'usage'; })(), op:'eq', value:''}]);
+    var qs = _hrGetQuestions(); qs[_hrQModalIdx].showIf = cur;
+    _hrQModalRenderConditions(qs[_hrQModalIdx]);
+  };
   el.appendChild(addGrp);
 }
 function _hrQModalSave() {
   var qs = _hrGetQuestions(); var q = qs[_hrQModalIdx]; if (!q) return;
   q.label = document.getElementById('hrQModalLabel').value || q.label;
-  if (!q.builtin) q.field = document.getElementById('hrQModalField').value || q.field;
-  if (!q.builtin) q.type  = document.getElementById('hrQModalType').value;
+  q.field = document.getElementById('hrQModalField').value || q.field;
+  q.type  = document.getElementById('hrQModalType').value;
   if (q.type==='bool') {
     q.trueLabel  = document.getElementById('hrQModalTrueLabel').value || 'はい';
     q.falseLabel = document.getElementById('hrQModalFalseLabel').value || 'いいえ';
   }
+  // showIf は DOM から直接読み取る（_hrGetQuestions が毎回コピーを返すため）
+  q.showIf = _hrQModalReadShowIf();
   _hrQuestionsSave(qs);
   _hrQCloseModal();
   _hrQEditorRender();
@@ -5974,7 +6022,7 @@ function _imgLibHsActivate(item) {
   };
   img.src = item.dataUrl;
   _imgLibHsRenderList();
-  _imgLibHsSetupDrag();
+  _imgLibHsSetupDrag(); // 初回のみ登録（フラグで二重登録防止）
 }
 
 function _imgLibHsDeactivate() {
@@ -6066,6 +6114,30 @@ function _imgLibHsClearAll() {
   _imgLibHsRenderList();
 }
 
+/**
+ * ライブラリアイテムのホットスポットを、同じ lib:id を参照している
+ * すべての画面に同期する共通処理。
+ * リネーム完了後・HS保存完了後の両方から呼ぶ。
+ */
+function _imgLibSyncHsToPatterns(item) {
+  var libRef = 'lib:' + item.id;
+  var libHotspots = Array.isArray(item.hotspots) && item.hotspots.length ? item.hotspots : null;
+  if (!libHotspots) return 0;
+  var updated = 0;
+  screenPatterns.forEach(function(p) {
+    (p.screens || []).forEach(function(s) {
+      if (s.imageSrc === libRef) {
+        s.hotspots = libHotspots.map(function(hs) {
+          return Object.assign({}, hs, { id: _scrGenId() });
+        });
+        updated++;
+      }
+    });
+  });
+  if (updated > 0) { scrSaveIndex(); markDirty(); scrRenderUnifiedSidebar(); }
+  return updated;
+}
+
 function _imgLibHsSave() {
   if (!_imgLibHsItem) return;
   _imgLibOpen().then(function(db) {
@@ -6080,44 +6152,72 @@ function _imgLibHsSave() {
       _imgLibHsItem.hotspots = JSON.parse(JSON.stringify(_imgLibHsList));
       var cached = _imgLibAllItems.find(function(x){ return x.id === _imgLibHsItem.id; });
       if (cached) cached.hotspots = _imgLibHsItem.hotspots;
-      toast('✅ ホットスポットを保存しました（' + _imgLibHsList.length + '件）');
+      var synced = _imgLibSyncHsToPatterns(_imgLibHsItem);
+      toast('✅ ホットスポットを保存しました（' + _imgLibHsList.length + '件）'
+        + (synced > 0 ? '　画面 ' + synced + '件に同期' : ''));
       _imgLibFilter(); // ボタン表示を更新
     };
   });
 }
 
-/** ドラッグ描画セットアップ */
+/**
+ * ドラッグ描画セットアップ（ページ起動時に1回だけ呼ぶ）。
+ * document レベルで mousedown/mousemove/mouseup を管理し、
+ * imgLibHsCanvasWrap の内外を問わずドラッグ開始・継続できる。
+ */
+var _imgLibHsDragSetup = false; // 初回登録フラグ
+
 function _imgLibHsSetupDrag() {
-  var wrap = document.getElementById('imgLibHsCanvasWrap');
-  var canvas = document.getElementById('imgLibHsCanvas');
-  if (!wrap || !canvas) return;
-  // 既存イベントを除去して再登録
-  var newWrap = wrap.cloneNode(false);
-  while(wrap.firstChild) newWrap.appendChild(wrap.firstChild);
-  wrap.parentNode.replaceChild(newWrap, wrap);
-  wrap = newWrap;
-  canvas = document.getElementById('imgLibHsCanvas');
+  if (_imgLibHsDragSetup) return; // 既に登録済みなら何もしない
+  _imgLibHsDragSetup = true;
 
-  var ghost = null;
-  var startX, startY;
+  var ghost   = null;
+  var startCx = 0, startCy = 0;
 
-  function _getCanvasRelPos(e) {
+  /**
+   * マウス座標を imgLibHsCanvas 相対座標に変換し [0, 画像サイズ] にクランプする。
+   * canvas が見つからない場合は null を返す。
+   */
+  function _toCanvasPos(e) {
+    var canvas = document.getElementById('imgLibHsCanvas');
+    var img    = document.getElementById('imgLibHsImg');
+    if (!canvas || !img) return null;
+    var iW   = img.offsetWidth  || img.naturalWidth  || 1;
+    var iH   = img.offsetHeight || img.naturalHeight || 1;
     var rect = canvas.getBoundingClientRect();
-    var cx = e.clientX - rect.left;
-    var cy = e.clientY - rect.top;
-    return { x: cx, y: cy, w: rect.width, h: rect.height };
+    var cx   = Math.max(0, Math.min(iW, e.clientX - rect.left));
+    var cy   = Math.max(0, Math.min(iH, e.clientY - rect.top));
+    return { cx: cx, cy: cy, iW: iW, iH: iH };
   }
 
-  canvas.addEventListener('mousedown', function(e) {
-    if (e.target.classList.contains('ilib-hs')) return; // HS要素クリックは無視
+  document.addEventListener('mousedown', function(e) {
+    // HSエディタが非表示 or パネルが閉じている → 無視
+    var editor = document.getElementById('imgLibHsEditor');
+    var panel  = document.getElementById('imgLibPanel');
+    if (!editor || editor.style.display === 'none') return;
+    if (!panel  || panel.style.display  === 'none') return;
+
+    // クリック対象が imgLibHsCanvasWrap の内側でなければ無視
+    var wrap = document.getElementById('imgLibHsCanvasWrap');
+    if (!wrap || !wrap.contains(e.target)) return;
+
+    // 既存 HS 要素のクリックは無視（HS選択に使う）
+    if (e.target.classList.contains('ilib-hs') ||
+        e.target.closest('.ilib-hs')) return;
+
     e.preventDefault();
-    var pos = _getCanvasRelPos(e);
-    startX = pos.x; startY = pos.y;
+    var pos = _toCanvasPos(e);
+    if (!pos) return;
+    startCx = pos.cx;
+    startCy = pos.cy;
     _imgLibHsDragging = true;
+
+    var canvas = document.getElementById('imgLibHsCanvas');
+    if (!canvas) return;
     ghost = document.createElement('div');
     ghost.style.cssText = 'position:absolute;border:2px dashed var(--accent);background:rgba(55,66,250,.12);box-sizing:border-box;pointer-events:none;z-index:20;';
-    ghost.style.left   = startX + 'px';
-    ghost.style.top    = startY + 'px';
+    ghost.style.left   = startCx + 'px';
+    ghost.style.top    = startCy + 'px';
     ghost.style.width  = '0px';
     ghost.style.height = '0px';
     canvas.appendChild(ghost);
@@ -6125,38 +6225,40 @@ function _imgLibHsSetupDrag() {
 
   document.addEventListener('mousemove', function(e) {
     if (!_imgLibHsDragging || !ghost) return;
-    var pos = _getCanvasRelPos(e);
-    var x = Math.min(pos.x, startX);
-    var y = Math.min(pos.y, startY);
-    var w = Math.abs(pos.x - startX);
-    var h = Math.abs(pos.y - startY);
+    var pos = _toCanvasPos(e);
+    if (!pos) return;
+    var x = Math.min(pos.cx, startCx);
+    var y = Math.min(pos.cy, startCy);
     ghost.style.left   = x + 'px';
     ghost.style.top    = y + 'px';
-    ghost.style.width  = w + 'px';
-    ghost.style.height = h + 'px';
+    ghost.style.width  = Math.abs(pos.cx - startCx) + 'px';
+    ghost.style.height = Math.abs(pos.cy - startCy) + 'px';
   });
 
   document.addEventListener('mouseup', function(e) {
     if (!_imgLibHsDragging) return;
     _imgLibHsDragging = false;
     if (!ghost) return;
-    var img = document.getElementById('imgLibHsImg');
-    var iW = img ? img.offsetWidth  : 1;
-    var iH = img ? img.offsetHeight : 1;
-    var gL = parseFloat(ghost.style.left)   || 0;
-    var gT = parseFloat(ghost.style.top)    || 0;
-    var gW = parseFloat(ghost.style.width)  || 0;
-    var gH = parseFloat(ghost.style.height) || 0;
+    var pos = _toCanvasPos(e);
+    var x1, y1, x2, y2, iW, iH;
+    if (pos) {
+      iW = pos.iW; iH = pos.iH;
+      x1 = Math.min(startCx, pos.cx); y1 = Math.min(startCy, pos.cy);
+      x2 = Math.max(startCx, pos.cx); y2 = Math.max(startCy, pos.cy);
+    } else {
+      // canvas が消えた場合は ghost のスタイルから復元
+      iW = 1; iH = 1;
+      x1 = parseFloat(ghost.style.left)   || 0;
+      y1 = parseFloat(ghost.style.top)    || 0;
+      x2 = x1 + (parseFloat(ghost.style.width)  || 0);
+      y2 = y1 + (parseFloat(ghost.style.height) || 0);
+    }
     ghost.remove(); ghost = null;
-    if (gW < 5 || gH < 5) return; // 小さすぎるドラッグは無視
+    if ((x2 - x1) < 5 || (y2 - y1) < 5) return; // 小さすぎるドラッグは無視
     var hs = {
-      x: Math.max(0, gL / iW),
-      y: Math.max(0, gT / iH),
-      w: Math.min(1 - gL/iW, gW / iW),
-      h: Math.min(1 - gT/iH, gH / iH),
-      note: '',
-      targetId: null,
-      targetType: null
+      x: x1 / iW, y: y1 / iH,
+      w: (x2 - x1) / iW, h: (y2 - y1) / iH,
+      note: '', targetId: null, targetType: null
     };
     _imgLibHsList.push(hs);
     _imgLibHsRedrawOverlays();
@@ -6420,7 +6522,7 @@ function _imgLibDraw(items, query) {
           var cached = _imgLibAllItems.find(function(x){ return x.id===item.id; });
           if (cached) cached.name = v;
           nameSpan.textContent = v; renameInput.style.display='none'; nameSpan.style.display='';
-          // パターン内で lib:id を使っている画面名も同期更新
+          // パターン内で lib:id を使っている画面名・ホットスポットも同期更新
           var libRef = 'lib:' + item.id;
           var updated = 0;
           screenPatterns.forEach(function(p) {
@@ -6429,6 +6531,7 @@ function _imgLibDraw(items, query) {
             });
           });
           if (updated > 0) { scrSaveIndex(); markDirty(); scrRenderUnifiedSidebar(); }
+          _imgLibSyncHsToPatterns(item);
           toast('✅ リネームしました');
         };
       });

@@ -133,8 +133,8 @@ window.initAppData = function() {
     }
   }
 
-  // scripts / mailTemplates / mailCatMeta は IDB から読む
-  var keys = ['scripts','mailTemplates','mailCatMeta'];
+  // scripts / mailTemplates / mailCatMeta / hearingPatterns は IDB から読む
+  var keys = ['scripts','mailTemplates','mailCatMeta','hearingPatterns'];
   return _appIdbOpen().then(function(db) {
     return new Promise(function(resolve) {
       var tx    = db.transaction('appData', 'readonly');
@@ -501,16 +501,26 @@ function _processImportText(text, noReload) {
               if (Array.isArray(raw.hearingPolicies))  { window._appCache.hearingPolicies  = raw.hearingPolicies;  window.idbSetAppData('hearingPolicies',  raw.hearingPolicies); }
               if (Array.isArray(raw.hearingPatterns))  { window._appCache.hearingPatterns  = raw.hearingPatterns;  window.idbSetAppData('hearingPatterns',  raw.hearingPatterns); }
 
-              // 全タブに一括通知
-              _broadcastAllDataUpdated();
+              // 画面遷移データを IDB に書き込んでから broadcast・applyImport を実行する。
+              // idbSetScreenData の完了前に allDataUpdated を送ると、
+              // screen.html が idbGetScreenData を読みに行った時点でまだ旧データしか
+              // 存在せず反映されない競合が起きるため、Promise チェーンで順序を保証する。
+              var _screenWriteP = (imported.screen && typeof idbSetScreenData === 'function')
+                ? idbSetScreenData(imported.screenData)
+                : Promise.resolve();
 
-              _importProgressUpdate('データを反映中…', '', 80);
-              setTimeout(function () {
-                try {
-                  if (noReload) { _applyImportedDataToPage(imported, raw); } else { location.reload(); }
-                } catch(e) { console.error('applyImport error:', e); }
-                _importProgressHide();
-              }, 0);
+              _screenWriteP.catch(function(){}).then(function() {
+                // 全タブに一括通知（画面遷移書き込み完了後）
+                _broadcastAllDataUpdated();
+
+                _importProgressUpdate('データを反映中…', '', 80);
+                setTimeout(function () {
+                  try {
+                    if (noReload) { _applyImportedDataToPage(imported, raw); } else { location.reload(); }
+                  } catch(e) { console.error('applyImport error:', e); }
+                  _importProgressHide();
+                }, 0);
+              });
             } catch(err2) { _importProgressHide(); alert('結合処理に失敗しました: ' + err2.message); }
           }, 0);
         }
@@ -628,11 +638,9 @@ function _applyImportedDataToPage(imported, raw) {
   }
 
   // 画面遷移データの反映
-  // admin.html では applyImport() が処理するためここでは screenPatterns を更新するのみ
-  // screen.html では patterns 変数に直接反映する
   if (imported.screen && imported.screenData) {
     try {
-      // screen.html 用：patterns 変数に直接反映（localStorage 経由しない）
+      // screen.html 用：patterns 変数に直接反映
       if (typeof patterns !== 'undefined') {
         patterns.length = 0;
         imported.screenData.forEach(function(p){ patterns.push(p); });
@@ -640,21 +648,14 @@ function _applyImportedDataToPage(imported, raw) {
         if (typeof renderFlow === 'function') renderFlow();
         msgs.push('画面遷移');
       }
-      // IDB にも保存（screen.html / admin.html 共通・画像含む完全データ）
-      if (typeof idbSetScreenData === 'function') {
-        var _idbP = idbSetScreenData(imported.screenData);
-        // 保存完了後に admin.html へ反映通知
-        var _afterSave = function() {
-          try {
-            var _bcast = new BroadcastChannel('tool_data_update');
-            _bcast.postMessage({ type: 'screenDataUpdated', ts: Date.now() });
-            _bcast.close();
-          } catch(e) {}
-          try { localStorage.setItem('_screenSaveTs', Date.now().toString()); } catch(e) {}
-        };
-        if (_idbP && typeof _idbP.then === 'function') { _idbP.then(_afterSave); }
-        else { _afterSave(); }
-      }
+      // IDB への書き込みは _processImportText 側で完了済み。
+      // ここでは他タブ（screen.html）への通知のみ行う。
+      try {
+        var _bcast = new BroadcastChannel('tool_data_update');
+        _bcast.postMessage({ type: 'screenDataUpdated', ts: Date.now() });
+        _bcast.close();
+      } catch(e) {}
+      try { localStorage.setItem('_screenSaveTs', Date.now().toString()); } catch(e) {}
     } catch(e) {}
   }
 
@@ -2211,114 +2212,49 @@ document.addEventListener('DOMContentLoaded', function () {
 })();
 
 // =============================================================================
-// ⑩ 画面遷移データの IDB 書き込みスタブ（index.html / mail.html 用）
+// ⑩ 画面遷移データの IDB 書き込み（index.html / mail.html 用）
 //    screen.html / admin.html では各ページで定義された関数が優先される。
-//    index.html / mail.html では idbSetScreenData が未定義のため
-//    ここで直接 IndexedDB に書き込む。
+//    共通の _appIdbOpen を使い、独立した DB 接続を作らない。
 // =============================================================================
 (function () {
   if (typeof idbSetScreenData === 'function') return; // 既に定義済みならスキップ
 
-  var IDB_NAME    = 'screenFlowDB';
-  var IDB_VER     = 4;
-  var IDB_STORE   = 'patterns';
-  var IDB_KEY     = 'data';
-  var _db         = null;
-
-  function _open() {
-    if (_db) return Promise.resolve(_db);
-    return new Promise(function (resolve, reject) {
-      var req = indexedDB.open(IDB_NAME, IDB_VER);
-      req.onupgradeneeded = function (e) {
-        var db = e.target.result;
-        if (!db.objectStoreNames.contains(IDB_STORE)) db.createObjectStore(IDB_STORE);
-        if (!db.objectStoreNames.contains('imageLib')) db.createObjectStore('imageLib');
-        if (!db.objectStoreNames.contains('appData'))  db.createObjectStore('appData');
-      };
-      req.onsuccess = function (e) {
-        _db = e.target.result;
-        _db.onclose = function () { _db = null; };
-        _db.onversionchange = function () { _db.close(); _db = null; };
-        resolve(_db);
-      };
-      req.onerror = function (e) { reject(e.target.error); };
-    });
-  }
-
-  // base64 画像を imageLib に保存して lib:xxx に差し替えるヘルパー
-  function _findOrPut(db, dataUrl, name) {
-    return new Promise(function (resolve) {
-      var tx  = db.transaction('imageLib', 'readonly');
-      var req = tx.objectStore('imageLib').getAll();
-      req.onsuccess = function (e) {
-        var items = e.target.result || [];
-        var fp    = dataUrl.slice(0, 256) + '|' + dataUrl.slice(-64) + '|' + dataUrl.length;
-        var found = items.find(function (item) {
-          return item.dataUrl.slice(0, 256) + '|' + item.dataUrl.slice(-64) + '|' + item.dataUrl.length === fp;
-        });
-        if (found) { resolve('lib:' + found.id); return; }
-        // 新規登録
-        var id  = 'lib' + Math.random().toString(36).substr(2, 9);
-        var tx2 = db.transaction('imageLib', 'readwrite');
-        tx2.objectStore('imageLib').put({ id: id, name: name || id, tags: [], dataUrl: dataUrl }, id);
-        tx2.oncomplete = function () { resolve('lib:' + id); };
-        tx2.onerror    = function () { resolve(dataUrl); }; // fallback
-      };
-      req.onerror = function () { resolve(dataUrl); };
-    });
-  }
+  var IDB_STORE = 'patterns';
+  var IDB_KEY   = 'data';
 
   window.idbSetScreenData = function (data) {
     if (!data) return Promise.resolve();
-    return _open().then(function (db) {
-      // v3: _pendingImgLib がある場合は imageLib を先に一括登録してから patterns を保存
-      var pendingLib = window._pendingImgLib;
-      window._pendingImgLib = null;
+    // imageLib の先行保存（v3: _pendingImgLib が設定されている場合）
+    var pendingLib = window._pendingImgLib;
+    window._pendingImgLib = null;
 
-      if (pendingLib && pendingLib.length) {
+    var libP = Promise.resolve();
+    if (pendingLib && pendingLib.length) {
+      libP = _appIdbOpen().then(function(db) {
         return new Promise(function(resolve) {
-          var tx = db.transaction('imageLib', 'readonly');
+          var tx  = db.transaction('imageLib', 'readonly');
           var req = tx.objectStore('imageLib').getAllKeys();
           req.onsuccess = function(e) {
-            var existingIds = new Set(e.target.result || []);
-            var toInsert = pendingLib.filter(function(x){ return !existingIds.has(x.id); });
+            var existing = new Set(e.target.result || []);
+            var toInsert = pendingLib.filter(function(x){ return !existing.has(x.id); });
             if (!toInsert.length) { resolve(); return; }
             var tx2 = db.transaction('imageLib', 'readwrite');
             toInsert.forEach(function(item){ tx2.objectStore('imageLib').put(item, item.id); });
-            tx2.oncomplete = resolve; tx2.onerror = resolve;
+            tx2.oncomplete = resolve;
+            tx2.onerror    = resolve;
           };
           req.onerror = function(){ resolve(); };
-        }).then(function() {
-          return new Promise(function(resolve, reject) {
-            var tx = db.transaction(IDB_STORE, 'readwrite');
-            tx.objectStore(IDB_STORE).put(data, IDB_KEY);
-            tx.oncomplete = resolve;
-            tx.onerror    = function(e){ reject(e.target.error); };
-          });
-        });
-      }
-
-      // 通常パス（v1/v2）：base64 を imageLib に移行してから patterns を保存
-      var promises = [];
-      data.forEach(function (p) {
-        (p.screens || []).forEach(function (s) {
-          if (s.imageSrc && !s.imageSrc.startsWith('lib:')) {
-            var dataUrl = s.imageSrc;
-            var name    = s.name || s.id;
-            promises.push(
-              _findOrPut(db, dataUrl, name).then(function (libRef) {
-                s.imageSrc = libRef;
-              })
-            );
-          }
         });
       });
-      return Promise.all(promises).then(function () {
-        return new Promise(function (resolve, reject) {
+    }
+
+    return libP.then(function() {
+      return _appIdbOpen().then(function(db) {
+        return new Promise(function(resolve, reject) {
           var tx  = db.transaction(IDB_STORE, 'readwrite');
-          var req = tx.objectStore(IDB_STORE).put(data, IDB_KEY);
+          tx.objectStore(IDB_STORE).put(data, IDB_KEY);
           tx.oncomplete = resolve;
-          tx.onerror    = function (e) { reject(e.target.error); };
+          tx.onerror    = function(e){ reject(e.target.error); };
         });
       });
     });
