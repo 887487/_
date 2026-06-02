@@ -916,20 +916,18 @@ function _applyImportedData(text) {
   try {
     const raw = JSON.parse(text);
 
-    // ── v1 / v2 / v3 統合フォーマット（差分結合）──
+    // ── v1 / v2 / v3 統合フォーマット（上書き）──
     if (raw && (raw.version === 1 || raw.version === 2 || raw.version === 3)) {
-      // スクリプト・メール：差分結合
+      if (!confirm('現在のデータをインポートしたデータで上書きします。よろしいですか？')) return;
+      // スクリプト・メール：上書き
       if (raw.talkScripts) {
-        let curS = {}; try { const c = localStorage.getItem('talkScripts'); if(c) curS = JSON.parse(c); } catch(e) {}
-        const merged = typeof _mergeScripts === 'function' ? _mergeScripts(curS, raw.talkScripts) : raw.talkScripts;
-        localStorage.setItem('talkScripts', JSON.stringify(merged));
+        if (window._appCache) window._appCache.scripts = raw.talkScripts;
+        if (window.idbSetAppData) window.idbSetAppData('scripts', raw.talkScripts);
         try { const bc=new BroadcastChannel('tool_data_update');bc.postMessage({type:'scriptsUpdated',ts:Date.now()});bc.close(); } catch(e){}
       }
       if (Array.isArray(raw.mailTemplates)) {
-        let curM = (window._appCache && window._appCache.mailTemplates) ? window._appCache.mailTemplates : [];
-        const merged = typeof _mergeMail === 'function' ? _mergeMail(curM, raw.mailTemplates) : raw.mailTemplates;
-        if (window._appCache) window._appCache.mailTemplates = merged;
-        if (window.idbSetAppData) window.idbSetAppData('mailTemplates', merged);
+        if (window._appCache) window._appCache.mailTemplates = raw.mailTemplates;
+        if (window.idbSetAppData) window.idbSetAppData('mailTemplates', raw.mailTemplates);
         try { const bc=new BroadcastChannel('tool_data_update');bc.postMessage({type:'mailDataUpdated',ts:Date.now()});bc.close(); } catch(e){}
       }
       if (Array.isArray(raw.updateHistory) && raw.updateHistory.length > 0) {
@@ -938,35 +936,30 @@ function _applyImportedData(text) {
       if (raw.version === 3 && Array.isArray(raw.imageLib)) window._pendingImgLib = raw.imageLib;
       else window._pendingImgLib = null;
 
-      // 画面遷移データ：パターン id 単位で差分結合（in-memory patterns を優先ベースに）
+      // 画面遷移データ：上書き
       if (Array.isArray(raw.screenData) && raw.screenData.length) {
-        // in-memory patterns を base にすることでIDB未ロード時もデータが失われない
-        const _basePatterns = patterns.length ? patterns : [];
-        const mergedScr = typeof _mergeScreenData === 'function'
-          ? _mergeScreenData(_basePatterns, raw.screenData) : raw.screenData;
-        patterns = mergedScr;
+        patterns = raw.screenData;
         idbSetScreenData(patterns);
         try { localStorage.removeItem('screenFlowData'); } catch(e) {}
         currentPatId = null; pvCurrentId = null; pvHistory = [];
         renderSidebar(); renderFlow(); _pvClearCanvas(); updateStartFab();
-        toast('✅ データを結合しました');
+        toast('✅ データを上書きしました');
       } else {
-        toast('✅ スクリプト・メールデータを結合しました');
+        toast('✅ スクリプト・メールデータを上書きしました');
       }
       return;
     }
 
-    // ── screenData 単独配列フォーマット（差分結合）──
+    // ── screenData 単独配列フォーマット（上書き）──
     if (Array.isArray(raw) && raw.length && raw[0].screens !== undefined) {
+      if (!confirm('現在のデータをインポートしたデータで上書きします。よろしいですか？')) return;
       window._pendingImgLib = null;
-      const mergedScr = typeof _mergeScreenData === 'function'
-        ? _mergeScreenData(patterns, raw) : raw;
-      patterns = mergedScr;
+      patterns = raw;
       idbSetScreenData(patterns);
       try { localStorage.removeItem('screenFlowData'); } catch(e) {}
       currentPatId = null; pvCurrentId = null; pvHistory = [];
       renderSidebar(); renderFlow(); _pvClearCanvas(); updateStartFab();
-      toast('✅ データを結合しました');
+      toast('✅ データを上書きしました');
       return;
     }
 

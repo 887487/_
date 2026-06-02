@@ -1226,10 +1226,10 @@ body.dnd-xlsx-hover::after {
 </div>
 
 <!-- ===== 画像ライブラリ（画面遷移タブ内オーバーレイパネル） ===== -->
-<div id="imgLibPanel" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.45);align-items:flex-start;justify-content:center;padding-top:calc(var(--header-h, 48px) + 12px);padding-bottom:20px;">
-  <div style="background:var(--surface);border-radius:14px;width:min(96vw,980px);max-height:90vh;display:flex;flex-direction:column;box-shadow:0 24px 64px rgba(0,0,0,.3);overflow:hidden;">
+<div id="imgLibPanel" style="display:none;position:fixed;inset:0;z-index:600;background:var(--surface);flex-direction:column;">
+  <div style="display:flex;flex-direction:column;height:100%;overflow:hidden;">
     <!-- ヘッダー -->
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 18px;border-bottom:1px solid var(--border);flex-shrink:0;background:var(--surface2);">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:0 18px;height:48px;border-bottom:1px solid var(--border);flex-shrink:0;background:var(--surface2);">
       <div style="display:flex;align-items:center;gap:12px;">
         <span style="font-size:14px;font-weight:700;color:var(--text);">🖼 画像ライブラリ</span>
         <span id="imgLibCount" style="font-size:11px;color:var(--text3);"></span>
@@ -1241,27 +1241,63 @@ body.dnd-xlsx-hover::after {
         <button onclick="toggleImgLibPanel()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text3);line-height:1;padding:2px 6px;">✕</button>
       </div>
     </div>
-    <!-- 検索バー -->
-    <div style="padding:12px 18px 0;flex-shrink:0;">
-      <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;">
-        <input id="imgLibSearch" type="text" placeholder="名前またはタグで検索（例: #背景）"
-               style="flex:1;height:30px;padding:0 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:inherit;background:var(--surface);color:var(--text);outline:none;"
-               oninput="_imgLibFilter()"
-               onfocus="this.style.borderColor='var(--accent)'"
-               onblur="this.style.borderColor='var(--border)'">
-        <button class="btn btn-secondary" style="font-size:11px;height:30px;padding:0 10px;" onclick="document.getElementById('imgLibSearch').value='';_imgLibFilter()">✕</button>
+    <!-- 本体：左リスト + 右HSエディタ -->
+    <div style="flex:1;display:flex;overflow:hidden;">
+      <!-- 左：画像一覧 -->
+      <div style="display:flex;flex-direction:column;flex:1;min-width:0;border-right:1px solid var(--border);overflow:hidden;">
+        <!-- 検索バー -->
+        <div style="padding:12px 18px 0;flex-shrink:0;">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;">
+            <input id="imgLibSearch" type="text" placeholder="名前またはタグで検索（例: #背景）"
+                   style="flex:1;height:30px;padding:0 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:inherit;background:var(--surface);color:var(--text);outline:none;"
+                   oninput="_imgLibFilter()"
+                   onfocus="this.style.borderColor='var(--accent)'"
+                   onblur="this.style.borderColor='var(--border)'">
+            <button class="btn btn-secondary" style="font-size:11px;height:30px;padding:0 10px;" onclick="document.getElementById('imgLibSearch').value='';_imgLibFilter()">✕</button>
+          </div>
+          <!-- 複数選択ツールバー -->
+          <div id="imgLibSelBar" style="display:none;align-items:center;gap:10px;padding:7px 12px;background:var(--accent-lt);border:1px solid var(--accent);border-radius:6px;margin-bottom:8px;font-size:12px;">
+            <span style="color:var(--accent);font-weight:700;" id="imgLibSelCount">0件選択中</span>
+            <button class="btn btn-secondary" style="font-size:11px;height:26px;" onclick="_imgLibClearSelection()">☐ 選択解除</button>
+            <button class="btn" style="font-size:11px;height:26px;background:var(--red);color:#fff;border:none;" onclick="_imgLibDeleteSelected()">🗑 選択削除</button>
+          </div>
+        </div>
+        <!-- グリッド（スクロール対応） -->
+        <div style="flex:1;overflow-y:auto;padding:0 18px 18px;">
+          <div id="imgLibGrid" style="display:flex;flex-wrap:wrap;gap:12px;align-content:flex-start;min-height:120px;">
+            <div style="width:100%;text-align:center;padding:40px 0;color:var(--text3);font-size:12px;">読み込み中…</div>
+          </div>
+        </div>
       </div>
-      <!-- 複数選択ツールバー -->
-      <div id="imgLibSelBar" style="display:none;align-items:center;gap:10px;padding:7px 12px;background:var(--accent-lt);border:1px solid var(--accent);border-radius:6px;margin-bottom:8px;font-size:12px;">
-        <span style="color:var(--accent);font-weight:700;" id="imgLibSelCount">0件選択中</span>
-        <button class="btn btn-secondary" style="font-size:11px;height:26px;" onclick="_imgLibClearSelection()">☐ 選択解除</button>
-        <button class="btn" style="font-size:11px;height:26px;background:var(--red);color:#fff;border:none;" onclick="_imgLibDeleteSelected()">🗑 選択削除</button>
-      </div>
-    </div>
-    <!-- グリッド（スクロール対応） -->
-    <div style="flex:1;overflow-y:auto;padding:0 18px 18px;">
-      <div id="imgLibGrid" style="display:flex;flex-wrap:wrap;gap:12px;align-content:flex-start;min-height:120px;">
-        <div style="width:100%;text-align:center;padding:40px 0;color:var(--text3);font-size:12px;">読み込み中…</div>
+      <!-- 右：ホットスポットエディタ -->
+      <div id="imgLibHsPane" style="width:520px;min-width:320px;display:flex;flex-direction:column;flex-shrink:0;background:var(--bg);overflow:hidden;">
+        <div style="padding:10px 14px;border-bottom:1px solid var(--border);background:var(--surface2);flex-shrink:0;display:flex;align-items:center;justify-content:space-between;">
+          <span style="font-size:12px;font-weight:700;color:var(--text);">📍 ホットスポット登録</span>
+          <span id="imgLibHsPaneName" style="font-size:11px;color:var(--text3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:200px;"></span>
+        </div>
+        <div id="imgLibHsEmpty" style="flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;color:var(--text4);font-size:12px;">
+          <span style="font-size:28px;">🖼️</span>
+          <span>左の一覧から画像を選択すると<br>ホットスポットを登録できます</span>
+        </div>
+        <div id="imgLibHsEditor" style="display:none;flex:1;flex-direction:column;overflow:hidden;">
+          <!-- キャンバスエリア -->
+          <div id="imgLibHsCanvasWrap" style="flex:1;overflow:auto;background:#333;display:flex;align-items:flex-start;justify-content:center;padding:16px;position:relative;cursor:crosshair;" title="ドラッグしてホットスポットを描画">
+            <div id="imgLibHsCanvas" style="position:relative;display:inline-block;flex-shrink:0;">
+              <img id="imgLibHsImg" src="" alt="" style="display:block;max-width:none;">
+            </div>
+          </div>
+          <!-- HS一覧 -->
+          <div style="flex-shrink:0;max-height:220px;overflow-y:auto;border-top:1px solid var(--border);background:var(--surface);">
+            <div style="padding:8px 12px;font-size:11px;font-weight:700;color:var(--text3);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+              <span>ホットスポット一覧</span>
+              <div style="display:flex;gap:6px;">
+                <button class="btn btn-secondary" style="font-size:10px;height:24px;padding:0 8px;" onclick="_imgLibHsClearAll()">🗑 全削除</button>
+                <button class="btn btn-primary" style="font-size:10px;height:24px;padding:0 10px;" onclick="_imgLibHsSave()">💾 保存</button>
+              </div>
+            </div>
+            <div id="imgLibHsList" style="padding:4px 0;"></div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -2026,7 +2062,7 @@ function _hrQModalSave() {
   toast('✅ 保存しました');
 }
 
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeAdminHelp();_closeCalPopup();closeSaveModal();var ilp=document.getElementById('imgLibPanel');if(ilp&&ilp.style.display==='flex')ilp.style.display='none';}});;
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeAdminHelp();_closeCalPopup();closeSaveModal();var ilp=document.getElementById('imgLibPanel');if(ilp&&ilp.style.display==='flex')toggleImgLibPanel();}});
 function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>el.classList.remove('show'),3000);}
 
 // ===================================================================
@@ -3905,19 +3941,14 @@ function toggleImgLibPanel() {
   var isOpen = panel.style.display === 'flex';
   if (isOpen) {
     panel.style.display = 'none';
+    _imgLibHsDeactivate(); // HSエディタをリセット
   } else {
     panel.style.display = 'flex';
     _imgLibAllItems = [];
     _imgLibRender();
   }
 }
-// パネル外クリックで閉じる
-document.addEventListener('click', function(e) {
-  var panel = document.getElementById('imgLibPanel');
-  if (panel && panel.style.display === 'flex' && e.target === panel) {
-    panel.style.display = 'none';
-  }
-});
+// パネル外クリックで閉じる → 全画面なので不要（✕ボタンのみ）
 
 // ===================================================================
 // 保存して反映モーダル
@@ -5896,6 +5927,246 @@ function _scrInitCenterOverlayEvents(){
 // ===================================================================
 // 画像ライブラリ管理UI
 // ===================================================================
+// 画像ライブラリ内ホットスポットエディタ
+// ===================================================================
+
+var _imgLibHsItem = null;   // 現在編集中のライブラリアイテム
+var _imgLibHsList = [];     // 編集中のHS配列（コピー）
+var _imgLibHsDragging = false;
+var _imgLibHsDragStart = null;
+var _imgLibHsDragRect = null;
+var _imgLibHsZoom = 1.0;
+
+/**
+ * 右ペインでホットスポットエディタを起動する
+ */
+function _imgLibHsActivate(item) {
+  _imgLibHsItem = item;
+  _imgLibHsList = JSON.parse(JSON.stringify(item.hotspots || []));
+  var empty  = document.getElementById('imgLibHsEmpty');
+  var editor = document.getElementById('imgLibHsEditor');
+  var pName  = document.getElementById('imgLibHsPaneName');
+  if (empty)  empty.style.display  = 'none';
+  if (editor) { editor.style.display = 'flex'; }
+  if (pName)  pName.textContent = item.name || item.id;
+
+  // 画像をセットしてキャンバスを構築
+  var img = document.getElementById('imgLibHsImg');
+  var canvas = document.getElementById('imgLibHsCanvas');
+  if (!img || !canvas) return;
+
+  // 既存のHS要素を全削除
+  Array.from(canvas.querySelectorAll('.ilib-hs')).forEach(function(el){ el.remove(); });
+
+  img.onload = function() {
+    // Fitズームを計算
+    var wrap = document.getElementById('imgLibHsCanvasWrap');
+    if (wrap) {
+      var wW = wrap.clientWidth - 32;
+      var wH = wrap.clientHeight - 32;
+      _imgLibHsZoom = Math.min(wW / img.naturalWidth, wH / img.naturalHeight, 1.0);
+    } else {
+      _imgLibHsZoom = 1.0;
+    }
+    img.style.width  = Math.round(img.naturalWidth  * _imgLibHsZoom) + 'px';
+    img.style.height = Math.round(img.naturalHeight * _imgLibHsZoom) + 'px';
+    _imgLibHsRedrawOverlays();
+  };
+  img.src = item.dataUrl;
+  _imgLibHsRenderList();
+  _imgLibHsSetupDrag();
+}
+
+function _imgLibHsDeactivate() {
+  _imgLibHsItem = null;
+  _imgLibHsList = [];
+  var empty  = document.getElementById('imgLibHsEmpty');
+  var editor = document.getElementById('imgLibHsEditor');
+  if (empty)  empty.style.display  = '';
+  if (editor) editor.style.display = 'none';
+}
+
+/** キャンバス上のHS要素を再描画 */
+function _imgLibHsRedrawOverlays() {
+  var canvas = document.getElementById('imgLibHsCanvas');
+  if (!canvas) return;
+  Array.from(canvas.querySelectorAll('.ilib-hs')).forEach(function(el){ el.remove(); });
+  var img = canvas.querySelector('img');
+  var iW = img ? img.offsetWidth  : 1;
+  var iH = img ? img.offsetHeight : 1;
+
+  _imgLibHsList.forEach(function(hs, idx) {
+    var el = document.createElement('div');
+    el.className = 'ilib-hs';
+    el.style.cssText = [
+      'position:absolute',
+      'left:'  + (hs.x * iW) + 'px',
+      'top:'   + (hs.y * iH) + 'px',
+      'width:' + (hs.w * iW) + 'px',
+      'height:'+ (hs.h * iH) + 'px',
+      'border:2px solid var(--accent)',
+      'background:rgba(55,66,250,.15)',
+      'border-radius:2px',
+      'cursor:pointer',
+      'box-sizing:border-box',
+      'z-index:10'
+    ].join(';');
+    // 番号ラベル
+    var lbl = document.createElement('span');
+    lbl.textContent = idx + 1;
+    lbl.style.cssText = 'position:absolute;top:1px;left:3px;font-size:9px;font-weight:700;color:var(--accent);line-height:1;pointer-events:none;';
+    el.appendChild(lbl);
+    el.onclick = function(e) { e.stopPropagation(); _imgLibHsSelectRow(idx); };
+    canvas.appendChild(el);
+  });
+}
+
+/** HS一覧を描画 */
+function _imgLibHsRenderList() {
+  var listEl = document.getElementById('imgLibHsList');
+  if (!listEl) return;
+  if (!_imgLibHsList.length) {
+    listEl.innerHTML = '<div style="padding:12px 14px;font-size:11px;color:var(--text3);">ホットスポットがありません。画像上をドラッグして追加してください。</div>';
+    return;
+  }
+  var escFn = function(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); };
+  listEl.innerHTML = _imgLibHsList.map(function(hs, idx) {
+    return '<div id="ilhsRow_'+idx+'" style="display:flex;align-items:center;gap:6px;padding:5px 10px;border-bottom:1px solid var(--border2,#f0f0f0);">' +
+      '<span style="font-size:10px;color:var(--accent);font-weight:700;min-width:16px;">'+( idx+1)+'</span>' +
+      '<input type="text" value="'+escFn(hs.note||'')+'" placeholder="メモ（任意）" ' +
+        'style="flex:1;height:24px;padding:0 7px;border:1px solid var(--border);border-radius:4px;font-size:11px;font-family:inherit;background:var(--surface);color:var(--text);" ' +
+        'oninput="_imgLibHsList['+idx+'].note=this.value">' +
+      '<span style="font-size:10px;color:var(--text3);white-space:nowrap;">'+
+        Math.round(hs.x*100)+'%,'+Math.round(hs.y*100)+'% '+
+        Math.round(hs.w*100)+'×'+Math.round(hs.h*100)+'%'+
+      '</span>' +
+      '<button onclick="_imgLibHsDelete('+idx+')" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:13px;padding:0 3px;" title="削除">🗑</button>' +
+    '</div>';
+  }).join('');
+}
+
+function _imgLibHsSelectRow(idx) {
+  var rows = document.querySelectorAll('[id^="ilhsRow_"]');
+  rows.forEach(function(r){ r.style.background=''; });
+  var row = document.getElementById('ilhsRow_'+idx);
+  if (row) { row.style.background='var(--accent-lt)'; row.scrollIntoView({block:'nearest'}); }
+}
+
+function _imgLibHsDelete(idx) {
+  _imgLibHsList.splice(idx, 1);
+  _imgLibHsRedrawOverlays();
+  _imgLibHsRenderList();
+}
+
+function _imgLibHsClearAll() {
+  if (!_imgLibHsList.length) return;
+  if (!confirm('全ホットスポットを削除しますか？')) return;
+  _imgLibHsList = [];
+  _imgLibHsRedrawOverlays();
+  _imgLibHsRenderList();
+}
+
+function _imgLibHsSave() {
+  if (!_imgLibHsItem) return;
+  _imgLibOpen().then(function(db) {
+    var tx = db.transaction('imageLib','readwrite');
+    var req = tx.objectStore('imageLib').get(_imgLibHsItem.id);
+    req.onsuccess = function(e) {
+      var rec = e.target.result; if (!rec) return;
+      rec.hotspots = JSON.parse(JSON.stringify(_imgLibHsList));
+      tx.objectStore('imageLib').put(rec, _imgLibHsItem.id);
+    };
+    tx.oncomplete = function() {
+      _imgLibHsItem.hotspots = JSON.parse(JSON.stringify(_imgLibHsList));
+      var cached = _imgLibAllItems.find(function(x){ return x.id === _imgLibHsItem.id; });
+      if (cached) cached.hotspots = _imgLibHsItem.hotspots;
+      toast('✅ ホットスポットを保存しました（' + _imgLibHsList.length + '件）');
+      _imgLibFilter(); // ボタン表示を更新
+    };
+  });
+}
+
+/** ドラッグ描画セットアップ */
+function _imgLibHsSetupDrag() {
+  var wrap = document.getElementById('imgLibHsCanvasWrap');
+  var canvas = document.getElementById('imgLibHsCanvas');
+  if (!wrap || !canvas) return;
+  // 既存イベントを除去して再登録
+  var newWrap = wrap.cloneNode(false);
+  while(wrap.firstChild) newWrap.appendChild(wrap.firstChild);
+  wrap.parentNode.replaceChild(newWrap, wrap);
+  wrap = newWrap;
+  canvas = document.getElementById('imgLibHsCanvas');
+
+  var ghost = null;
+  var startX, startY;
+
+  function _getCanvasRelPos(e) {
+    var rect = canvas.getBoundingClientRect();
+    var cx = e.clientX - rect.left;
+    var cy = e.clientY - rect.top;
+    return { x: cx, y: cy, w: rect.width, h: rect.height };
+  }
+
+  canvas.addEventListener('mousedown', function(e) {
+    if (e.target.classList.contains('ilib-hs')) return; // HS要素クリックは無視
+    e.preventDefault();
+    var pos = _getCanvasRelPos(e);
+    startX = pos.x; startY = pos.y;
+    _imgLibHsDragging = true;
+    ghost = document.createElement('div');
+    ghost.style.cssText = 'position:absolute;border:2px dashed var(--accent);background:rgba(55,66,250,.12);box-sizing:border-box;pointer-events:none;z-index:20;';
+    ghost.style.left   = startX + 'px';
+    ghost.style.top    = startY + 'px';
+    ghost.style.width  = '0px';
+    ghost.style.height = '0px';
+    canvas.appendChild(ghost);
+  });
+
+  document.addEventListener('mousemove', function(e) {
+    if (!_imgLibHsDragging || !ghost) return;
+    var pos = _getCanvasRelPos(e);
+    var x = Math.min(pos.x, startX);
+    var y = Math.min(pos.y, startY);
+    var w = Math.abs(pos.x - startX);
+    var h = Math.abs(pos.y - startY);
+    ghost.style.left   = x + 'px';
+    ghost.style.top    = y + 'px';
+    ghost.style.width  = w + 'px';
+    ghost.style.height = h + 'px';
+  });
+
+  document.addEventListener('mouseup', function(e) {
+    if (!_imgLibHsDragging) return;
+    _imgLibHsDragging = false;
+    if (!ghost) return;
+    var img = document.getElementById('imgLibHsImg');
+    var iW = img ? img.offsetWidth  : 1;
+    var iH = img ? img.offsetHeight : 1;
+    var gL = parseFloat(ghost.style.left)   || 0;
+    var gT = parseFloat(ghost.style.top)    || 0;
+    var gW = parseFloat(ghost.style.width)  || 0;
+    var gH = parseFloat(ghost.style.height) || 0;
+    ghost.remove(); ghost = null;
+    if (gW < 5 || gH < 5) return; // 小さすぎるドラッグは無視
+    var hs = {
+      x: Math.max(0, gL / iW),
+      y: Math.max(0, gT / iH),
+      w: Math.min(1 - gL/iW, gW / iW),
+      h: Math.min(1 - gT/iH, gH / iH),
+      note: '',
+      targetId: null,
+      targetType: null
+    };
+    _imgLibHsList.push(hs);
+    _imgLibHsRedrawOverlays();
+    _imgLibHsRenderList();
+    _imgLibHsSelectRow(_imgLibHsList.length - 1);
+  });
+}
+
+
+// ===================================================================
 
 // ライブラリ一覧を描画する
 function _imgLibRender() {
@@ -6282,37 +6553,14 @@ function _imgLibDraw(items, query) {
     replaceLabel.appendChild(replaceInput);
     tdOp.appendChild(replaceLabel);
 
-    // ホットスポット保存ボタン
+    // ホットスポット登録ボタン（右ペインのHSエディタを起動）
     var hsCount = Array.isArray(item.hotspots) ? item.hotspots.length : 0;
     var saveHsBtn = document.createElement('button');
-    saveHsBtn.textContent = '📍 HS保存' + (hsCount > 0 ? '(' + hsCount + ')' : '');
-    saveHsBtn.title = '現在選択中の画面のホットスポットをライブラリに保存します';
+    saveHsBtn.textContent = '📍 HS登録' + (hsCount > 0 ? '(' + hsCount + ')' : '');
+    saveHsBtn.title = '画像ライブラリ内でホットスポットを登録・編集します';
     saveHsBtn.style.cssText = 'font-size:10px;padding:2px 8px;border:1px solid var(--border);border-radius:4px;background:var(--surface2);cursor:pointer;color:var(--text);font-family:inherit;margin-right:4px;' + (hsCount > 0 ? 'border-color:var(--accent);color:var(--accent);' : '');
     saveHsBtn.onclick = function() {
-      // 現在選択中の画面のホットスポットを取得
-      var curPat = screenPatterns.find(function(p){ return p.id === _scrCurrentPatId; });
-      var curScr = curPat ? curPat.screens.find(function(s){ return s.id === _scrSelScrId; }) : null;
-      if (!curScr) { toast('❌ 画面を選択してください'); return; }
-      if (curScr.imageSrc !== 'lib:' + item.id) { toast('❌ 選択中の画面はこの画像を使用していません'); return; }
-      var hs = curScr.hotspots || [];
-      if (!confirm(hs.length + '件のホットスポットをライブラリに保存します。\nこの画像をパターンに追加する際に自動的に引き継がれます。')) return;
-      _imgLibOpen().then(function(db) {
-        var tx = db.transaction('imageLib', 'readwrite');
-        var req = tx.objectStore('imageLib').get(item.id);
-        req.onsuccess = function(e) {
-          var rec = e.target.result; if (!rec) return;
-          rec.hotspots = JSON.parse(JSON.stringify(hs));
-          tx.objectStore('imageLib').put(rec, item.id);
-        };
-        tx.oncomplete = function() {
-          item.hotspots = JSON.parse(JSON.stringify(hs));
-          var cached = _imgLibAllItems.find(function(x){ return x.id === item.id; });
-          if (cached) cached.hotspots = item.hotspots;
-          saveHsBtn.textContent = '📍 HS保存(' + hs.length + ')';
-          saveHsBtn.style.borderColor = 'var(--accent)'; saveHsBtn.style.color = 'var(--accent)';
-          toast('✅ ホットスポットをライブラリに保存しました');
-        };
-      });
+      _imgLibHsActivate(item);
     };
     tdOp.appendChild(saveHsBtn);
 
