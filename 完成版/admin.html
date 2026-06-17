@@ -371,6 +371,59 @@
 .hr-pat-name-text { font-size: 12px; font-weight: 700; color: var(--text); flex: 1; }
 .hr-pat-cond-summary { font-size: 10px; color: var(--text3); padding-left: 4px; line-height: 1.5; }
 
+/* ── 共通：アコーディオン矢印 ── */
+.hr-acc-arrow {
+  font-size: 9px; color: var(--text4); transition: transform 0.18s;
+  flex-shrink: 0; display: inline-block;
+}
+details[open] > summary .hr-acc-arrow { transform: rotate(90deg); }
+
+/* ── 対応方針エディタ：各項目のアコーディオン ── */
+.hr-policy-acc {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 8px; overflow: hidden;
+}
+.hr-policy-acc > summary {
+  list-style: none; cursor: pointer; padding: 12px 14px;
+  display: flex; flex-direction: column; gap: 6px;
+}
+.hr-policy-acc > summary::-webkit-details-marker,
+.hr-policy-acc > summary::marker { display: none; content: ''; }
+.hr-policy-acc-hd { display: flex; align-items: center; gap: 8px; }
+.hr-policy-acc-preview {
+  font-size: 11px; color: var(--text3); padding-left: 16px;
+  line-height: 1.5; overflow: hidden; text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.hr-policy-acc[open] > summary .hr-policy-acc-preview { display: none; }
+.hr-policy-acc-body {
+  padding: 0 14px 14px; border-top: 1px solid var(--border2);
+  margin-top: 2px; padding-top: 10px;
+  display: flex; flex-direction: column; gap: 8px;
+}
+
+/* ── 表示/非表示パターン登録：セクション全体のアコーディオン ── */
+.hr-section-acc {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; overflow: hidden;
+}
+.hr-section-acc > summary {
+  list-style: none; cursor: pointer;
+  display: flex; align-items: center; gap: 8px;
+  padding: 12px 14px;
+}
+.hr-section-acc > summary::-webkit-details-marker,
+.hr-section-acc > summary::marker { display: none; content: ''; }
+.hr-section-acc-title { font-size: 13px; font-weight: 700; color: var(--text); flex: 1; }
+.hr-section-acc-count {
+  font-size: 11px; color: var(--text3); background: var(--surface2);
+  border-radius: 10px; padding: 1px 9px; flex-shrink: 0;
+}
+.hr-section-acc-body {
+  padding: 0 14px 14px; border-top: 1px solid var(--border2);
+  margin-top: 2px; padding-top: 12px;
+}
+
 /* ── パターン登録モーダル ── */
 #hrPatModal {
   display: none; position: fixed; inset: 0; z-index: 7000;
@@ -1060,28 +1113,37 @@ body.dnd-xlsx-hover::after {
       </div>
 
 
-      <!-- ── 対応方針エディタ ── -->
-      <div>
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-          <div style="font-size:13px;font-weight:700;color:var(--text);">🗂 対応方針エディタ</div>
-          <button class="btn btn-primary" style="font-size:11px;" onclick="_hrEditorAdd()">＋ 対応方針を追加</button>
+      <!-- ── 対応方針エディタ（アコーディオン） ── -->
+      <details class="hr-section-acc" id="hrPolicySection">
+        <summary>
+          <span class="hr-acc-arrow">▶</span>
+          <span class="hr-section-acc-title">🗂 対応方針エディタ</span>
+          <span class="hr-section-acc-count" id="hrEditorCountBadge">0件</span>
+          <button class="btn btn-primary" style="font-size:11px;" onclick="event.stopPropagation();document.getElementById('hrPolicySection').open=true;_hrEditorAdd()">＋ 対応方針を追加</button>
+        </summary>
+        <div class="hr-section-acc-body">
+          <div style="font-size:11px;color:var(--text3);margin-bottom:10px;">選択値の組み合わせに応じて対応方針を表示します。条件を空にすると常に表示されます。</div>
+          <div id="hrEditorList" style="display:flex;flex-direction:column;gap:10px;"></div>
         </div>
-        <div style="font-size:11px;color:var(--text3);margin-bottom:10px;">選択値の組み合わせに応じて対応方針を表示します。条件を空にすると常に表示されます。</div>
-        <div id="hrEditorList" style="display:flex;flex-direction:column;gap:10px;"></div>
-      </div>
+      </details>
 
-      <!-- ── 表示/非表示パターン登録 ── -->
-      <div>
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-          <div style="font-size:13px;font-weight:700;color:var(--text);">🎯 表示/非表示パターン登録</div>
-          <button class="btn btn-primary" style="font-size:11px;" onclick="_hrPatOpen(-1)">＋ パターンを追加</button>
+      <!-- ── 表示/非表示パターン登録（アコーディオン） ── -->
+      <details class="hr-section-acc" id="hrPatSection">
+        <summary>
+          <span class="hr-acc-arrow">▶</span>
+          <span class="hr-section-acc-title">🎯 表示/非表示パターン登録</span>
+          <span class="hr-section-acc-count" id="hrPatCountBadge">0件</span>
+          <button class="btn btn-primary" style="font-size:11px;" onclick="event.stopPropagation();document.getElementById('hrPatSection').open=true;_hrPatOpen(-1)">＋ パターンを追加</button>
+        </summary>
+        <div class="hr-section-acc-body">
+          <div style="font-size:11px;color:var(--text3);margin-bottom:10px;">
+            ボタンの組み合わせに応じて質問の表示/非表示を切り替えるパターンを登録します。<br>
+            複数のパターンが同時に該当する場合はすべて適用されます（後勝ち）。showIfより優先されます。
+          </div>
+          <div id="hrPatList" style="display:flex;flex-direction:column;gap:8px;"></div>
         </div>
-        <div style="font-size:11px;color:var(--text3);margin-bottom:10px;">
-          ボタンの組み合わせに応じて質問の表示/非表示を切り替えるパターンを登録します。<br>
-          複数のパターンが同時に該当する場合はすべて適用されます（後勝ち）。showIfより優先されます。
-        </div>
-        <div id="hrPatList" style="display:flex;flex-direction:column;gap:8px;"></div>
-      </div>
+      </details>
+
 
     </div>
   </div>
@@ -1655,11 +1717,26 @@ function _hrLoadAndRender() {
   Promise.all([
     window.idbGetAppData('hearingPolicies'),
     window.idbGetAppData('hearingPatterns'),
-    window.idbGetAppData('hearingQuestions')
+    window.idbGetAppData('hearingQuestions'),
+    window.idbGetAppData('hearingDataVersion')
   ]).then(function(r) {
-    if (Array.isArray(r[0]) && r[0].length) window._appCache.hearingPolicies  = r[0];
-    if (Array.isArray(r[1]) && r[1].length) window._appCache.hearingPatterns  = r[1];
-    if (Array.isArray(r[2]) && r[2].length) window._appCache.hearingQuestions = r[2];
+    // ヒアリング項目を大幅リニューアルした際、IDBに残る旧バージョンの保存データを
+    // 優先してしまうと新しいデフォルト内容（HEARING_QUESTIONS_DEFAULT 等）が
+    // 画面に反映されない。バージョンが一致する場合のみ保存データを使う。
+    var storedVer = r[3];
+    if (storedVer === window.HEARING_DATA_VERSION) {
+      if (Array.isArray(r[0]) && r[0].length) window._appCache.hearingPolicies  = r[0];
+      if (Array.isArray(r[1]) && r[1].length) window._appCache.hearingPatterns  = r[1];
+      if (Array.isArray(r[2]) && r[2].length) window._appCache.hearingQuestions = r[2];
+    } else if (typeof window.HEARING_DATA_VERSION !== 'undefined') {
+      window._appCache.hearingPolicies  = JSON.parse(JSON.stringify(window.DEFAULT_HEARING_POLICIES || []));
+      window._appCache.hearingPatterns  = JSON.parse(JSON.stringify(window.DEFAULT_HEARING_PATTERNS || []));
+      window._appCache.hearingQuestions = JSON.parse(JSON.stringify(window.DEFAULT_HEARING_QUESTIONS || []));
+      window.idbSetAppData('hearingPolicies',  window._appCache.hearingPolicies);
+      window.idbSetAppData('hearingPatterns',  window._appCache.hearingPatterns);
+      window.idbSetAppData('hearingQuestions', window._appCache.hearingQuestions);
+      window.idbSetAppData('hearingDataVersion', window.HEARING_DATA_VERSION);
+    }
     _draw();
   }).catch(_draw);
 }
@@ -1686,43 +1763,76 @@ function _hrPoliciesSave(list) {
 
 // ヒアリング状態のフィールド一覧（表示名 → 実フィールド名）
 var HR_FIELDS = [
-  {l:'（条件なし）',          v:''},
-  {l:'用途',                  v:'usage',          opts:['世帯','学校','事業']},
-  {l:'移行対象者',            v:'isMigration',    opts:['true','false']},
-  {l:'旧プラスID発行',        v:'oldPlusId',      opts:['true','false']},
-  {l:'移行案内メール確認',    v:'migMailConfirmed',opts:['true','false']},
-  {l:'移行メール使用可',      v:'migMailUsable',  opts:['true','false']},
-  {l:'アカウント担当者',      v:'isAccountPerson', opts:['true','false']},
-  {l:'Sアカ作成済み',         v:'sAccountCreated', opts:['true','false']},
-  {l:'認証コード問題(Sアカ)', v:'authCodeIssue',  opts:['移行エラーメール受信','新規エラーメール受信','メール受信なし']},
-  {l:'認証コード結果(Sアカ)', v:'authCodeResult', opts:['認証コード受信','認証コード未着(任意情報なし)','認証コード未着(任意情報あり)']},
-  {l:'S-J連携状態',           v:'sjLinked',       opts:['連携済み','未連携','再連携必要','ログイン不可']},
-  {l:'Jアカなしログイン結果', v:'sjLoginlessResult', opts:['認証コード受信','認証コード未着(任意情報なし)','認証コード未着(任意情報あり)']},
-  {l:'Jアカ作成済み',         v:'jAccountCreated', opts:['true','false']},
-  {l:'認証コード問題(Jアカ)', v:'jAuthCodeIssue', opts:['Jアカ重複メール受信','メール受信なし']},
+  {l:'（条件なし）', v:''},
+  {l:'用途', v:'usage', opts:['世帯','学校','事業']},
+  {l:'旧NHKプラス', v:'oldPlusUsed', opts:['true','false']},
+  {l:'移行メアド', v:'migMailStatus', opts:['移行案内メールから特定済み、現在も使用可能','移行案内メールも確認できず特定不可','移行案内メールから特定済み、現在は使用不可']},
+  {l:'【移行Sアカ】作成', v:'migSAccCreated', opts:['true','false']},
+  {l:'【移行Sアカ】作成案内', v:'migSAccGuide', opts:['成功','失敗（エラーメール受信）','失敗（メール受信なし）']},
+  {l:'【移行Sアカ】ログイン', v:'migSAccLogin', opts:['true','false']},
+  {l:'【移行Sアカ】PW再設定', v:'migSAccPwReset', opts:['成功','失敗（ログインID設定あり）','失敗（ログインID以外の任意情報設定あり）','失敗（任意情報設定なし）']},
+  {l:'【転送パターンA】入電者確認', v:'transferA', opts:['受信契約者本人','配偶者','受信契約者本人/配偶者　ではないが　本人同席','上記に該当しない']},
+  {l:'【転送パターンB】入電者確認', v:'transferB', opts:['受信契約者本人','配偶者','受信契約者本人/配偶者　ではないが　本人同席','上記に該当しない']},
+  {l:'【転送パターンC】入電者確認', v:'transferC', opts:['受信契約者本人','配偶者','受信契約者本人/配偶者　ではないが　本人同席','上記に該当しない']},
+  {l:'【転送パターンD】入電者確認', v:'transferD', opts:['受信契約者本人','配偶者','受信契約者本人/配偶者　ではないが　本人同席','上記に該当しない']},
+  {l:'【新規Sアカ】作成', v:'newSAccCreated', opts:['true','false']},
+  {l:'【新規Sアカ】作成案内', v:'newSAccGuide', opts:['成功','失敗（エラーメール受信）','失敗（メール受信なし）']},
+  {l:'【新規Sアカ】ログイン', v:'newSAccLogin', opts:['true','false']},
+  {l:'【新規Sアカ】PW再設定', v:'newSAccPwReset', opts:['成功','失敗（ログインID設定あり）','失敗（ログインID以外の任意情報設定あり）','失敗（任意情報設定なし）']},
+  {l:'【S-J連携】', v:'sjLink', opts:['連携済（Jアカ作成済）','未連携（Jアカ作成済）','未連携（Jアカ作成済）※Jアカログイン不可','未連携（Jアカ未作成）','未確認（照合NG）','未確認（他S）']},
+  {l:'【Jアカ】作成案内', v:'jAccGuide', opts:['成功','失敗（エラーメール受信）','失敗（メール受信なし）']},
+  {l:'確認項目（Sアカ）メアド入力ミス', v:'cbSMistake', opts:['true','false']},
+  {l:'確認項目（Sアカ）迷惑メールフィルター', v:'cbSSpam', opts:['true','false']},
+  {l:'確認項目（Sアカ）受信許可設定', v:'cbSPermission', opts:['true','false']},
+  {l:'確認項目（Jアカ）メアド入力ミス', v:'cbJMistake', opts:['true','false']},
+  {l:'確認項目（Jアカ）迷惑メールフィルター', v:'cbJSpam', opts:['true','false']},
+  {l:'確認項目（Jアカ）受信許可設定', v:'cbJPermission', opts:['true','false']},
 ];
+
+// 各対応方針アコーディオンの開閉状態（id → bool）。再描画後も状態を保持するための保管庫。
+var _hrPolicyOpenState = window._hrPolicyOpenState || {};
+window._hrPolicyOpenState = _hrPolicyOpenState;
+
+function _hrPolicyPreviewText(item) {
+  var conds = item.conditions || [];
+  var condPart = conds.length ? ('条件' + conds.length + '件') : '条件なし（常に表示）';
+  var pol = (item.policy || '').replace(/\s+/g, ' ').trim();
+  var polPart = pol ? (pol.length > 36 ? pol.slice(0, 36) + '…' : pol) : '（方針未設定）';
+  return condPart + ' ／ ' + polPart;
+}
 
 function _hrEditorRender() {
   var el = document.getElementById('hrEditorList'); if (!el) return;
   var list = _hrPoliciesLoad() || [];
+  var badge = document.getElementById('hrEditorCountBadge');
+  if (badge) badge.textContent = list.length + '件';
   if (!list.length) {
     el.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:12px 0;">対応方針が登録されていません。「＋ 対応方針を追加」で追加してください。</div>';
     return;
   }
   el.innerHTML = '';
   list.forEach(function(item, idx) {
-    var card = document.createElement('div');
-    card.style.cssText = 'background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px 14px;display:flex;flex-direction:column;gap:8px;';
-
-    // ── ヘッダー（番号・有効化トグル・削除ボタン）──
-    var hd = document.createElement('div');
-    hd.style.cssText = 'display:flex;align-items:center;gap:8px;';
     var isBuiltin = !!item.builtin;
+
+    // ── アコーディオン本体（<details>）──
+    var card = document.createElement('details');
+    card.className = 'hr-policy-acc';
+    card.open = !!_hrPolicyOpenState[item.id];
+    card.addEventListener('toggle', function() { _hrPolicyOpenState[item.id] = card.open; });
+
+    // ── summary（常時表示：ヘッダー行＋プレビュー行）──
+    var summary = document.createElement('summary');
+
+    var hd = document.createElement('div');
+    hd.className = 'hr-policy-acc-hd';
+    var arrow = document.createElement('span');
+    arrow.className = 'hr-acc-arrow'; arrow.textContent = '▶';
     var num = document.createElement('span');
     num.textContent = '方針 ' + (idx+1) + (isBuiltin ? '　🔒 組み込み' : '');
     num.style.cssText = 'font-size:11px;font-weight:700;color:' + (isBuiltin ? 'var(--accent)' : 'var(--text3)') + ';flex:1;';
     var ena = document.createElement('label');
     ena.style.cssText = 'display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text2);cursor:pointer;';
+    ena.onclick = function(e) { e.stopPropagation(); }; // アコーディオン開閉と干渉させない
     var enaChk = document.createElement('input');
     enaChk.type = 'checkbox'; enaChk.checked = item.enabled !== false;
     enaChk.onchange = (function(iidx){ return function() {
@@ -1738,25 +1848,38 @@ function _hrEditorRender() {
       }
     }; })(idx);
     ena.appendChild(enaChk); ena.appendChild(document.createTextNode('有効'));
-    hd.appendChild(num); hd.appendChild(ena);
+    hd.appendChild(arrow); hd.appendChild(num); hd.appendChild(ena);
     if (!isBuiltin) {
       var del = document.createElement('button');
       del.textContent = '🗑 削除'; del.style.cssText = 'font-size:10px;padding:2px 8px;border:1px solid var(--border);border-radius:4px;background:var(--surface2);cursor:pointer;color:var(--text);font-family:inherit;';
-      del.onclick = (function(iidx){ return function() {
+      del.onclick = (function(iidx){ return function(e) {
+        e.stopPropagation(); // アコーディオン開閉と干渉させない
         if(!confirm('この対応方針を削除しますか？'))return;
         var l = (window._appCache.hearingPolicies||[]).filter(function(p){return !p.builtin;});
         l.splice(iidx - (window.DEFAULT_HEARING_POLICIES||[]).filter(function(p){return p.builtin;}).length, 1);
+        delete _hrPolicyOpenState[item.id];
         _hrPoliciesSave(l); _hrEditorRender();
       }; })(idx);
       hd.appendChild(del);
     }
-    card.appendChild(hd);
+    summary.appendChild(hd);
+
+    var preview = document.createElement('div');
+    preview.className = 'hr-policy-acc-preview';
+    preview.textContent = _hrPolicyPreviewText(item);
+    summary.appendChild(preview);
+
+    card.appendChild(summary);
+
+    // ── 折りたたみ本文（条件・対応方針テキスト）──
+    var body = document.createElement('div');
+    body.className = 'hr-policy-acc-body';
 
     // ── 条件行 ──
     var conds = item.conditions || [];
     var condLabel = document.createElement('div');
     condLabel.textContent = '表示条件（AND条件）'; condLabel.style.cssText = 'font-size:11px;font-weight:700;color:var(--text2);';
-    card.appendChild(condLabel);
+    body.appendChild(condLabel);
 
     var condList = document.createElement('div');
     condList.style.cssText = 'display:flex;flex-direction:column;gap:4px;';
@@ -1775,8 +1898,8 @@ function _hrEditorRender() {
       }
       _fillVSel(cond.field);
       if (isBuiltin) { fSel.disabled = true; vSel.disabled = true; }
-      fSel.onchange = function() { _fillVSel(fSel.value); _hrCondSetField(idx,ci,'field',fSel.value); _hrCondSetField(idx,ci,'value',vSel.value); };
-      vSel.onchange = function() { _hrCondSetField(idx,ci,'value',vSel.value); };
+      fSel.onchange = function() { _fillVSel(fSel.value); _hrCondSetField(idx,ci,'field',fSel.value); _hrCondSetField(idx,ci,'value',vSel.value); preview.textContent = _hrPolicyPreviewText(_hrPoliciesLoad()[idx]); };
+      vSel.onchange = function() { _hrCondSetField(idx,ci,'value',vSel.value); preview.textContent = _hrPolicyPreviewText(_hrPoliciesLoad()[idx]); };
       var delC = document.createElement('button');
       if (isBuiltin) { delC.style.display = 'none'; }
       delC.textContent='✕'; delC.style.cssText='font-size:10px;padding:2px 6px;border:1px solid var(--border);border-radius:4px;background:var(--surface2);cursor:pointer;color:var(--text);font-family:inherit;';
@@ -1795,19 +1918,20 @@ function _hrEditorRender() {
       _hrPoliciesSave(l); _hrEditorRender();
     }; })(idx);
     condList.appendChild(addCond);
-    card.appendChild(condList);
+    body.appendChild(condList);
 
     // ── 対応方針テキスト ──
     var polLabel = document.createElement('div');
     polLabel.textContent = '対応方針テキスト'; polLabel.style.cssText = 'font-size:11px;font-weight:700;color:var(--text2);';
-    card.appendChild(polLabel);
+    body.appendChild(polLabel);
     var ta = document.createElement('textarea');
     ta.value = item.policy || '';
     ta.rows = 3;
     ta.style.cssText = 'width:100%;font-size:12px;padding:6px 8px;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text);font-family:inherit;resize:vertical;box-sizing:border-box;';
-    ta.oninput = (function(idx){ return function(){ _hrPolicySetField(idx,'policy',this.value); }; })(idx);
-    card.appendChild(ta);
+    ta.oninput = (function(idx){ return function(){ _hrPolicySetField(idx,'policy',this.value); preview.textContent = _hrPolicyPreviewText(_hrPoliciesLoad()[idx]); }; })(idx);
+    body.appendChild(ta);
 
+    card.appendChild(body);
     el.appendChild(card);
   });
 }
@@ -1826,10 +1950,13 @@ function _hrCondSetField(pIdx, cIdx, field, val) {
 }
 function _hrEditorAdd() {
   var l = _hrPoliciesLoad()||[];
-  l.push({id:'hr'+Math.random().toString(36).substr(2,8), conditions:[], policy:'', enabled:true});
+  var newId = 'hr'+Math.random().toString(36).substr(2,8);
+  l.push({id:newId, conditions:[], policy:'', enabled:true});
   _hrPoliciesSave(l);
+  _hrPolicyOpenState[newId] = true; // 追加した項目は開いた状態で表示
   _hrLoadAndRender();
 }
+
 
 // calcPolicies から呼ばれるカスタムポリシーを注入
 function _hrCustomPolicies(s) {
@@ -3610,6 +3737,8 @@ function _hrPatsSave(arr) {
 function _hrPatRender() {
   var el = document.getElementById('hrPatList'); if (!el) return;
   var pats = _hrPatsLoad();
+  var badge = document.getElementById('hrPatCountBadge');
+  if (badge) badge.textContent = pats.length + '件';
   if (!pats.length) {
     el.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:12px;background:var(--surface);border:1px dashed var(--border);border-radius:8px;text-align:center;">パターンがありません。「＋ パターンを追加」から登録してください。</div>';
     return;
@@ -7351,6 +7480,9 @@ window.addEventListener('resize',function(){
            '✏️ <b>ラベル・ボタンテキスト</b>をダブルクリックで編集　<b>＋ 追加</b> / <b>×</b> で選択肢の追加・削除　末尾の <b>＋ 質問を追加</b> で新規質問をインライン追加' +
            '</div>';
 
+      // ■デバイス（常時表示・固定・編集不要／common-utils.js の共通ヘルパーを使用）
+      if (typeof window._hrDeviceSectionHTML === 'function') h += window._hrDeviceSectionHTML(s);
+
       qs.forEach(function(q) {
         if (!q.enabled) return;
         if (q.id in patternOverrides) { if (!patternOverrides[q.id]) return; }
@@ -7371,24 +7503,22 @@ window.addEventListener('resize',function(){
              '</div>';
       });
 
-      // メール未着調査（固定・編集不要）
-      var _showMailInv = s.authCodeIssue === 'メール受信なし' || s.jAuthCodeIssue === 'メール受信なし';
-      if (_showMailInv) {
-        var dv = s.mailDomain;
-        var _rejectLabel = s.jAuthCodeIssue === 'メール受信なし' ? '受信拒否（mail.service.nhk-cs.jp）' : '受信拒否（mail.nhk）';
-        h += '<div class="hr-divider">メール未着調査</div>';
-        h += '<div class="hr-row"><div class="hr-label">■ドメイン（＠以降）</div><select id="hearingDomainSel" class="hr-select" onchange="onHearingDomainChange()"><option value="">選択してください</option>' +
-          ['@docomo.ne.jp','@softbank.ne.jp','@i.softbank.jp','@ezweb.ne.jp','@au.com','@gmail.com','@yahoo.co.jp','@outlook.com'].map(function(v){
-            return '<option value="'+v+'"'+(dv===v?' selected':'')+'>'+v+'</option>';
-          }).join('') +
-          '<option value="__manual__"'+(dv==='__manual__'?' selected':'')+'>その他（手入力）</option></select>' +
-          '<div id="hearingDomainManualWrap" style="display:'+(dv==='__manual__'?'block':'none')+';margin-top:6px;">' +
-          '<input id="hearingDomainManual" type="text" class="hr-text-input" placeholder="例）@example.com" value="' + _hEscL(s.mailDomainManual||'') + '" oninput="onHearingDomainManualInput()"></div></div>';
-        h += '<div class="hr-row"><div class="hr-label">■確認項目</div>' +
-          '<label class="hr-check-label"><input id="hearingCb_cbMistake" type="checkbox"'+(s.cbMistake?' checked':'')+' onchange="onHearingCheckChange(\'cbMistake\')"> メールアドレスの入力ミス</label>' +
-          '<label class="hr-check-label"><input id="hearingCb_cbReject" type="checkbox"'+(s.cbReject?' checked':'')+' onchange="onHearingCheckChange(\'cbReject\')"> '+_rejectLabel+'</label>' +
-          '<label class="hr-check-label"><input id="hearingCb_cbSpam" type="checkbox"'+(s.cbSpam?' checked':'')+' onchange="onHearingCheckChange(\'cbSpam\')"> 迷惑メールフィルター</label>' +
-          '</div>';
+      // 【Sアカ】／【Jアカ】メール受信なし（固定・編集不要／common-utils.js の共通ヘルパーを使用）
+      if (typeof window._hrMailCheckGroupHTML === 'function') {
+        if (s.migSAccGuide === '失敗（メール受信なし）' || s.newSAccGuide === '失敗（メール受信なし）') {
+          h += window._hrMailCheckGroupHTML(s, {
+            title: '【Sアカ】メール受信なし',
+            mistakeField: 'cbSMistake', spamField: 'cbSSpam', permField: 'cbSPermission',
+            permLabel: '受信許可設定（mail.nhk）'
+          });
+        }
+        if (s.jAccGuide === '失敗（メール受信なし）') {
+          h += window._hrMailCheckGroupHTML(s, {
+            title: '【Jアカ】メール受信なし',
+            mistakeField: 'cbJMistake', spamField: 'cbJSpam', permField: 'cbJPermission',
+            permLabel: '受信許可設定（mail.service.nhk-cs.jp）'
+          });
+        }
       }
 
       // メモ欄

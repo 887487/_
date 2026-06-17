@@ -18,6 +18,9 @@
 //    localStorage は darkMode と hearingState のみ継続使用。
 // =============================================================================
 var _APP_IDB_INST = null;
+// ヒアリング項目／対応方針／パターンのデフォルト内容を大幅に作り直した際にインクリメントする。
+// IndexedDB 上の保存値とこの値が異なる場合、保存データを破棄して新しいデフォルトで上書きする。
+var HEARING_DATA_VERSION = 2;
 function _appIdbOpen() {
   if (_APP_IDB_INST) return Promise.resolve(_APP_IDB_INST);
   return new Promise(function(resolve, reject) {
@@ -161,7 +164,7 @@ window.initAppData = function() {
   }).then(function(result) {
     // data.js がない場合は IDB からヒアリング・サイドメニュー等も読む（後方互換）
     if (!sd) {
-      var legacyKeys = ['updateHistory','hearingQuestions','hearingPolicies','hearingPatterns','sideMenuData','fixedTexts'];
+      var legacyKeys = ['updateHistory','hearingQuestions','hearingPolicies','hearingPatterns','sideMenuData','fixedTexts','hearingDataVersion'];
       return _appIdbOpen().then(function(db) {
         return new Promise(function(resolve2) {
           var tx2    = db.transaction('appData', 'readonly');
@@ -189,6 +192,23 @@ window.initAppData = function() {
       ['updateHistory','hearingQuestions','hearingPolicies','hearingPatterns','sideMenuData','fixedTexts'].forEach(function(k) {
         if (result[k] != null) window._appCache[k] = result[k];
       });
+    }
+    // ── ヒアリング項目の大幅リニューアル対応 ──
+    // IndexedDB に保存されている旧バージョンのヒアリング項目／対応方針／パターンが
+    // 残っている場合、それを優先してしまうと common-utils.js 側で新しく定義した
+    // デフォルト内容（HEARING_QUESTIONS_DEFAULT 等）が反映されない。
+    // バージョン番号が一致しない場合は保存データを破棄し、新しいデフォルトで上書き・再保存する。
+    var storedHearingVer = result ? result.hearingDataVersion : null;
+    if (storedHearingVer !== HEARING_DATA_VERSION) {
+      window._appCache.hearingQuestions = JSON.parse(JSON.stringify(HEARING_QUESTIONS_DEFAULT || []));
+      window._appCache.hearingPolicies  = JSON.parse(JSON.stringify(window.DEFAULT_HEARING_POLICIES || []));
+      window._appCache.hearingPatterns  = JSON.parse(JSON.stringify(window.DEFAULT_HEARING_PATTERNS || []));
+      if (window.idbSetAppData) {
+        window.idbSetAppData('hearingQuestions', window._appCache.hearingQuestions);
+        window.idbSetAppData('hearingPolicies',  window._appCache.hearingPolicies);
+        window.idbSetAppData('hearingPatterns',  window._appCache.hearingPatterns);
+        window.idbSetAppData('hearingDataVersion', HEARING_DATA_VERSION);
+      }
     }
     return window._appCache;
   });
@@ -1443,23 +1463,28 @@ _phonRow('A','アメリカ','アップルパイ') + _phonRow('B','ブラジル',
 // ※ 変更なし（省略せず全文維持）
 // =============================================================================
 
-var HEARING_KEY = 'hearingState_v4';
+var HEARING_KEY = 'hearingState_v7';
 
 var DEFAULT_STATE = {
-  usage: null, isMigration: null, oldPlusId: null, migMailConfirmed: null, migMailUsable: null,
-  isAccountPerson: null, sAccountCreated: null, authCodeIssue: null, authCodeResult: null,
-  jAccountCreated: null, jAuthCodeIssue: null, sjLinked: null, sjLoginlessResult: null,
-  devices: {}, mailDomain: '', mailDomainManual: '', cbMistake: false, cbReject: false, cbSpam: false,
+  usage: null,
+  oldPlusUsed: null, migMailStatus: null,
+  migSAccCreated: null, migSAccGuide: null, migSAccLogin: null, migSAccPwReset: null,
+  newSAccCreated: null, newSAccGuide: null, newSAccLogin: null, newSAccPwReset: null,
+  sjLink: null, jAccGuide: null,
+  transferA: null, transferB: null, transferC: null, transferD: null,
+  devices: {}, mailDomain: '', mailDomainManual: '',
+  cbSMistake: false, cbSSpam: false, cbSPermission: false,
+  cbJMistake: false, cbJSpam: false, cbJPermission: false,
   memo: ''
 };
 
-var DEVICE_LIST = ['iPhone', 'Android', 'タブレット', 'PC', 'TV'];
+var DEVICE_LIST = ['iPhone', 'Android', 'タブレット端末', 'PC', 'TV'];
 var DEVICE_DETAIL_OPTIONS = {
-  'iPhone':    ['Web', 'アプリ', 'Web,アプリ両方'],
-  'Android':   ['Web', 'アプリ', 'Web,アプリ両方'],
-  'タブレット': ['Web', 'アプリ', 'Web,アプリ両方'],
-  'PC':        ['Windows', 'Mac', 'ChromeBook'],
-  'TV':        []
+  'iPhone':       ['Web', 'アプリ', '両方'],
+  'Android':      ['Web', 'アプリ', '両方'],
+  'タブレット端末': ['Web', 'アプリ', '両方'],
+  'PC':           ['Win', 'Mac', 'ChromeBook'],
+  'TV':           []
 };
 
 function loadHearingState() {
@@ -1469,14 +1494,15 @@ function loadHearingState() {
       var parsed = JSON.parse(saved);
       var devices = {};
       DEVICE_LIST.forEach(function (d) {
-        devices[d] = (parsed.devices && parsed.devices[d]) ? parsed.devices[d] : { selected: false, detail: '' };
+        devices[d] = (parsed.devices && parsed.devices[d]) ? parsed.devices[d] : { selected: false, detail: [] };
+        if (!Array.isArray(devices[d].detail)) devices[d].detail = devices[d].detail ? [devices[d].detail] : [];
       });
       parsed.devices = devices;
       return Object.assign({}, DEFAULT_STATE, parsed);
     }
   } catch (e) {}
   var state = JSON.parse(JSON.stringify(DEFAULT_STATE));
-  DEVICE_LIST.forEach(function (d) { state.devices[d] = { selected: false, detail: '' }; });
+  DEVICE_LIST.forEach(function (d) { state.devices[d] = { selected: false, detail: [] }; });
   return state;
 }
 
@@ -1497,7 +1523,7 @@ window.toggleHearingPanel = function () {
 
 window.resetHearing = function () {
   hearingState = JSON.parse(JSON.stringify(DEFAULT_STATE));
-  DEVICE_LIST.forEach(function (d) { hearingState.devices[d] = { selected: false, detail: '' }; });
+  DEVICE_LIST.forEach(function (d) { hearingState.devices[d] = { selected: false, detail: [] }; });
   saveHearingState();
   renderHearing();
 };
@@ -1516,13 +1542,22 @@ window.setHearing = function (field, value) {
 window.toggleHearingDevice = function (device) {
   var d = hearingState.devices[device];
   d.selected = !d.selected;
-  if (!d.selected) d.detail = '';
+  if (!d.selected) d.detail = [];
   saveHearingState();
   renderHearing();
 };
 
 window.setHearingDeviceDetail = function (device, value) {
-  hearingState.devices[device].detail = value;
+  var d = hearingState.devices[device];
+  if (!Array.isArray(d.detail)) d.detail = [];
+  var idx = d.detail.indexOf(value);
+  if (idx >= 0) {
+    // すでに選択中のボタンをもう一度押すと、その項目だけOFF（複数選択可）
+    d.detail.splice(idx, 1);
+  } else {
+    d.detail.push(value);
+  }
+  d.selected = d.detail.length > 0;
   saveHearingState();
   renderHearing();
 };
@@ -1579,29 +1614,48 @@ function _hEsc(s) {
 
 function calcPolicies(s) {
   var policies = [];
-  if (s.usage === '世帯' && s.isMigration === true && s.oldPlusId === false) policies.push('移行対象者ではありませんので新規登録を案内してください');
-  if (s.usage === '世帯' && s.isMigration === true && s.oldPlusId === true && s.migMailConfirmed === false) policies.push('ガイダンス2で確認を依頼してください');
-  if (s.usage === '世帯' && s.isMigration === true && s.oldPlusId === true && s.migMailConfirmed === true && s.migMailUsable === false) policies.push('ガイダンス2で連携解除を依頼してください');
-  if (s.sjLinked === '再連携必要') policies.push('ガイダンス2で連携解除後の再登録となることを案内してください');
-  if (s.sAccountCreated === false && s.authCodeResult === '認証コード受信') policies.push('PW変更後、ログインしてご利用いただくようご案内ください。');
-  if (s.sjLinked === 'ログイン不可' && s.sjLoginlessResult === '認証コード受信') policies.push('PW変更後、ログインしてご利用いただくようご案内ください。');
-  if (s.usage === '世帯' && s.isMigration === true && s.sjLinked === 'ログイン不可' && s.sjLoginlessResult === '認証コード未着(任意情報なし)') policies.push('入力されたメールアドレスでアカウントが作成されていない可能性が高いです。\n移行手続きを進めていただくようご案内ください');
-  if (s.usage === '世帯' && s.isMigration === true && s.sjLinked === 'ログイン不可' && s.sjLoginlessResult === '認証コード未着(任意情報あり)') policies.push('このメールアドレスでSアカは作成済みです\n任意情報を失念してしまうとアカウントの復旧ができません\nガイダンス2で連携解除後の新規登録となることをご案内ください。');
-  if (s.usage === '世帯' && s.isMigration === false && s.sjLinked === 'ログイン不可' && s.sjLoginlessResult === '認証コード未着(任意情報なし)') policies.push('入力されたメールアドレスでアカウントが作成されていない可能性が高いです。\n新規登録の手続きを進めていただくようご案内ください');
-  if (s.usage === '世帯' && s.isMigration === false && s.sjLinked === 'ログイン不可' && s.sjLoginlessResult === '認証コード未着(任意情報あり)') policies.push('このメールアドレスでSアカは作成済みです\n任意情報を失念してしまうとアカウントの復旧ができません\nガイダンス2で連携解除後の新規登録となることをご案内ください。');
-  if (s.authCodeIssue === 'Jアカ重複メール受信') policies.push('ガイダンス2で受信料アカウントの登録状況確認を依頼してください。');
-  if (s.authCodeIssue === '移行エラーメール受信' && s.authCodeResult === '認証コード未着(任意情報なし)') policies.push('入力されたアドレスが登録表記との不一致等の理由で移行対象のアドレスではない可能性があるため、ガイダンス2で確認を依頼してください。');
-  if (s.authCodeIssue === '移行エラーメール受信' && s.authCodeResult === '認証コード未着(任意情報あり)') policies.push('任意情報を失念してしまうとアカウントの復旧ができないため、ガイダンス2で連携解除後の新規登録となることをご案内ください。');
-  if (s.authCodeIssue === '新規エラーメール受信' && s.authCodeResult === '認証コード未着(任意情報なし)') policies.push('入力されたアドレスが移行の対象である可能性があるため、移行手続きをお試しいただくようご案内ください。');
-  if (s.usage === '世帯' && s.isMigration === false && s.authCodeIssue === '新規エラーメール受信' && s.authCodeResult === '認証コード未着(任意情報あり)') policies.push('このメールアドレスでSアカは作成済みです\n任意情報を失念してしまうとアカウントの復旧ができません\n作成済みのSアカは3か月未ログインで自動削除となり、そこから1か月経過後より同アドレスの利用が可能となります\n別メアドでのSアカ新規に不承の場合は、当窓口でのSアカ削除を承ってください。');
-  if (s.usage === '世帯' && s.isMigration === true && s.oldPlusId === true && s.migMailConfirmed === true && s.migMailUsable === true && s.sAccountCreated === false && s.authCodeIssue === '新規エラーメール受信' && s.authCodeResult === '認証コード未着(任意情報あり)') policies.push('このメールアドレスでSアカは作成済みです\n任意情報を失念してしまうとアカウントの復旧ができません\nガイダンス2で連携解除後の新規登録となることをご案内ください。');
-  if (s.authCodeIssue === 'メール受信なし' && s.cbMistake === true && s.cbReject === true && s.cbSpam === true) policies.push('クライアントエスカレーションの案件です');
+
+  // ── ■用途：学校/事業 ──
+  if (s.usage === '学校' || s.usage === '事業') policies.push('【学校/事業】アカウント担当者からの入電として対応してください。');
+
+  // ── 【移行Sアカ】ログイン／PW再設定 ──
+  if (s.migSAccLogin === true) policies.push('クロージング　Jアカ作成希望であれば320誘導');
+  if (s.migSAccPwReset === '成功') policies.push('ログイン確認後、クロージング　Jアカ作成希望であれば320誘導');
+  if (s.migSAccPwReset === '失敗（ログインID設定あり）') policies.push('ログインID開示で受付');
+  if (s.migSAccPwReset === '失敗（ログインID以外の任意情報設定あり）') policies.push('入力した任意情報に誤りがあります。入力内容をご確認下さい。');
+  if (s.migSAccPwReset === '失敗（任意情報設定なし）') policies.push('入力されたメアドでアカウントが存在しない可能性が高いです。');
+
+  // ── 【新規Sアカ】PW再設定 ──
+  if (s.newSAccPwReset === '失敗（ログインID設定あり）') policies.push('ログインID開示で受付');
+  if (s.newSAccPwReset === '失敗（ログインID以外の任意情報設定あり）') policies.push('入力した任意情報に誤りがあります。入力内容をご確認下さい。');
+  if (s.newSAccPwReset === '失敗（任意情報設定なし）') policies.push('入力されたメアドでアカウントが存在しない可能性が高いです。');
+
+  // ── 【転送パターンA〜D】入電者確認 ──
+  ['transferA', 'transferB', 'transferC', 'transferD'].forEach(function (f) {
+    var v = s[f];
+    if (v === '受信契約者本人' || v === '配偶者' || v === '受信契約者本人/配偶者　ではないが　本人同席') policies.push('転送OK');
+    if (v === '上記に該当しない') policies.push('転送NG　本人からおかけ直しいただくよう案内');
+  });
+
+  // ── 【S-J連携】 ──
+  if (s.sjLink === '連携済（Jアカ作成済）') policies.push('クロージング');
+  if (s.sjLink === '未連携（Jアカ作成済）') policies.push('S-J連携を完了してサービスをご利用ください');
+  if (s.sjLink === '未確認（照合NG）') policies.push('077で正しい受信契約情報を確認いただくよう案内');
+
+  // ── 【Jアカ】作成案内 ──
+  if (s.jAccGuide === '失敗（エラーメール受信）') policies.push('同メアドで既にJアカが存在しています。');
+
+  // ── メール受信なし（チェックボックス全部✓でクライアントエスカレ） ──
+  if (s.cbSMistake === true && s.cbSSpam === true && s.cbSPermission === true) policies.push('クライアントエスカレ');
+  if (s.cbJMistake === true && s.cbJSpam === true && s.cbJPermission === true) policies.push('クライアントエスカレ');
+
   // admin.html で登録されたカスタム対応方針を追記
   if (typeof _hrCustomPolicies === 'function') {
     _hrCustomPolicies(s).forEach(function(p){ if(p)policies.push(p); });
   }
   return policies;
 }
+
 
 // ===================================================================
 // ヒアリング質問定義（データ駆動式）
@@ -1613,53 +1667,144 @@ var HEARING_QUESTIONS_DEFAULT = [
   {id:'q_usage', label:'用途', field:'usage', type:'str',
    options:[{l:'世帯',v:'世帯'},{l:'学校',v:'学校'},{l:'事業',v:'事業'}],
    showIf:[], builtin:true, enabled:true,
-   resets:['isMigration','oldPlusId','migMailConfirmed','migMailUsable','isAccountPerson','sAccountCreated','authCodeIssue','authCodeResult','jAccountCreated','jAuthCodeIssue','sjLinked','sjLoginlessResult']},
-  {id:'q_isMigration', label:'移行対象者ですか？', field:'isMigration', type:'bool',
-   trueLabel:'はい', falseLabel:'いいえ',
+   resets:['oldPlusUsed','migMailStatus','migSAccCreated','migSAccGuide','migSAccLogin','migSAccPwReset',
+           'transferA','transferB','transferC','newSAccCreated','newSAccGuide','newSAccLogin','newSAccPwReset',
+           'sjLink','jAccGuide','cbSMistake','cbSSpam','cbSPermission','cbJMistake','cbJSpam','cbJPermission']},
+
+  {id:'q_oldPlusUsed', label:'旧NHKプラス', field:'oldPlusUsed', type:'bool',
+   trueLabel:'2025/8/15までに利用あり（気がする）', falseLabel:'2025/8/15までに利用なし',
    showIf:[[{field:'usage',op:'eq',value:'世帯'}]], builtin:true, enabled:true,
-   resets:['oldPlusId','migMailConfirmed','migMailUsable','sAccountCreated','authCodeIssue','authCodeResult','jAccountCreated','jAuthCodeIssue','sjLinked','sjLoginlessResult']},
-  {id:'q_oldPlusId', label:'2025/8/15時点で旧プラスのIDは発行されていましたか？', field:'oldPlusId', type:'bool',
-   trueLabel:'はい(わからない)', falseLabel:'いいえ',
-   showIf:[[{field:'usage',op:'eq',value:'世帯'},{field:'isMigration',op:'true'}]], builtin:true, enabled:true, resets:['migMailConfirmed','migMailUsable']},
-  {id:'q_migMailConfirmed', label:'7月/9月/10月に送信している移行案内メールは確認されていますか？', field:'migMailConfirmed', type:'bool',
-   trueLabel:'はい', falseLabel:'いいえ(わからない)',
-   showIf:[[{field:'usage',op:'eq',value:'世帯'},{field:'isMigration',op:'true'},{field:'oldPlusId',op:'true'}]], builtin:true, enabled:true, resets:['migMailUsable']},
-  {id:'q_migMailUsable', label:'移行案内メールを受信しているメールアドレスは現在も使用可能ですか？', field:'migMailUsable', type:'bool',
-   trueLabel:'はい', falseLabel:'いいえ',
-   showIf:[[{field:'usage',op:'eq',value:'世帯'},{field:'isMigration',op:'true'},{field:'oldPlusId',op:'true'},{field:'migMailConfirmed',op:'true'}]], builtin:true, enabled:true, resets:[]},
-  {id:'q_isAccountPerson', label:'入電者はアカウント担当者ですか？', field:'isAccountPerson', type:'bool',
-   trueLabel:'はい', falseLabel:'いいえ',
-   showIf:[[{field:'usage',op:'in',value:'学校,事業'}]], builtin:true, enabled:true,
-   resets:['sAccountCreated','authCodeIssue','authCodeResult','jAccountCreated','jAuthCodeIssue','sjLinked','sjLoginlessResult']},
-  {id:'q_sAccountCreated', label:'Sアカは作成済みですか？', field:'sAccountCreated', type:'bool',
-   trueLabel:'はい', falseLabel:'いいえ',
-   showIf:[[{field:'usage',op:'notnull'}]], builtin:true, enabled:true,
-   resets:['authCodeIssue','authCodeResult','jAccountCreated','jAuthCodeIssue','sjLinked','sjLoginlessResult']},
-  {id:'q_authCodeIssue', label:'認証コード未着ですか？（Sアカいいえ時）', field:'authCodeIssue', type:'str',
-   options:[{l:'移行エラーメール受信',v:'移行エラーメール受信'},{l:'新規エラーメール受信',v:'新規エラーメール受信'},{l:'メール受信なし',v:'メール受信なし'}],
-   showIf:[[{field:'sAccountCreated',op:'false'}]], builtin:true, enabled:true, resets:['authCodeResult']},
-  {id:'q_authCodeResult', label:'PWをお忘れの方はこちらから認証コードが届くか（Sアカ）', field:'authCodeResult', type:'str',
-   options:[{l:'認証コード受信',v:'認証コード受信'},{l:'認証コード未着(任意情報なし)',v:'認証コード未着(任意情報なし)'},{l:'認証コード未着(任意情報あり)',v:'認証コード未着(任意情報あり)'}],
-   showIf:[[{field:'authCodeIssue',op:'in',value:'移行エラーメール受信,新規エラーメール受信'}]], builtin:true, enabled:true, resets:[]},
-  {id:'q_sjLinked', label:'S-J連携済みですか？', field:'sjLinked', type:'str',
-   options:[{l:'連携済み',v:'連携済み'},{l:'未連携',v:'未連携'},{l:'未確認（再連携が必要です）',v:'再連携必要'},{l:'ログイン不可',v:'ログイン不可'}],
-   showIf:[[{field:'usage',op:'eq',value:'世帯'},{field:'sAccountCreated',op:'true'}]], builtin:true, enabled:true,
-   resets:['jAccountCreated','jAuthCodeIssue','sjLoginlessResult']},
-  {id:'q_sjLoginlessResult', label:'PWをお忘れの方はこちらから認証コードが届くか（ログイン不可）', field:'sjLoginlessResult', type:'str',
-   options:[{l:'認証コード受信',v:'認証コード受信'},{l:'認証コード未着(任意情報なし)',v:'認証コード未着(任意情報なし)'},{l:'認証コード未着(任意情報あり)',v:'認証コード未着(任意情報あり)'}],
-   showIf:[[{field:'usage',op:'eq',value:'世帯'},{field:'sAccountCreated',op:'true'},{field:'sjLinked',op:'eq',value:'ログイン不可'}]], builtin:true, enabled:true, resets:[]},
-  {id:'q_jAccountCreated', label:'Jアカは作成済みですか？', field:'jAccountCreated', type:'bool',
-   trueLabel:'はい', falseLabel:'いいえ',
+   resets:['migMailStatus','migSAccCreated','migSAccGuide','migSAccLogin','migSAccPwReset',
+           'transferA','transferB','transferC','newSAccCreated','newSAccGuide','newSAccLogin','newSAccPwReset',
+           'sjLink','jAccGuide','cbSMistake','cbSSpam','cbSPermission','cbJMistake','cbJSpam','cbJPermission']},
+
+  {id:'q_migMailStatus', label:'移行メアド', field:'migMailStatus', type:'str',
+   options:[
+     {l:'移行案内メールから特定済み、現在も使用可能', v:'移行案内メールから特定済み、現在も使用可能'},
+     {l:'移行案内メールも確認できず特定不可',         v:'移行案内メールも確認できず特定不可'},
+     {l:'移行案内メールから特定済み、現在は使用不可', v:'移行案内メールから特定済み、現在は使用不可'}
+   ],
+   showIf:[[{field:'oldPlusUsed',op:'true'}]], builtin:true, enabled:true,
+   resets:['migSAccCreated','migSAccGuide','migSAccLogin','migSAccPwReset','transferA','transferB',
+           'cbSMistake','cbSSpam','cbSPermission']},
+
+  {id:'q_migSAccCreated', label:'【移行Sアカ】作成', field:'migSAccCreated', type:'bool',
+   trueLabel:'済', falseLabel:'未',
+   showIf:[[{field:'migMailStatus',op:'eq',value:'移行案内メールから特定済み、現在も使用可能'}]], builtin:true, enabled:true,
+   resets:['migSAccGuide','migSAccLogin','migSAccPwReset','cbSMistake','cbSSpam','cbSPermission']},
+
+  {id:'q_migSAccGuide', label:'【移行Sアカ】作成案内', field:'migSAccGuide', type:'str',
+   options:[{l:'成功',v:'成功'},{l:'失敗（エラーメール受信）',v:'失敗（エラーメール受信）'},{l:'失敗（メール受信なし）',v:'失敗（メール受信なし）'}],
+   showIf:[[{field:'migSAccCreated',op:'false'}]], builtin:true, enabled:true,
+   resets:['migSAccLogin','migSAccPwReset','cbSMistake','cbSSpam','cbSPermission']},
+
+  {id:'q_migSAccLogin', label:'【移行Sアカ】ログイン', field:'migSAccLogin', type:'bool',
+   trueLabel:'成功 もしくは ログイン済み', falseLabel:'失敗',
+   showIf:[[{field:'migSAccCreated',op:'true'}],[{field:'migSAccGuide',op:'eq',value:'成功'}]],
+   builtin:true, enabled:true, resets:['migSAccPwReset']},
+
+  {id:'q_migSAccPwReset', label:'【移行Sアカ】PW再設定', field:'migSAccPwReset', type:'str',
+   options:[
+     {l:'成功',v:'成功'},
+     {l:'失敗（ログインID設定あり）',v:'失敗（ログインID設定あり）'},
+     {l:'失敗（ログインID以外の任意情報設定あり）',v:'失敗（ログインID以外の任意情報設定あり）'},
+     {l:'失敗（任意情報設定なし）',v:'失敗（任意情報設定なし）'}
+   ],
+   showIf:[[{field:'migSAccLogin',op:'false'}],[{field:'migSAccGuide',op:'eq',value:'失敗（エラーメール受信）'}]],
+   builtin:true, enabled:true, resets:[]},
+
+  {id:'q_transferA', label:'【転送パターンA】入電者確認', field:'transferA', type:'str',
+   options:[
+     {l:'受信契約者本人',v:'受信契約者本人'},
+     {l:'配偶者',v:'配偶者'},
+     {l:'受信契約者本人/配偶者　ではないが　本人同席',v:'受信契約者本人/配偶者　ではないが　本人同席'},
+     {l:'上記に該当しない',v:'上記に該当しない'}
+   ],
+   showIf:[[{field:'migMailStatus',op:'eq',value:'移行案内メールも確認できず特定不可'}]],
+   builtin:true, enabled:true, resets:[]},
+
+  {id:'q_transferB', label:'【転送パターンB】入電者確認', field:'transferB', type:'str',
+   options:[
+     {l:'受信契約者本人',v:'受信契約者本人'},
+     {l:'配偶者',v:'配偶者'},
+     {l:'受信契約者本人/配偶者　ではないが　本人同席',v:'受信契約者本人/配偶者　ではないが　本人同席'},
+     {l:'上記に該当しない',v:'上記に該当しない'}
+   ],
    showIf:[
-     [{field:'usage',op:'eq',value:'世帯'},{field:'sAccountCreated',op:'true'},{field:'isMigration',op:'true'},{field:'oldPlusId',op:'true'},{field:'migMailConfirmed',op:'true'},{field:'migMailUsable',op:'true'},{field:'sjLinked',op:'in',value:'未連携,再連携必要'}],
-     [{field:'usage',op:'eq',value:'世帯'},{field:'sAccountCreated',op:'true'},{field:'isMigration',op:'neq',value:'true'},{field:'sjLinked',op:'in',value:'未連携,再連携必要'}]
-   ], builtin:true, enabled:true, resets:['jAuthCodeIssue']},
-  {id:'q_jAuthCodeIssue', label:'認証コード未着ですか？（Jアカいいえ時）', field:'jAuthCodeIssue', type:'str',
-   options:[{l:'Jアカ重複メール受信',v:'Jアカ重複メール受信'},{l:'メール受信なし',v:'メール受信なし'}],
-   showIf:[
-     [{field:'usage',op:'eq',value:'世帯'},{field:'sAccountCreated',op:'true'},{field:'isMigration',op:'true'},{field:'oldPlusId',op:'true'},{field:'migMailConfirmed',op:'true'},{field:'migMailUsable',op:'true'},{field:'sjLinked',op:'in',value:'未連携,再連携必要'},{field:'jAccountCreated',op:'false'}],
-     [{field:'usage',op:'eq',value:'世帯'},{field:'sAccountCreated',op:'true'},{field:'isMigration',op:'neq',value:'true'},{field:'sjLinked',op:'in',value:'未連携,再連携必要'},{field:'jAccountCreated',op:'false'}]
-   ], builtin:true, enabled:true, resets:[]}
+     [{field:'migMailStatus',op:'eq',value:'移行案内メールから特定済み、現在は使用不可'}],
+     [{field:'sjLink',op:'eq',value:'未確認（他S）'}]
+   ],
+   builtin:true, enabled:true, resets:[]},
+
+  {id:'q_transferC', label:'【転送パターンC】入電者確認', field:'transferC', type:'str',
+   options:[
+     {l:'受信契約者本人',v:'受信契約者本人'},
+     {l:'配偶者',v:'配偶者'},
+     {l:'受信契約者本人/配偶者　ではないが　本人同席',v:'受信契約者本人/配偶者　ではないが　本人同席'},
+     {l:'上記に該当しない',v:'上記に該当しない'}
+   ],
+   showIf:[[{field:'sjLink',op:'eq',value:'未連携（Jアカ作成済）※Jアカログイン不可'}]],
+   builtin:true, enabled:true, resets:[]},
+
+  // 転送パターンDはフロー図上に表示先（呼び出し元）が存在しないため、現状は表示トリガーなし。
+  // 将来「表示/非表示パターン登録」で showIf を追加すれば有効化できます。
+  {id:'q_transferD', label:'【転送パターンD】入電者確認', field:'transferD', type:'str',
+   options:[
+     {l:'受信契約者本人',v:'受信契約者本人'},
+     {l:'配偶者',v:'配偶者'},
+     {l:'受信契約者本人/配偶者　ではないが　本人同席',v:'受信契約者本人/配偶者　ではないが　本人同席'},
+     {l:'上記に該当しない',v:'上記に該当しない'}
+   ],
+   showIf:[[{field:'usage',op:'eq',value:'__never__'}]],
+   builtin:true, enabled:true, resets:[]},
+
+  {id:'q_newSAccCreated', label:'【新規Sアカ】作成', field:'newSAccCreated', type:'bool',
+   trueLabel:'済', falseLabel:'未',
+   showIf:[[{field:'oldPlusUsed',op:'false'}]], builtin:true, enabled:true,
+   resets:['newSAccGuide','newSAccLogin','newSAccPwReset','sjLink','jAccGuide','transferB','transferC',
+           'cbSMistake','cbSSpam','cbSPermission','cbJMistake','cbJSpam','cbJPermission']},
+
+  {id:'q_newSAccGuide', label:'【新規Sアカ】作成案内', field:'newSAccGuide', type:'str',
+   options:[{l:'成功',v:'成功'},{l:'失敗（エラーメール受信）',v:'失敗（エラーメール受信）'},{l:'失敗（メール受信なし）',v:'失敗（メール受信なし）'}],
+   showIf:[[{field:'newSAccCreated',op:'false'}]], builtin:true, enabled:true,
+   resets:['newSAccLogin','newSAccPwReset','sjLink','jAccGuide','transferB','transferC',
+           'cbSMistake','cbSSpam','cbSPermission','cbJMistake','cbJSpam','cbJPermission']},
+
+  {id:'q_newSAccLogin', label:'【新規Sアカ】ログイン', field:'newSAccLogin', type:'bool',
+   trueLabel:'成功 もしくは ログイン済み', falseLabel:'不可',
+   showIf:[[{field:'newSAccCreated',op:'true'}],[{field:'newSAccGuide',op:'eq',value:'成功'}]],
+   builtin:true, enabled:true,
+   resets:['newSAccPwReset','sjLink','jAccGuide','transferB','transferC','cbJMistake','cbJSpam','cbJPermission']},
+
+  {id:'q_newSAccPwReset', label:'【新規Sアカ】PW再設定', field:'newSAccPwReset', type:'str',
+   options:[
+     {l:'成功',v:'成功'},
+     {l:'失敗（ログインID設定あり）',v:'失敗（ログインID設定あり）'},
+     {l:'失敗（ログインID以外の任意情報設定あり）',v:'失敗（ログインID以外の任意情報設定あり）'},
+     {l:'失敗（任意情報設定なし）',v:'失敗（任意情報設定なし）'}
+   ],
+   showIf:[[{field:'newSAccLogin',op:'false'}],[{field:'newSAccGuide',op:'eq',value:'失敗（エラーメール受信）'}]],
+   builtin:true, enabled:true,
+   resets:['sjLink','jAccGuide','transferB','transferC','cbJMistake','cbJSpam','cbJPermission']},
+
+  {id:'q_sjLink', label:'【S-J連携】', field:'sjLink', type:'str',
+   options:[
+     {l:'連携済（Jアカ作成済）',v:'連携済（Jアカ作成済）'},
+     {l:'未連携（Jアカ作成済）',v:'未連携（Jアカ作成済）'},
+     {l:'未連携（Jアカ作成済）※Jアカログイン不可',v:'未連携（Jアカ作成済）※Jアカログイン不可'},
+     {l:'未連携（Jアカ未作成）',v:'未連携（Jアカ未作成）'},
+     {l:'未確認（照合NG）',v:'未確認（照合NG）'},
+     {l:'未確認（他S）',v:'未確認（他S）'}
+   ],
+   showIf:[[{field:'newSAccLogin',op:'true'}],[{field:'newSAccPwReset',op:'eq',value:'成功'}]],
+   builtin:true, enabled:true,
+   resets:['transferB','transferC','jAccGuide','cbJMistake','cbJSpam','cbJPermission']},
+
+  {id:'q_jAccGuide', label:'【Jアカ】作成案内', field:'jAccGuide', type:'str',
+   options:[{l:'成功',v:'成功'},{l:'失敗（エラーメール受信）',v:'失敗（エラーメール受信）'},{l:'失敗（メール受信なし）',v:'失敗（メール受信なし）'}],
+   showIf:[[{field:'sjLink',op:'eq',value:'未連携（Jアカ未作成）'}]], builtin:true, enabled:true,
+   // 成功時は【S-J連携】を未回答の状態に戻して再表示する
+   resets:['sjLink','transferB','transferC','cbJMistake','cbJSpam','cbJPermission']}
 ];
 // @@HEARING_QUESTIONS_END@@
 
@@ -1672,18 +1817,10 @@ window.DEFAULT_HEARING_POLICIES = [
       {
         "field": "usage",
         "op": "eq",
-        "value": "世帯"
-      },
-      {
-        "field": "isMigration",
-        "op": "true"
-      },
-      {
-        "field": "oldPlusId",
-        "op": "false"
+        "value": "学校"
       }
     ],
-    "policy": "移行対象者ではありませんので新規登録を案内してください",
+    "policy": "【学校/事業】アカウント担当者からの入電として対応してください。",
     "enabled": true,
     "builtin": true
   },
@@ -1693,22 +1830,10 @@ window.DEFAULT_HEARING_POLICIES = [
       {
         "field": "usage",
         "op": "eq",
-        "value": "世帯"
-      },
-      {
-        "field": "isMigration",
-        "op": "true"
-      },
-      {
-        "field": "oldPlusId",
-        "op": "true"
-      },
-      {
-        "field": "migMailConfirmed",
-        "op": "false"
+        "value": "事業"
       }
     ],
-    "policy": "ガイダンス2で確認を依頼してください",
+    "policy": "【学校/事業】アカウント担当者からの入電として対応してください。",
     "enabled": true,
     "builtin": true
   },
@@ -1716,28 +1841,11 @@ window.DEFAULT_HEARING_POLICIES = [
     "id": "builtin_p03",
     "conditions": [
       {
-        "field": "usage",
-        "op": "eq",
-        "value": "世帯"
-      },
-      {
-        "field": "isMigration",
+        "field": "migSAccLogin",
         "op": "true"
-      },
-      {
-        "field": "oldPlusId",
-        "op": "true"
-      },
-      {
-        "field": "migMailConfirmed",
-        "op": "true"
-      },
-      {
-        "field": "migMailUsable",
-        "op": "false"
       }
     ],
-    "policy": "ガイダンス2で連携解除を依頼してください",
+    "policy": "クロージング　Jアカ作成希望であれば320誘導",
     "enabled": true,
     "builtin": true
   },
@@ -1745,12 +1853,12 @@ window.DEFAULT_HEARING_POLICIES = [
     "id": "builtin_p04",
     "conditions": [
       {
-        "field": "sjLinked",
+        "field": "migSAccPwReset",
         "op": "eq",
-        "value": "再連携必要"
+        "value": "成功"
       }
     ],
-    "policy": "ガイダンス2で連携解除後の再登録となることを案内してください",
+    "policy": "ログイン確認後、クロージング　Jアカ作成希望であれば320誘導",
     "enabled": true,
     "builtin": true
   },
@@ -1758,16 +1866,12 @@ window.DEFAULT_HEARING_POLICIES = [
     "id": "builtin_p05",
     "conditions": [
       {
-        "field": "sAccountCreated",
-        "op": "false"
-      },
-      {
-        "field": "authCodeResult",
+        "field": "migSAccPwReset",
         "op": "eq",
-        "value": "認証コード受信"
+        "value": "失敗（ログインID設定あり）"
       }
     ],
-    "policy": "PW変更後、ログインしてご利用いただくようご案内ください。",
+    "policy": "ログインID開示で受付",
     "enabled": true,
     "builtin": true
   },
@@ -1775,17 +1879,12 @@ window.DEFAULT_HEARING_POLICIES = [
     "id": "builtin_p06",
     "conditions": [
       {
-        "field": "sjLinked",
+        "field": "migSAccPwReset",
         "op": "eq",
-        "value": "ログイン不可"
-      },
-      {
-        "field": "sjLoginlessResult",
-        "op": "eq",
-        "value": "認証コード受信"
+        "value": "失敗（ログインID以外の任意情報設定あり）"
       }
     ],
-    "policy": "PW変更後、ログインしてご利用いただくようご案内ください。",
+    "policy": "入力した任意情報に誤りがあります。入力内容をご確認下さい。",
     "enabled": true,
     "builtin": true
   },
@@ -1793,26 +1892,12 @@ window.DEFAULT_HEARING_POLICIES = [
     "id": "builtin_p07",
     "conditions": [
       {
-        "field": "usage",
+        "field": "migSAccPwReset",
         "op": "eq",
-        "value": "世帯"
-      },
-      {
-        "field": "isMigration",
-        "op": "true"
-      },
-      {
-        "field": "sjLinked",
-        "op": "eq",
-        "value": "ログイン不可"
-      },
-      {
-        "field": "sjLoginlessResult",
-        "op": "eq",
-        "value": "認証コード未着(任意情報なし)"
+        "value": "失敗（任意情報設定なし）"
       }
     ],
-    "policy": "入力されたメールアドレスでアカウントが作成されていない可能性が高いです。\n移行手続きを進めていただくようご案内ください",
+    "policy": "入力されたメアドでアカウントが存在しない可能性が高いです。",
     "enabled": true,
     "builtin": true
   },
@@ -1820,26 +1905,12 @@ window.DEFAULT_HEARING_POLICIES = [
     "id": "builtin_p08",
     "conditions": [
       {
-        "field": "usage",
+        "field": "newSAccPwReset",
         "op": "eq",
-        "value": "世帯"
-      },
-      {
-        "field": "isMigration",
-        "op": "true"
-      },
-      {
-        "field": "sjLinked",
-        "op": "eq",
-        "value": "ログイン不可"
-      },
-      {
-        "field": "sjLoginlessResult",
-        "op": "eq",
-        "value": "認証コード未着(任意情報あり)"
+        "value": "失敗（ログインID設定あり）"
       }
     ],
-    "policy": "このメールアドレスでSアカは作成済みです\n任意情報を失念してしまうとアカウントの復旧ができません\nガイダンス2で連携解除後の新規登録となることをご案内ください。",
+    "policy": "ログインID開示で受付",
     "enabled": true,
     "builtin": true
   },
@@ -1847,26 +1918,12 @@ window.DEFAULT_HEARING_POLICIES = [
     "id": "builtin_p09",
     "conditions": [
       {
-        "field": "usage",
+        "field": "newSAccPwReset",
         "op": "eq",
-        "value": "世帯"
-      },
-      {
-        "field": "isMigration",
-        "op": "false"
-      },
-      {
-        "field": "sjLinked",
-        "op": "eq",
-        "value": "ログイン不可"
-      },
-      {
-        "field": "sjLoginlessResult",
-        "op": "eq",
-        "value": "認証コード未着(任意情報なし)"
+        "value": "失敗（ログインID以外の任意情報設定あり）"
       }
     ],
-    "policy": "入力されたメールアドレスでアカウントが作成されていない可能性が高いです。\n新規登録の手続きを進めていただくようご案内ください",
+    "policy": "入力した任意情報に誤りがあります。入力内容をご確認下さい。",
     "enabled": true,
     "builtin": true
   },
@@ -1874,26 +1931,12 @@ window.DEFAULT_HEARING_POLICIES = [
     "id": "builtin_p10",
     "conditions": [
       {
-        "field": "usage",
+        "field": "newSAccPwReset",
         "op": "eq",
-        "value": "世帯"
-      },
-      {
-        "field": "isMigration",
-        "op": "false"
-      },
-      {
-        "field": "sjLinked",
-        "op": "eq",
-        "value": "ログイン不可"
-      },
-      {
-        "field": "sjLoginlessResult",
-        "op": "eq",
-        "value": "認証コード未着(任意情報あり)"
+        "value": "失敗（任意情報設定なし）"
       }
     ],
-    "policy": "このメールアドレスでSアカは作成済みです\n任意情報を失念してしまうとアカウントの復旧ができません\nガイダンス2で連携解除後の新規登録となることをご案内ください。",
+    "policy": "入力されたメアドでアカウントが存在しない可能性が高いです。",
     "enabled": true,
     "builtin": true
   },
@@ -1901,12 +1944,12 @@ window.DEFAULT_HEARING_POLICIES = [
     "id": "builtin_p11",
     "conditions": [
       {
-        "field": "authCodeIssue",
+        "field": "transferA",
         "op": "eq",
-        "value": "Jアカ重複メール受信"
+        "value": "受信契約者本人"
       }
     ],
-    "policy": "ガイダンス2で受信料アカウントの登録状況確認を依頼してください。",
+    "policy": "転送OK",
     "enabled": true,
     "builtin": true
   },
@@ -1914,17 +1957,12 @@ window.DEFAULT_HEARING_POLICIES = [
     "id": "builtin_p12",
     "conditions": [
       {
-        "field": "authCodeIssue",
+        "field": "transferA",
         "op": "eq",
-        "value": "移行エラーメール受信"
-      },
-      {
-        "field": "authCodeResult",
-        "op": "eq",
-        "value": "認証コード未着(任意情報なし)"
+        "value": "配偶者"
       }
     ],
-    "policy": "入力されたアドレスが登録表記との不一致等の理由で移行対象のアドレスではない可能性があるため、ガイダンス2で確認を依頼してください。",
+    "policy": "転送OK",
     "enabled": true,
     "builtin": true
   },
@@ -1932,17 +1970,12 @@ window.DEFAULT_HEARING_POLICIES = [
     "id": "builtin_p13",
     "conditions": [
       {
-        "field": "authCodeIssue",
+        "field": "transferA",
         "op": "eq",
-        "value": "移行エラーメール受信"
-      },
-      {
-        "field": "authCodeResult",
-        "op": "eq",
-        "value": "認証コード未着(任意情報あり)"
+        "value": "受信契約者本人/配偶者　ではないが　本人同席"
       }
     ],
-    "policy": "任意情報を失念してしまうとアカウントの復旧ができないため、ガイダンス2で連携解除後の新規登録となることをご案内ください。",
+    "policy": "転送OK",
     "enabled": true,
     "builtin": true
   },
@@ -1950,17 +1983,12 @@ window.DEFAULT_HEARING_POLICIES = [
     "id": "builtin_p14",
     "conditions": [
       {
-        "field": "authCodeIssue",
+        "field": "transferA",
         "op": "eq",
-        "value": "新規エラーメール受信"
-      },
-      {
-        "field": "authCodeResult",
-        "op": "eq",
-        "value": "認証コード未着(任意情報なし)"
+        "value": "上記に該当しない"
       }
     ],
-    "policy": "入力されたアドレスが移行の対象である可能性があるため、移行手続きをお試しいただくようご案内ください。",
+    "policy": "転送NG　本人からおかけ直しいただくよう案内",
     "enabled": true,
     "builtin": true
   },
@@ -1968,26 +1996,12 @@ window.DEFAULT_HEARING_POLICIES = [
     "id": "builtin_p15",
     "conditions": [
       {
-        "field": "usage",
+        "field": "transferB",
         "op": "eq",
-        "value": "世帯"
-      },
-      {
-        "field": "isMigration",
-        "op": "false"
-      },
-      {
-        "field": "authCodeIssue",
-        "op": "eq",
-        "value": "新規エラーメール受信"
-      },
-      {
-        "field": "authCodeResult",
-        "op": "eq",
-        "value": "認証コード未着(任意情報あり)"
+        "value": "受信契約者本人"
       }
     ],
-    "policy": "このメールアドレスでSアカは作成済みです\n任意情報を失念してしまうとアカウントの復旧ができません\n作成済みのSアカは3か月未ログインで自動削除となり、そこから1か月経過後より同アドレスの利用が可能となります\n別メアドでのSアカ新規に不承の場合は、当窓口でのSアカ削除を承ってください。",
+    "policy": "転送OK",
     "enabled": true,
     "builtin": true
   },
@@ -1995,42 +2009,12 @@ window.DEFAULT_HEARING_POLICIES = [
     "id": "builtin_p16",
     "conditions": [
       {
-        "field": "usage",
+        "field": "transferB",
         "op": "eq",
-        "value": "世帯"
-      },
-      {
-        "field": "isMigration",
-        "op": "true"
-      },
-      {
-        "field": "oldPlusId",
-        "op": "true"
-      },
-      {
-        "field": "migMailConfirmed",
-        "op": "true"
-      },
-      {
-        "field": "migMailUsable",
-        "op": "true"
-      },
-      {
-        "field": "sAccountCreated",
-        "op": "false"
-      },
-      {
-        "field": "authCodeIssue",
-        "op": "eq",
-        "value": "新規エラーメール受信"
-      },
-      {
-        "field": "authCodeResult",
-        "op": "eq",
-        "value": "認証コード未着(任意情報あり)"
+        "value": "配偶者"
       }
     ],
-    "policy": "このメールアドレスでSアカは作成済みです\n任意情報を失念してしまうとアカウントの復旧ができません\nガイダンス2で連携解除後の新規登録となることをご案内ください。",
+    "policy": "転送OK",
     "enabled": true,
     "builtin": true
   },
@@ -2038,24 +2022,221 @@ window.DEFAULT_HEARING_POLICIES = [
     "id": "builtin_p17",
     "conditions": [
       {
-        "field": "authCodeIssue",
+        "field": "transferB",
         "op": "eq",
-        "value": "メール受信なし"
-      },
+        "value": "受信契約者本人/配偶者　ではないが　本人同席"
+      }
+    ],
+    "policy": "転送OK",
+    "enabled": true,
+    "builtin": true
+  },
+  {
+    "id": "builtin_p18",
+    "conditions": [
       {
-        "field": "cbMistake",
+        "field": "transferB",
+        "op": "eq",
+        "value": "上記に該当しない"
+      }
+    ],
+    "policy": "転送NG　本人からおかけ直しいただくよう案内",
+    "enabled": true,
+    "builtin": true
+  },
+  {
+    "id": "builtin_p19",
+    "conditions": [
+      {
+        "field": "transferC",
+        "op": "eq",
+        "value": "受信契約者本人"
+      }
+    ],
+    "policy": "転送OK",
+    "enabled": true,
+    "builtin": true
+  },
+  {
+    "id": "builtin_p20",
+    "conditions": [
+      {
+        "field": "transferC",
+        "op": "eq",
+        "value": "配偶者"
+      }
+    ],
+    "policy": "転送OK",
+    "enabled": true,
+    "builtin": true
+  },
+  {
+    "id": "builtin_p21",
+    "conditions": [
+      {
+        "field": "transferC",
+        "op": "eq",
+        "value": "受信契約者本人/配偶者　ではないが　本人同席"
+      }
+    ],
+    "policy": "転送OK",
+    "enabled": true,
+    "builtin": true
+  },
+  {
+    "id": "builtin_p22",
+    "conditions": [
+      {
+        "field": "transferC",
+        "op": "eq",
+        "value": "上記に該当しない"
+      }
+    ],
+    "policy": "転送NG　本人からおかけ直しいただくよう案内",
+    "enabled": true,
+    "builtin": true
+  },
+  {
+    "id": "builtin_p23",
+    "conditions": [
+      {
+        "field": "transferD",
+        "op": "eq",
+        "value": "受信契約者本人"
+      }
+    ],
+    "policy": "転送OK",
+    "enabled": true,
+    "builtin": true
+  },
+  {
+    "id": "builtin_p24",
+    "conditions": [
+      {
+        "field": "transferD",
+        "op": "eq",
+        "value": "配偶者"
+      }
+    ],
+    "policy": "転送OK",
+    "enabled": true,
+    "builtin": true
+  },
+  {
+    "id": "builtin_p25",
+    "conditions": [
+      {
+        "field": "transferD",
+        "op": "eq",
+        "value": "受信契約者本人/配偶者　ではないが　本人同席"
+      }
+    ],
+    "policy": "転送OK",
+    "enabled": true,
+    "builtin": true
+  },
+  {
+    "id": "builtin_p26",
+    "conditions": [
+      {
+        "field": "transferD",
+        "op": "eq",
+        "value": "上記に該当しない"
+      }
+    ],
+    "policy": "転送NG　本人からおかけ直しいただくよう案内",
+    "enabled": true,
+    "builtin": true
+  },
+  {
+    "id": "builtin_p27",
+    "conditions": [
+      {
+        "field": "sjLink",
+        "op": "eq",
+        "value": "連携済（Jアカ作成済）"
+      }
+    ],
+    "policy": "クロージング",
+    "enabled": true,
+    "builtin": true
+  },
+  {
+    "id": "builtin_p28",
+    "conditions": [
+      {
+        "field": "sjLink",
+        "op": "eq",
+        "value": "未連携（Jアカ作成済）"
+      }
+    ],
+    "policy": "S-J連携を完了してサービスをご利用ください",
+    "enabled": true,
+    "builtin": true
+  },
+  {
+    "id": "builtin_p29",
+    "conditions": [
+      {
+        "field": "sjLink",
+        "op": "eq",
+        "value": "未確認（照合NG）"
+      }
+    ],
+    "policy": "077で正しい受信契約情報を確認いただくよう案内",
+    "enabled": true,
+    "builtin": true
+  },
+  {
+    "id": "builtin_p30",
+    "conditions": [
+      {
+        "field": "jAccGuide",
+        "op": "eq",
+        "value": "失敗（エラーメール受信）"
+      }
+    ],
+    "policy": "同メアドで既にJアカが存在しています。",
+    "enabled": true,
+    "builtin": true
+  },
+  {
+    "id": "builtin_p31",
+    "conditions": [
+      {
+        "field": "cbSMistake",
         "op": "true"
       },
       {
-        "field": "cbReject",
+        "field": "cbSSpam",
         "op": "true"
       },
       {
-        "field": "cbSpam",
+        "field": "cbSPermission",
         "op": "true"
       }
     ],
-    "policy": "クライアントエスカレーションの案件です",
+    "policy": "クライアントエスカレ",
+    "enabled": true,
+    "builtin": true
+  },
+  {
+    "id": "builtin_p32",
+    "conditions": [
+      {
+        "field": "cbJMistake",
+        "op": "true"
+      },
+      {
+        "field": "cbJSpam",
+        "op": "true"
+      },
+      {
+        "field": "cbJPermission",
+        "op": "true"
+      }
+    ],
+    "policy": "クライアントエスカレ",
     "enabled": true,
     "builtin": true
   }
@@ -2110,13 +2291,55 @@ window.addEventListener('storage', function(e) {
     var devices = {};
     DEVICE_LIST.forEach(function(d) {
       devices[d] = (updated.devices && updated.devices[d])
-        ? updated.devices[d] : { selected: false, detail: '' };
+        ? updated.devices[d] : { selected: false, detail: [] };
     });
     updated.devices = devices;
     hearingState = Object.assign({}, DEFAULT_STATE, updated);
     if (typeof renderHearing === 'function') renderHearing();
   } catch(ex) {}
 });
+
+function _hrDeviceSectionHTML(s) {
+  var h = '<div class="hr-divider">■デバイス</div>';
+  DEVICE_LIST.forEach(function (device) {
+    var d = s.devices[device] || { selected: false, detail: [] };
+    var dDetail = Array.isArray(d.detail) ? d.detail : (d.detail ? [d.detail] : []);
+    var details = DEVICE_DETAIL_OPTIONS[device] || [];
+    var content = '';
+    if (details.length) {
+      // Web/アプリ/両方（PCはWin/Mac/ChromeBook）を複数選択可能なトグルボタン群として表示。
+      // 選択中のボタンをもう一度押すとその項目だけOFFになる（setHearingDeviceDetail 側で制御）。
+      details.forEach(function (opt) {
+        var active = (dDetail.indexOf(opt) >= 0) ? ' active' : '';
+        content += '<button class="hr-device-btn' + active + '" onclick="setHearingDeviceDetail(\'' + device + '\',\'' + opt + '\')">' + _hEsc(opt) + '</button>';
+      });
+    } else {
+      // 詳細選択肢のないデバイス（TV）は単純なON/OFFトグル
+      content = '<button class="hr-device-btn' + (d.selected ? ' active' : '') + '" onclick="toggleHearingDevice(\'' + device + '\')">' + (d.selected ? '利用あり' : '利用なし') + '</button>';
+    }
+    h += _hrRow(device, content, 'hr-device-row');
+  });
+  var dv = s.mailDomain;
+  var domainContent = '<select id="hearingDomainSel" class="hr-select" onchange="onHearingDomainChange()"><option value="">選択してください</option>' +
+    _mkOpt('@docomo.ne.jp', dv) + _mkOpt('@softbank.ne.jp', dv) + _mkOpt('@i.softbank.jp', dv) +
+    _mkOpt('@ezweb.ne.jp', dv) + _mkOpt('@au.com', dv) + _mkOpt('@gmail.com', dv) +
+    _mkOpt('@yahoo.co.jp', dv) + _mkOpt('@outlook.com', dv) +
+    '<option value="__manual__"' + (dv === '__manual__' ? ' selected' : '') + '>その他（手入力）</option></select>' +
+    '<div id="hearingDomainManualWrap" style="display:' + (dv === '__manual__' ? 'block' : 'none') + ';margin-top:6px;">' +
+    '<input id="hearingDomainManual" type="text" class="hr-text-input" placeholder="例）@example.com" value="' + _hEsc(s.mailDomainManual) + '" oninput="onHearingDomainManualInput()"></div>';
+  h += _hrRow('メールドメイン', domainContent);
+  return h;
+}
+
+// opts: {title, mistakeField, spamField, permField, permLabel}
+function _hrMailCheckGroupHTML(s, opts) {
+  var h = '<div class="hr-divider">' + opts.title + '</div>';
+  var content = _mkChk(opts.mistakeField, s[opts.mistakeField], 'メールアドレスの入力ミス') +
+    _mkChk(opts.spamField, s[opts.spamField], '迷惑メールフィルター') +
+    _mkChk(opts.permField, s[opts.permField], opts.permLabel);
+  h += _hrRow('確認項目', content);
+  return h;
+}
 
 function renderHearing() {
   var el = document.getElementById('hearingContent');
@@ -2139,7 +2362,9 @@ function renderHearing() {
     }
   });
 
-  var h = '';
+  // ── ■デバイス（常時表示） ──
+  var h = _hrDeviceSectionHTML(s);
+
   qs.forEach(function(q) {
     if (!q.enabled) return;
     // パターンが優先、なければ showIf を評価
@@ -2157,14 +2382,22 @@ function renderHearing() {
     }
   });
 
-  // メール未着調査（固定セクション）
-  var _showMailInvestigation = s.authCodeIssue === 'メール受信なし' || s.jAuthCodeIssue === 'メール受信なし';
-  if (_showMailInvestigation) {
-    var dv = s.mailDomain;
-    var _rejectLabel = s.jAuthCodeIssue === 'メール受信なし' ? '受信拒否（mail.service.nhk-cs.jp）' : '受信拒否（mail.nhk）';
-    h += '<div class="hr-divider">メール未着調査</div>';
-    h += '<div class="hr-row"><div class="hr-label">■ドメイン（＠以降）</div><select id="hearingDomainSel" class="hr-select" onchange="onHearingDomainChange()"><option value="">選択してください</option>' + _mkOpt('@docomo.ne.jp',dv) + _mkOpt('@softbank.ne.jp',dv) + _mkOpt('@i.softbank.jp',dv) + _mkOpt('@ezweb.ne.jp',dv) + _mkOpt('@au.com',dv) + _mkOpt('@gmail.com',dv) + _mkOpt('@yahoo.co.jp',dv) + _mkOpt('@outlook.com',dv) + '<option value="__manual__"' + (dv==='__manual__'?' selected':'') + '>その他（手入力）</option></select><div id="hearingDomainManualWrap" style="display:' + (dv==='__manual__'?'block':'none') + ';margin-top:6px;"><input id="hearingDomainManual" type="text" class="hr-text-input" placeholder="例）@example.com" value="' + _hEsc(s.mailDomainManual) + '" oninput="onHearingDomainManualInput()"></div></div>';
-    h += '<div class="hr-row"><div class="hr-label">■確認項目</div>' + _mkChk('cbMistake',s.cbMistake,'メールアドレスの入力ミス') + _mkChk('cbReject',s.cbReject,_rejectLabel) + _mkChk('cbSpam',s.cbSpam,'迷惑メールフィルター') + '</div>';
+  // 【Sアカ】メール受信なし（固定セクション）
+  if (s.migSAccGuide === '失敗（メール受信なし）' || s.newSAccGuide === '失敗（メール受信なし）') {
+    h += _hrMailCheckGroupHTML(s, {
+      title: '【Sアカ】メール受信なし',
+      mistakeField: 'cbSMistake', spamField: 'cbSSpam', permField: 'cbSPermission',
+      permLabel: '受信許可設定（mail.nhk）'
+    });
+  }
+
+  // 【Jアカ】メール受信なし（固定セクション）
+  if (s.jAccGuide === '失敗（メール受信なし）') {
+    h += _hrMailCheckGroupHTML(s, {
+      title: '【Jアカ】メール受信なし',
+      mistakeField: 'cbJMistake', spamField: 'cbJSpam', permField: 'cbJPermission',
+      permLabel: '受信許可設定（mail.service.nhk-cs.jp）'
+    });
   }
 
   // ── メモ欄 ──
@@ -2192,80 +2425,76 @@ function renderHearingSummary() {
   var area = document.getElementById('hearingSummaryArea');
   if (!area) return;
   var s = hearingState, rows = [];
-  if (s.usage) rows.push(['用途', s.usage, '']);
-  if (s.usage === '世帯') {
-    if (s.isMigration !== null) rows.push(['移行対象者', s.isMigration ? 'はい' : 'いいえ', 'bool']);
-    if (s.isMigration === true) {
-      if (s.oldPlusId !== null) rows.push(['旧プラスID発行', s.oldPlusId ? 'はい(わからない)' : 'いいえ', 'bool']);
-      if (s.oldPlusId === true) {
-        if (s.migMailConfirmed !== null) rows.push(['移行案内メール確認', s.migMailConfirmed ? 'はい' : 'いいえ(わからない)', 'bool']);
-        if (s.migMailConfirmed === true && s.migMailUsable !== null) rows.push(['メールアドレス使用可', s.migMailUsable ? 'はい' : 'いいえ', 'bool']);
-      }
-    }
-  }
-  if ((s.usage === '学校' || s.usage === '事業') && s.isAccountPerson !== null) rows.push(['アカウント担当者', s.isAccountPerson ? 'はい' : 'いいえ', 'bool']);
-  if (s.sAccountCreated !== null) rows.push(['Sアカ作成済み', s.sAccountCreated ? 'はい' : 'いいえ', 'bool']);
-  if (s.sAccountCreated === false && s.authCodeIssue) rows.push(['認証コード未着', s.authCodeIssue, '']);
-  if (s.sAccountCreated === false && s.authCodeResult) rows.push(['認証コード確認', s.authCodeResult, '']);
-  if (s.usage === '世帯' && s.sAccountCreated === true && s.sjLinked !== null) rows.push(['S-J連携', s.sjLinked === '再連携必要' ? '未確認（再連携必要）' : s.sjLinked, s.sjLinked === '連携済み' ? 'yes' : 'no']);
-  if (s.usage === '世帯' && s.sAccountCreated === true && s.sjLinked === 'ログイン不可' && s.sjLoginlessResult !== null) rows.push(['認証コード確認(ログイン不可)', s.sjLoginlessResult, '']);
-  if (s.usage === '世帯' && s.sAccountCreated === true && (s.sjLinked === '未連携' || s.sjLinked === '再連携必要') && s.jAccountCreated !== null) rows.push(['Jアカ作成済み', s.jAccountCreated ? 'はい' : 'いいえ', 'bool']);
+
+  // ── 操作環境（デバイス） ──
   var envParts = [];
   DEVICE_LIST.forEach(function (device) {
     var d = s.devices[device];
-    if (d.selected) envParts.push(d.detail ? device + '(' + d.detail + ')' : device);
+    if (!d || !d.selected) return;
+    var dDetail = Array.isArray(d.detail) ? d.detail : (d.detail ? [d.detail] : []);
+    envParts.push(dDetail.length ? device + '(' + dDetail.join('/') + ')' : device);
   });
   if (envParts.length) rows.push(['操作環境', envParts.join('、'), '']);
-  if (s.authCodeIssue === 'メール受信なし') {
+  if (s.mailDomain) {
     var domain = s.mailDomain === '__manual__' ? s.mailDomainManual : s.mailDomain;
-    if (domain) rows.push(['ドメイン', domain, '']);
-    var checks = [];
-    if (s.cbMistake) checks.push('入力ミス');
-    if (s.cbReject)  checks.push('受信拒否');
-    if (s.cbSpam)    checks.push('迷惑メールフィルター');
-    if (checks.length) rows.push(['確認項目', checks.join('、'), '']);
+    if (domain) rows.push(['メールドメイン', domain, '']);
   }
-  var policies = calcPolicies(s);
 
-  // ── カスタム質問（builtin でない質問）の結果を追加 ──
-  var qs2 = (typeof _hrGetQuestions === 'function') ? _hrGetQuestions() : [];
-  var patterns2 = window._appCache.hearingPatterns || [];
-  var patOver2 = {};
-  patterns2.forEach(function(pat) {
+  // ── 質問（builtin/カスタム問わず全て）の回答を表示 ──
+  var qs = (typeof _hrGetQuestions === 'function') ? _hrGetQuestions() : [];
+  var patterns = window._appCache.hearingPatterns || [];
+  var patOver = {};
+  patterns.forEach(function(pat) {
     if (!pat.conditions || !pat.conditions.length) return;
     var ok = pat.conditions.every(function(c) {
       var sv = s[c.field];
       if (typeof sv === 'boolean') return (c.value === 'true') === sv;
       return String(sv === null || sv === undefined ? '' : sv) === String(c.value || '');
     });
-    if (ok) (pat.targets || []).forEach(function(t) { patOver2[t.id] = t.show; });
+    if (ok) (pat.targets || []).forEach(function(t) { patOver[t.id] = t.show; });
   });
-  qs2.forEach(function(q) {
-    if (q.builtin) return; // 組み込み質問は上で既にrows追加済みのためスキップ
+  qs.forEach(function(q) {
     if (!q.enabled) return;
-    if (q.id in patOver2) { if (!patOver2[q.id]) return; }
+    if (q.id in patOver) { if (!patOver[q.id]) return; }
     else if (!_hrEvalShowIf(q.showIf, s)) return;
     var val = s[q.field];
     if (val === null || val === undefined || val === '') return;
-    var disp = '';
+    var disp = '', type = '';
     if (q.type === 'bool') {
-      if (val === true)  disp = q.trueResult  || q.trueLabel  || 'はい';
-      if (val === false) disp = q.falseResult || q.falseLabel || 'いいえ';
+      if (val === true)  { disp = q.trueResult  || q.trueLabel  || 'はい';   type = 'yes'; }
+      if (val === false) { disp = q.falseResult || q.falseLabel || 'いいえ'; type = 'no';  }
     } else if (q.type === 'str') {
       var opt = (q.options || []).find(function(o) { return o.v === val; });
       disp = opt ? (opt.r || opt.l) : String(val);
     } else if (q.type === 'text') {
       disp = String(val);
     }
-    if (disp) rows.push([q.label, disp, '']);
+    if (disp) rows.push([q.label, disp, type]);
   });
+
+  // ── メール受信なし確認項目（Sアカ／Jアカ） ──
+  if (s.migSAccGuide === '失敗（メール受信なし）' || s.newSAccGuide === '失敗（メール受信なし）') {
+    var checksS = [];
+    if (s.cbSMistake)    checksS.push('入力ミス');
+    if (s.cbSSpam)       checksS.push('迷惑メールフィルター');
+    if (s.cbSPermission) checksS.push('受信許可設定（mail.nhk）');
+    if (checksS.length) rows.push(['確認項目（Sアカ）', checksS.join('、'), '']);
+  }
+  if (s.jAccGuide === '失敗（メール受信なし）') {
+    var checksJ = [];
+    if (s.cbJMistake)    checksJ.push('入力ミス');
+    if (s.cbJSpam)       checksJ.push('迷惑メールフィルター');
+    if (s.cbJPermission) checksJ.push('受信許可設定（mail.service.nhk-cs.jp）');
+    if (checksJ.length) rows.push(['確認項目（Jアカ）', checksJ.join('、'), '']);
+  }
+
+  var policies = calcPolicies(s);
 
   if (rows.length === 0 && policies.length === 0) { area.innerHTML = ''; return; }
   var h = '<div class="hr-summary"><div class="hr-summary-title">📋 ヒアリング内容</div><div class="hr-summary-rows">';
   rows.forEach(function (r) {
     var label = r[0], val = r[1], type = r[2];
     var valClass = 'hr-sum-val';
-    if (type === 'bool') valClass += (val === 'はい' || val === 'はい(わからない)') ? ' hr-sum-yes' : ' hr-sum-no';
     if (type === 'yes') valClass += ' hr-sum-yes';
     if (type === 'no')  valClass += ' hr-sum-no';
     h += '<div class="hr-summary-row"><span class="hr-sum-label">' + _hEsc(label) + '</span><span class="' + valClass + '">' + _hEsc(val) + '</span></div>';
@@ -2288,39 +2517,22 @@ function renderHearingSummary() {
 
 window.copyHearingText = function () {
   var s = hearingState, lines = [];
-  if (s.usage) lines.push('用途：' + s.usage);
-  if (s.usage === '世帯') {
-    if (s.isMigration !== null) lines.push('移行対象者：' + (s.isMigration ? 'はい' : 'いいえ'));
-    if (s.isMigration === true) {
-      if (s.oldPlusId !== null) lines.push('旧プラスID発行：' + (s.oldPlusId ? 'はい(わからない)' : 'いいえ'));
-      if (s.oldPlusId === true) {
-        if (s.migMailConfirmed !== null) lines.push('移行案内メール確認：' + (s.migMailConfirmed ? 'はい' : 'いいえ(わからない)'));
-        if (s.migMailConfirmed === true && s.migMailUsable !== null) lines.push('メールアドレス使用可：' + (s.migMailUsable ? 'はい' : 'いいえ'));
-      }
-    }
-  }
-  if ((s.usage === '学校' || s.usage === '事業') && s.isAccountPerson !== null) lines.push('アカウント担当者：' + (s.isAccountPerson ? 'はい' : 'いいえ'));
-  if (s.sAccountCreated !== null) lines.push('Sアカ作成済み：' + (s.sAccountCreated ? 'はい' : 'いいえ'));
-  if (s.sAccountCreated === false && s.authCodeIssue) lines.push('認証コード未着：' + s.authCodeIssue);
-  if (s.sAccountCreated === false && s.authCodeResult) lines.push('認証コード確認：' + s.authCodeResult);
-  if (s.usage === '世帯' && s.sAccountCreated === true && s.sjLinked) lines.push('S-J連携：' + (s.sjLinked === '再連携必要' ? '未確認（再連携必要）' : s.sjLinked));
-  if (s.usage === '世帯' && s.sAccountCreated === true && s.sjLinked === 'ログイン不可' && s.sjLoginlessResult) lines.push('認証コード確認(ログイン不可)：' + s.sjLoginlessResult);
-  if (s.usage === '世帯' && s.sAccountCreated === true && (s.sjLinked === '未連携' || s.sjLinked === '再連携必要') && s.jAccountCreated !== null) lines.push('Jアカ作成済み：' + (s.jAccountCreated ? 'はい' : 'いいえ'));
-  var envParts = [];
-  DEVICE_LIST.forEach(function (device) { var d = s.devices[device]; if (d.selected) envParts.push(d.detail ? device + '(' + d.detail + ')' : device); });
-  if (envParts.length) lines.push('操作環境：' + envParts.join('、'));
-  if (s.authCodeIssue === 'メール受信なし') {
-    var domain = s.mailDomain === '__manual__' ? s.mailDomainManual : s.mailDomain;
-    if (domain) lines.push('ドメイン：' + domain);
-    var chks = [];
-    if (s.cbMistake) chks.push('入力ミス');
-    if (s.cbReject)  chks.push('受信拒否');
-    if (s.cbSpam)    chks.push('迷惑メールフィルター');
-    if (chks.length) lines.push('確認項目：' + chks.join('、'));
-  }
-  calcPolicies(s).forEach(function (p) { lines.push('対応方針：' + p); });
 
-  // ── カスタム質問の結果 ──
+  // ── 操作環境（デバイス） ──
+  var envParts = [];
+  DEVICE_LIST.forEach(function (device) {
+    var d = s.devices[device];
+    if (!d || !d.selected) return;
+    var dDetail = Array.isArray(d.detail) ? d.detail : (d.detail ? [d.detail] : []);
+    envParts.push(dDetail.length ? device + '(' + dDetail.join('/') + ')' : device);
+  });
+  if (envParts.length) lines.push('操作環境：' + envParts.join('、'));
+  if (s.mailDomain) {
+    var domain = s.mailDomain === '__manual__' ? s.mailDomainManual : s.mailDomain;
+    if (domain) lines.push('メールドメイン：' + domain);
+  }
+
+  // ── 質問（builtin/カスタム問わず全て）の回答 ──
   var cqs = (typeof _hrGetQuestions === 'function') ? _hrGetQuestions() : [];
   var cpats = window._appCache.hearingPatterns || [];
   var cpOver = {};
@@ -2351,6 +2563,24 @@ window.copyHearingText = function () {
     }
     if (disp) lines.push(q.label + '：' + disp);
   });
+
+  // ── メール受信なし確認項目（Sアカ／Jアカ） ──
+  if (s.migSAccGuide === '失敗（メール受信なし）' || s.newSAccGuide === '失敗（メール受信なし）') {
+    var chksS = [];
+    if (s.cbSMistake)    chksS.push('入力ミス');
+    if (s.cbSSpam)       chksS.push('迷惑メールフィルター');
+    if (s.cbSPermission) chksS.push('受信許可設定（mail.nhk）');
+    if (chksS.length) lines.push('確認項目（Sアカ）：' + chksS.join('、'));
+  }
+  if (s.jAccGuide === '失敗（メール受信なし）') {
+    var chksJ = [];
+    if (s.cbJMistake)    chksJ.push('入力ミス');
+    if (s.cbJSpam)       chksJ.push('迷惑メールフィルター');
+    if (s.cbJPermission) chksJ.push('受信許可設定（mail.service.nhk-cs.jp）');
+    if (chksJ.length) lines.push('確認項目（Jアカ）：' + chksJ.join('、'));
+  }
+
+  calcPolicies(s).forEach(function (p) { lines.push('対応方針：' + p); });
 
   // ── メモ ──
   if (s.memo && s.memo.trim()) lines.push('メモ：' + s.memo.trim());
@@ -2423,7 +2653,11 @@ document.addEventListener('keydown', function (e) {
     '.step-choice-btn:focus { outline: 2px solid #3742fa; border-color: #3742fa; background: #f0f4ff; }' +
     '.sb-acc-header:focus { outline: 2px solid #3742fa; outline-offset: -2px; }' +
     '.sb-item:focus { outline: 2px solid #3742fa; outline-offset: -2px; }' +
-    '.hr-btn:focus, .hr-device-btn:focus, .hr-detail-btn:focus { outline: 2px solid #3742fa; }' +
+    '.hr-btn:focus, .hr-device-btn:focus { outline: 2px solid #3742fa; }' +
+    // ── ■デバイス（1グループのトグルボタン） ──
+    '.hr-device-btn { display:inline-block; height:26px; padding:0 12px; margin-right:6px; border:1px solid var(--border,#dfe4ea); border-radius:14px; background:var(--surface2,#f1f2f6); color:var(--text2,#57606f); font-size:11px; font-weight:700; cursor:pointer; font-family:inherit; transition:background .12s,border-color .12s,color .12s; }' +
+    '.hr-device-btn.active { background:var(--accent,#3742fa); border-color:var(--accent,#3742fa); color:#fff; }' +
+    '.hr-device-row .hr-btns { display:flex; align-items:center; flex-wrap:wrap; gap:0; }' +
     // ── メモ欄 ──
     '.hr-memo-row { align-items: flex-start !important; }' +
     '.hr-memo-textarea { width:100%; min-height:60px; resize:vertical; padding:7px 9px; border:1px solid var(--border,#dfe4ea); border-radius:6px; font-family:inherit; font-size:12px; background:var(--bg,#f1f2f6); color:var(--text,#2f3542); line-height:1.6; transition:border-color .15s; }' +
