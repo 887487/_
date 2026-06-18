@@ -485,24 +485,30 @@ function _processImportText(text, noReload) {
         var imported = { scripts: false, mail: false, screen: false, history: false };
 
         // ===== version:3/2/1（統合JSON：スクリプト＋メール＋画面遷移＋更新履歴）=====
+        // 注：talkScripts / mailTemplates は片方だけでも対象とする（admin.html の
+        // 「個別エクスポート」「保存して反映」で一部のみ選択した場合に両方揃わないため）。
         if (raw && (raw.version === 3 || raw.version === 2 || raw.version === 1) &&
-            'talkScripts' in raw && 'mailTemplates' in raw) {
+            ('talkScripts' in raw || 'mailTemplates' in raw)) {
           _importProgressHide();
           if (!confirm('現在のデータをインポートしたデータで上書きします。よろしいですか？')) return;
           _importProgressShow('データを保存中…', 'スクリプト・メール', 50);
           setTimeout(function () {
             try {
-              // スクリプト：上書き
-              var mergedScripts = raw.talkScripts;
-              window._appCache.scripts = mergedScripts;
-              window.idbSetAppData('scripts', mergedScripts);
-              try { var _bcs2=new BroadcastChannel('tool_data_update'); _bcs2.postMessage({type:'scriptsUpdated',ts:Date.now()}); _bcs2.close(); } catch(e) {}
-              // メール：上書き
-              var mergedMail = raw.mailTemplates;
-              window._appCache.mailTemplates = mergedMail;
-              window.idbSetAppData('mailTemplates', mergedMail);
-              imported.scripts = true;
-              imported.mail    = true;
+              // スクリプト：含まれている場合のみ上書き
+              if ('talkScripts' in raw) {
+                var mergedScripts = raw.talkScripts;
+                window._appCache.scripts = mergedScripts;
+                window.idbSetAppData('scripts', mergedScripts);
+                try { var _bcs2=new BroadcastChannel('tool_data_update'); _bcs2.postMessage({type:'scriptsUpdated',ts:Date.now()}); _bcs2.close(); } catch(e) {}
+                imported.scripts = true;
+              }
+              // メール：含まれている場合のみ上書き
+              if ('mailTemplates' in raw) {
+                var mergedMail = raw.mailTemplates;
+                window._appCache.mailTemplates = mergedMail;
+                window.idbSetAppData('mailTemplates', mergedMail);
+                imported.mail = true;
+              }
 
               // 画面遷移
               if ((raw.version === 2 || raw.version === 3) && Array.isArray(raw.screenData)) {
