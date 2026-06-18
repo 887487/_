@@ -1453,7 +1453,34 @@ function _buildSideMenuHTML(isDark) {
     '<th style="padding:6px 8px;border:1px solid var(--border,#e8eaed);text-align:center;font-weight:700;color:var(--text2,#555)">アルファベット</th>' +
     '<th style="padding:6px 8px;border:1px solid var(--border,#e8eaed);text-align:center;font-weight:700;color:var(--text2,#555)">読み方</th>' +
     '</tr></thead><tbody>' +
-_phonRow('A','アメリカ','アップルパイ') + _phonRow('B','ブラジル','バウムクーヘン') + _phonRow('C','チャイナ','チョコレート') + _phonRow('D','デンマーク','ドラヤキ') + _phonRow('E','エジプト','エクレア') + _phonRow('F','フランス','フィナンシェ') + _phonRow('G','グーグル','ガトーショコラ') + _phonRow('H','ホンコン','ホットケーキ') + _phonRow('I','イタリア','イモケンピ') + _phonRow('J','ジャパン','ジャム') + _phonRow('K','キング','カステラ') + _phonRow('L','ロンドン','ラングドシャ') + _phonRow('M','メキシコ','マカロン') + _phonRow('N','ニューヨーク','ナッツ') + _phonRow('O','大阪','オレンジ') + _phonRow('P','パリ','プリン') + _phonRow('Q','クイーン','') + _phonRow('R','ローマ','ロールケーキ') + _phonRow('S','スター','シュガー') + _phonRow('T','東京','タルト') + _phonRow('U','USA','') + _phonRow('V','ヴィクトリー','バニラ') + _phonRow('W','ワールド','わたあめ') + _phonRow('X','エックス線','') + _phonRow('Y','ヤフー','ヨーグルト') + _phonRow('Z','ゼブラ','ザッハトルテ') + _phonRow('-','ハイフン','■■■') + _phonRow('_','アンダーバー','■■■') +
+_phonRow('A','アメリカ') + 
+_phonRow('B','ブラジル') + 
+_phonRow('C','チャイナ') + 
+_phonRow('D','デンマーク') + 
+_phonRow('E','エジプト') + 
+_phonRow('F','フランス') + 
+_phonRow('G','グーグル') + 
+_phonRow('H','ホンコン') + 
+_phonRow('I','イタリア') + 
+_phonRow('J','ジャパン') + 
+_phonRow('K','キング') + 
+_phonRow('L','ロンドン') + 
+_phonRow('M','メキシコ') + 
+_phonRow('N','ニューヨーク') + 
+_phonRow('O','大阪') + 
+_phonRow('P','パリ') + 
+_phonRow('Q','クイーン') + 
+_phonRow('R','ローマ') + 
+_phonRow('S','スター') + 
+_phonRow('T','東京') + 
+_phonRow('U','USA') + 
+_phonRow('V','ヴィクトリー') + 
+_phonRow('W','ワールド') + 
+_phonRow('X','エックス線') + 
+_phonRow('Y','ヤフー') + 
+_phonRow('Z','ゼブラ') + 
+_phonRow('-','ハイフン') + 
+_phonRow('_','アンダーバー') +
     '</tbody></table></div></div></div>';
 
   // ドメインリスト（固定・1列テーブル）
@@ -1461,7 +1488,7 @@ _phonRow('A','アメリカ','アップルパイ') + _phonRow('B','ブラジル',
     '<div class="accordion-body" id="domainListPanel" style="padding:10px 12px 14px;"><div style="overflow-x:auto;">' +
     '<table style="width:100%;border-collapse:collapse;font-size:11px;min-width:160px;">' +
     '<tbody>' +
-    ['@gmail.com', '@yahoo.co.jp'].map(function(d) {
+    ['aol.com', 'asahinet.jp', 'au.com', 'auone-net.jp', 'bbiq.jp', 'biglobe.ne.jp', 'biz.ezweb.ne.jp', 'canet.ne.jp', 'commufa.jp', 'dion.ne.jp', 'docomo.ne.jp', 'dream.com', 'dti.ne.jp', 'eonet.ne.jp', 'excite.co.jp', 'ezweb.ne.jp', 'gmail.com', 'gmobb.jp', 'gol.com', 'goo.jp', 'googlemail.com', 'goomail.com', 'hotmail.co.jp', 'hotmail.com', 'i.softbank.jp', 'icloud.com', 'infoseek.co.jp', 'infoseek.jp', 'itscom.net', 'jcom.home.ne.jp', 'jcom.zaq.ne.jp', 'ktv.ne.jp', 'live.jp', 'mac.com', 'mail.bbexcite.jp', 'mail.goo.ne.jp', 'me.com', 'mineo.com', 'msn.com', 'mvt-net.com', 'nifty.com', 'ocn.ne.jp', 'odn.ne.jp', 'outlook.com', 'plala.or.jp', 'pobox.com', 'rakuten.jp', 'softbank.ne.jp', 'so-net.ne.jp', 'vodafone.ne.jp', 'wakwak.com', 'yahoo.co.jp', 'yahoo.ne.jp', 'ybb.ne.jp', 'ymobile.ne.jp', 'ztv.ne.jp'].map(function(d) {
       return '<tr><td style="padding:6px 8px;border:1px solid var(--border,#e8eaed);text-align:center;color:var(--text,#2f3542)">' + d + '</td></tr>';
     }).join('') +
     '</tbody></table></div></div></div>';
@@ -3042,28 +3069,3 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   };
 })();
-
-// =============================================================================
-// 同期URL自動フェッチ（ビューアページ用: script/mail/screen.html）
-// admin.html は自前で DOMContentLoaded で処理するため除外
-// =============================================================================
-(function() {
-  document.addEventListener('DOMContentLoaded', function() {
-    // admin.html 判定（タブパネルがあるか）
-    if (document.getElementById('tabScript') || document.getElementById('tabBtnScript')) return;
-    var syncUrl  = localStorage.getItem('syncUrl')  || '';
-    var syncIntv = parseInt(localStorage.getItem('syncInterval') || '0');
-    if (!syncUrl) return;
-    function _doSync() {
-      fetch(syncUrl, { cache: 'no-store' })
-        .then(function(r) { return r.ok ? r.text() : Promise.reject('HTTP ' + r.status); })
-        .then(function(text) {
-          if (typeof window._processImportText === 'function') window._processImportText(text, true);
-        })
-        .catch(function(e) { console.warn('[sync] fetch failed:', e); });
-    }
-    setTimeout(_doSync, 1500);
-    if (syncIntv) setInterval(_doSync, syncIntv * 1000);
-  });
-})();
-
