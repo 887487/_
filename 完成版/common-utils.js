@@ -1450,6 +1450,16 @@ function _buildSideMenuHTML(isDark) {
 _phonRow('A','アメリカ','アップルパイ') + _phonRow('B','ブラジル','バウムクーヘン') + _phonRow('C','チャイナ','チョコレート') + _phonRow('D','デンマーク','ドラヤキ') + _phonRow('E','エジプト','エクレア') + _phonRow('F','フランス','フィナンシェ') + _phonRow('G','グーグル','ガトーショコラ') + _phonRow('H','ホンコン','ホットケーキ') + _phonRow('I','イタリア','イモケンピ') + _phonRow('J','ジャパン','ジャム') + _phonRow('K','キング','カステラ') + _phonRow('L','ロンドン','ラングドシャ') + _phonRow('M','メキシコ','マカロン') + _phonRow('N','ニューヨーク','ナッツ') + _phonRow('O','大阪','オレンジ') + _phonRow('P','パリ','プリン') + _phonRow('Q','クイーン','') + _phonRow('R','ローマ','ロールケーキ') + _phonRow('S','スター','シュガー') + _phonRow('T','東京','タルト') + _phonRow('U','USA','') + _phonRow('V','ヴィクトリー','バニラ') + _phonRow('W','ワールド','わたあめ') + _phonRow('X','エックス線','') + _phonRow('Y','ヤフー','ヨーグルト') + _phonRow('Z','ゼブラ','ザッハトルテ') + _phonRow('-','ハイフン','■■■') + _phonRow('_','アンダーバー','■■■') +
     '</tbody></table></div></div></div>';
 
+  // ドメインリスト（固定・1列テーブル）
+  html += '<div class="side-section"><div class="side-section-header" onclick="toggleAccordion(\'domainListPanel\')">📧ドメインリスト <span class="arrow" style="display:inline-block;transition:transform .2s">▶</span></div>' +
+    '<div class="accordion-body" id="domainListPanel" style="padding:10px 12px 14px;"><div style="overflow-x:auto;">' +
+    '<table style="width:100%;border-collapse:collapse;font-size:11px;min-width:160px;">' +
+    '<tbody>' +
+    ['@gmail.com', '@yahoo.co.jp'].map(function(d) {
+      return '<tr><td style="padding:6px 8px;border:1px solid var(--border,#e8eaed);text-align:center;color:var(--text,#2f3542)">' + d + '</td></tr>';
+    }).join('') +
+    '</tbody></table></div></div></div>';
+
   // 更新履歴（固定）
   html += '<div class="side-section" id="historySideSection">' +
     '<div class="side-section-header" onclick="toggleAccordion(\'historyPanel\')">📝 更新履歴 <span class="arrow" style="display:inline-block;transition:transform .2s">▶</span></div>' +
