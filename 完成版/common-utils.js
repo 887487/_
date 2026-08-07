@@ -512,6 +512,25 @@ window._appCache = {
   sideMenuData:     null
 };
 
+// ── data.js の内容を「読み込み直後に同期で」キャッシュへ流し込む ──
+// initAppData() は IndexedDB を読むため非同期で、しかも呼ぶかどうかは各ページ任せ。
+// index.html のように initAppData() を呼ばないページでは、
+// サイドメニュー・更新履歴・定型文が空のまま描画されてしまう。
+// data.js は同期読み込みなので、ここで先に反映しておけばどのページでも欠けない。
+(function _seedFromStaticData() {
+  var sd = window.APP_STATIC_DATA;
+  if (!sd) return;
+  if (sd.sideMenuData     != null) window._appCache.sideMenuData     = sd.sideMenuData;
+  if (sd.updateHistory    != null) window._appCache.updateHistory    = sd.updateHistory;
+  if (sd.fixedTexts       != null) window._appCache.fixedTexts       = sd.fixedTexts;
+  if (sd.hearingQuestions != null) window._appCache.hearingQuestions = sd.hearingQuestions;
+  if (sd.hearingPolicies  != null) window._appCache.hearingPolicies  = sd.hearingPolicies;
+  if (sd.hearingPatterns  != null) window._appCache.hearingPatterns  = sd.hearingPatterns;
+  if (sd.talkScripts      != null) window._appCache.scripts          = sd.talkScripts;
+  if (sd.mailTemplates    != null) window._appCache.mailTemplates    = sd.mailTemplates;
+  if (sd.mailCatMeta      != null) window._appCache.mailCatMeta      = sd.mailCatMeta;
+})();
+
 // localStorage からの一回限りのマイグレーション
 function _migrateFromLocalStorage() {
   var map = {
@@ -1516,6 +1535,36 @@ function _smAttrJs(s) {
     .replace(/>/g,  '&gt;');
 }
 
+/**
+ * 動画パスを、確実に解決できる絶対URLへ正規化する。
+ *
+ *  ・相対パス（./videos/… ）
+ *      プレイヤーは window.open('','_blank') + document.write で作るため、
+ *      about:blank の基準URLがブラウザ依存になり相対パスが外れることがある。
+ *      呼び出し元ページ（location.href）を基準に絶対URL化して回避する。
+ *  ・日本語やスペースを含むパス
+ *      new URL() が自動でパーセントエンコードするため、そのまま扱える。
+ *  ・"#" や "?" を含むフォルダ名
+ *      URLの断片/クエリ記号と解釈されてしまうため、先にエスケープする。
+ *  ・Windows のUNC/ドライブレターパス
+ *      file:// 形式へ変換する。
+ */
+function _smResolveMediaUrl(u) {
+  var s = String(u == null ? '' : u).trim();
+  if (!s) return '';
+
+  // \\server\share\... → file://server/share/...
+  if (/^\\\\/.test(s)) return 'file://' + s.replace(/\\/g, '/').replace(/^\/\//, '');
+  // C:\path\... → file:///C:/path/...
+  if (/^[a-zA-Z]:[\\/]/.test(s)) return 'file:///' + s.replace(/\\/g, '/');
+  // 既にスキーム付き（http: / https: / file: など）はそのまま
+  if (/^[a-z][a-z0-9+.\-]*:/i.test(s)) return s;
+
+  // 相対パス：# と ? だけ先に逃がしてから絶対URL化する
+  var safe = s.replace(/#/g, '%23').replace(/\?/g, '%3F');
+  try { return new URL(safe, location.href).href; } catch (e) { return s; }
+}
+
 /** HTML 埋め込み用エスケープ */
 function _smHtmlEsc(s) {
   return String(s == null ? '' : s)
@@ -1534,6 +1583,7 @@ window._smOpenVideo = function(event, url, name) {
   if (!url) return;
 
   var title = name || String(url).split(/[\\/]/).pop();
+  url = _smResolveMediaUrl(url);          // 相対パス・日本語・UNC を絶対URLへ
   var tab   = window.open('', '_blank');
 
   // ポップアップブロック時は動画URLへ直接遷移させる
@@ -1711,7 +1761,10 @@ function _phonRow(letter, r1, r2) {
 
 function _buildSideMenuHTML(isDark) {
   // localStorage は使用しない。data.js の内容（_appCache.sideMenuData）を正として参照する。
-  var sections = (window._appCache && window._appCache.sideMenuData) || [];
+  // キャッシュ未設定のタイミングで呼ばれても欠けないよう data.js を直接見る保険を入れる。
+  var sections = (window._appCache && window._appCache.sideMenuData)
+              || (window.APP_STATIC_DATA && window.APP_STATIC_DATA.sideMenuData)
+              || [];
   var html = '';
 
   // ダークモードトグル（固定）
@@ -1743,7 +1796,7 @@ function _buildSideMenuHTML(isDark) {
           }
           // マニュアル／動画ボタン（通常セクションと同じ見た目）
           var subManualBtn = (it.manualUrl) ?
-            '<a href="' + (it.manualUrl || '') + '" target="_blank" title="マニュアルをブラウザで閲覧" style="border:1px solid var(--accent,#4361ee);border-radius:4px;color:var(--accent-text,#4361ee);font-size:10px;padding:1px 6px;line-height:1.5;flex-shrink:0;white-space:nowrap;text-decoration:none;background:none;">📕 マニュアル</a>' : '';
+            '<a href="' + _smHtmlEsc(_smResolveMediaUrl(it.manualUrl)) + '" target="_blank" title="マニュアルをブラウザで閲覧" style="border:1px solid var(--accent,#4361ee);border-radius:4px;color:var(--accent-text,#4361ee);font-size:10px;padding:1px 6px;line-height:1.5;flex-shrink:0;white-space:nowrap;text-decoration:none;background:none;">📕 マニュアル</a>' : '';
           var subVideoBtn = (it.videoUrl) ?
             '<a href="javascript:void(0)" onclick="window._smOpenVideo(event,\'' + _smAttrJs(it.videoUrl) + '\',\'' + _smAttrJs(it.name || '') + '\')" title="動画をブラウザで再生" style="border:1px solid #e8590c;border-radius:4px;color:#e8590c;font-size:10px;padding:1px 6px;line-height:1.5;flex-shrink:0;white-space:nowrap;text-decoration:none;background:none;">🎬 動画</a>' : '';
           if (subManualBtn || subVideoBtn) {
@@ -1786,7 +1839,7 @@ function _buildSideMenuHTML(isDark) {
           return '<li><a href="' + it.file + '" download style="display:flex;align-items:center;gap:4px;">⬇️ ' + it.name + '</a></li>';
         }
         var manualBtn = (it.manualUrl) ?
-          '<a href="' + (it.manualUrl||'')+'" target="_blank" title="マニュアルをブラウザで閲覧" style="border:1px solid var(--accent,#4361ee);border-radius:4px;color:var(--accent-text,#4361ee);font-size:10px;padding:1px 6px;line-height:1.5;flex-shrink:0;white-space:nowrap;text-decoration:none;background:none;">📕 マニュアル</a>　' : '';
+          '<a href="' + _smHtmlEsc(_smResolveMediaUrl(it.manualUrl)) + '" target="_blank" title="マニュアルをブラウザで閲覧" style="border:1px solid var(--accent,#4361ee);border-radius:4px;color:var(--accent-text,#4361ee);font-size:10px;padding:1px 6px;line-height:1.5;flex-shrink:0;white-space:nowrap;text-decoration:none;background:none;">📕 マニュアル</a>　' : '';
         var videoBtn = (it.videoUrl) ?
           '<a href="javascript:void(0)" onclick="window._smOpenVideo(event,\'' + _smAttrJs(it.videoUrl) + '\',\'' + _smAttrJs(it.name || '') + '\')" title="動画をブラウザで再生" style="border:1px solid #e8590c;border-radius:4px;color:#e8590c;font-size:10px;padding:1px 6px;line-height:1.5;flex-shrink:0;white-space:nowrap;text-decoration:none;background:none;">🎬 動画</a>　' : '';
         return '<li style="display:flex;align-items:center;gap:4px;">' + '<a href="' + (it.url || '#') + '" target="_blank" style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + it.name + '</a>' + manualBtn + videoBtn + '</li>';
