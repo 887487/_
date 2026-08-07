@@ -1160,6 +1160,10 @@ html[data-theme="dark"] .nav-arrow-btn { background: rgba(40,42,54,.9); }
   color: var(--text3); font-size: 12px; padding: 0 2px;
 }
 
+/* リンク中の画像はホットスポットを編集できない */
+#imgLibHsCanvasWrap.ilib-readonly .ilib-handle{display:none;}
+#imgLibHsCanvasWrap.ilib-readonly .ilib-hs{cursor:default;}
+
 /* 登録済みホットスポットのリサイズハンドル */
 .ilib-handle{
   width:10px;height:10px;background:var(--accent);border:1.5px solid #fff;
@@ -1316,6 +1320,49 @@ html[data-theme="dark"] .nav-arrow-btn { background: rgba(40,42,54,.9); }
     </div>
     <div class="mail-editor-wrap" id="mailEditorWrap">
       <div class="empty-state"><div class="empty-icon">✉️</div><div>左のリストからテンプレートを選んでください</div></div>
+    </div>
+  </div>
+
+  <!-- ===== ホットスポット使い回しモーダル ===== -->
+  <div id="ilibApplyModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:8700;align-items:center;justify-content:center;"
+       onclick="if(event.target===this)_imgLibHsCloseApply()">
+    <div style="background:var(--surface);border-radius:14px;width:min(94vw,720px);max-height:88vh;display:flex;flex-direction:column;box-shadow:0 24px 64px rgba(0,0,0,.3);overflow:hidden;">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--border);">
+        <span style="font-size:15px;font-weight:700;">🔁 ホットスポットと遷移先を他の画像にも適用</span>
+        <button onclick="_imgLibHsCloseApply()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text3);">✕</button>
+      </div>
+      <div style="flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:14px;">
+        <div id="ilibApplySrc" style="font-size:12px;color:var(--text2);background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;"></div>
+
+        <div style="border:1px solid var(--border);border-radius:10px;padding:12px 14px;">
+          <div style="font-size:12px;font-weight:700;margin-bottom:8px;">適用方法</div>
+          <label style="display:flex;align-items:flex-start;gap:8px;font-size:12px;cursor:pointer;padding:4px 0;">
+            <input type="radio" name="ilibApplyMode" value="copy" checked style="margin-top:3px;">
+            <span><strong>コピー</strong>　適用先で自由に編集できます。<br>
+              <span style="font-size:11px;color:var(--text3);">元の画像を後から直しても、適用先には反映されません。</span></span></label>
+          <label style="display:flex;align-items:flex-start;gap:8px;font-size:12px;cursor:pointer;padding:4px 0;">
+            <input type="radio" name="ilibApplyMode" value="link" style="margin-top:3px;">
+            <span><strong>リンク</strong>　元の画像に追従します。<br>
+              <span style="font-size:11px;color:var(--text3);">元を保存するたび、適用先すべてが自動で更新されます。適用先では編集できません。</span></span></label>
+        </div>
+
+        <div>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+            <span style="font-size:12px;font-weight:700;">適用先の画像</span>
+            <span id="ilibApplyCount" style="font-size:11px;color:var(--accent-text);font-weight:700;"></span>
+            <span style="flex:1;"></span>
+            <input type="text" id="ilibApplyFilter" placeholder="名前で絞り込み" oninput="_imgLibHsRenderApplyList()"
+                   style="height:26px;padding:0 8px;font-size:11px;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text);">
+            <button class="btn btn-secondary" style="font-size:10px;height:26px;padding:0 8px;" onclick="_imgLibHsApplySelectAll(true)">全選択</button>
+            <button class="btn btn-secondary" style="font-size:10px;height:26px;padding:0 8px;" onclick="_imgLibHsApplySelectAll(false)">全解除</button>
+          </div>
+          <div id="ilibApplyList" style="border:1px solid var(--border);border-radius:8px;max-height:320px;overflow-y:auto;"></div>
+        </div>
+      </div>
+      <div style="padding:12px 20px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;">
+        <button class="btn btn-secondary" onclick="_imgLibHsCloseApply()" style="font-size:12px;">キャンセル</button>
+        <button class="btn btn-primary" id="ilibApplyRunBtn" onclick="_imgLibHsRunApply()" style="font-size:12px;" disabled>適用する</button>
+      </div>
     </div>
   </div>
 
@@ -1585,6 +1632,12 @@ html[data-theme="dark"] .nav-arrow-btn { background: rgba(40,42,54,.9); }
           <span>左の一覧から画像を選択すると<br>ホットスポットを登録できます</span>
         </div>
         <div id="imgLibHsEditor" style="display:none;flex:1;flex-direction:column;overflow:hidden;">
+          <!-- 他の画像のホットスポットにリンクしている場合の表示 -->
+          <div id="imgLibHsLinkBar" style="display:none;align-items:center;gap:8px;padding:6px 12px;background:var(--accent-lt);border-bottom:1px solid var(--accent);font-size:11px;">
+            <span style="color:var(--accent-text);font-weight:700;white-space:nowrap;">🔗 リンク中</span>
+            <span id="imgLibHsLinkName" style="flex:1;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
+            <button class="btn btn-secondary" style="font-size:10px;height:22px;padding:0 8px;" onclick="_imgLibHsUnlink()" title="リンクを解除してこの画像だけの設定にします">🔓 リンク解除</button>
+          </div>
           <!-- キャンバスエリア -->
           <div id="imgLibHsCanvasWrap" style="flex:1;overflow:auto;background:#333;display:flex;padding:16px;position:relative;cursor:crosshair;" title="ドラッグしてホットスポットを描画／Ctrl+ホイールで拡大縮小／Alt+ドラッグで移動">
             <div id="imgLibHsCanvas" style="position:relative;display:inline-block;flex-shrink:0;margin:auto;">
@@ -1607,6 +1660,7 @@ html[data-theme="dark"] .nav-arrow-btn { background: rgba(40,42,54,.9); }
               <span>ホットスポット一覧</span>
               <div style="display:flex;gap:6px;">
                 <button class="btn btn-secondary" style="font-size:10px;height:24px;padding:0 8px;" onclick="_imgLibHsClearAll()">🗑 全削除</button>
+                <button class="btn btn-secondary" style="font-size:10px;height:24px;padding:0 8px;" onclick="_imgLibHsOpenApply()" title="このホットスポットと遷移先を、他の画像にも適用します">🔁 使い回す</button>
                 <button class="btn btn-primary" style="font-size:10px;height:24px;padding:0 10px;" onclick="_imgLibHsSave()">💾 保存</button>
               </div>
             </div>
@@ -6780,6 +6834,14 @@ function _imgLibHsActivate(item) {
   _imgLibHsUpdateNav(); // ＜＞ ボタン・位置表示を更新
   var zb = document.getElementById('imgLibHsZoomBar');
   if (zb) zb.style.display = 'flex';
+  _imgLibHsUpdateLinkBar();
+  // リンク中は元画像が正なので、この画面では描画・編集させない
+  var wrapEl = document.getElementById('imgLibHsCanvasWrap');
+  if (wrapEl) {
+    var ro = !!(item && item.hsLinkFrom);
+    wrapEl.classList.toggle('ilib-readonly', ro);
+    wrapEl.style.cursor = ro ? 'default' : 'crosshair';
+  }
 }
 
 // ===================================================================
@@ -7237,6 +7299,203 @@ function _scrScreenUsesLib(s, libRef) {
   return (s.variants || []).some(function(v) { return v.src === libRef; });
 }
 
+// ===================================================================
+// ホットスポットの使い回し（コピー／リンク）
+//   コピー: 適用先へ複製する。以後は独立して編集できる。
+//   リンク: hsLinkFrom に元画像IDを持たせ、元を保存するたび自動で追従する。
+//           実データも materialize しておくため、パターン追加や書き出しは
+//           従来どおりの経路（item.hotspots）でそのまま動く。
+// ===================================================================
+var _ilibApplySel = null;   // 適用先として選択中のID
+
+function _imgLibHsOpenApply() {
+  if (!_imgLibHsItem) { toast('⚠️ 先に画像を選択してください'); return; }
+  if (!_imgLibHsList.length) { toast('⚠️ ホットスポットが登録されていません'); return; }
+  if (_imgLibHsItem.hsLinkFrom) {
+    toast('⚠️ リンク中の画像は元にできません。先にリンクを解除してください'); return;
+  }
+  _ilibApplySel = new Set();
+  var f = document.getElementById('ilibApplyFilter'); if (f) f.value = '';
+  var nT = _imgLibHsList.filter(function(h){ return h.targetType==='lib' || h.targetType==='url'; }).length;
+  document.getElementById('ilibApplySrc').innerHTML =
+    '元画像：<strong>' + _smEscHtml(_imgLibHsItem.name || _imgLibHsItem.id) + '</strong>　'
+    + 'ホットスポット <strong>' + _imgLibHsList.length + '</strong> 件'
+    + (nT ? '（うち遷移先設定済み ' + nT + ' 件）' : '（遷移先は未設定）');
+  document.getElementById('ilibApplyModal').style.display = 'flex';
+  _imgLibHsRenderApplyList();
+}
+
+function _imgLibHsCloseApply() {
+  document.getElementById('ilibApplyModal').style.display = 'none';
+  _ilibApplySel = null;
+}
+
+/** 適用先候補の一覧を描画（セットは代表1件に集約） */
+function _imgLibHsRenderApplyList() {
+  var listEl = document.getElementById('ilibApplyList');
+  if (!listEl || !_ilibApplySel) return;
+  var q = (document.getElementById('ilibApplyFilter') || {}).value || '';
+  q = q.trim().toLowerCase();
+
+  var seenSet = {};
+  var cands = (_imgLibAllItems || []).filter(function(it) {
+    if (!it || it.id === _imgLibHsItem.id) return false;
+    if (it.setId) {
+      if (it.setId === _imgLibHsItem.setId) return false;   // 同一セットは元々共有される
+      if (seenSet[it.setId]) return false;
+      seenSet[it.setId] = 1;
+    }
+    if (q && String(it.name || '').toLowerCase().indexOf(q) < 0) return false;
+    return true;
+  });
+
+  if (!cands.length) {
+    listEl.innerHTML = '<div style="padding:14px;font-size:11px;color:var(--text3);">該当する画像がありません。</div>';
+  } else {
+    listEl.innerHTML = cands.map(function(it) {
+      var hsN = (it.hotspots || []).length;
+      var linked = it.hsLinkFrom;
+      var warn = linked
+        ? '<span style="font-size:10px;color:var(--accent-text);">🔗 他画像にリンク中</span>'
+        : (hsN ? '<span style="font-size:10px;color:#c77700;">⚠️ 既存 ' + hsN + ' 件は置き換えられます</span>' : '');
+      return '<label style="display:flex;align-items:center;gap:8px;padding:6px 10px;border-bottom:1px solid var(--border);cursor:pointer;font-size:12px;">' +
+        '<input type="checkbox" data-id="' + it.id + '"' + (_ilibApplySel.has(it.id) ? ' checked' : '') +
+          ' onchange="_imgLibHsToggleApply(this)" style="width:14px;height:14px;">' +
+        '<span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' +
+          (it.setId ? '🧩 ' : '') + _smEscHtml(it.name || it.id) + '</span>' + warn + '</label>';
+    }).join('');
+  }
+  _imgLibHsUpdateApplyCount();
+}
+
+function _imgLibHsToggleApply(cb) {
+  if (cb.checked) _ilibApplySel.add(cb.dataset.id); else _ilibApplySel.delete(cb.dataset.id);
+  _imgLibHsUpdateApplyCount();
+}
+
+function _imgLibHsApplySelectAll(on) {
+  document.querySelectorAll('#ilibApplyList input[type="checkbox"]').forEach(function(cb) {
+    cb.checked = on;
+    if (on) _ilibApplySel.add(cb.dataset.id); else _ilibApplySel.delete(cb.dataset.id);
+  });
+  _imgLibHsUpdateApplyCount();
+}
+
+function _imgLibHsUpdateApplyCount() {
+  var n = _ilibApplySel ? _ilibApplySel.size : 0;
+  var el = document.getElementById('ilibApplyCount');
+  if (el) el.textContent = n ? n + ' 件選択中' : '';
+  var btn = document.getElementById('ilibApplyRunBtn');
+  if (btn) btn.disabled = (n === 0);
+}
+
+/** 適用を実行 */
+function _imgLibHsRunApply() {
+  if (!_ilibApplySel || !_ilibApplySel.size) return;
+  var mode = (document.querySelector('input[name="ilibApplyMode"]:checked') || {}).value || 'copy';
+  var ids  = Array.from(_ilibApplySel);
+  var src  = _imgLibHsItem;
+
+  // 先に元画像を保存してから適用する（未保存の編集も反映されるように）
+  _imgLibHsSave(function() {
+    _imgLibHsApplyToItems(src.id, _imgLibHsList, ids, mode, function(n) {
+      _imgLibHsCloseApply();
+      toast('✅ ' + n + ' 件の画像に適用しました（' + (mode === 'link' ? 'リンク' : 'コピー') + '）');
+      _imgLibRender();
+    });
+  }, true);
+}
+
+/**
+ * ホットスポットを対象画像へ書き込む。
+ * @param srcId  元画像ID
+ * @param hsList 元のホットスポット配列
+ * @param ids    適用先の画像ID（セット代表）
+ * @param mode   'copy' | 'link'
+ */
+function _imgLibHsApplyToItems(srcId, hsList, ids, mode, cb) {
+  imgLibGetAll().then(function(all) {
+    // セット代表が選ばれた場合はセット全員へ広げる
+    var targets = [];
+    ids.forEach(function(id) {
+      var it = all.find(function(x) { return x.id === id; });
+      if (!it) return;
+      if (it.setId) all.forEach(function(x) { if (x.setId === it.setId) targets.push(x); });
+      else targets.push(it);
+    });
+    var seen = {}, uniq = [];
+    targets.forEach(function(t) { if (!seen[t.id] && t.id !== srcId) { seen[t.id] = 1; uniq.push(t); } });
+
+    var updates = uniq.map(function(t) {
+      // リンクは元と同じHS IDを保つ。パターン側の有効/無効設定が維持される。
+      // コピーは新しいIDを振り、以後は独立して編集できるようにする。
+      var hs = JSON.parse(JSON.stringify(hsList)).map(function(h) {
+        if (mode === 'copy') h.id = 'lhs' + Math.random().toString(36).substr(2, 9);
+        return h;
+      });
+      return { id: t.id, fields: {
+        hotspots:   hs,
+        hsLinkFrom: (mode === 'link') ? srcId : null
+      } };
+    });
+
+    _imgLibBulkUpdate(updates, function() {
+      // 反映先を使っている画面へも同期する
+      uniq.forEach(function(t) {
+        t.hotspots = updates.find(function(u){ return u.id === t.id; }).fields.hotspots;
+        if (mode === 'link') t.hsLinkFrom = srcId; else delete t.hsLinkFrom;
+        _imgLibSyncHsToPatterns(t);
+      });
+      if (typeof cb === 'function') cb(uniq.length);
+    });
+  });
+}
+
+/** リンク中の画像すべてに、元のホットスポットを反映する */
+function _imgLibPropagateHsToLinked(srcItem, cb) {
+  imgLibGetAll().then(function(all) {
+    var linked = (all || []).filter(function(x) { return x.hsLinkFrom === srcItem.id; });
+    if (!linked.length) { if (cb) cb(0); return; }
+    var hs = JSON.parse(JSON.stringify(srcItem.hotspots || []));
+    var updates = linked.map(function(t) { return { id: t.id, fields: { hotspots: hs } }; });
+    _imgLibBulkUpdate(updates, function() {
+      linked.forEach(function(t) { t.hotspots = hs; _imgLibSyncHsToPatterns(t); });
+      if (cb) cb(linked.length);
+    });
+  }).catch(function() { if (cb) cb(0); });
+}
+
+/** リンクを解除して、この画像だけの設定にする */
+function _imgLibHsUnlink() {
+  if (!_imgLibHsItem || !_imgLibHsItem.hsLinkFrom) return;
+  if (!confirm('リンクを解除して、この画像だけのホットスポットにしますか？\n（現在の内容はそのまま残ります）')) return;
+  var hs = JSON.parse(JSON.stringify(_imgLibHsList)).map(function(h) {
+    h.id = 'lhs' + Math.random().toString(36).substr(2, 9);
+    return h;
+  });
+  _imgLibBulkUpdate([{ id: _imgLibHsItem.id, fields: { hsLinkFrom: null, hotspots: hs } }], function() {
+    delete _imgLibHsItem.hsLinkFrom;
+    _imgLibHsItem.hotspots = hs;
+    _imgLibHsList = JSON.parse(JSON.stringify(hs));
+    _imgLibHsUpdateLinkBar();
+    _imgLibHsRedrawOverlays();
+    _imgLibHsRenderList();
+    toast('🔓 リンクを解除しました');
+  });
+}
+
+/** リンク状態バナーの表示を更新 */
+function _imgLibHsUpdateLinkBar() {
+  var bar = document.getElementById('imgLibHsLinkBar');
+  if (!bar) return;
+  var from = _imgLibHsItem && _imgLibHsItem.hsLinkFrom;
+  if (!from) { bar.style.display = 'none'; return; }
+  var srcItem = (_imgLibAllItems || []).find(function(x) { return x.id === from; });
+  var nm = document.getElementById('imgLibHsLinkName');
+  if (nm) nm.textContent = '「' + ((srcItem && srcItem.name) || from) + '」のホットスポットに追従しています（編集は元画像で行ってください）';
+  bar.style.display = 'flex';
+}
+
 function _imgLibHsSave(cb, silent) {
   if (!_imgLibHsItem) { if (typeof cb === 'function') cb(); return; }
   // 保存前に全HSへIDを補完（＜＞で連続登録した分もIDを持つ）
@@ -7257,6 +7516,8 @@ function _imgLibHsSave(cb, silent) {
       if (cached) cached.hotspots = _imgLibHsItem.hotspots;
       // セットは1画面扱いなので、同一セットの全画像へホットスポットを共有する
       _imgLibPropagateHsToSet(_imgLibHsItem);
+      // この画像にリンクしている他画像へも反映する
+      _imgLibPropagateHsToLinked(_imgLibHsItem);
       var synced = _imgLibSyncHsToPatterns(_imgLibHsItem);
       if (!silent) {
         toast('✅ ホットスポットを保存しました（' + _imgLibHsList.length + '件）'
@@ -7450,6 +7711,8 @@ function _imgLibHsSetupDrag() {
     // クリック対象が imgLibHsCanvasWrap の内側でなければ無視
     var wrap = document.getElementById('imgLibHsCanvasWrap');
     if (!wrap || !wrap.contains(e.target)) return;
+    // リンク中の画像は編集不可（Alt+ドラッグの画像移動だけ許可する）
+    if (_imgLibHsItem && _imgLibHsItem.hsLinkFrom && !e.altKey) return;
 
     // ── 既存ホットスポットの移動・リサイズ ──
     // 新規描画より優先して判定する（枠やハンドルの上で押した場合）
