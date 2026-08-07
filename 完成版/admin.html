@@ -4460,7 +4460,11 @@ function saveAndExportSelected() {
   var hrQuestions = window._appCache.hearingQuestions || [];
   var hrPolicies  = window._appCache.hearingPolicies  || [];
   var hrPatterns  = window._appCache.hearingPatterns  || [];
-  var smData      = _smData || window._appCache.sideMenuData;
+  // サイドメニューは編集中の _smData が正。
+  // exportDataJS() は _appCache から data.js を組み立てるため、
+  // ここで反映しておかないと編集内容（videoUrl など）が書き出されない。
+  var smData      = _smData || window._appCache.sideMenuData || [];
+  window._appCache.sideMenuData = JSON.parse(JSON.stringify(smData));
   var histData    = window._appCache.updateHistory || [];
 
   var chkJson   = document.getElementById('chkExJsonBackup');
@@ -4708,7 +4712,10 @@ function hrSave() {
 // data.js として出力。HTML ファイルと同じフォルダに配置で次回起動から反映。
 // =============================================================================
 function exportDataJS(silent) {
-  var sideMenuData = window._appCache.sideMenuData || [];
+  // 編集中の _smData があれば最新とみなす（保存ボタン以外の経路からの呼び出し対策）
+  var sideMenuData = (typeof _smData !== 'undefined' && _smData)
+    ? _smData
+    : (window._appCache.sideMenuData || []);
 
   return window.idbGetAllMenuFiles().then(function(allFiles) {
     // 添付ファイルを { fileId: { name, mimeType, size, dataUrl, addedAt } } に変換
@@ -10387,16 +10394,31 @@ function _scrAddScreensFromLibItemsInner(patId, items, silent, allItems) {
   var pat = screenPatterns.find(function(p) { return p.id === patId; });
   if (!pat) { toast('❌ 追加先のパターンが見つかりません'); return; }
 
+  // ── ① 渡された items を IndexedDB の最新レコードで作り直す ──
+  // 呼び出し元は _imgLibAllItems（メモリキャッシュ）から拾った参照を渡してくるが、
+  // セット化の直後などはこのオブジェクトに setId が付いていないことがある。
+  // 古いオブジェクトのままだとセットとして認識されず、1枚＝1画面で追加されてしまう。
+  var byId = {};
+  allItems.forEach(function(x) { byId[x.id] = x; });
+  items = (items || []).map(function(it) { return byId[it.id] || it; });
+
+  // ── ② セットのメンバーを最新の一覧から展開する ──
+  var expanded = [], seenId = {};
+  items.forEach(function(it) {
+    var group = it.setId
+      ? allItems.filter(function(x) { return x.setId === it.setId; })
+                .sort(function(a, b) { return (a.setOrder || 0) - (b.setOrder || 0); })
+      : [it];
+    if (!group.length) group = [it];
+    group.forEach(function(g) { if (!seenId[g.id]) { seenId[g.id] = true; expanded.push(g); } });
+  });
+  items = expanded;
+
   var order = [], bySet = {};
   items.forEach(function(it) {
     if (it.setId) {
       if (bySet[it.setId]) return;   // セットは1回だけ処理する
-      // items にセットの一部しか無くても、ライブラリから全メンバーを補完する
-      var members = allItems.filter(function(x) { return x.setId === it.setId; });
-      if (members.length < 2) {
-        var local = items.filter(function(x) { return x.setId === it.setId; });
-        if (local.length > members.length) members = local;
-      }
+      var members = items.filter(function(x) { return x.setId === it.setId; });
       if (!members.length) members = [it];
       bySet[it.setId] = { items: members.slice() };
       order.push(bySet[it.setId]);
@@ -10447,13 +10469,20 @@ function _imgLibAddSelectedToPattern() {
   var pat = _scrResolveTargetPattern();
   if (!pat) { toast('⚠️ 追加先のパターンがありません。先にパターンを作成してください'); return; }
 
-  var items = _scrExpandSetMembers(ids);
-  var n = _scrCountScreensFor(items);
-  if (!confirm(items.length + ' 枚（' + n + ' 画面）をパターン「' + pat.name + '」に追加します。\n（セット化された画像は1画面にまとまります）')) return;
-
-  _scrAddScreensFromLibItems(pat.id, items);
-  _imgLibClearSelection();
-  toggleImgLibPanel();
+  // セット情報は IndexedDB を正として読み直す
+  // （セット化直後はメモリ上のオブジェクトに setId が反映されていないことがある）
+  imgLibGetAll().then(function(all) {
+    var items = _scrExpandSetMembers(ids, all || []);
+    if (!items.length) { toast('⚠️ 対象の画像が見つかりませんでした'); return; }
+    var n = _scrCountScreensFor(items);
+    var setN = items.filter(function(x){ return x.setId; }).length;
+    var msg = items.length + ' 枚（' + n + ' 画面）をパターン「' + pat.name + '」に追加します。'
+            + (setN ? '\n🧩 うち ' + setN + ' 枚はセットとして1画面にまとまります。' : '');
+    if (!confirm(msg)) return;
+    _scrAddScreensFromLibItems(pat.id, items);
+    _imgLibClearSelection();
+    toggleImgLibPanel();
+  });
 }
 
 /**
@@ -10471,14 +10500,15 @@ function _scrResolveTargetPattern() {
  * 選択IDを「セットのメンバー全員」に広げてライブラリアイテム配列にする。
  * 折りたたみ表示では既定画像しか選択されないことがあるため必須。
  */
-function _scrExpandSetMembers(ids) {
+function _scrExpandSetMembers(ids, source) {
+  var list = (source && source.length) ? source : _imgLibAllItems;
   var out = [], seen = {};
   ids.forEach(function(id) {
-    var it = _imgLibAllItems.find(function(x) { return x.id === id; });
+    var it = list.find(function(x) { return x.id === id; });
     if (!it) return;
     var group = it.setId
-      ? _imgLibAllItems.filter(function(x) { return x.setId === it.setId; })
-                       .sort(function(a, b) { return (a.setOrder || 0) - (b.setOrder || 0); })
+      ? list.filter(function(x) { return x.setId === it.setId; })
+            .sort(function(a, b) { return (a.setOrder || 0) - (b.setOrder || 0); })
       : [it];
     group.forEach(function(g) { if (!seen[g.id]) { seen[g.id] = true; out.push(g); } });
   });
