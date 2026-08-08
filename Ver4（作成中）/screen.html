@@ -889,11 +889,24 @@ function _idbOpen() {
 // 画像ライブラリ（imageLib ストア）から dataUrl を取得する
 // "lib:xxxxx" 形式の imageSrc を解決する。直接 base64 はそのまま返す。
 var _pvImgCache = {};
+// 取得中の Promise を保持し、同じ画像への同時要求をまとめる。
+// フロー図では同じ画像が複数のカードに出るため、これが無いと
+// 1枚の画像に対して何本もトランザクションが走る。
+var _pvImgPending = {};
 function resolveImgPv(src) {
   if (!src) return Promise.resolve(null);
   if (!src.startsWith('lib:')) return Promise.resolve(src);
   var libId = src.slice(4);
   if (_pvImgCache[libId]) return Promise.resolve(_pvImgCache[libId]);
+  if (_pvImgPending[libId]) return _pvImgPending[libId];
+  var p = _resolveImgPvRaw(libId);
+  _pvImgPending[libId] = p;
+  p.then(function() { delete _pvImgPending[libId]; },
+         function() { delete _pvImgPending[libId]; });
+  return p;
+}
+
+function _resolveImgPvRaw(libId) {
   return _idbOpen().then(function(db) {
     return new Promise(function(resolve) {
       var tx  = db.transaction('imageLib', 'readonly');

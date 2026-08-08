@@ -329,6 +329,9 @@ main { flex:1;min-height:0;padding:20px;display:flex;flex-direction:column;gap:2
 #historyPanel { padding:10px; }
 table { width:100%;border-collapse:collapse;font-size:12px; }
 th, td { border:1px solid #ddd;padding:6px;text-align:center; }
+/* 画像ライブラリの一覧は、上の全体規則（text-align:center）を打ち消して左揃えにする */
+#imgLibGrid td, #imgLibGrid th { text-align:left; border:none; }
+#imgLibGrid th:first-child, #imgLibGrid td:first-child { text-align:center; }
 th { background:var(--bg); }
 
 /* ===== QUICK COPY ===== */

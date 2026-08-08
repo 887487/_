@@ -5151,6 +5151,51 @@ function imgLibGetAll() {
   });
 }
 
+/**
+ * dataUrl を除いたメタ情報だけを取得する。
+ *
+ * getAll() は base64 の画像データまで丸ごと読み込むため、枚数が増えると
+ * IndexedDB のデシリアライズとメモリ確保だけで数秒かかる。
+ * 一覧表示はサムネイルを廃止して画像名しか使わないので、
+ * カーソルで1件ずつ走査して dataUrl を捨てながら読む。
+ */
+function imgLibGetAllMeta() {
+  return _imgLibOpen().then(function(db) {
+    return new Promise(function(resolve) {
+      var out = [];
+      var tx  = db.transaction('imageLib', 'readonly');
+      var req = tx.objectStore('imageLib').openCursor();
+      req.onsuccess = function(e) {
+        var cur = e.target.result;
+        if (!cur) { resolve(out); return; }
+        var v = cur.value || {};
+        out.push({
+          id: v.id, name: v.name,
+          hotspots: v.hotspots || [],
+          hsLinkFrom: v.hsLinkFrom || null,
+          setId: v.setId || null, setName: v.setName || '',
+          setLabel: v.setLabel || '', setOrder: v.setOrder || 0,
+          _metaOnly: true          // dataUrl を持たない印
+        });
+        cur.continue();
+      };
+      req.onerror = function() { resolve(out); };
+    });
+  });
+}
+
+/** 1件だけ dataUrl 込みで取得する（表示直前に呼ぶ） */
+function imgLibGetOne(libId) {
+  return _imgLibOpen().then(function(db) {
+    return new Promise(function(resolve) {
+      var tx  = db.transaction('imageLib', 'readonly');
+      var req = tx.objectStore('imageLib').get(libId);
+      req.onsuccess = function(e) { resolve(e.target.result || null); };
+      req.onerror   = function()  { resolve(null); };
+    });
+  });
+}
+
 // ライブラリから1件削除
 function imgLibDelete(libId) {
   delete _imgLibCache[libId];
@@ -6742,7 +6787,19 @@ function _imgLibHsActivate(item) {
     _imgLibHsFitZoom = _imgLibHsCalcFit();
     _imgLibHsApplyZoom(_imgLibHsFitZoom);
   };
-  img.src = item.dataUrl;
+  // 一覧は dataUrl を持たないメタ情報なので、ここで初めて画像本体を読む
+  if (item.dataUrl) {
+    img.src = item.dataUrl;
+  } else {
+    img.removeAttribute('src');
+    imgLibGetOne(item.id).then(function(full) {
+      if (!full || !full.dataUrl) return;
+      // 表示中の画像が切り替わっていたら破棄する
+      if (!_imgLibHsItem || _imgLibHsItem.id !== item.id) return;
+      item.dataUrl = full.dataUrl;      // 以後は再取得しない
+      img.src = full.dataUrl;
+    });
+  }
   _imgLibHsRenderList();
   _imgLibHsSetupDrag(); // 初回のみ登録（フラグで二重登録防止）
   _imgLibHsSetupZoom(); // Ctrl+ホイール／キーボードズーム（初回のみ）
@@ -7216,7 +7273,7 @@ function _scrResolveLibTarget(pat, self, lh) {
  * 画面を追加・削除した直後に呼ぶことで、後から追加した画面へのリンクが張られる。
  */
 function _scrReresolveAllLibTargets(cb) {
-  imgLibGetAll().then(function(items) {
+  imgLibGetAllMeta().then(function(items) {
     var byId = {};
     (items || []).forEach(function(it) { byId[it.id] = it; });
 
@@ -7354,7 +7411,7 @@ function _imgLibHsRunApply() {
  * @param mode   'copy' | 'link'
  */
 function _imgLibHsApplyToItems(srcId, hsList, ids, mode, cb) {
-  imgLibGetAll().then(function(all) {
+  imgLibGetAllMeta().then(function(all) {
     // セット代表が選ばれた場合はセット全員へ広げる
     var targets = [];
     ids.forEach(function(id) {
@@ -7392,7 +7449,7 @@ function _imgLibHsApplyToItems(srcId, hsList, ids, mode, cb) {
 
 /** リンク中の画像すべてに、元のホットスポットを反映する */
 function _imgLibPropagateHsToLinked(srcItem, cb) {
-  imgLibGetAll().then(function(all) {
+  imgLibGetAllMeta().then(function(all) {
     var linked = (all || []).filter(function(x) { return x.hsLinkFrom === srcItem.id; });
     if (!linked.length) { if (cb) cb(0); return; }
     var hs = JSON.parse(JSON.stringify(srcItem.hotspots || []));
@@ -7860,7 +7917,8 @@ function _imgLibFilter(cb) {
 function _imgLibLoad(cb) {
   var grid = document.getElementById('imgLibGrid');
   if (grid) grid.innerHTML = '<div style="width:100%;text-align:center;padding:40px 0;color:var(--text3);font-size:12px;">読み込み中…</div>';
-  imgLibGetAll().then(function(items){ cb(items); });
+  // 一覧は画像名しか使わないので dataUrl を読まない（大幅に高速化）
+  imgLibGetAllMeta().then(function(items){ cb(items); });
 }
 
 // 画像ライブラリ複数選択状態
@@ -8094,7 +8152,7 @@ function _imgLibDraw(items, query) {
 
     // ── セル②：画像名 ──
     var tdName = document.createElement('td');
-    tdName.style.cssText = 'padding:6px 8px;border-bottom:1px solid var(--border);min-width:0;overflow:hidden;';
+    tdName.style.cssText = 'padding:6px 8px;border-bottom:1px solid var(--border);min-width:0;overflow:hidden;text-align:left;';
 
     var hsCount = Array.isArray(item.hotspots) ? item.hotspots.length : 0;
 
@@ -8165,7 +8223,7 @@ function _imgLibDraw(items, query) {
     // ── セル③：使用パターン ──
     // ── 使用パターン：画像名セル内にまとめて表示（列を増やさない）──
     var usageRow = document.createElement('div');
-    usageRow.style.cssText = 'margin-top:3px;font-size:10px;color:var(--text2);line-height:1.6;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
+    usageRow.style.cssText = 'margin-top:3px;font-size:10px;color:var(--text2);line-height:1.6;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:left;';
     if (pats.length) {
       usageRow.innerHTML = pats.map(function(p){ return '<span style="display:inline-block;background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:0 5px;margin-right:3px;">' + esc(p) + '</span>'; }).join('');
       usageRow.title = '使用中：' + pats.join('、');
@@ -8176,7 +8234,7 @@ function _imgLibDraw(items, query) {
 
     // ── 操作：画像名セル内にアイコンで表示 ──
     var tdOp = document.createElement('div');
-    tdOp.style.cssText = 'margin-top:4px;display:flex;gap:4px;flex-wrap:wrap;';
+    tdOp.style.cssText = 'margin-top:4px;display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-start;';
     var btnStyle = 'font-size:10px;padding:1px 6px;border:1px solid var(--border);border-radius:4px;background:var(--surface2);cursor:pointer;color:var(--text);font-family:inherit;';
 
     // 差し替えボタン（隠し file input + label）
@@ -10444,7 +10502,7 @@ function _scrAddScreensFromLibItems(patId, items, silent) {
   // 検索やパネル開閉で空になることがあるため、必ず IndexedDB から取り直す。
   // （ここが空だとメンバーが1件しか集まらず variants が作られないため、
   //   パターンに追加してもバリエーション切替が出なくなる）
-  imgLibGetAll().then(function(allItems) {
+  imgLibGetAllMeta().then(function(allItems) {
     _scrAddScreensFromLibItemsInner(patId, items, silent, allItems || []);
   }).catch(function() {
     _scrAddScreensFromLibItemsInner(patId, items, silent, _imgLibAllItems || []);
@@ -10513,9 +10571,8 @@ function _imgLibAddSelectedToPattern() {
   var pat = _scrResolveTargetPattern();
   if (!pat) { toast('⚠️ 追加先のパターンがありません。先にパターンを作成してください'); return; }
 
-  // セット情報は IndexedDB を正として読み直す
-  // （セット化直後はメモリ上のオブジェクトに setId が反映されていないことがある）
-  imgLibGetAll().then(function(all) {
+  // 画像情報は IndexedDB を正として読み直す（dataUrl は不要なのでメタのみ）
+  imgLibGetAllMeta().then(function(all) {
     var items = _scrExpandSetMembers(ids, all || []);
     if (!items.length) { toast('⚠️ 対象の画像が見つかりませんでした'); return; }
     var n = _scrCountScreensFor(items);
