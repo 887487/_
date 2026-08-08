@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🏠 ホーム</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="data.js" onerror="void(0)"></script>
+  <!-- お知らせ（任意）。file:// でも確実に読めるのはこの形式 -->
+  <script src="★お知らせ★.js" onerror="void(0)"></script>
+  <script src="common-utils.js"></script>
+  <style>
+    html, body {
+      height: 100%;
+      overflow: hidden;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Noto Sans JP', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ===== ヘッダー ===== */
+    .home-header {
+      height: var(--header-h);
+      background: var(--header-bg);
+      color: var(--header-text);
+      display: flex;
+      align-items: center;
+      padding: 0 20px;
+      gap: 12px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: var(--shadow-md);
+    }
+    .home-header-icon { font-size: 22px; }
+    .home-header-title {
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      color: var(--header-text);
+    }
+
+    /* ===== ページ本体：サイドバー＋メイン横並び ===== */
+    .home-body {
+      flex: 1;
+      display: flex;
+      height: calc(100vh - var(--header-h));
+      overflow: hidden;
+    }
+
+    /* ===== 左サイドバー（常時表示・独立スクロール）===== */
+    /* common-utils.js が描画する #sideMenu をそのまま流用。
+       通常は fixed + slide だが、ここでは static に上書きする */
+    #sideMenu {
+      position: static !important;
+      left: auto !important;
+      top: auto !important;
+      transform: none !important;
+      transition: none !important;
+      width: var(--sidemenu-w) !important;
+      min-width: var(--sidemenu-w) !important;
+      max-width: var(--sidemenu-w) !important;
+      height: 100% !important;
+      box-shadow: none !important;
+      border-right: 1px solid var(--border);
+      overflow-y: auto;
+      overflow-x: hidden;
+      flex-shrink: 0;
+      z-index: 1 !important;
+    }
+
+    /* ===== メインコンテンツ ===== */
+    .home-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 32px 24px 64px;
+      height: 100%;
+      overflow-y: auto;
+    }
+
+    .home-lead {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    .home-lead-title {
+      font-size: 22px;
+      font-weight: 700;
+      margin: 0 0 8px;
+      color: var(--text);
+    }
+    .home-lead-sub {
+      font-size: 13px;
+      color: var(--text3);
+      margin: 0;
+    }
+
+    /* ===== お知らせ枠 ===== */
+    .home-notice {
+      width: 100%;
+      max-width: 900px;
+      margin: 0 0 28px;   /* 先頭に配置。カードグリッドとの間だけ空ける */
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--accent);
+      border-radius: 10px;
+      padding: 14px 18px;
+      box-sizing: border-box;
+    }
+    .home-notice-head {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--accent-text);
+      margin-bottom: 8px;
+    }
+    .home-notice-date {
+      margin-left: auto;
+      font-size: 11px;
+      font-weight: 400;
+      color: var(--text3);
+      font-variant-numeric: tabular-nums;
+    }
+    .home-notice-body {
+      font-size: 13px;
+      line-height: 1.9;
+      color: var(--text);
+      white-space: pre-wrap;
+      word-break: break-word;
+      max-height: 220px;
+      overflow-y: auto;
+    }
+    .home-notice-body a { color: var(--accent-text); }
+    .home-notice.is-empty { display: none; }
+    /* file:// では中身を読めないため <object> で表示する */
+    .home-notice-embed {
+      width: 100%;
+      height: 150px;
+      border: none;
+      display: block;
+      background: transparent;
+    }
+
+    /* ===== カードグリッド ===== */
+    .home-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 18px;
+      width: 100%;
+      max-width: 900px;
+    }
+
+    .home-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 28px 24px;
+      cursor: pointer;
+      text-decoration: none;
+      color: inherit;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      transition: box-shadow 0.18s, border-color 0.18s, transform 0.12s;
+    }
+    .home-card:hover {
+      box-shadow: var(--shadow-md);
+      border-color: var(--accent);
+      transform: translateY(-2px);
+    }
+    .home-card:active {
+      transform: translateY(0);
+    }
+
+    .home-card-icon {
+      font-size: 34px;
+      line-height: 1;
+    }
+    .home-card-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .home-card-desc {
+      font-size: 12px;
+      color: var(--text3);
+      line-height: 1.7;
+    }
+    .home-card-arrow {
+      margin-top: auto;
+      font-size: 12px;
+      color: var(--accent);
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+
+    /* 管理カードはやや控えめなスタイル */
+    .home-card.admin-card {
+      border-style: dashed;
+      opacity: 0.85;
+    }
+    .home-card.admin-card:hover {
+      opacity: 1;
+    }
+
+    /* ===== フッター ===== */
+    .home-footer {
+      text-align: center;
+      padding: 16px;
+      font-size: 11px;
+      color: var(--text3);
+      border-top: 1px solid var(--border);
+    }
+
+    @media (max-width: 700px) {
+      #sideMenu {
+        display: none !important;
+      }
+      .home-grid {
+        grid-template-columns: 1fr;
+      }
+      .home-main {
+        padding: 32px 16px 48px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<header class="home-header">
+  <span class="home-header-icon">🏠</span>
+  <span class="home-header-title">ツール一覧　【Ver4】</span>
+  <span id="homeClock" style="margin-left:auto;font-size:13px;font-variant-numeric:tabular-nums;color:var(--header-text);opacity:.85;letter-spacing:.03em;"></span>
+</header>
+
+<div class="home-body">
+  <aside id="sideMenu"></aside>
+  <main class="home-main">
+
+  <!-- お知らせ（★お知らせ★.js / ★お知らせ★.txt を自動読み込み。内容が無ければ非表示） -->
+  <section class="home-notice is-empty" id="homeNotice">
+    <div class="home-notice-head">
+      <span>📢 お知らせ</span>
+      <span class="home-notice-date" id="homeNoticeDate"></span>
+    </div>
+    <div class="home-notice-body" id="homeNoticeBody"></div>
+  </section>
+
+  <!-- リード文は非表示（お知らせ欄に集約）
+  <div class="home-lead">
+    <p class="home-lead-title">ようこそ！利用するツールを選んでください。</p>
+    <p class="home-lead-sub">お知らせ：データのインポート操作（jsonファイルのD&D）が不要になりました！</p>
+  </div>
+  -->
+  <!-- <img src="img/ファイル名.拡張子" width="650" height="300"><br> -->
+
+  <div class="home-grid">
+
+    <!-- トークスクリプト -->
+    <a class="home-card" onclick="openNamedTab('script.html','scriptTab')" href="javascript:void(0)">
+      <span class="home-card-icon">📋</span>
+      <span class="home-card-title">トークスクリプト</span>
+      <span class="home-card-desc">お問い合わせ対応のトークスクリプトを一覧から検索・参照できます。ヒアリングチェックシート付き。
+      </span>
+      <span class="home-card-arrow">開く →</span>
+    </a>
+
+    <!-- メールテンプレート -->
+    <a class="home-card" onclick="openNamedTab('mail.html','mailTab')" href="javascript:void(0)">
+      <span class="home-card-icon">✉️</span>
+      <span class="home-card-title">メールテンプレート</span>
+      <span class="home-card-desc">メールのテンプレートをカテゴリ別に管理。件名/本文から検索して確認できます。
+      </span>
+      <span class="home-card-arrow">開く →</span>
+    </a>
+
+    <!-- 画面遷移 -->
+    <a class="home-card" onclick="openNamedTab('screen.html','screenFlowTab')" href="javascript:void(0)">
+      <span class="home-card-icon">🖥️</span>
+      <span class="home-card-title">画面遷移</span>
+      <span class="home-card-desc">システム画面の遷移フローを視覚的に確認できます。操作手順の確認・説明に活用できます。
+      </span>
+      <span class="home-card-arrow">開く →</span>
+    </a>
+
+    <!-- 管理画面 -->
+    <a class="home-card admin-card" onclick="openNamedTab('admin.html','adminTab')" href="javascript:void(0)">
+      <span class="home-card-icon">⚙️</span>
+      <span class="home-card-title">管理画面</span>
+      <span class="home-card-desc">スクリプト・メールテンプレート・画面フローのデータ編集・追加・削除を行います。
+      </span>
+      <span class="home-card-arrow">開く →</span>
+    </a>
+
+  </div>
+</main>
+</div>
+
+<footer class="home-footer">各ページはタブで開きます。複数ページを同時に使えます。</footer>
+
+<script>
+  // ===== お知らせの読み込み =====
+  // 本文の取得元（優先順）
+  //   ① ★お知らせ★.js の window.APP_NOTICE（file:// でも確実に読める）
+  //   ② ★お知らせ★.txt を fetch（http(s) 配信時）
+  //   ③ ★お知らせ★.txt を iframe で埋め込み表示（file:// の最終手段）
+  //
+  // 更新日時の取得元（優先順）
+  //   ⓐ window.APP_NOTICE_DATE（手動指定があれば最優先）
+  //   ⓑ File System Access のフォルダ接続経由でファイルの実際の更新日時
+  //   ⓒ fetch の Last-Modified ヘッダ
+  //   ⓓ 本文中の最も新しい日付（【2026/08/07】など）
+  //   ※ file:// では ⓑ が使えない場合 ⓓ になる。JS からローカルファイルの
+  //     更新日時を直接読む手段が他に無いため。
+  (function loadNotice() {
+    var FILE_TXT = '★お知らせ★.txt';
+    var FILE_JS  = '★お知らせ★.js';
+    var box  = document.getElementById('homeNotice');
+    var body = document.getElementById('homeNoticeBody');
+    var dateEl = document.getElementById('homeNoticeDate');
+    if (!box || !body) return;
+
+    function fmt(d) {
+      if (!d || isNaN(d)) return '';
+      var p = function (n) { return String(n).padStart(2, '0'); };
+      return '更新 ' + d.getFullYear() + '/' + p(d.getMonth() + 1) + '/' + p(d.getDate());
+    }
+
+    /** 本文から最も新しい日付を拾う（2026/08/07・2026-8-7・2026年8月7日 に対応） */
+    function newestDateIn(text) {
+      var re = /(20\d{2})\s*[\/\-年.]\s*(\d{1,2})\s*[\/\-月.]\s*(\d{1,2})/g, m, best = null;
+      while ((m = re.exec(text)) !== null) {
+        var d = new Date(+m[1], +m[2] - 1, +m[3]);
+        if (!isNaN(d) && (!best || d > best)) best = d;
+      }
+      return best;
+    }
+
+    /** 接続フォルダ経由でファイルの実際の更新日時を取る（Chrome / Edge） */
+    function fileMtime(name) {
+      if (!window.AppFS || !window.AppFS.isSupported()) return Promise.resolve(null);
+      // 権限ダイアログは出さない（ページを開いただけで許可を求めない）
+      return window.AppFS.ensure(false).then(function (dir) {
+        if (!dir) return null;
+        return dir.getFileHandle(name, { create: false })
+          .then(function (fh) { return fh.getFile(); })
+          .then(function (f) { return f.lastModified ? new Date(f.lastModified) : null; })
+          .catch(function () { return null; });
+      }).catch(function () { return null; });
+    }
+
+    function setDate(text, headerLastMod) {
+      // ⓐ 手動指定が最優先
+      if (window.APP_NOTICE_DATE) {
+        var manual = new Date(window.APP_NOTICE_DATE);
+        if (!isNaN(manual)) { if (dateEl) dateEl.textContent = fmt(manual); return; }
+      }
+      // ⓑ 実ファイルの更新日時
+      fileMtime(FILE_JS).then(function (d) {
+        if (!d) return fileMtime(FILE_TXT);
+        return d;
+      }).then(function (d) {
+        // ⓒ fetch の Last-Modified
+        if (!d && headerLastMod) {
+          var h = new Date(headerLastMod);
+          if (!isNaN(h)) d = h;
+        }
+        // ⓓ 本文中の最新日付
+        if (!d) d = newestDateIn(text || '');
+        if (dateEl) dateEl.textContent = fmt(d);
+      });
+    }
+
+    function showText(text, headerLastMod) {
+      var t = String(text || '').replace(/^\uFEFF/, '').replace(/\r\n?/g, '\n').trim();
+      if (!t) return false;
+      body.textContent = t;
+      setDate(t, headerLastMod);
+      box.classList.remove('is-empty');
+      return true;
+    }
+
+    // ③ iframe による埋め込み表示（file:// 用の最終手段）
+    function embed() {
+      var fr = document.createElement('iframe');
+      fr.className = 'home-notice-embed';
+      fr.src = encodeURI(FILE_TXT);
+      body.textContent = '';
+      body.style.maxHeight = 'none';
+      body.appendChild(fr);
+      setDate('', null);   // 本文は読めないのでファイル日時のみ試す
+      box.classList.remove('is-empty');
+    }
+
+    // ① ★お知らせ★.js
+    if (typeof window.APP_NOTICE === 'string' && window.APP_NOTICE.trim()) {
+      if (showText(window.APP_NOTICE)) return;
+    }
+
+    // ② fetch（http(s) 配信時のみ成功）
+    try {
+      fetch(FILE_TXT, { cache: 'no-store' })
+        .then(function (r) {
+          if (!r.ok) throw new Error('HTTP ' + r.status);
+          var lm = r.headers.get('last-modified');
+          return r.text().then(function (t) { if (!showText(t, lm)) box.classList.add('is-empty'); });
+        })
+        .catch(embed);
+    } catch (e) { embed(); }
+  })();
+
+  (function() {
+    var DAYS = ['日','月','火','水','木','金','土'];
+    function updateClock() {
+      var d = new Date();
+      var p = function(n){ return String(n).padStart(2,'0'); };
+      document.getElementById('homeClock').textContent =
+        d.getFullYear() + '/' + p(d.getMonth()+1) + '/' + p(d.getDate()) +
+        '(' + DAYS[d.getDay()] + ') ' +
+        p(d.getHours()) + ':' + p(d.getMinutes()) + ':' + p(d.getSeconds());
+    }
+    updateClock();
+    setInterval(updateClock, 1000);
+  })();
+</script>
+</body>
+</html>
