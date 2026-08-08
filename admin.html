@@ -1694,6 +1694,7 @@ html[data-theme="dark"] .nav-arrow-btn { background: rgba(40,42,54,.9); }
         <div style="font-size:10px;color:var(--text3);line-height:1.7;margin-bottom:7px;">
           画像は <strong>screen-images/</strong> の実ファイル、設定は <strong>screen-data.js</strong> に保存されます。
         </div>
+        <button class="btn btn-secondary" style="font-size:10px;width:100%;margin-bottom:5px;" onclick="scrCheckImages()" title="画像ファイルが実在するか点検します">🩺 画像ファイルを点検</button>
         <button class="btn btn-secondary" style="font-size:10px;width:100%;" onclick="scrInitV2()" title="画面遷移データをすべて削除して作り直します">🗑 画面遷移データを初期化</button>
       </div>
     </aside>
@@ -5219,20 +5220,56 @@ function imgLibGet(libId) {
 }
 
 /** 画像を追加する。ファイルを書き出してから images[] に登録する */
+/**
+ * 画像を追加する。実ファイルを書き出してから images[] に登録する。
+ * 書き込めなかった場合はライブラリにも登録しない（存在しないファイルを
+ * 指すエントリが残ると、一覧には出るのに表示されない状態になるため）。
+ */
 function imgLibPut(dataUrl, name) {
   var v = v2Load();
   var id   = _v2NewId('img');
   var blob = window.dataUrlToBlob(dataUrl);
-  var ext  = blob ? window.mimeToExt(blob.type) : 'png';
+  if (!blob) return Promise.reject(new Error('画像を読み取れませんでした'));
+  var ext  = window.mimeToExt(blob.type);
   var file = SCREEN_IMG_DIR + '/' + id + '.' + ext;
 
-  var w = blob ? window.AppFS.writeBinary(file, blob, false) : Promise.resolve(false);
-  return w.then(function(ok) {
-    if (!ok) throw new Error('画像を書き込めませんでした。保存先フォルダを接続してください。');
+  return _v2EnsureFolder().then(function() {
+    return window.AppFS.writeBinary(file, blob, false);
+  }).then(function(ok) {
+    if (!ok) throw new Error('保存先フォルダに書き込めませんでした');
     v.images.push({ id: id, name: name || id, file: file, dataUrl: file, hotspots: [] });
     markDirty();
     return 'lib:' + id;
+  }).catch(function(e) {
+    _v2WarnNoFolder(e);
+    throw e;
   });
+}
+
+/** 保存先フォルダを1度だけ確保する（未接続なら接続を促す） */
+var _v2FolderPromise = null;
+function _v2EnsureFolder() {
+  if (!window.AppFS || !window.AppFS.isSupported()) {
+    return Promise.reject(new Error('この機能は Chrome / Edge が必要です'));
+  }
+  if (_v2FolderPromise) return _v2FolderPromise;
+  _v2FolderPromise = window.AppFS.ensure(true).then(function(dir) {
+    if (!dir) { _v2FolderPromise = null; throw new Error('保存先フォルダが接続されていません'); }
+    return dir;
+  }).catch(function(e) { _v2FolderPromise = null; throw e; });
+  return _v2FolderPromise;
+}
+
+/** 画像を書き込めなかったことを一度だけ知らせる */
+var _v2WarnedNoFolder = false;
+function _v2WarnNoFolder(e) {
+  console.error('[画像登録] 失敗:', e);
+  if (_v2WarnedNoFolder) return;
+  _v2WarnedNoFolder = true;
+  setTimeout(function() { _v2WarnedNoFolder = false; }, 3000);
+  alert('❌ 画像を保存できませんでした\n\n' + (e && e.message || e) +
+        '\n\n画像は screen-images/ フォルダに実ファイルとして保存します。\n' +
+        '「💾 保存して反映」から保存先フォルダを接続してください。');
 }
 
 /** 同じ画像が既にあれば再利用する（ファイル名ベースで判定） */
@@ -5325,6 +5362,16 @@ function v2ExpandPatterns() {
 }
 
 /** ビューモデル → v2（disabledHs だけを書き戻す） */
+/** 画面から画像IDを取り出す。imageSrc が 'lib:xxx' 形式でも拾えるようにする */
+function _v2ScreenImageId(sc) {
+  if (sc.imageId) return sc.imageId;
+  var src = sc.imageSrc || '';
+  if (src.indexOf('lib:') === 0) return src.slice(4);
+  // 実ファイルのパスから逆引きする
+  var hit = v2Load().images.find(function(i) { return i.file === src; });
+  return hit ? hit.id : null;
+}
+
 function v2CollapsePatterns(view) {
   var v = v2Load();
   v.patterns = (view || []).map(function(p) {
@@ -5333,7 +5380,7 @@ function v2CollapsePatterns(view) {
       screens: (p.screens || []).map(function(sc) {
         return {
           id: sc.id, name: sc.name || '', note: sc.note || '',
-          imageId: sc.imageId || null,
+          imageId: _v2ScreenImageId(sc),
           disabledHs: (sc.hotspots || [])
             .filter(function(h) { return h.enabled === false; })
             .map(function(h) { return h.id; })
@@ -5372,6 +5419,54 @@ function v2Save() {
   return window.AppFS.writeText('screen-data.js', js, false).then(function(ok) {
     if (!ok) throw new Error('screen-data.js を書き込めませんでした');
     return 'file';
+  });
+}
+
+/**
+ * 画像ファイルが実在するか点検する。
+ * 一覧には出るのに表示されない、という状態の原因を特定するために使う。
+ */
+function scrCheckImages() {
+  var v = v2Load();
+  if (!v.images.length) { alert('画像が登録されていません。'); return; }
+  if (!window.AppFS || !window.AppFS.isSupported()) {
+    alert('この機能は Chrome / Edge が必要です。'); return;
+  }
+  window.AppFS.ensure(true).then(function(dir) {
+    if (!dir) throw new Error('保存先フォルダが接続されていません');
+    return window.AppFS.listFiles(SCREEN_IMG_DIR);
+  }).then(function(names) {
+    var have = {};
+    (names || []).forEach(function(n) { have[SCREEN_IMG_DIR + '/' + n] = 1; });
+    var missing = v.images.filter(function(i) { return !have[i.file]; });
+
+    if (!missing.length) {
+      alert('✅ 画像ファイルはすべて揃っています（' + v.images.length + ' 件）');
+      return;
+    }
+    var msg = '⚠️ ' + missing.length + ' 件の画像ファイルが見つかりません。\n\n' +
+      missing.slice(0, 10).map(function(i) { return '・' + i.name + '（' + i.file + '）'; }).join('\n') +
+      (missing.length > 10 ? '\n…ほか ' + (missing.length - 10) + ' 件' : '') +
+      '\n\nフォルダ未接続のまま取り込むと、この状態になります。\n' +
+      'これらのエントリを一覧から削除しますか？（画像を登録し直してください）';
+    if (!confirm(msg)) return;
+
+    var ids = {};
+    missing.forEach(function(i) { ids[i.id] = 1; });
+    v.images = v.images.filter(function(i) { return !ids[i.id]; });
+    v.patterns.forEach(function(p) {
+      p.screens = (p.screens || []).filter(function(sc) { return !ids[sc.imageId]; });
+    });
+    if (typeof screenPatterns !== 'undefined') {
+      screenPatterns.forEach(function(p) {
+        p.screens = (p.screens || []).filter(function(sc) { return !ids[_v2ScreenImageId(sc)]; });
+      });
+    }
+    markDirty();
+    _imgLibRender(); scrRenderUnifiedSidebar(); _scrUpdateCenterCanvas(); _scrUpdateRightSidebar();
+    toast('🧹 ' + missing.length + ' 件を削除しました');
+  }).catch(function(e) {
+    alert('❌ 点検に失敗しました\n\n' + (e && e.message || e));
   });
 }
 
@@ -10659,6 +10754,8 @@ function _v2ResolveTargetsInPattern(pat) {
 
   var imgToScr = {};
   (pat.screens || []).forEach(function(sc) {
+    // 'lib:xxx' でしか設定されていない画面もここで imageId に正規化する
+    if (!sc.imageId) sc.imageId = _v2ScreenImageId(sc);
     if (sc.imageId && !imgToScr[sc.imageId]) imgToScr[sc.imageId] = sc.id;
   });
 
