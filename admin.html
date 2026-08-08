@@ -1694,6 +1694,7 @@ html[data-theme="dark"] .nav-arrow-btn { background: rgba(40,42,54,.9); }
         <div style="font-size:10px;color:var(--text3);line-height:1.7;margin-bottom:7px;">
           画像は <strong>screen-images/</strong> の実ファイル、設定は <strong>screen-data.js</strong> に保存されます。
         </div>
+        <button class="btn btn-secondary" style="font-size:10px;width:100%;margin-bottom:5px;" onclick="scrDiagnose()" title="画像が表示されない原因を調べます">🔎 診断</button>
         <button class="btn btn-secondary" style="font-size:10px;width:100%;margin-bottom:5px;" onclick="scrCheckImages()" title="画像ファイルが実在するか点検します">🩺 画像ファイルを点検</button>
         <button class="btn btn-secondary" style="font-size:10px;width:100%;" onclick="scrInitV2()" title="画面遷移データをすべて削除して作り直します">🗑 画面遷移データを初期化</button>
       </div>
@@ -5515,6 +5516,87 @@ function scrCheckImages() {
     });
   }).catch(function(e) {
     alert('❌ 点検に失敗しました\n\n' + (e && e.message || e));
+  });
+}
+
+/**
+ * 画像が表示されない原因を切り分ける。
+ * 「フォルダにファイルはあるのに img が読めない」場合、
+ * 接続フォルダと HTML の置き場所が違うことが多い。
+ */
+function scrDiagnose() {
+  var v = v2Load();
+  var lines = [];
+  var pageUrl = location.href;
+  var pageDir = pageUrl.replace(/[^\/]*$/, '');
+
+  lines.push('【ページの場所】');
+  lines.push('  ' + pageDir);
+  lines.push('');
+  lines.push('【登録エントリ】 ' + v.images.length + ' 件');
+  v.images.slice(0, 3).forEach(function(i) { lines.push('  ' + i.name + ' → ' + i.file); });
+  if (v.images.length > 3) lines.push('  …ほか ' + (v.images.length - 3) + ' 件');
+  lines.push('');
+
+  if (!window.AppFS || !window.AppFS.isSupported()) {
+    lines.push('【フォルダ接続】 非対応ブラウザ');
+    alert(lines.join('\n')); return;
+  }
+
+  window.AppFS.status().then(function(st) {
+    lines.push('【フォルダ接続】 ' + (st === 'granted' ? '接続中：' + (window.AppFS.dirName() || '?')
+              : st === null ? '未接続' : st));
+    return window.AppFS.ensure(true);
+  }).then(function(dir) {
+    if (!dir) throw new Error('フォルダが接続されていません');
+    lines.push('  フォルダ名：' + dir.name);
+    // このフォルダに HTML があるか＝正しいフォルダかを確認する
+    return Promise.all([
+      dir.getFileHandle('admin.html', { create: false }).then(function(){ return true; }).catch(function(){ return false; }),
+      dir.getFileHandle('screen-data.js', { create: false }).then(function(){ return true; }).catch(function(){ return false; }),
+      window.AppFS.listFiles(SCREEN_IMG_DIR)
+    ]);
+  }).then(function(r) {
+    var hasHtml = r[0], hasData = r[1], files = r[2] || [];
+    lines.push('  admin.html あり：' + (hasHtml ? 'はい' : '★いいえ'));
+    lines.push('  screen-data.js あり：' + (hasData ? 'はい' : '★いいえ'));
+    lines.push('  screen-images/ の画像：' + files.length + ' 件');
+    files.slice(0, 3).forEach(function(n) { lines.push('    ' + n); });
+    lines.push('');
+
+    if (!hasHtml) {
+      lines.push('⚠️ 接続フォルダに admin.html がありません。');
+      lines.push('　 HTML が置いてあるフォルダとは別の場所に接続しています。');
+      lines.push('　 画像は相対パスで読むため、この状態では表示されません。');
+      lines.push('　「💾 保存して反映」→「📁 フォルダを変更」で選び直してください。');
+      alert(lines.join('\n')); return;
+    }
+
+    // 実際に img で読めるか試す
+    if (!v.images.length) { lines.push('（登録画像が無いため読み込みテストは省略）'); alert(lines.join('\n')); return; }
+    var target = v.images[0];
+    return new Promise(function(resolve) {
+      var im = new Image();
+      var done = false;
+      var fin = function(ok, why) { if (done) return; done = true; resolve({ ok: ok, why: why, file: target.file }); };
+      im.onload  = function() { fin(true, im.naturalWidth + '×' + im.naturalHeight); };
+      im.onerror = function() { fin(false, '読み込みエラー'); };
+      setTimeout(function() { fin(false, 'タイムアウト'); }, 4000);
+      im.src = target.file;
+    }).then(function(res) {
+      lines.push('【読み込みテスト】 ' + res.file);
+      lines.push('  ' + (res.ok ? '✅ 成功（' + res.why + '）' : '❌ 失敗（' + res.why + '）'));
+      if (!res.ok) {
+        lines.push('');
+        lines.push('　ファイルはフォルダにあるのに読めない場合、');
+        lines.push('　接続フォルダと HTML の場所が一致していない可能性があります。');
+      }
+      alert(lines.join('\n'));
+    });
+  }).catch(function(e) {
+    lines.push('');
+    lines.push('❌ ' + (e && e.message || e));
+    alert(lines.join('\n'));
   });
 }
 
