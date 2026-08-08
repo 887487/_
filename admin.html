@@ -6885,7 +6885,15 @@ var _imgLibHsPan  = null;   // Alt+ドラッグによる画像移動の状態
  */
 function _imgLibHsActivate(item) {
   _imgLibHsItem = item;
-  _imgLibHsList = JSON.parse(JSON.stringify(item.hotspots || []));
+  // v2 の target を編集用フィールド（targetType / targetLibId / targetUrl）へ展開
+  _imgLibHsList = (item.hotspots || []).map(function(h) {
+    var t = h.target || {};
+    var c = JSON.parse(JSON.stringify(h));
+    if (t.type === 'image') { c.targetType = 'lib'; c.targetLibId = t.imageId || ''; }
+    else if (t.type === 'url') { c.targetType = 'url'; c.targetUrl = t.url || ''; }
+    else { c.targetType = 'none'; }
+    return c;
+  });
   var empty  = document.getElementById('imgLibHsEmpty');
   var editor = document.getElementById('imgLibHsEditor');
   var pName  = document.getElementById('imgLibHsPaneName');
@@ -7382,26 +7390,7 @@ function _scrResolveLibTarget(pat, self, lh) {
  * 全ライブラリ画像の遷移先を、全パターンに対して解決し直す。
  * 画面を追加・削除した直後に呼ぶことで、後から追加した画面へのリンクが張られる。
  */
-function _scrReresolveAllLibTargets(cb) {
-  imgLibGetAll().then(function(items) {
-    var byId = {};
-    (items || []).forEach(function(it) { byId[it.id] = it; });
-
-    screenPatterns.forEach(function(p) {
-      (p.screens || []).forEach(function(s) {
-        (s.hotspots || []).forEach(function(h) {
-          if (!h.libHsId || !h.libTargetId) return;
-          var lh = { targetType: 'lib', targetLibId: h.libTargetId };
-          var r = _scrResolveLibTarget(p, s, lh);
-          h.targetId = r.targetId;
-          h.targetType = r.targetType;
-          h.libUnresolved = r.unresolved;
-        });
-      });
-    });
-    if (typeof cb === 'function') cb();
-  }).catch(function() { if (typeof cb === 'function') cb(); });
-}
+// v2 版に置き換え済み
 
 /** 画面 s が libRef（"lib:xxx"）の画像を使っているか（バリエーション含む） */
 function _scrScreenUsesLib(s, libRef) {
@@ -7604,35 +7593,45 @@ function _imgLibHsUpdateLinkBar() {
 
 function _imgLibHsSave(cb, silent) {
   if (!_imgLibHsItem) { if (typeof cb === 'function') cb(); return; }
-  // 保存前に全HSへIDを補完（＜＞で連続登録した分もIDを持つ）
+
+  // 全HSへIDを補完（＜＞で連続登録した分も含む）
   _imgLibHsList.forEach(function(h) {
     if (!h.id) h.id = 'lhs' + Math.random().toString(36).substr(2, 9);
   });
-  _imgLibOpen().then(function(db) {
-    var tx = db.transaction('imageLib','readwrite');
-    var req = tx.objectStore('imageLib').get(_imgLibHsItem.id);
-    req.onsuccess = function(e) {
-      var rec = e.target.result; if (!rec) return;
-      rec.hotspots = JSON.parse(JSON.stringify(_imgLibHsList));
-      tx.objectStore('imageLib').put(rec, _imgLibHsItem.id);
-    };
-    tx.oncomplete = function() {
-      _imgLibHsItem.hotspots = JSON.parse(JSON.stringify(_imgLibHsList));
-      var cached = _imgLibAllItems.find(function(x){ return x.id === _imgLibHsItem.id; });
-      if (cached) cached.hotspots = _imgLibHsItem.hotspots;
-      // セットは1画面扱いなので、同一セットの全画像へホットスポットを共有する
-      _imgLibPropagateHsToSet(_imgLibHsItem);
-      // この画像にリンクしている他画像へも反映する
-      _imgLibPropagateHsToLinked(_imgLibHsItem);
-      var synced = _imgLibSyncHsToPatterns(_imgLibHsItem);
-      if (!silent) {
-        toast('✅ ホットスポットを保存しました（' + _imgLibHsList.length + '件）'
-          + (synced > 0 ? '　画面 ' + synced + '件に同期' : ''));
-      }
-      _imgLibFilter(); // ボタン表示を更新
-      if (typeof cb === 'function') cb();
+
+  // v2：ホットスポットは画像が唯一の正。images[] に直接書くだけでよい。
+  // 画面側へのコピーや同期は不要（表示時に画像から展開する）。
+  var v = v2Load();
+  var img = v.images.find(function(x) { return x.id === _imgLibHsItem.id; });
+  var saved = _imgLibHsList.map(function(h) {
+    return {
+      id: h.id, x: h.x, y: h.y, w: h.w, h: h.h,
+      note: h.note || '',
+      target: _v2TargetFromEditor(h),
+      mailBtnTargets: h.mailBtnTargets || []
     };
   });
+  if (img) img.hotspots = saved;
+  _imgLibHsItem.hotspots = saved;
+
+  // 開いているパターンの表示を更新する
+  _scrReresolveAllLibTargets();
+  markDirty();
+
+  if (!silent) toast('✅ ホットスポットを保存しました（' + saved.length + '件）');
+  _imgLibFilter();
+  scrRenderUnifiedSidebar();
+  _scrUpdateCenterCanvas();
+  _scrUpdateRightSidebar();
+  if (typeof cb === 'function') cb();
+}
+
+/** 編集中のHS（targetType / targetLibId / targetUrl）→ v2 の target 形式 */
+function _v2TargetFromEditor(h) {
+  var t = h.targetType || (h.targetLibId ? 'lib' : (h.targetUrl ? 'url' : 'none'));
+  if (t === 'lib' && h.targetLibId) return { type: 'image', imageId: h.targetLibId };
+  if (t === 'url' && h.targetUrl)   return { type: 'url', url: h.targetUrl };
+  return { type: 'none' };
 }
 
 /**
@@ -10592,54 +10591,104 @@ function _scrAddScreensFromLibItemsInner(patId, items, silent, allItems) {
   var pat = screenPatterns.find(function(p) { return p.id === patId; });
   if (!pat) { toast('❌ 追加先のパターンが見つかりません'); return; }
 
-  // ── ① 渡された items を IndexedDB の最新レコードで作り直す ──
-  // 呼び出し元は _imgLibAllItems（メモリキャッシュ）から拾った参照を渡してくるが、
-  // セット化の直後などはこのオブジェクトに setId が付いていないことがある。
-  // 古いオブジェクトのままだとセットとして認識されず、1枚＝1画面で追加されてしまう。
+  // 渡された items をライブラリの最新レコードで作り直す
   var byId = {};
-  allItems.forEach(function(x) { byId[x.id] = x; });
+  (allItems || []).forEach(function(x) { byId[x.id] = x; });
   items = (items || []).map(function(it) { return byId[it.id] || it; });
 
-  // ── ② 1画像＝1画面（セット機能は廃止） ──
-  var seenId = {}, order = [];
+  // 1画像＝1画面。名前順（0→9 / a→z / あ→お）に並べて追加する
+  var seen = {}, targets = [];
   items.forEach(function(it) {
-    if (seenId[it.id]) return;
-    seenId[it.id] = true;
-    order.push({ items: [it] });
+    if (!it || seen[it.id]) return;
+    seen[it.id] = true;
+    targets.push(it);
+  });
+  targets.sort(function(a, b) {
+    return _imgLibCollator.compare(String(a.name || ''), String(b.name || ''));
   });
 
   var firstId = null;
-  order.forEach(function(g) {
-    g.items.sort(function(a, b) {
-      var d = (a.setOrder || 0) - (b.setOrder || 0);
-      if (d !== 0) return d;
-      return String(a.name || '').localeCompare(String(b.name || ''), 'ja', { numeric: true });
-    });
-    var primary = g.items[0];
+  targets.forEach(function(img) {
+    // v2：画面は imageId で画像を参照する。
+    // imageSrc はビュー用の実パスで、保存時は使われない。
     var scr = {
       id: _scrGenId(),
-      name: (g.items.length > 1 ? (primary.setName || primary.name) : primary.name),
+      name: img.name || '',
       note: '',
-      imageSrc: 'lib:' + primary.id,
-      hotspots: (primary.hotspots || []).map(_scrHsFromLib)
+      imageId: img.id,
+      imageSrc: img.file || img.dataUrl || '',
+      // ホットスポットは画像側が正。ここでは表示用に展開しておく
+      hotspots: (img.hotspots || []).map(function(h) {
+        var t = h.target || { type: 'none' };
+        return {
+          id: h.id, libHsId: h.id,
+          x: h.x, y: h.y, w: h.w, h: h.h,
+          note: h.note || '',
+          targetId: t.type === 'url' ? (t.url || '') : '',
+          targetType: t.type === 'url' ? 'url' : 'screen',
+          enabled: true,
+          mailBtnTargets: []
+        };
+      })
     };
-    if (g.items.length > 1) {
-      scr.variants = g.items.map(function(it) {
-        return { src: 'lib:' + it.id, label: it.setLabel || it.name || '' };
-      });
-    }
     pat.screens.push(scr);
     if (!firstId) firstId = scr.id;
   });
 
-  // 画像ライブラリで固定化された遷移先を、追加後の画面構成で解決し直す
-  _scrReresolveAllLibTargets(function() {
-    scrSaveIndex(); scrSaveData(); markDirty();
-    _scrCurrentPatId = patId;
-    scrRenderUnifiedSidebar();
-    if (firstId) scrSelectScreen(firstId);
-    if (!silent) toast('✅ ' + order.length + ' 画面を追加しました');
+  // 追加後の画面構成で、画像側の遷移先を画面IDへ解決し直す
+  _v2ResolveTargetsInPattern(pat);
+
+  markDirty();
+  _scrCurrentPatId = patId;
+  scrRenderUnifiedSidebar();
+  if (firstId) scrSelectScreen(firstId);
+  _scrUpdateCenterCanvas();
+  _scrUpdateRightSidebar();
+  if (!silent) toast('✅ ' + targets.length + ' 画面を追加しました');
+}
+
+/**
+ * パターン内の画面について、画像側の遷移先（imageId）を
+ * 実際の画面ID へ解決し直す。画面の追加・削除のたびに呼ぶ。
+ */
+function _v2ResolveTargetsInPattern(pat) {
+  if (!pat) return;
+  var v = v2Load();
+  var imgById = {};
+  v.images.forEach(function(i) { imgById[i.id] = i; });
+
+  var imgToScr = {};
+  (pat.screens || []).forEach(function(sc) {
+    if (sc.imageId && !imgToScr[sc.imageId]) imgToScr[sc.imageId] = sc.id;
   });
+
+  (pat.screens || []).forEach(function(sc) {
+    var img = imgById[sc.imageId];
+    if (!img) return;
+    var off = {};
+    (sc.hotspots || []).forEach(function(h) { if (h.enabled === false) off[h.id] = 1; });
+
+    sc.imageSrc = img.file;
+    sc.hotspots = (img.hotspots || []).map(function(h) {
+      var t = h.target || { type: 'none' };
+      return {
+        id: h.id, libHsId: h.id,
+        x: h.x, y: h.y, w: h.w, h: h.h,
+        note: h.note || '',
+        targetId:   t.type === 'url' ? (t.url || '') : (imgToScr[t.imageId] || ''),
+        targetType: t.type === 'url' ? 'url' : 'screen',
+        libUnresolved: t.type === 'image' && !imgToScr[t.imageId],
+        enabled: !off[h.id],
+        mailBtnTargets: h.mailBtnTargets || []
+      };
+    });
+  });
+}
+
+/** 全パターンについて遷移先を解決し直す */
+function _scrReresolveAllLibTargets(cb) {
+  (screenPatterns || []).forEach(_v2ResolveTargetsInPattern);
+  if (typeof cb === 'function') cb();
 }
 
 /** 選択中のライブラリ画像を現在のパターンへ画面として追加する */
