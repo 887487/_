@@ -5239,6 +5239,7 @@ function imgLibPut(dataUrl, name) {
     if (!ok) throw new Error('保存先フォルダに書き込めませんでした');
     v.images.push({ id: id, name: name || id, file: file, dataUrl: file, hotspots: [] });
     markDirty();
+    _v2AutoSave();      // エントリが失われないよう即座に永続化する
     return 'lib:' + id;
   }).catch(function(e) {
     _v2WarnNoFolder(e);
@@ -5298,6 +5299,7 @@ function imgLibDelete(libId) {
   });
 
   markDirty();
+  _v2AutoSave();
   return it ? window.AppFS.removeFile(it.file).catch(function() {}) : Promise.resolve();
 }
 
@@ -5394,6 +5396,21 @@ function idbGetScreenData() { return Promise.resolve(v2ExpandPatterns()); }
 function idbSetScreenData() { return Promise.resolve(); }
 function _idbPutScreenPatterns() { return Promise.resolve(); }
 
+/**
+ * 画像の増減を screen-data.js へ自動反映する。
+ * 「保存して反映」を押す前にリロードすると、ファイルだけ残って
+ * エントリが消える（＝一覧に出ないのに画像が残る）状態になるため。
+ * 連続追加をまとめるため少し遅らせて1回だけ書く。
+ */
+var _v2AutoSaveTimer = null;
+function _v2AutoSave() {
+  if (_v2AutoSaveTimer) clearTimeout(_v2AutoSaveTimer);
+  _v2AutoSaveTimer = setTimeout(function() {
+    _v2AutoSaveTimer = null;
+    v2Save().catch(function(e) { console.warn('[自動保存] 失敗:', e); });
+  }, 400);
+}
+
 /** screen-data.js を書き出す（保存の唯一の出口） */
 function v2Save() {
   var v = v2Load();
@@ -5427,44 +5444,75 @@ function v2Save() {
  * 一覧には出るのに表示されない、という状態の原因を特定するために使う。
  */
 function scrCheckImages() {
-  var v = v2Load();
-  if (!v.images.length) { alert('画像が登録されていません。'); return; }
   if (!window.AppFS || !window.AppFS.isSupported()) {
     alert('この機能は Chrome / Edge が必要です。'); return;
   }
+  var v = v2Load();
+
   window.AppFS.ensure(true).then(function(dir) {
     if (!dir) throw new Error('保存先フォルダが接続されていません');
     return window.AppFS.listFiles(SCREEN_IMG_DIR);
   }).then(function(names) {
+    names = names || [];
     var have = {};
-    (names || []).forEach(function(n) { have[SCREEN_IMG_DIR + '/' + n] = 1; });
+    names.forEach(function(n) { have[SCREEN_IMG_DIR + '/' + n] = 1; });
+
+    var used = {};
+    v.images.forEach(function(i) { used[i.file] = 1; });
+
+    // 登録はあるがファイルが無い（＝表示されない）
     var missing = v.images.filter(function(i) { return !have[i.file]; });
+    // ファイルはあるが登録が無い（＝保存前にリロードした等で迷子になったもの）
+    var orphans = names.filter(function(n) { return !used[SCREEN_IMG_DIR + '/' + n]; });
 
-    if (!missing.length) {
-      alert('✅ 画像ファイルはすべて揃っています（' + v.images.length + ' 件）');
-      return;
+    var msg = '📊 点検結果\n\n' +
+      '登録エントリ　　' + v.images.length + ' 件\n' +
+      'フォルダ内の画像　' + names.length + ' 件\n' +
+      '　├ 表示できない（ファイル無し）　' + missing.length + ' 件\n' +
+      '　└ 未登録（ファイルのみ）　　　　' + orphans.length + ' 件';
+
+    if (!missing.length && !orphans.length) { alert(msg + '\n\n✅ 問題ありません'); return; }
+
+    if (orphans.length) {
+      msg += '\n\n未登録の画像を一覧に取り込みますか？\n' +
+             orphans.slice(0, 10).map(function(n) { return '・' + n; }).join('\n') +
+             (orphans.length > 10 ? '\n…ほか ' + (orphans.length - 10) + ' 件' : '');
     }
-    var msg = '⚠️ ' + missing.length + ' 件の画像ファイルが見つかりません。\n\n' +
-      missing.slice(0, 10).map(function(i) { return '・' + i.name + '（' + i.file + '）'; }).join('\n') +
-      (missing.length > 10 ? '\n…ほか ' + (missing.length - 10) + ' 件' : '') +
-      '\n\nフォルダ未接続のまま取り込むと、この状態になります。\n' +
-      'これらのエントリを一覧から削除しますか？（画像を登録し直してください）';
-    if (!confirm(msg)) return;
+    if (missing.length) {
+      msg += '\n\n※ ファイルが無いエントリ ' + missing.length + ' 件は一覧から削除します。';
+    }
+    if (!confirm(msg + '\n\n実行しますか？')) return;
 
-    var ids = {};
-    missing.forEach(function(i) { ids[i.id] = 1; });
-    v.images = v.images.filter(function(i) { return !ids[i.id]; });
-    v.patterns.forEach(function(p) {
-      p.screens = (p.screens || []).filter(function(sc) { return !ids[sc.imageId]; });
-    });
-    if (typeof screenPatterns !== 'undefined') {
-      screenPatterns.forEach(function(p) {
-        p.screens = (p.screens || []).filter(function(sc) { return !ids[_v2ScreenImageId(sc)]; });
+    // ① ファイルが無いエントリを削除
+    if (missing.length) {
+      var del = {};
+      missing.forEach(function(i) { del[i.id] = 1; });
+      v.images = v.images.filter(function(i) { return !del[i.id]; });
+      v.patterns.forEach(function(p) {
+        p.screens = (p.screens || []).filter(function(sc) { return !del[sc.imageId]; });
       });
+      if (typeof screenPatterns !== 'undefined') {
+        screenPatterns.forEach(function(p) {
+          p.screens = (p.screens || []).filter(function(sc) { return !del[_v2ScreenImageId(sc)]; });
+        });
+      }
     }
+
+    // ② 未登録のファイルを取り込む（ファイル名から拡張子を除いたものを画像名にする）
+    orphans.forEach(function(n) {
+      var file = SCREEN_IMG_DIR + '/' + n;
+      var base = n.replace(/\.[^.]+$/, '');
+      v.images.push({ id: base, name: base, file: file, dataUrl: file, hotspots: [] });
+    });
+    v.images.sort(function(a, b) {
+      return _imgLibCollator.compare(String(a.name || ''), String(b.name || ''));
+    });
+
     markDirty();
-    _imgLibRender(); scrRenderUnifiedSidebar(); _scrUpdateCenterCanvas(); _scrUpdateRightSidebar();
-    toast('🧹 ' + missing.length + ' 件を削除しました');
+    return v2Save().then(function() {
+      _imgLibRender(); scrRenderUnifiedSidebar(); _scrUpdateCenterCanvas(); _scrUpdateRightSidebar();
+      alert('✅ 修復しました\n\n削除 ' + missing.length + ' 件 / 取り込み ' + orphans.length + ' 件');
+    });
   }).catch(function(e) {
     alert('❌ 点検に失敗しました\n\n' + (e && e.message || e));
   });
