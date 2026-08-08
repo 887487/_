@@ -996,8 +996,71 @@ function _pvInvalidateImgCache() {
   _pvImgCache = {}; _pvRawCache = {}; _pvImgPending = {}; _pvPrefetched = null;
 }
 
+// =============================================================================
+// v2（実ファイル方式）の読み込み
+//   screen-data.js が version:2 なら、それだけで完結する。
+//   ・画像      … images[].file の相対パス
+//   ・HS/遷移先 … images[].hotspots（画像が唯一の正）
+//   ・画面      … imageId で画像を参照し、disabledHs で個別に無効化
+//   IndexedDB もマージ処理も不要。
+// =============================================================================
+var _v2Data = null;
+
+function _v2IsActive() {
+  var sd = window.APP_SCREEN_DATA;
+  return !!(sd && sd.version >= 2 && Array.isArray(sd.images));
+}
+
+/** v2 データを、既存の描画コードが扱える形（画面ごとにHSを展開）へ変換する */
+function _v2BuildPatterns() {
+  if (_v2Data) return _v2Data;
+  var sd = window.APP_SCREEN_DATA;
+  var imgById = {};
+  (sd.images || []).forEach(function(i) { imgById[i.id] = i; });
+
+  // 画像ID → その画像を使う画面ID（パターン内で遷移先を解決するのに使う）
+  _v2Data = (sd.patterns || []).map(function(p) {
+    var imgToScr = {};
+    (p.screens || []).forEach(function(sc) { if (sc.imageId && !imgToScr[sc.imageId]) imgToScr[sc.imageId] = sc.id; });
+
+    return {
+      id: p.id,
+      name: p.name,
+      screens: (p.screens || []).map(function(sc) {
+        var img = imgById[sc.imageId] || null;
+        var off = {};
+        (sc.disabledHs || []).forEach(function(id) { off[id] = 1; });
+
+        return {
+          id: sc.id,
+          name: sc.name || (img ? img.name : ''),
+          note: sc.note || '',
+          imageSrc: img ? img.file : '',
+          hotspots: (img ? img.hotspots : []).map(function(h) {
+            var t = h.target || { type: 'none' };
+            var targetId = '', targetType = 'screen';
+            if (t.type === 'url')        { targetId = t.url || ''; targetType = 'url'; }
+            else if (t.type === 'image') { targetId = imgToScr[t.imageId] || ''; }
+            return {
+              id: h.id, x: h.x, y: h.y, w: h.w, h: h.h,
+              note: h.note || '',
+              targetId: targetId, targetType: targetType,
+              enabled: !off[h.id],
+              mailBtnTargets: h.mailBtnTargets || []
+            };
+          })
+        };
+      })
+    };
+  });
+  return _v2Data;
+}
+
 function idbGetScreenData() {
-  // screen-data.js（構成ファイル）が IDB より新しければそちらを優先する
+  // v2 なら screen-data.js だけで完結する
+  if (_v2IsActive()) return Promise.resolve(_v2BuildPatterns());
+
+  // 以下は旧形式(v1)のための経路
   return (window.initScreenStaticData ? window.initScreenStaticData() : Promise.resolve(null))
     .then(function(staticPats) {
       if (Array.isArray(staticPats) && staticPats.length) return staticPats;
