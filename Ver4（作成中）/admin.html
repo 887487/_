@@ -3510,13 +3510,28 @@ function exportJSON(){
                        '-'+_pad(_now.getHours())+'-'+_pad(_now.getMinutes())+'.json';
 
           // 接続中のフォルダがあれば、保存先を聞かずにそこへ書き出す
-          var _fsTry = window.AppFS.writeBinary(_fname, blob, false)
-            .then(function(okFs) { return !!okFs; })
-            .catch(function() { return false; });
+          // 接続フォルダへの書き出しを試す。
+          // ここで例外や未解決になると進捗表示が出たまま固まるため、
+          // AppFS の有無を確認したうえで、失敗も遅延も必ず握りつぶす。
+          var _fsTry;
+          try {
+            _fsTry = (window.AppFS && window.AppFS.isSupported && window.AppFS.isSupported())
+              ? Promise.resolve(window.AppFS.writeBinary(_fname, blob, false))
+                  .then(function(okFs) { return !!okFs; })
+                  .catch(function() { return false; })
+              : Promise.resolve(false);
+          } catch (e) { _fsTry = Promise.resolve(false); }
+
+          // 保険：5秒応答がなければ従来の保存方法へ進む
+          _fsTry = Promise.race([
+            _fsTry,
+            new Promise(function(res) { setTimeout(function() { res(false); }, 5000); })
+          ]);
 
           _fsTry.then(function(savedToFolder) {
           if (savedToFolder) {
-            _importProgressDone('✅ 接続フォルダに保存しました（' + _fname + ' / ' + sizeMB + 'MB）');
+            _importProgressHide();
+            toast('✅ 接続フォルダに保存しました（' + _fname + ' / ' + sizeMB + ' MB）');
           } else if (window.showSaveFilePicker) {
             window.showSaveFilePicker({
               suggestedName: _fname,
@@ -3549,6 +3564,10 @@ function exportJSON(){
           }
           });   // _fsTry.then
         });
+      }).catch(function(err) {
+        // 圧縮・書き出し中の想定外エラーで「準備中…」が残らないようにする
+        _importProgressHide();
+        toast('❌ エクスポート失敗: ' + (err && err.message || err));
       });
     }).catch(function(err) {
       _importProgressHide();
