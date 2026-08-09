@@ -1,9 +1,9 @@
 // 画面遷移データ — admin.html の「💾 保存して反映」で自動更新されます。
 // 画像は screen-images/ フォルダに実ファイルとして保存されています。
 // library は画像ライブラリの復元用です（別PCでも一覧が再現されます）。
-// 生成日時: 2026-08-09T08:29:50.223Z
+// 生成日時: 2026-08-09T09:27:56.928Z
 window.APP_SCREEN_DATA = {
-  "savedAt": "2026-08-09T08:29:50.223Z",
+  "savedAt": "2026-08-09T09:27:56.928Z",
   "images": {
     "lib00mgrcfnd": "screen-images/lib00mgrcfnd.png",
     "lib0hur66912": "screen-images/lib0hur66912.png",
@@ -6829,225 +6829,225 @@ window.APP_SCREEN_DATA = {
           "id": "scetdrqwao",
           "name": "［S］15.②事業_アカウント管理",
           "note": "",
-          "imageSrc": "lib:lib6k2vr6f8u",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:lib6k2vr6f8u"
         },
         {
           "id": "sc0l1mbyha",
           "name": "16.［S］アカウントプライバシーノーティス_②事業",
           "note": "",
-          "imageSrc": "lib:libhfuuatxf4",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:libhfuuatxf4"
         },
         {
           "id": "sc0jj47vet",
           "name": "16.［S］アカウント情報_②事業",
           "note": "",
-          "imageSrc": "lib:liby9wm6dq7z",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:liby9wm6dq7z"
         },
         {
           "id": "scu2xukoch",
           "name": "16.［S］お住まいの地域_②事業",
           "note": "",
-          "imageSrc": "lib:libt0cnr6kwa",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:libt0cnr6kwa"
         },
         {
           "id": "sc6a9x7nw7",
           "name": "17.［S］アカウント情報_②事業",
           "note": "",
-          "imageSrc": "lib:libj3ojd588m",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:libj3ojd588m"
         },
         {
           "id": "scdosryz1t",
           "name": "18.［S］ID変更_②事業",
           "note": "",
-          "imageSrc": "lib:libog0tdudlj",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:libog0tdudlj"
         },
         {
           "id": "scnpso39qs",
           "name": "18.［S］PW変更_②事業",
           "note": "",
-          "imageSrc": "lib:liby6omghw11",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:liby6omghw11"
         },
         {
           "id": "sckfl74nw0",
           "name": "18.［S］TEL変更_②事業",
           "note": "",
-          "imageSrc": "lib:lib6h9mi36pl",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:lib6h9mi36pl"
         },
         {
           "id": "scjlq0hcfx",
           "name": "18.［S］アカウント削除_②事業 (1)",
           "note": "",
-          "imageSrc": "lib:libbw9ik46rs",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:libbw9ik46rs"
         },
         {
           "id": "schgcs68q6",
           "name": "18.［S］アカウント削除_②事業 (2)",
           "note": "",
-          "imageSrc": "lib:libz8evexv7k",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:libz8evexv7k"
         },
         {
           "id": "scdgtoe7v8",
           "name": "18.［S］アカウント削除_②事業 (3)",
           "note": "",
-          "imageSrc": "lib:libxt6lsu7sg",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:libxt6lsu7sg"
         },
         {
           "id": "sce8yb22d4",
           "name": "18.［S］メアド変更_②事業",
           "note": "",
-          "imageSrc": "lib:libe3nz2bh8l",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:libe3nz2bh8l"
         },
         {
           "id": "scgonlwah6",
           "name": "18.［S］事業所コード・確認キーの管理 ※キー発行前",
           "note": "",
-          "imageSrc": "lib:libdgvu1eknd",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:libdgvu1eknd"
         },
         {
           "id": "scu1x501vf",
           "name": "18.［S］復旧用メアド変更_②事業",
           "note": "",
-          "imageSrc": "lib:lib0oause94n",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:lib0oause94n"
         },
         {
           "id": "scuhlchqg7",
           "name": "19.［オアシス］",
           "note": "",
-          "imageSrc": "lib:lib8hzurebyh",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:lib8hzurebyh"
         },
         {
           "id": "sc5dtcto61",
           "name": "20.［オアシス］ (2)",
           "note": "",
-          "imageSrc": "lib:libcvfzri0x1",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:libcvfzri0x1"
         },
         {
           "id": "sctg61p6d4",
           "name": "21.［オアシス］ (3)",
           "note": "",
-          "imageSrc": "lib:libp6e33ed0y",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:libp6e33ed0y"
         },
         {
           "id": "sc764dw6le",
           "name": "22.［オアシス］ (4)",
           "note": "",
-          "imageSrc": "lib:lib0iangby6p",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:lib0iangby6p"
         },
         {
           "id": "sc0t7j8pcz",
           "name": "23.［オアシス］ (5)",
           "note": "",
-          "imageSrc": "lib:libauojb7ha6",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:libauojb7ha6"
         },
         {
           "id": "scud728lrs",
           "name": "24.［オアシス］ (6)",
           "note": "",
-          "imageSrc": "lib:libtlfwnf9zz",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:libtlfwnf9zz"
         },
         {
           "id": "sc3bl8xjzs",
           "name": "25.［S］事業所コード・確認キーの管理 ※キー発行後",
           "note": "",
-          "imageSrc": "lib:liblmnhxjfxy",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:liblmnhxjfxy"
         },
         {
           "id": "scoklfqak2",
           "name": "①世帯_ご利用情報の初期化（1）",
           "note": "",
-          "imageSrc": "lib:libp17x46sjb",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:libp17x46sjb"
         },
         {
           "id": "sc3g8axy8h",
           "name": "①世帯_ご利用情報の初期化（2）",
           "note": "",
-          "imageSrc": "lib:libywgca6wpa",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:libywgca6wpa"
         },
         {
           "id": "sczu9xuci2",
           "name": "②事業_ご利用情報の初期化（1）",
           "note": "",
-          "imageSrc": "lib:libetc8w0551",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:libetc8w0551"
         },
         {
           "id": "sc53si9wpk",
           "name": "②事業_ご利用情報の初期化（2）",
           "note": "",
-          "imageSrc": "lib:libvulzxzdnx",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:libvulzxzdnx"
         },
         {
           "id": "sc288n1dlk",
           "name": "③学校_ご利用情報の初期化（1）",
           "note": "",
-          "imageSrc": "lib:lib1q8f71v58",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:lib1q8f71v58"
         },
         {
           "id": "sc288zm7uh",
           "name": "③学校_ご利用情報の初期化（2）",
           "note": "",
-          "imageSrc": "lib:libl3ylir5j4",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:libl3ylir5j4"
         },
         {
           "id": "sc94vyxe4h",
           "name": "ご利用情報の初期化_エラー",
           "note": "",
-          "imageSrc": "lib:libf741f02w3",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:libf741f02w3"
         },
         {
           "id": "scm476zj3l",
           "name": "ご利用情報の初期化_完了",
           "note": "",
-          "imageSrc": "lib:libo4b89nuqq",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:libo4b89nuqq"
         },
         {
           "id": "scp73r4e1j",
           "name": "［S］②事業_コード入力（1）",
           "note": "",
-          "imageSrc": "lib:lib7vat03uas",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:lib7vat03uas"
         },
         {
           "id": "scrcfrauj9",
           "name": "［S］③学校_コード入力（1）",
           "note": "",
-          "imageSrc": "lib:libdd1xuc6ud",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:libdd1xuc6ud"
         },
         {
           "id": "scno65ik1b",
           "name": "［S］コード入力_エラー",
           "note": "",
-          "imageSrc": "lib:libfna7guaed",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:libfna7guaed"
         }
       ]
     }

@@ -227,6 +227,17 @@ window.AppFS = (function() {
     });
   }
 
+  /** 空のフォルダを削除する */
+  function removeDir(path) {
+    return ensure(false).then(function(dir) {
+      if (!dir) return false;
+      return _resolvePath(dir, path, false)
+        .then(function(loc) { return loc.dir.removeEntry(loc.name, { recursive: false }); })
+        .then(function() { return true; })
+        .catch(function() { return false; });   // 空でなければ失敗するのでそのまま無視
+    });
+  }
+
   /** ファイルを削除する */
   function removeFile(path) {
     return ensure(false).then(function(dir) {
@@ -250,7 +261,7 @@ window.AppFS = (function() {
   return {
     isSupported: isSupported, status: status, pick: pick, ensure: ensure,
     readText: readText, writeText: writeText, writeBinary: writeBinary,
-    listFiles: listFiles, listDirs: listDirs, removeFile: removeFile,
+    listFiles: listFiles, listDirs: listDirs, removeFile: removeFile, removeDir: removeDir,
     forget: forget, dirName: dirName
   };
 })();

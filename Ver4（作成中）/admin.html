@@ -1551,7 +1551,9 @@ html[data-theme="dark"] .nav-arrow-btn { background: rgba(40,42,54,.9); }
                     style="flex:1;min-width:0;height:28px;font-size:11px;font-family:inherit;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);">
               <option value="">📁 すべて</option>
             </select>
-            <button class="btn btn-secondary" style="font-size:11px;height:28px;padding:0 10px;flex-shrink:0;"
+            <button class="btn btn-secondary" style="font-size:11px;height:28px;padding:0 8px;flex-shrink:0;"
+                    onclick="_imgLibRenameFolder()" title="選択中のフォルダの名前を変更">✏️</button>
+            <button class="btn btn-secondary" style="font-size:11px;height:28px;padding:0 8px;flex-shrink:0;"
                     onclick="document.getElementById('imgLibFolderSel').value='';_imgLibFilter()" title="絞り込みを解除">✕</button>
           </div>
           <!-- 複数選択ツールバー -->
@@ -1701,46 +1703,12 @@ html[data-theme="dark"] .nav-arrow-btn { background: rgba(40,42,54,.9); }
             <textarea class="scr-rs-textarea" id="scrRsMemo" rows="2" placeholder="" oninput="scrRsUpdateMemo()" disabled></textarea>
           </div>
 
-          <!-- スクリーンショット -->
-          <div class="scr-rs-always">
-            <label class="scr-rs-label">スクリーンショット</label>
-            <!-- 画像サイズ -->
-            <div class="scr-size-row">
-              <span class="scr-size-lbl">画像:</span>
-              <input class="scr-size-input" id="scrCropW" type="number" placeholder="幅">
-              <span class="scr-size-lbl">×</span>
-              <input class="scr-size-input" id="scrCropH" type="number" placeholder="高さ">
-              <span class="scr-size-lbl">px</span>
-              <button class="scr-btn-xs primary" onclick="scrApplyResize()">適用</button>
-            </div>
-          </div>
+          <!-- トリミング・リサイズ機能は廃止（画像は画像ライブラリで管理） -->
 
-          <!-- 📍 ホットスポット / ✂️ トリミング トグル -->
-          <div class="scr-rs-always">
-            <div class="scr-toggle-row">
-              <button id="scrModeHotspot" class="scr-toggle-btn active" onclick="scrSetEditMode('hotspot')">📍 ホットスポット</button>
-              <button id="scrModeCrop"    class="scr-toggle-btn"        onclick="scrSetEditMode('crop')">✂️ トリミング</button>
-            </div>
-            <div id="scrCropSec" style="display:none;margin-top:6px;">
-              <div class="scr-size-row">
-                <span class="scr-size-lbl">幅</span>
-                <input class="scr-size-input" id="scrCropTrimW" type="number" placeholder="幅px">
-                <span class="scr-size-lbl">×</span>
-                <span class="scr-size-lbl">高さ</span>
-                <input class="scr-size-input" id="scrCropTrimH" type="number" placeholder="高さpx">
-              </div>
-              <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap;">
-                <button class="scr-btn-xs primary" onclick="scrApplyResizeTrim()">↔ リサイズ</button>
-                <button class="scr-btn-xs" id="scrApplyCropBtn" onclick="scrApplyCropSel()" style="display:none;background:var(--green);color:#fff;border-color:var(--green);">✂️ トリミング</button>
-                <button class="scr-btn-xs" onclick="scrCropSelClear()">クリア</button>
-              </div>
-            </div>
-          </div>
-
-          <!-- ホットスポット（遷移エリア）: flex:1 で削除ボタン直上まで拡大 -->
+          <!-- ホットスポット（遷移エリア）: 表示と有効/無効の切り替えのみ -->
           <div class="scr-rs-hs-section">
             <label class="scr-rs-label" style="flex-shrink:0;">ホットスポット（遷移エリア）</label>
-            <div class="scr-hs-hint" style="flex-shrink:0;">🟦 画像をドラッグして遷移エリアを描いてください</div>
+            <div class="scr-hs-hint" style="flex-shrink:0;">🔒 位置と遷移先は画像ライブラリで管理します。ここでは有効/無効のみ切り替えできます。</div>
             <div id="scrRsHsList" style="flex:1;overflow-y:auto;margin-top:4px;min-height:60px;"></div>
           </div>
 
@@ -3541,7 +3509,15 @@ function exportJSON(){
           var _fname = _now.getFullYear()+'-'+_pad(_now.getMonth()+1)+'-'+_pad(_now.getDate())+
                        '-'+_pad(_now.getHours())+'-'+_pad(_now.getMinutes())+'.json';
 
-          if (window.showSaveFilePicker) {
+          // 接続中のフォルダがあれば、保存先を聞かずにそこへ書き出す
+          var _fsTry = window.AppFS.writeBinary(_fname, blob, false)
+            .then(function(okFs) { return !!okFs; })
+            .catch(function() { return false; });
+
+          _fsTry.then(function(savedToFolder) {
+          if (savedToFolder) {
+            _importProgressDone('✅ 接続フォルダに保存しました（' + _fname + ' / ' + sizeMB + 'MB）');
+          } else if (window.showSaveFilePicker) {
             window.showSaveFilePicker({
               suggestedName: _fname,
               startIn: 'downloads',
@@ -3571,6 +3547,7 @@ function exportJSON(){
             _importProgressHide();
             toast('📥 エクスポートしました（' + sizeMB + ' MB）');
           }
+          });   // _fsTry.then
         });
       });
     }).catch(function(err) {
@@ -5404,9 +5381,23 @@ function _imgLibCleanupFiles(keepFiles) {
           .map(function(n) { return dirPath + '/' + n; })
           .filter(function(p) { return !keepFiles[p]; })
           .map(function(p) { return window.AppFS.removeFile(p); });
-        return Promise.all(dels);
+        return Promise.all(dels).then(function() { return sub; });
       }).catch(function() { return null; });
-    }));
+    })).then(function(done) {
+      // ── 空になったサブフォルダを削除する ──
+      // フォルダ名を変更したり中身を移動したりすると空フォルダが残るため。
+      var subDirs = (subs || []);
+      return Promise.all(subDirs.map(function(sub) {
+        var dirPath = SCREEN_IMG_DIR + '/' + sub;
+        return window.AppFS.listFiles(dirPath).then(function(rest) {
+          if (rest && rest.length) return null;           // まだ中身がある
+          return window.AppFS.listDirs(dirPath).then(function(inner) {
+            if (inner && inner.length) return null;       // 入れ子フォルダがある
+            return window.AppFS.removeDir(dirPath);
+          });
+        }).catch(function() { return null; });
+      }));
+    });
   }).catch(function() { return null; });
 }
 
@@ -6117,19 +6108,7 @@ function _scrDrawCenterOverlay(previewRect){
       ctx.fillText('HS-'+(i+1)+(off?' OFF':''),hs.x*W+3,hs.y*H+11);
     });
   }
-  if(_scrEditMode==='crop'&&_scrCropSel){
-    var cs=_scrCropSel;
-    ctx.fillStyle='rgba(0,0,0,0.44)';ctx.fillRect(0,0,W,H);ctx.clearRect(cs.x*W,cs.y*H,cs.w*W,cs.h*H);
-    ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.setLineDash([6,4]);ctx.strokeRect(cs.x*W,cs.y*H,cs.w*W,cs.h*H);ctx.setLineDash([]);
-    // 8点ハンドルを描画
-    var hSize=8,hHalf=hSize/2;
-    ctx.fillStyle='#fff';ctx.strokeStyle='rgba(37,99,235,0.9)';ctx.lineWidth=1.5;
-    [[cs.x,cs.y],[cs.x+cs.w/2,cs.y],[cs.x+cs.w,cs.y],
-     [cs.x,cs.y+cs.h/2],[cs.x+cs.w,cs.y+cs.h/2],
-     [cs.x,cs.y+cs.h],[cs.x+cs.w/2,cs.y+cs.h],[cs.x+cs.w,cs.y+cs.h]
-    ].forEach(function(pt){ctx.fillRect(pt[0]*W-hHalf,pt[1]*H-hHalf,hSize,hSize);ctx.strokeRect(pt[0]*W-hHalf,pt[1]*H-hHalf,hSize,hSize);});
-    if(img.naturalWidth){var nw=Math.round(cs.w*img.naturalWidth),nh=Math.round(cs.h*img.naturalHeight);ctx.fillStyle='rgba(0,0,0,0.72)';ctx.fillRect(cs.x*W,cs.y*H+cs.h*H-18,72,18);ctx.fillStyle='#fff';ctx.font='10px monospace';ctx.fillText(nw+'x'+nh,cs.x*W+4,cs.y*H+cs.h*H-5);}
-  }
+  // トリミングの選択枠描画は廃止（トリミング機能を撤去したため）
   if(previewRect){
     var pr=previewRect;
     if(_scrEditMode==='hotspot'){
@@ -6558,234 +6537,20 @@ function _scrRsDelHs(idx){var pat=screenPatterns.find(function(p){return p.id===
 
 // ── オーバーレイ（ホットスポット描画） ──
 var _scrCenterOvInited=false;
+/**
+ * パターン編集画面の中央キャンバスのイベント登録。
+ *
+ * ホットスポットの作成・編集・トリミングは廃止した。
+ * 位置と遷移先は画像ライブラリ側のみで管理する方針のため、ここでは
+ * 「描かれているホットスポットを見る」だけで、ドラッグ操作は受け付けない。
+ * （有効/無効の切り替えは右サイドバーの一覧から行う）
+ */
 function _scrInitCenterOverlayEvents(){
-  if(_scrCenterOvInited)return;_scrCenterOvInited=true;
-  var ov=document.getElementById('scrCenterOverlay');if(!ov)return;
-
-  // ── トリミング用ハンドル状態 ──
-  var _cropHandle=null;  // ドラッグ中のハンドル名（'n','s','e','w','nw','ne','sw','se','move'）
-  var _cropStart=null;   // {rx, ry, sel} ドラッグ開始時のスナップショット
-  var HIT=0.03;          // ハンドルのヒット幅（画像比率 3%）
-
-  function _hitTest(rx,ry){
-    var cs=_scrCropSel;if(!cs)return null;
-    var x1=cs.x,y1=cs.y,x2=cs.x+cs.w,y2=cs.y+cs.h;
-    var onL=Math.abs(rx-x1)<HIT, onR=Math.abs(rx-x2)<HIT;
-    var onT=Math.abs(ry-y1)<HIT, onB=Math.abs(ry-y2)<HIT;
-    if(onT&&onL)return'nw';if(onT&&onR)return'ne';
-    if(onB&&onL)return'sw';if(onB&&onR)return'se';
-    var inX=rx>=x1-HIT&&rx<=x2+HIT, inY=ry>=y1-HIT&&ry<=y2+HIT;
-    if(onT&&inX)return'n';if(onB&&inX)return's';
-    if(onL&&inY)return'w';if(onR&&inY)return'e';
-    return null;
+  var ov = document.getElementById('scrCenterOverlay');
+  if (ov) {
+    ov.style.cursor = 'default';
+    ov.style.pointerEvents = 'none';   // クリックを透過させ、誤操作を防ぐ
   }
-  var _cursorMap={n:'n-resize',s:'s-resize',e:'e-resize',w:'w-resize',
-                  nw:'nw-resize',ne:'ne-resize',sw:'sw-resize',se:'se-resize',move:'grabbing'};
-  function _applyCropResize(s,dx,dy,handle){
-    var nx=s.x,ny=s.y,nw=s.w,nh=s.h;
-    if(handle==='move'){
-      nx=Math.max(0,Math.min(1-nw,s.x+dx));
-      ny=Math.max(0,Math.min(1-nh,s.y+dy));
-    }else{
-      var x2=s.x+s.w,y2=s.y+s.h;
-      if(handle.indexOf('e')>=0){nw=Math.max(0.02,Math.min(1-nx,s.w+dx));}
-      if(handle.indexOf('w')>=0){nx=Math.max(0,Math.min(x2-0.02,s.x+dx));nw=x2-nx;}
-      if(handle.indexOf('s')>=0){nh=Math.max(0.02,Math.min(1-ny,s.h+dy));}
-      if(handle.indexOf('n')>=0){ny=Math.max(0,Math.min(y2-0.02,s.y+dy));nh=y2-ny;}
-    }
-    return {x:nx,y:ny,w:nw,h:nh};
-  }
-  // トリミング選択枠をキャンバスに直接描画（プレビュー用）
-  function _drawCropPreview(cs){
-    var ov2=document.getElementById('scrCenterOverlay');
-    var img2=document.getElementById('scrCenterImg');
-    if(!ov2||!img2)return;
-    var W=ov2.width,H=ov2.height,ctx=ov2.getContext('2d');
-    ctx.clearRect(0,0,W,H);
-    ctx.fillStyle='rgba(0,0,0,0.44)';ctx.fillRect(0,0,W,H);
-    ctx.clearRect(cs.x*W,cs.y*H,cs.w*W,cs.h*H);
-    ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.setLineDash([6,4]);
-    ctx.strokeRect(cs.x*W,cs.y*H,cs.w*W,cs.h*H);ctx.setLineDash([]);
-    var hS=8,hH=hS/2;
-    ctx.fillStyle='#fff';ctx.strokeStyle='rgba(37,99,235,0.9)';ctx.lineWidth=1.5;
-    [[cs.x,cs.y],[cs.x+cs.w/2,cs.y],[cs.x+cs.w,cs.y],
-     [cs.x,cs.y+cs.h/2],[cs.x+cs.w,cs.y+cs.h/2],
-     [cs.x,cs.y+cs.h],[cs.x+cs.w/2,cs.y+cs.h],[cs.x+cs.w,cs.y+cs.h]
-    ].forEach(function(pt){
-      ctx.fillRect(pt[0]*W-hH,pt[1]*H-hH,hS,hS);
-      ctx.strokeRect(pt[0]*W-hH,pt[1]*H-hH,hS,hS);
-    });
-    if(img2.naturalWidth){
-      var nw=Math.round(cs.w*img2.naturalWidth),nh=Math.round(cs.h*img2.naturalHeight);
-      ctx.fillStyle='rgba(0,0,0,0.72)';ctx.fillRect(cs.x*W,cs.y*H+cs.h*H-18,72,18);
-      ctx.fillStyle='#fff';ctx.font='10px monospace';ctx.fillText(nw+'x'+nh,cs.x*W+4,cs.y*H+cs.h*H-5);
-    }
-  }
-
-  // ── pointerdown ──
-  // scrCenterCanvas（スクロール領域全体）で pointerdown を拾い、
-  // ov（画像オーバーレイ）外からのドラッグでもホットスポットを作成できるようにする。
-  // ov 内のイベントは ov.pointerdown が処理するので、ここでは「ov 外のみ」を担当。
-  var _outerCapture = false;
-  var _scrCenterCanvasEl = document.getElementById('scrCenterCanvas');
-  if (_scrCenterCanvasEl) {
-    _scrCenterCanvasEl.addEventListener('pointerdown', function(e) {
-      if (!_scrSelScrId || _scrEditMode !== 'hotspot') return;
-      var r = ov.getBoundingClientRect();
-      // ov 内ならスキップ（ov.pointerdown が担当）
-      if (r.width > 0 && e.clientX >= r.left && e.clientX <= r.right &&
-          e.clientY >= r.top && e.clientY <= r.bottom) return;
-      if (r.width === 0) return; // 画像未ロード
-      // ov 外から開始 → 座標を ov の境界にクランプ
-      var rx = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
-      var ry = Math.max(0, Math.min(1, (e.clientY - r.top)  / r.height));
-      _scrHsDrawing = true; _scrHsDrawStart = {rx: rx, ry: ry};
-      _outerCapture = true;
-      _scrCenterCanvasEl.setPointerCapture(e.pointerId);
-      e.preventDefault();
-    }, {passive: false});
-    _scrCenterCanvasEl.addEventListener('pointermove', function(e) {
-      if (!_outerCapture || !_scrHsDrawing || !_scrHsDrawStart) return;
-      var r = ov.getBoundingClientRect();
-      var rx = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
-      var ry = Math.max(0, Math.min(1, (e.clientY - r.top)  / r.height));
-      _scrDrawCenterOverlay({x:Math.min(rx,_scrHsDrawStart.rx), y:Math.min(ry,_scrHsDrawStart.ry),
-                              w:Math.abs(rx-_scrHsDrawStart.rx), h:Math.abs(ry-_scrHsDrawStart.ry)});
-    });
-    _scrCenterCanvasEl.addEventListener('pointerup', function(e) {
-      if (!_outerCapture) return;
-      _outerCapture = false;
-      var r = ov.getBoundingClientRect();
-      var rx = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
-      var ry = Math.max(0, Math.min(1, (e.clientY - r.top)  / r.height));
-      _scrCenterCanvasEl.releasePointerCapture(e.pointerId);
-      if (!_scrHsDrawStart) return;
-      var sx=_scrHsDrawStart.rx, sy=_scrHsDrawStart.ry;
-      _scrHsDrawing = false; _scrHsDrawStart = null;
-      var x=Math.min(rx,sx), y=Math.min(ry,sy), w=Math.abs(rx-sx), h=Math.abs(ry-sy);
-      if (w<0.005||h<0.005){_scrDrawCenterOverlay(null);return;}
-      var pat=screenPatterns.find(function(p){return p.id===_scrCurrentPatId;});if(!pat)return;
-      var scr=pat.screens.find(function(s){return s.id===_scrSelScrId;});if(!scr)return;
-      if(!scr.hotspots)scr.hotspots=[];
-      scr.hotspots.push({id:_scrGenId(),x:x,y:y,w:w,h:h,targetId:'',targetType:'screen',note:''});
-      scrSaveData();markDirty();_scrRsRenderHsList(scr);_scrDrawCenterOverlay(null);
-    });
-    _scrCenterCanvasEl.addEventListener('pointercancel', function() {
-      _outerCapture=false; _scrHsDrawing=false; _scrHsDrawStart=null; _scrDrawCenterOverlay(null);
-    });
-  }
-
-  ov.addEventListener('pointerdown',function(e){
-    if(!_scrSelScrId)return;
-    var r=ov.getBoundingClientRect();
-    var rx=(e.clientX-r.left)/r.width, ry=(e.clientY-r.top)/r.height;
-
-    if(_scrEditMode==='crop'&&_scrCropSel){
-      // ハンドルヒット → ハンドルドラッグ開始
-      var h=_hitTest(rx,ry);
-      if(h){
-        _cropHandle=h;_cropStart={rx:rx,ry:ry,sel:Object.assign({},_scrCropSel)};
-        ov.style.cursor=_cursorMap[h]||'crosshair';
-        ov.setPointerCapture(e.pointerId);e.preventDefault();return;
-      }
-      // 枠内クリック → 移動ドラッグ開始
-      var cs=_scrCropSel;
-      if(rx>=cs.x&&rx<=cs.x+cs.w&&ry>=cs.y&&ry<=cs.y+cs.h){
-        _cropHandle='move';_cropStart={rx:rx,ry:ry,sel:Object.assign({},_scrCropSel)};
-        ov.style.cursor='grabbing';
-        ov.setPointerCapture(e.pointerId);e.preventDefault();return;
-      }
-    }
-
-    // 通常のドラッグ（ホットスポット / トリミング新規描画）
-    _scrHsDrawing=true;_scrHsDrawStart={rx:rx,ry:ry};
-    ov.setPointerCapture(e.pointerId);e.preventDefault();
-  });
-
-  // ── pointermove ──
-  ov.addEventListener('pointermove',function(e){
-    var r=ov.getBoundingClientRect();
-    var rx=Math.max(0,Math.min(1,(e.clientX-r.left)/r.width));
-    var ry=Math.max(0,Math.min(1,(e.clientY-r.top)/r.height));
-
-    // トリミングハンドルドラッグ中
-    if(_scrEditMode==='crop'&&_cropHandle&&_cropStart){
-      var cs=_applyCropResize(_cropStart.sel,rx-_cropStart.rx,ry-_cropStart.ry,_cropHandle);
-      _drawCropPreview(cs);
-      return;
-    }
-    // カーソル更新（トリミングモード・未ドラッグ時）
-    if(_scrEditMode==='crop'&&!_scrHsDrawing&&!_cropHandle){
-      var h=_hitTest(rx,ry);
-      ov.style.cursor=h?(_cursorMap[h]||'crosshair'):'crosshair';
-    }
-    // 通常ドラッグ中
-    if(!_scrHsDrawing||!_scrHsDrawStart)return;
-    var x=Math.min(rx,_scrHsDrawStart.rx),y=Math.min(ry,_scrHsDrawStart.ry);
-    var w=Math.abs(rx-_scrHsDrawStart.rx),h2=Math.abs(ry-_scrHsDrawStart.ry);
-    _scrDrawCenterOverlay({x:x,y:y,w:w,h:h2});
-  });
-
-  // ── pointerup ──
-  ov.addEventListener('pointerup',function(e){
-    var r=ov.getBoundingClientRect();
-    var rx=Math.max(0,Math.min(1,(e.clientX-r.left)/r.width));
-    var ry=Math.max(0,Math.min(1,(e.clientY-r.top)/r.height));
-    ov.releasePointerCapture(e.pointerId);
-
-    // トリミングハンドルドラッグ確定
-    if(_scrEditMode==='crop'&&_cropHandle&&_cropStart){
-      _scrCropSel=_applyCropResize(_cropStart.sel,rx-_cropStart.rx,ry-_cropStart.ry,_cropHandle);
-      var imgEl=document.getElementById('scrCenterImg');
-      if(imgEl&&imgEl.naturalWidth){
-        var cnw=Math.round(_scrCropSel.w*imgEl.naturalWidth);
-        var cnh=Math.round(_scrCropSel.h*imgEl.naturalHeight);
-        var tw=document.getElementById('scrCropTrimW');if(tw)tw.value=cnw;
-        var th=document.getElementById('scrCropTrimH');if(th)th.value=cnh;
-      }
-      _cropHandle=null;_cropStart=null;
-      var h=_hitTest(rx,ry);ov.style.cursor=h?(_cursorMap[h]||'crosshair'):'crosshair';
-      _scrDrawCenterOverlay(null);
-      return;
-    }
-
-    // 通常ドラッグ確定
-    if(!_scrHsDrawing||!_scrHsDrawStart)return;
-    var startRx=_scrHsDrawStart.rx, startRy=_scrHsDrawStart.ry;
-    _scrHsDrawing=false;_scrHsDrawStart=null;
-
-    var x=Math.min(rx,startRx),y=Math.min(ry,startRy);
-    var w=Math.abs(rx-startRx),h=Math.abs(ry-startRy);
-
-    if(_scrEditMode==='hotspot'){
-      if(w<0.01||h<0.01){_scrDrawCenterOverlay(null);return;}
-      var pat=screenPatterns.find(function(p){return p.id===_scrCurrentPatId;});if(!pat)return;
-      var scr=pat.screens.find(function(s){return s.id===_scrSelScrId;});if(!scr)return;
-      if(!scr.hotspots)scr.hotspots=[];
-      scr.hotspots.push({id:_scrGenId(),x:x,y:y,w:w,h:h,targetId:'',targetType:'screen',note:''});
-      scrSaveData();markDirty();_scrRsRenderHsList(scr);_scrDrawCenterOverlay(null);
-    }else{
-      // トリミング：枠外から新たに描いた場合
-      if(w<0.01||h<0.01){_scrDrawCenterOverlay(null);return;}
-      _scrCropSel={x:x,y:y,w:w,h:h};
-      var imgEl2=document.getElementById('scrCenterImg');
-      if(imgEl2&&imgEl2.naturalWidth){
-        var nw2=Math.round(w*imgEl2.naturalWidth),nh2=Math.round(h*imgEl2.naturalHeight);
-        var tw2=document.getElementById('scrCropTrimW');if(tw2)tw2.value=nw2;
-        var th2=document.getElementById('scrCropTrimH');if(th2)th2.value=nh2;
-      }
-      var ab=document.getElementById('scrApplyCropBtn');if(ab)ab.style.display='inline-flex';
-      _scrDrawCenterOverlay(null);
-    }
-  });
-
-  // ── pointercancel ──
-  ov.addEventListener('pointercancel',function(){
-    _scrHsDrawing=false;_scrHsDrawStart=null;
-    _cropHandle=null;_cropStart=null;
-    ov.style.cursor='crosshair';
-    _scrDrawCenterOverlay(null);
-  });
 }
 
 // データ保存（markDirty のみ。実際の書き込みは saveAllManual）
@@ -7997,6 +7762,37 @@ function _imgLibRefreshFolderSel(items) {
       }).join('');
   // 選択中のフォルダが消えていなければ維持する
   sel.value = (cur && (cur === '__root__' || set[cur])) ? cur : '';
+}
+
+/** 絞り込み中のフォルダを一括リネームする */
+function _imgLibRenameFolder() {
+  var sel = document.getElementById('imgLibFolderSel');
+  var cur = sel ? sel.value : '';
+  if (!cur || cur === '__root__') {
+    toast('⚠️ 名前を変更したいフォルダを選んでください');
+    return;
+  }
+  var name = prompt('フォルダ名を変更します。\n\n現在： ' + cur, cur);
+  if (name === null) return;
+
+  var next = _imgLibSafeFolder(name);
+  if (!next)        { toast('⚠️ フォルダ名を入力してください'); return; }
+  if (next === cur) return;
+
+  var targets = (_imgLibAllItems || []).filter(function(it) { return it.folder === cur; });
+  if (!targets.length) { toast('⚠️ 対象の画像がありません'); return; }
+
+  // 同名フォルダがあれば統合になる旨を確認する
+  var exists = (_imgLibAllItems || []).some(function(it) { return it.folder === next; });
+  if (exists && !confirm('「' + next + '」は既に存在します。統合しますか？')) return;
+
+  var updates = targets.map(function(it) { return { id: it.id, fields: { folder: next } }; });
+  _imgLibBulkUpdate(updates, function() {
+    targets.forEach(function(it) { it.folder = next; });
+    if (sel) sel.value = next;
+    _imgLibFilter();
+    toast('✏️ 「' + cur + '」→「' + next + '」に変更しました（' + targets.length + ' 件）');
+  });
 }
 
 /** 選択中の画像をフォルダへ移動する（空入力＝未分類に戻す） */
