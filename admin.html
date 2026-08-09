@@ -1544,10 +1544,15 @@ html[data-theme="dark"] .nav-arrow-btn { background: rgba(40,42,54,.9); }
                    onfocus="this.style.borderColor='var(--accent)'"
                    onblur="this.style.borderColor='var(--border)'">
             <button class="btn btn-secondary" style="font-size:11px;height:30px;padding:0 10px;" onclick="document.getElementById('imgLibSearch').value='';_imgLibFilter()">✕</button>
+          </div>
+          <!-- フォルダ絞り込み（幅が狭いので独立行にする） -->
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;">
             <select id="imgLibFolderSel" onchange="_imgLibFilter()" title="フォルダで絞り込み"
-                    style="height:30px;font-size:11px;font-family:inherit;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);max-width:130px;">
+                    style="flex:1;min-width:0;height:28px;font-size:11px;font-family:inherit;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);">
               <option value="">📁 すべて</option>
             </select>
+            <button class="btn btn-secondary" style="font-size:11px;height:28px;padding:0 10px;flex-shrink:0;"
+                    onclick="document.getElementById('imgLibFolderSel').value='';_imgLibFilter()" title="絞り込みを解除">✕</button>
           </div>
           <!-- 複数選択ツールバー -->
           <div id="imgLibSelBar" style="display:none;flex-direction:column;gap:6px;padding:8px 10px;background:var(--accent-lt);border:1px solid var(--accent);border-radius:6px;margin-bottom:8px;font-size:12px;">
@@ -7063,21 +7068,29 @@ function _imgLibHsRenderList() {
   var curId = _imgLibHsItem && _imgLibHsItem.id;
   var cands = (_imgLibAllItems || []).filter(function(it) { return !!it; })
     .slice()
-    .sort(function(a, b) {
-      return _imgLibCollator.compare(String(a.name || ''), String(b.name || ''));
-    });
+    .sort(_imgLibCompare);   // 一覧・適用先と同じ並び順にそろえる
 
   listEl.innerHTML = _imgLibHsList.map(function(hs, idx) {
     var type = hs.targetType || (hs.targetLibId ? 'lib' : (hs.targetUrl ? 'url' : 'none'));
 
-    var opts = '<option value="">— 遷移先の画像を選択 —</option>' + cands.map(function(it) {
+    // フォルダごとに optgroup で区切る（一覧と同じ並び順）
+    var opts = '<option value="">— 遷移先の画像を選択 —</option>';
+    var curGroup = null;
+    cands.forEach(function(it) {
+      var g = it.folder || '';
+      if (g !== curGroup) {
+        if (curGroup !== null) opts += '</optgroup>';
+        opts += '<optgroup label="' + escFn(g ? '📁 ' + g : '📂 未分類') + '">';
+        curGroup = g;
+      }
       var isSelf = (it.id === curId);
       var lbl = (it.name || it.id) + (isSelf ? '（この画像）' : '');
-      return '<option value="' + it.id + '"'
+      opts += '<option value="' + it.id + '"'
         + (hs.targetLibId === it.id ? ' selected' : '')
         + (isSelf ? ' disabled style="color:var(--text3);"' : '')
         + '>' + escFn(lbl) + '</option>';
-    }).join('');
+    });
+    if (curGroup !== null) opts += '</optgroup>';
 
     var btn = function(v, lbl) {
       var on = (type === v);
@@ -7378,13 +7391,11 @@ function _imgLibHsRenderApplyList() {
   var q = (document.getElementById('ilibApplyFilter') || {}).value || '';
   q = q.trim().toLowerCase();
 
-  var seenSet = {};
   var cands = (_imgLibAllItems || []).filter(function(it) {
     if (!it || it.id === _imgLibHsItem.id) return false;
-    // セット機能は廃止したため集約しない
     if (q && String(it.name || '').toLowerCase().indexOf(q) < 0) return false;
     return true;
-  });
+  }).sort(_imgLibCompare);   // 一覧・プルダウンと同じ並び順にそろえる
 
   if (!cands.length) {
     listEl.innerHTML = '<div style="padding:14px;font-size:11px;color:var(--text3);">該当する画像がありません。</div>';
@@ -7399,6 +7410,7 @@ function _imgLibHsRenderApplyList() {
         '<input type="checkbox" data-id="' + it.id + '"' + (_ilibApplySel.has(it.id) ? ' checked' : '') +
           ' onchange="_imgLibHsToggleApply(this)" style="width:14px;height:14px;">' +
         '<span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' +
+          (it.folder ? '<span style="font-size:10px;color:var(--accent-text);background:var(--accent-lt);border-radius:3px;padding:0 4px;margin-right:5px;">📁' + _smEscHtml(it.folder) + '</span>' : '') +
           _smEscHtml(it.name || it.id) + '</span>' + warn + '</label>';
     }).join('');
   }
@@ -7987,29 +7999,48 @@ function _imgLibRefreshFolderSel(items) {
   sel.value = (cur && (cur === '__root__' || set[cur])) ? cur : '';
 }
 
-/** 選択中の画像をフォルダへ移動する */
+/** 選択中の画像をフォルダへ移動する（空入力＝未分類に戻す） */
 function _imgLibMoveToFolder() {
   var ids = Array.from(_imgLibSelectedIds);
   if (!ids.length) { toast('⚠️ 画像を選択してください'); return; }
 
-  // 既存フォルダを候補として提示する
+  // 選択中の画像が今どこに入っているか
+  var inFolder = (_imgLibAllItems || []).filter(function(it) {
+    return ids.indexOf(it.id) >= 0 && it.folder;
+  }).length;
+
   var existing = {};
   (_imgLibAllItems || []).forEach(function(it) { if (it.folder) existing[it.folder] = 1; });
-  var hint = Object.keys(existing).sort().join(' / ');
+  var hint = Object.keys(existing).sort(function(a, b){ return _imgLibCollator.compare(a, b); }).join(' / ');
 
-  var name = prompt(
-    ids.length + ' 件をフォルダにまとめます。\n' +
-    'フォルダ名を入力してください（空欄にすると未分類に戻します）。' +
-    (hint ? '\n\n既存フォルダ： ' + hint : ''),
-    ''
-  );
-  if (name === null) return;
+  var msg = ids.length + ' 件のフォルダを変更します。\n\n'
+          + '・フォルダ名を入力 → そのフォルダへ移動\n'
+          + '・空欄のまま OK → 未分類に戻す（フォルダ解除）'
+          + (inFolder ? '\n\n※ うち ' + inFolder + ' 件は現在フォルダに入っています' : '')
+          + (hint ? '\n\n既存フォルダ： ' + hint : '');
+
+  var name = prompt(msg, '');
+  if (name === null) return;   // キャンセル
 
   var folder = _imgLibSafeFolder(name);
+
+  // 解除は取り消せないので確認する
+  if (!folder && inFolder) {
+    if (!confirm(inFolder + ' 件のフォルダを解除して未分類に戻します。よろしいですか？')) return;
+  }
+
   var updates = ids.map(function(id) { return { id: id, fields: { folder: folder } }; });
   _imgLibBulkUpdate(updates, function() {
-    (_imgLibAllItems || []).forEach(function(it) { if (ids.indexOf(it.id) >= 0) it.folder = folder; });
+    (_imgLibAllItems || []).forEach(function(it) {
+      if (ids.indexOf(it.id) >= 0) it.folder = folder;
+    });
     _imgLibClearSelection();
+
+    // 絞り込み中だと移動先が表示範囲外になり「変わっていない」ように見えるため、
+    // 移動先のフォルダ（解除なら「すべて」）に絞り込みを合わせる
+    var fs = document.getElementById('imgLibFolderSel');
+    if (fs) fs.value = folder || '';
+
     _imgLibFilter();
     toast(folder ? '📁 「' + folder + '」に ' + ids.length + ' 件を移動しました'
                  : '📂 ' + ids.length + ' 件を未分類に戻しました');
@@ -10296,11 +10327,25 @@ var _imgLibCollator = (function() {
   catch (e) { return { compare: function(a, b) { return String(a).localeCompare(String(b)); } }; }
 })();
 
-/** 画像を名前順に並べ替える（セット機能は廃止したため集約は行わない） */
+/**
+ * 画像の並び順を決める共通の比較関数。
+ * 未分類 → フォルダ名順 → 画像名順。
+ * 一覧・遷移先プルダウン・使い回しの適用先で必ずこれを使い、順序を揃える。
+ */
+function _imgLibCompare(a, b) {
+  var fa = String((a && a.folder) || '');
+  var fb = String((b && b.folder) || '');
+  if (fa !== fb) {
+    if (!fa) return -1;          // 未分類を先頭に
+    if (!fb) return 1;
+    return _imgLibCollator.compare(fa, fb);
+  }
+  return _imgLibCollator.compare(String((a && a.name) || ''), String((b && b.name) || ''));
+}
+
+/** 画像を並べ替える（セット機能は廃止したため集約は行わない） */
 function _imgLibGroupSorted(list) {
-  return (list || []).slice().sort(function(a, b) {
-    return _imgLibCollator.compare(String(a && a.name || ''), String(b && b.name || ''));
-  });
+  return (list || []).slice().sort(_imgLibCompare);
 }
 
 /* ===================================================================
