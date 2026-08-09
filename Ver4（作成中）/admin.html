@@ -1514,54 +1514,6 @@ html[data-theme="dark"] .nav-arrow-btn { background: rgba(40,42,54,.9); }
   </div>
 </div>
 
-<!-- ===== 画像ライブラリ プレビューモーダル ===== -->
-<style>
-#imgLibPreviewModal {
-  display: none;
-  position: fixed; inset: 0; z-index: 4000;
-  background: rgba(0,0,0,.7);
-  align-items: center; justify-content: center;
-}
-#imgLibPreviewBox {
-  background: var(--surface);
-  border-radius: 12px;
-  max-width: min(90vw, 900px);
-  max-height: 90vh;
-  display: flex; flex-direction: column;
-  box-shadow: 0 24px 64px rgba(0,0,0,.4);
-  overflow: hidden;
-}
-#imgLibPreviewHead {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 10px 16px;
-  border-bottom: 1px solid var(--border);
-  flex-shrink: 0;
-}
-#imgLibPreviewName { font-size: 13px; font-weight: 700; color: var(--text); }
-#imgLibPreviewMeta { font-size: 11px; color: var(--text3); margin-top: 2px; }
-#imgLibPreviewBody {
-  flex: 1; overflow: auto;
-  display: flex; align-items: center; justify-content: center;
-  padding: 16px; background: var(--surface2);
-}
-#imgLibPreviewBody img { max-width: 100%; max-height: 70vh; object-fit: contain; border-radius: 4px; }
-</style>
-<div id="imgLibPreviewModal" onclick="if(event.target===this)_imgLibPreviewClose()">
-  <div id="imgLibPreviewBox">
-    <div id="imgLibPreviewHead">
-      <div>
-        <div id="imgLibPreviewName"></div>
-        <div id="imgLibPreviewMeta">
-          <span id="imgLibPreviewInfo"></span>
-          <span id="imgLibPreviewUsage" style="margin-left:12px;"></span>
-        </div>
-      </div>
-      <button onclick="_imgLibPreviewClose()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text3);line-height:1;">✕</button>
-    </div>
-    <div id="imgLibPreviewBody"><img id="imgLibPreviewImg" src="" alt=""></div>
-  </div>
-</div>
-
 <!-- ===== 画像ライブラリ（画面遷移タブ内オーバーレイパネル） ===== -->
 <div id="imgLibPanel" style="display:none;position:fixed;top:var(--header-h,60px);left:0;right:0;bottom:0;z-index:600;background:var(--surface);flex-direction:column;">
   <div style="display:flex;flex-direction:column;height:100%;overflow:hidden;">
@@ -5197,15 +5149,45 @@ function imgLibGetOne(libId) {
 }
 
 // ライブラリから1件削除
+/**
+ * ライブラリから1件削除する。
+ *
+ * 以前は tx.oncomplete しか拾っておらず、トランザクションが中断すると
+ * Promise が解決されないまま止まり、画面も更新されず IndexedDB にも
+ * レコードが残る（＝削除したはずの画像が残り続ける）状態になっていた。
+ * ここでは onerror / onabort も拾って必ず解決させ、さらに
+ * 「キーが id と一致しない古いレコード」もカーソルで走査して消す。
+ */
 function imgLibDelete(libId) {
   delete _imgLibCache[libId];
   return _imgLibOpen().then(function(db) {
     return new Promise(function(resolve) {
-      var tx = db.transaction('imageLib', 'readwrite');
-      tx.objectStore('imageLib').delete(libId);
-      tx.oncomplete = resolve;
+      var tx, store;
+      try {
+        tx = db.transaction('imageLib', 'readwrite');
+        store = tx.objectStore('imageLib');
+      } catch (e) { resolve(false); return; }
+
+      // ① 通常のキー削除
+      try { store.delete(libId); } catch (e) {}
+
+      // ② キーが id と食い違うレコードの取りこぼしを防ぐ
+      try {
+        var cur = store.openCursor();
+        cur.onsuccess = function(e) {
+          var c = e.target.result;
+          if (!c) return;
+          var v = c.value;
+          if (v && v.id === libId) { try { c.delete(); } catch (er) {} }
+          c.continue();
+        };
+      } catch (e) {}
+
+      tx.oncomplete = function() { resolve(true); };
+      tx.onerror    = function() { resolve(false); };
+      tx.onabort    = function() { resolve(false); };
     });
-  });
+  }).catch(function() { return false; });
 }
 
 // エクスポート時：全 screenPatterns の "lib:xxx" を実際の base64 に展開する
@@ -6123,7 +6105,6 @@ function _scrUpdateRightSidebar(){
   if(cwEl)cwEl.disabled=false;
   if(chEl)chEl.disabled=false;
   _scrUpdateImageMeta(scr);
-  _scrRenderVariantList(scr);
   _scrRsRenderHsList(scr);
 }
 function _scrUpdateImageMeta(scr){
@@ -7510,8 +7491,6 @@ function _imgLibHsSave(cb, silent) {
       _imgLibHsItem.hotspots = JSON.parse(JSON.stringify(_imgLibHsList));
       var cached = _imgLibAllItems.find(function(x){ return x.id === _imgLibHsItem.id; });
       if (cached) cached.hotspots = _imgLibHsItem.hotspots;
-      // セットは1画面扱いなので、同一セットの全画像へホットスポットを共有する
-      _imgLibPropagateHsToSet(_imgLibHsItem);
       // この画像にリンクしている他画像へも反映する
       _imgLibPropagateHsToLinked(_imgLibHsItem);
       var synced = _imgLibSyncHsToPatterns(_imgLibHsItem);
@@ -7969,11 +7948,13 @@ function _imgLibDeleteSelected() {
   if (!ids.length) return;
   if (!confirm(ids.length + '件の画像を削除しますか？')) return;
   var promises = ids.map(function(id) { return imgLibDelete(id); });
-  Promise.all(promises).then(function() {
+  Promise.all(promises).then(function(results) {
+    var ng = results.filter(function(r){ return !r; }).length;
     _imgLibSelectedIds.clear();
-    _imgLibAllItems = _imgLibAllItems.filter(function(x){ return !ids.includes(x.id); });
-    _imgLibDraw(_imgLibAllItems, (document.getElementById('imgLibSearch')||{}).value || '');
-    _imgLibUpdateSelectionUI();
+    if (_imgLibHsItem && ids.indexOf(_imgLibHsItem.id) >= 0) _imgLibHsDeactivate();
+    // IndexedDB を読み直して一覧を作り直す
+    _imgLibRender();
+    toast(ng ? ('🗑 ' + (ids.length - ng) + '件削除／' + ng + '件失敗') : ('🗑 ' + ids.length + '件削除しました'));
   });
 }
 
@@ -8292,9 +8273,13 @@ function _imgLibDraw(items, query) {
     delBtn.style.cssText = 'font-size:10px;padding:1px 6px;border:1px solid var(--border);border-radius:4px;background:var(--surface2);cursor:' + (used?'not-allowed':'pointer') + ';color:' + (used?'var(--text3)':'var(--text)') + ';font-family:inherit;';
     delBtn.onclick = function() {
       if (!confirm('この画像をライブラリから削除しますか？')) return;
-      imgLibDelete(item.id).then(function() {
-        _imgLibAllItems = _imgLibAllItems.filter(function(x){ return x.id!==item.id; });
-        _imgLibFilter();
+      imgLibDelete(item.id).then(function(ok) {
+        if (!ok) { toast('❌ 削除できませんでした'); return; }
+        // メモリ上のキャッシュではなく IndexedDB を読み直して反映する
+        // （削除が実際に反映されたかを画面で確認できるようにする）
+        _imgLibRender();
+        if (_imgLibHsItem && _imgLibHsItem.id === item.id) _imgLibHsDeactivate();
+        toast('🗑 削除しました');
       });
     };
     tdOp.appendChild(delBtn);
@@ -8458,39 +8443,6 @@ function _imgLibMergeDuplicates() {
 }
 
 // 未使用の画像を一括削除する
-// 画像ライブラリ プレビューモーダルを開く
-function _imgLibPreview(item) {
-  var ov = document.getElementById('imgLibPreviewModal');
-  if (!ov) return;
-  var img  = document.getElementById('imgLibPreviewImg');
-  var name = document.getElementById('imgLibPreviewName');
-  var info = document.getElementById('imgLibPreviewInfo');
-  if (img)  img.src = item.dataUrl;
-  if (name) name.textContent = item.name || item.id;
-  // 画像サイズ取得
-  if (img) {
-    img.onload = function() {
-      if (info) info.textContent = img.naturalWidth + ' × ' + img.naturalHeight + ' px';
-    };
-    if (img.complete && img.naturalWidth) {
-      if (info) info.textContent = img.naturalWidth + ' × ' + img.naturalHeight + ' px';
-    }
-  }
-  // 使用パターン表示
-  var pats = [];
-  screenPatterns.forEach(function(p) {
-    (p.screens || []).forEach(function(s) {
-      if (s.imageSrc && s.imageSrc.slice(4) === item.id && !pats.includes(p.name)) pats.push(p.name);
-    });
-  });
-  var usage = document.getElementById('imgLibPreviewUsage');
-  if (usage) usage.textContent = pats.length ? '使用パターン: ' + pats.join(', ') : '未使用';
-  ov.style.display = 'flex';
-}
-function _imgLibPreviewClose() {
-  var ov = document.getElementById('imgLibPreviewModal');
-  if (ov) ov.style.display = 'none';
-}
 
 // 画像ライブラリ行の右クリックコンテキストメニュー
 var _imgLibCtxItem = null; // 現在対象の item
@@ -8622,8 +8574,10 @@ function _imgLibCleanup() {
                  unused.slice(0, 10).map(function(x){ return '・' + (x.name || x.id); }).join('\n') +
                  (unused.length > 10 ? '\n…ほか ' + (unused.length - 10) + ' 件' : ''))) return;
 
-    Promise.all(unused.map(function(item) { return imgLibDelete(item.id); })).then(function() {
-      toast('✅ ' + unused.length + ' 件削除しました');
+    Promise.all(unused.map(function(item) { return imgLibDelete(item.id); })).then(function(results) {
+      var ng = results.filter(function(r){ return !r; }).length;
+      toast(ng ? ('🗑 ' + (unused.length - ng) + ' 件削除／' + ng + ' 件失敗')
+               : ('✅ ' + unused.length + ' 件削除しました'));
       _imgLibRender();   // キャッシュを破棄して再読み込みするため一覧から即座に消える
     });
   });
@@ -10201,23 +10155,6 @@ var _VARIANT_TOKENS = [
   '開', '閉', '前', '後'
 ].sort(function(a, b) { return b.length - a.length; });
 
-function _imgLibDetectVariant(name) {
-  var n = String(name || '').trim();
-  for (var i = 0; i < _VARIANT_TOKENS.length; i++) {
-    var tk = _VARIANT_TOKENS[i];
-    // 区切り文字（_ - スペース 全角括弧 半角括弧 角括弧）を挟んで末尾にトークンがある形
-    var re = new RegExp('^(.*?)[\\s_\\-–—（(\\[]+' + tk + '[\\s_\\-–—）)\\]]*$', 'i');
-    var m  = n.match(re);
-    if (m && m[1] && m[1].trim().length) {
-      return { base: m[1].replace(/[\s_\-–—（(\[]+$/, '').trim(), label: tk.toUpperCase() === tk ? tk : tk };
-    }
-  }
-  return null;
-}
-
-/** セットIDを生成 */
-function _setGenId() { return 'set' + Math.random().toString(36).substr(2, 9); }
-
 // 画像一覧の並び順：数字 → 英字 → かな（数字は自然順で img2 < img10）
 var _imgLibCollator = (function() {
   try { return new Intl.Collator('ja', { numeric: true, sensitivity: 'base' }); }
@@ -10230,130 +10167,6 @@ function _imgLibGroupSorted(list) {
     return _imgLibCollator.compare(String(a && a.name || ''), String(b && b.name || ''));
   });
 }
-
-/**
- * 選択中の画像を1セットにまとめる。
- * セット内の1枚目が「既定の画像」となり、画面追加時はこの1枚が代表になる。
- */
-function _imgLibMakeSet() {
-  var ids = Array.from(_imgLibSelectedIds);
-  if (ids.length < 2) { toast('⚠️ セット化するには2枚以上を選択してください'); return; }
-
-  var items = ids.map(function(id) {
-    return _imgLibAllItems.find(function(x) { return x.id === id; });
-  }).filter(Boolean);
-
-  items.sort(function(a, b) {
-    return String(a.name || '').localeCompare(String(b.name || ''), 'ja', { numeric: true });
-  });
-
-  // セット名の初期値：全画像に共通するベース名 → 無ければ1枚目の名前
-  var guess = null;
-  var d0 = _imgLibDetectVariant(items[0].name);
-  if (d0) {
-    var allSame = items.every(function(it) {
-      var d = _imgLibDetectVariant(it.name);
-      return d && d.base === d0.base;
-    });
-    if (allSame) guess = d0.base;
-  }
-  if (!guess) guess = String(items[0].name || '').replace(/[_\-\s]+(ON|OFF|on|off)$/i, '');
-
-  var setName = prompt('セット名（画面名として使われます）', guess);
-  if (setName === null) return;
-  setName = setName.trim() || guess;
-
-  var setId = _setGenId();
-  var updates = items.map(function(it, i) {
-    var d = _imgLibDetectVariant(it.name);
-    var label = d ? d.label : (i === 0 ? '既定' : String(i + 1));
-    it.setId = setId; it.setName = setName; it.setLabel = label; it.setOrder = i;
-    return { id: it.id, fields: { setId: setId, setName: setName, setLabel: label, setOrder: i } };
-  });
-
-  _imgLibBulkUpdate(updates, function() {
-    _imgLibClearSelection();
-    _imgLibFilter();
-    toast('🧩 「' + setName + '」として ' + items.length + ' 枚をセット化しました');
-  });
-}
-
-/** 選択中画像のセットを解除する */
-function _imgLibUnsetSelected() {
-  var ids = Array.from(_imgLibSelectedIds).filter(function(id) {
-    var it = _imgLibAllItems.find(function(x) { return x.id === id; });
-    return it && it.setId;
-  });
-  if (!ids.length) { toast('⚠️ セットに属する画像が選択されていません'); return; }
-  if (!confirm(ids.length + ' 枚のセットを解除しますか？')) return;
-
-  var updates = ids.map(function(id) {
-    var it = _imgLibAllItems.find(function(x) { return x.id === id; });
-    if (it) { delete it.setId; delete it.setName; delete it.setLabel; delete it.setOrder; }
-    return { id: id, fields: { setId: null, setName: null, setLabel: null, setOrder: null } };
-  });
-  _imgLibBulkUpdate(updates, function() {
-    _imgLibClearSelection();
-    _imgLibFilter();
-    toast('🔓 セットを解除しました');
-  });
-}
-
-/**
- * ファイル名の ON/OFF などの接尾辞から自動でセットを作成する。
- * 既にセット済みの画像はスキップする。
- */
-function _imgLibAutoGroupSets(items, silent, cb) {
-  var run = function(list) {
-    var groups = {};
-    list.forEach(function(it) {
-      if (it.setId) return;
-      var d = _imgLibDetectVariant(it.name);
-      if (!d) return;
-      if (!groups[d.base]) groups[d.base] = [];
-      groups[d.base].push({ item: it, label: d.label });
-    });
-    var keys = Object.keys(groups).filter(function(k) { return groups[k].length >= 2; });
-    if (!keys.length) {
-      if (!silent) toast('🧩 ON/OFF などの接尾辞から判定できる画像が見つかりませんでした');
-      if (cb) cb(0);
-      return;
-    }
-    var total = keys.reduce(function(n, k) { return n + groups[k].length; }, 0);
-    if (!silent) {
-      var sample = keys.slice(0, 4).join(' / ');
-      if (!confirm(keys.length + ' セット・' + total + ' 枚をセット化します。\n例: ' + sample +
-                   (keys.length > 4 ? ' ほか' : '') + '\n\nよろしいですか？')) { if (cb) cb(0); return; }
-    }
-    var updates = [];
-    keys.forEach(function(base) {
-      var setId = _setGenId();
-      var members = groups[base];
-      // ラベルの並び順：OFF/無効/非表示 などの「素の状態」を先頭に寄せる
-      var priority = ['既定', 'OFF', 'off', 'オフ', '無効', '非活性', '非表示', '未選択', '押下前', 'チェックなし', '閉', '前'];
-      members.sort(function(a, b) {
-        var ia = priority.indexOf(a.label), ib = priority.indexOf(b.label);
-        if (ia < 0) ia = 99; if (ib < 0) ib = 99;
-        if (ia !== ib) return ia - ib;
-        return String(a.item.name).localeCompare(String(b.item.name), 'ja', { numeric: true });
-      });
-      members.forEach(function(m, i) {
-        m.item.setId = setId; m.item.setName = base; m.item.setLabel = m.label; m.item.setOrder = i;
-        updates.push({ id: m.item.id, fields: { setId: setId, setName: base, setLabel: m.label, setOrder: i } });
-      });
-    });
-    _imgLibBulkUpdate(updates, function() {
-      _imgLibFilter();
-      if (!silent) toast('🧩 ' + keys.length + ' セット（' + total + ' 枚）を自動作成しました');
-      if (cb) cb(keys.length);
-    });
-  };
-
-  if (Array.isArray(items)) run(items);
-  else if (_imgLibAllItems.length) run(_imgLibAllItems);
-  else imgLibGetAll().then(function(list) { _imgLibAllItems = list; run(list); });
-}
-
 
 /* ===================================================================
    ① ローカルフォルダからの読み込み
@@ -10622,22 +10435,6 @@ function _scrCountScreensFor(items) {
   return n;
 }
 
-/** セットのアコーディオン開閉 */
-function _imgLibToggleSet(setId) {
-  if (!window._imgLibSetOpen) window._imgLibSetOpen = {};
-  window._imgLibSetOpen[setId] = !window._imgLibSetOpen[setId];
-  _imgLibDraw(_imgLibAllItems, (document.getElementById('imgLibSearch') || {}).value || '');
-}
-
-/**
- * セットに属する画像のホットスポットを、同一セットの全画像へ複製する。
- * セットは「1つの画面」なので、どのバリエーションを既定にしても
- * 同じホットスポットが付いている状態を保つ。
- */
-// セット機能は廃止。セット内共有は行わない。
-function _imgLibPropagateHsToSet(item) {}
-
-
 /* ===================================================================
    画面設定：バリエーション（画像セット）一覧
    =================================================================== */
@@ -10647,100 +10444,6 @@ function _scrGetVariants(scr) {
   if (!scr || !Array.isArray(scr.variants) || scr.variants.length < 2) return [];
   return scr.variants;
 }
-
-function _scrRenderVariantList(scr) {
-  var el = document.getElementById('scrRsVariantList');
-  if (!el) return;
-  scr = scr || _scrGetSelScreen();
-  if (!scr) { el.innerHTML = ''; return; }
-
-  var vars = _scrGetVariants(scr);
-  if (!vars.length) {
-    el.innerHTML = '<div style="font-size:10px;color:var(--muted);padding:3px 0;">バリエーションなし（単一画像）</div>';
-    return;
-  }
-
-  var h = '', thumbs = [];
-  vars.forEach(function(v, i) {
-    var isP  = (v.src === scr.imageSrc);
-    var tid  = 'scrVarThumb_' + i;
-    thumbs.push([tid, v.src]);
-    h += '<div class="scr-var-row' + (isP ? ' primary' : '') + '">'
-       +   '<img class="scr-var-thumb" id="' + tid + '" src="" alt="">'
-       +   '<span class="scr-var-name">' + (isP ? '★ ' : '') + esc(v.label || ('画像' + (i + 1))) + '</span>'
-       +   '<input class="scr-var-lbl-input" value="' + esc(v.label || '') + '" placeholder="ラベル"'
-       +          ' onchange="_scrSetVariantLabel(' + i + ',this.value)">'
-       +   (isP ? '' : '<button class="scr-btn-xs" onclick="_scrSetPrimaryVariant(' + i + ')" title="この画像を既定表示にする">★</button>')
-       +   '<button class="scr-var-del" onclick="_scrDelVariant(' + i + ')" title="このバリエーションを外す">✕</button>'
-       + '</div>';
-  });
-  el.innerHTML = h;
-
-  // innerHTML 反映後にサムネイルを解決してセットする
-  thumbs.forEach(function(t) {
-    resolveImg(t[1]).then(function(d) {
-      var e = document.getElementById(t[0]);
-      if (e && d) e.src = d;
-    });
-  });
-}
-
-function _scrSetVariantLabel(i, val) {
-  var scr = _scrGetSelScreen(); if (!scr || !scr.variants || !scr.variants[i]) return;
-  scr.variants[i].label = String(val || '').trim();
-  scrSaveIndex(); scrSaveData(); markDirty();
-  _scrRenderVariantList(scr);
-}
-
-/** バリエーションのうち1枚を「既定（一覧サムネイル・初期表示）」にする */
-function _scrSetPrimaryVariant(i) {
-  var scr = _scrGetSelScreen(); if (!scr || !scr.variants || !scr.variants[i]) return;
-  scr.imageSrc = scr.variants[i].src;
-  scrSaveIndex(); scrSaveData(); markDirty();
-  _scrUpdateCenterCanvas();
-  scrRenderUnifiedSidebar();
-  _scrRenderVariantList(scr);
-  toast('★ 既定の画像を変更しました');
-}
-
-function _scrDelVariant(i) {
-  var scr = _scrGetSelScreen(); if (!scr || !scr.variants || !scr.variants[i]) return;
-  var removed = scr.variants.splice(i, 1)[0];
-  if (scr.imageSrc === removed.src) {
-    scr.imageSrc = scr.variants.length ? scr.variants[0].src : scr.imageSrc;
-  }
-  if (scr.variants.length < 2) delete scr.variants;
-  scrSaveIndex(); scrSaveData(); markDirty();
-  _scrUpdateCenterCanvas();
-  scrRenderUnifiedSidebar();
-  _scrRenderVariantList(scr);
-}
-
-/** 「＋ バリエーション画像を追加」 */
-function _scrAddVariantFiles(input) {
-  var files = Array.from(input.files || []);
-  input.value = '';
-  if (!files.length) return;
-  var scr = _scrGetSelScreen();
-  if (!scr) { toast('⚠️ 先に画面を選択してください'); return; }
-
-  _imgLibImportFiles(files, function(items) {
-    if (!items.length) return;
-    if (!Array.isArray(scr.variants) || !scr.variants.length) {
-      scr.variants = [{ src: scr.imageSrc, label: '既定' }];
-    }
-    items.forEach(function(it) {
-      var src = 'lib:' + it.id;
-      if (scr.variants.some(function(v) { return v.src === src; })) return;
-      var d = _imgLibDetectVariant(it.name);
-      scr.variants.push({ src: src, label: (d ? d.label : it.name) || '' });
-    });
-    scrSaveIndex(); scrSaveData(); markDirty();
-    _scrRenderVariantList(scr);
-    toast('✅ バリエーションを追加しました');
-  });
-}
-
 
 /* ===================================================================
    ④ ＜＞ による連続移動
@@ -10842,128 +10545,6 @@ function _scrReadFilesToPat(files, patId) {
 
 var _imgLibSetIds = [];   // モーダルで編集中の対象画像ID（表示順）
 
-/** モーダルを開く。ids は対象画像のライブラリID配列 */
-function _imgLibOpenSetModal(ids) {
-  ids = (ids || []).filter(Boolean);
-  if (!ids.length) { toast('⚠️ 画像を選択してください'); return; }
-
-  // 名前順で初期整列（既にセット済みなら setOrder 優先）
-  var items = ids.map(function(id) {
-    return _imgLibAllItems.find(function(x) { return x.id === id; });
-  }).filter(Boolean);
-  items.sort(function(a, b) {
-    var d = (a.setOrder != null ? a.setOrder : 999) - (b.setOrder != null ? b.setOrder : 999);
-    if (d !== 0) return d;
-    return String(a.name || '').localeCompare(String(b.name || ''), 'ja', { numeric: true });
-  });
-  _imgLibSetIds = items.map(function(x) { return x.id; });
-
-  // 既存セットのプルダウンを構築
-  var sel = document.getElementById('imgLibSetExisting');
-  var seen = {}, opts = '';
-  _imgLibAllItems.forEach(function(x) {
-    if (!x.setId || seen[x.setId]) return;
-    seen[x.setId] = true;
-    var n = _imgLibAllItems.filter(function(y) { return y.setId === x.setId; }).length;
-    opts += '<option value="' + x.setId + '">' + esc(x.setName || 'セット') + '（' + n + '枚）</option>';
-  });
-  if (sel) sel.innerHTML = opts || '<option value="">（既存のセットはありません）</option>';
-
-  // モード初期値：全員が同じセットに属していれば「既存」、それ以外は「新規」
-  var curSet = items[0] && items[0].setId;
-  var allSame = curSet && items.every(function(x) { return x.setId === curSet; });
-  var radios = document.getElementsByName('imgLibSetMode');
-  Array.from(radios).forEach(function(r) { r.checked = (r.value === (allSame ? 'existing' : 'new')); });
-  if (allSame && sel) sel.value = curSet;
-
-  // セット名の初期値：共通のベース名を推定
-  var guess = '';
-  var d0 = _imgLibDetectVariant(items[0].name);
-  if (d0 && items.every(function(x) {
-        var d = _imgLibDetectVariant(x.name);
-        return d && d.base === d0.base;
-      })) {
-    guess = d0.base;
-  } else {
-    guess = String(items[0].name || '').replace(/[_\-\s]+(ON|OFF|on|off)$/i, '');
-  }
-  var nameInp = document.getElementById('imgLibSetNewName');
-  if (nameInp) nameInp.value = (allSame ? (items[0].setName || guess) : guess);
-
-  _imgLibSetModeChange();
-  _imgLibRenderSetList();
-
-  // ピッカーは毎回閉じた状態で開く
-  var pk = document.getElementById('imgLibSetPicker');
-  if (pk) pk.style.display = 'none';
-
-  var m = document.getElementById('imgLibSetModal');
-  if (m) m.style.display = 'flex';
-}
-
-function _imgLibCloseSetModal() {
-  var m = document.getElementById('imgLibSetModal');
-  if (m) m.style.display = 'none';
-  _imgLibSetIds = [];
-}
-
-/** ラジオ切替：入力欄の有効／無効と対象一覧の表示を更新 */
-function _imgLibSetModeChange() {
-  var mode = _imgLibGetSetMode();
-  var nameInp = document.getElementById('imgLibSetNewName');
-  var sel     = document.getElementById('imgLibSetExisting');
-  var targets = document.getElementById('imgLibSetTargets');
-  if (nameInp) { nameInp.disabled = (mode !== 'new');      nameInp.style.opacity = (mode === 'new')      ? '1' : '.45'; }
-  if (sel)     { sel.disabled     = (mode !== 'existing'); sel.style.opacity     = (mode === 'existing') ? '1' : '.45'; }
-  if (targets) targets.style.display = (mode === 'clear') ? 'none' : '';
-}
-
-function _imgLibGetSetMode() {
-  var radios = document.getElementsByName('imgLibSetMode');
-  for (var i = 0; i < radios.length; i++) if (radios[i].checked) return radios[i].value;
-  return 'new';
-}
-
-/** 対象画像の一覧（サムネイル・ラベル・並べ替え）を描画 */
-function _imgLibRenderSetList() {
-  var el = document.getElementById('imgLibSetList');
-  if (!el) return;
-  var h = '';
-  _imgLibSetIds.forEach(function(id, i) {
-    var it = _imgLibAllItems.find(function(x) { return x.id === id; });
-    if (!it) return;
-    var d = _imgLibDetectVariant(it.name);
-    var label = it.setLabel || (d ? d.label : (i === 0 ? '既定' : String(i + 1)));
-    h += '<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;border-bottom:1px solid var(--border);background:' + (i === 0 ? 'var(--accent-lt)' : 'var(--surface)') + ';">'
-       +   '<span style="font-size:10px;font-weight:700;color:' + (i === 0 ? 'var(--accent)' : 'var(--text3)') + ';width:34px;flex-shrink:0;">' + (i === 0 ? '★既定' : (i + 1)) + '</span>'
-       +   '<img src="' + it.dataUrl + '" style="width:56px;height:36px;object-fit:contain;background:var(--surface2);border:1px solid var(--border);border-radius:3px;flex-shrink:0;">'
-       +   '<span style="flex:1;min-width:0;font-size:11px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + esc(it.name || it.id) + '</span>'
-       +   '<input type="text" id="imgLibSetLbl_' + i + '" value="' + esc(label) + '" placeholder="ラベル"'
-       +          ' style="width:88px;flex-shrink:0;height:26px;padding:0 7px;border:1px solid var(--border);border-radius:4px;font-size:11px;font-family:inherit;background:var(--surface);color:var(--text);">'
-       +   '<button onclick="_imgLibSetMove(' + i + ',-1)" title="上へ" ' + (i === 0 ? 'disabled' : '') + ' style="flex-shrink:0;width:24px;height:24px;border:1px solid var(--border);border-radius:4px;background:var(--surface2);cursor:pointer;font-size:11px;font-family:inherit;color:var(--text2);">↑</button>'
-       +   '<button onclick="_imgLibSetMove(' + i + ',1)" title="下へ" ' + (i === _imgLibSetIds.length - 1 ? 'disabled' : '') + ' style="flex-shrink:0;width:24px;height:24px;border:1px solid var(--border);border-radius:4px;background:var(--surface2);cursor:pointer;font-size:11px;font-family:inherit;color:var(--text2);">↓</button>'
-       +   '<button onclick="_imgLibSetRemoveRow(' + i + ')" title="対象から外す" style="flex-shrink:0;background:none;border:none;cursor:pointer;color:var(--text3);font-size:12px;">✕</button>'
-       + '</div>';
-  });
-  el.innerHTML = h || '<div style="padding:14px;font-size:11px;color:var(--text3);text-align:center;">対象画像がありません</div>';
-}
-
-/** 並べ替え（ラベルの入力途中の値も保持する） */
-function _imgLibSetMove(i, d) {
-  var n = i + d;
-  if (n < 0 || n >= _imgLibSetIds.length) return;
-  _imgLibStashLabels();
-  var moved = _imgLibSetIds.splice(i, 1)[0];
-  _imgLibSetIds.splice(n, 0, moved);
-  _imgLibRenderSetList();
-}
-
-function _imgLibSetRemoveRow(i) {
-  _imgLibStashLabels();
-  _imgLibSetIds.splice(i, 1);
-  _imgLibRenderSetList();
-}
-
 /** 入力中のラベルを一時的にメモリ側へ退避（再描画で消えないように） */
 function _imgLibStashLabels() {
   _imgLibSetIds.forEach(function(id, i) {
@@ -10974,158 +10555,8 @@ function _imgLibStashLabels() {
   });
 }
 
-/** 登録を確定して IndexedDB へ保存 */
-function _imgLibSaveSetModal() {
-  var mode = _imgLibGetSetMode();
-
-  // ── 解除 ──
-  if (mode === 'clear') {
-    var updates = _imgLibSetIds.map(function(id) {
-      var it = _imgLibAllItems.find(function(x) { return x.id === id; });
-      if (it) { delete it.setId; delete it.setName; delete it.setLabel; delete it.setOrder; }
-      return { id: id, fields: { setId: null, setName: null, setLabel: null, setOrder: null } };
-    });
-    _imgLibBulkUpdate(updates, function() {
-      _imgLibCloseSetModal();
-      _imgLibClearSelection();
-      _imgLibFilter();
-      toast('🔓 セットを解除しました');
-    });
-    return;
-  }
-
-  if (_imgLibSetIds.length < 2) { toast('⚠️ セットには2枚以上の画像が必要です'); return; }
-  _imgLibStashLabels();
-
-  var setId, setName;
-  if (mode === 'existing') {
-    var sel = document.getElementById('imgLibSetExisting');
-    setId = sel ? sel.value : '';
-    if (!setId) { toast('⚠️ 追加先のセットを選択してください'); return; }
-    var ref = _imgLibAllItems.find(function(x) { return x.setId === setId; });
-    setName = ref ? (ref.setName || 'セット') : 'セット';
-    // 既存セットの元メンバーも含めて通し番号を振り直す
-    var existingIds = _imgLibAllItems
-      .filter(function(x) { return x.setId === setId && _imgLibSetIds.indexOf(x.id) < 0; })
-      .sort(function(a, b) { return (a.setOrder || 0) - (b.setOrder || 0); })
-      .map(function(x) { return x.id; });
-    _imgLibSetIds = existingIds.concat(_imgLibSetIds);
-  } else {
-    var nameInp = document.getElementById('imgLibSetNewName');
-    setName = nameInp ? nameInp.value.trim() : '';
-    if (!setName) { toast('⚠️ セット名を入力してください'); if (nameInp) nameInp.focus(); return; }
-    setId = _setGenId();
-  }
-
-  var updates = _imgLibSetIds.map(function(id, i) {
-    var it = _imgLibAllItems.find(function(x) { return x.id === id; });
-    var label = (it && it.setLabel) ? it.setLabel : (i === 0 ? '既定' : String(i + 1));
-    if (it) { it.setId = setId; it.setName = setName; it.setLabel = label; it.setOrder = i; }
-    return { id: id, fields: { setId: setId, setName: setName, setLabel: label, setOrder: i } };
-  });
-
-  _imgLibBulkUpdate(updates, function() {
-    _imgLibCloseSetModal();
-    _imgLibClearSelection();
-    _imgLibFilter();
-    toast('🧩 「' + setName + '」に ' + updates.length + ' 枚を登録しました');
-  });
-}
-
 /* ── セット登録モーダル：対象画像の追加 ────────────────────────── */
 
-/** ライブラリ画像ピッカーの開閉 */
-function _imgLibSetTogglePicker() {
-  var el = document.getElementById('imgLibSetPicker');
-  if (!el) return;
-  var open = (el.style.display !== 'none');
-  if (open) { el.style.display = 'none'; return; }
-  el.style.display = '';
-  var q = document.getElementById('imgLibSetPickerQ');
-  if (q) q.value = '';
-  _imgLibRenderSetPicker();
-  if (q) q.focus();
-}
-
-/** 未追加のライブラリ画像をサムネイル一覧で表示する */
-function _imgLibRenderSetPicker() {
-  var grid = document.getElementById('imgLibSetPickerGrid');
-  if (!grid) return;
-  var q = ((document.getElementById('imgLibSetPickerQ') || {}).value || '').trim().toLowerCase();
-
-  var cands = _imgLibAllItems.filter(function(it) {
-    if (_imgLibSetIds.indexOf(it.id) >= 0) return false;         // 既に対象
-    if (!q) return true;
-    return String(it.name || '').toLowerCase().indexOf(q) >= 0;
-  });
-
-  if (!cands.length) {
-    grid.innerHTML = '<div style="width:100%;text-align:center;padding:18px 0;font-size:11px;color:var(--text3);">'
-                   + (q ? '一致する画像がありません' : '追加できる画像がありません') + '</div>';
-    return;
-  }
-
-  grid.innerHTML = '';
-  cands.slice(0, 120).forEach(function(it) {
-    var card = document.createElement('div');
-    card.style.cssText = 'width:96px;border:1px solid var(--border);border-radius:6px;overflow:hidden;cursor:pointer;background:var(--surface2);transition:border-color .12s,box-shadow .12s;';
-    card.title = (it.setId ? '⚠️ 別のセット「' + (it.setName || '') + '」に登録済みです\n' : '') + 'クリックで対象に追加';
-    card.onmouseover = function() { this.style.borderColor = 'var(--accent)'; this.style.boxShadow = '0 2px 8px rgba(0,0,0,.14)'; };
-    card.onmouseout  = function() { this.style.borderColor = 'var(--border)'; this.style.boxShadow = 'none'; };
-
-    var im = document.createElement('img');
-    im.src = it.dataUrl;
-    im.style.cssText = 'width:100%;height:60px;object-fit:contain;display:block;background:var(--surface2);';
-    card.appendChild(im);
-
-    var cap = document.createElement('div');
-    cap.textContent = it.name || it.id;
-    cap.style.cssText = 'font-size:9px;color:var(--text2);padding:3px 5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;background:var(--surface);';
-    card.appendChild(cap);
-
-    if (it.setId) {
-      var warn = document.createElement('div');
-      warn.textContent = '🧩 ' + (it.setName || 'セット済');
-      warn.style.cssText = 'font-size:8px;color:#fff;background:var(--green,#2ec4b6);padding:1px 5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
-      card.appendChild(warn);
-    }
-
-    card.onclick = function() { _imgLibSetAddId(it.id); };
-    grid.appendChild(card);
-  });
-
-  if (cands.length > 120) {
-    var more = document.createElement('div');
-    more.textContent = 'ほか ' + (cands.length - 120) + ' 件。検索で絞り込んでください';
-    more.style.cssText = 'width:100%;text-align:center;padding:8px 0;font-size:10px;color:var(--text3);';
-    grid.appendChild(more);
-  }
-}
-
-/** 画像1枚を対象リストの末尾に追加する */
-function _imgLibSetAddId(id) {
-  if (!id || _imgLibSetIds.indexOf(id) >= 0) return;
-  _imgLibStashLabels();              // 入力途中のラベルを退避
-  _imgLibSetIds.push(id);
-  _imgLibRenderSetList();
-  _imgLibRenderSetPicker();
-}
-
-/** ローカルファイルを読み込んでライブラリ登録し、そのまま対象へ追加する */
-function _imgLibSetAddFiles(input) {
-  var files = Array.from(input.files || []);
-  input.value = '';
-  if (!files.length) return;
-  _imgLibStashLabels();
-  _imgLibImportFiles(files, function(items) {
-    if (!items.length) return;
-    items.forEach(function(it) {
-      if (_imgLibSetIds.indexOf(it.id) < 0) _imgLibSetIds.push(it.id);
-    });
-    _imgLibRenderSetList();
-    _imgLibRenderSetPicker();
-  });
-}
 </script>
 
 </body>

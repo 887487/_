@@ -1,88 +1,105 @@
 // 画面遷移データ — admin.html の「💾 保存して反映」で自動更新されます。
 // 画像は screen-images/ フォルダに実ファイルとして保存されています。
-// 生成日時: 2026-08-08T10:10:21.372Z
+// 生成日時: 2026-08-09T03:29:14.050Z
 window.APP_SCREEN_DATA = {
-  "savedAt": "2026-08-08T10:10:21.372Z",
+  "savedAt": "2026-08-09T03:29:14.050Z",
   "images": {
-    "lib00mgrcfnd": "screen-images/lib00mgrcfnd.png",
-    "lib0hur66912": "screen-images/lib0hur66912.png",
-    "lib16ol6nbgm": "screen-images/lib16ol6nbgm.png",
-    "lib1ao8tsbki": "screen-images/lib1ao8tsbki.png",
-    "lib1e6gduvan": "screen-images/lib1e6gduvan.png",
-    "lib2sx5xcj8f": "screen-images/lib2sx5xcj8f.png",
-    "lib65zua8dyb": "screen-images/lib65zua8dyb.png",
-    "lib3to5sf8nj": "screen-images/lib3to5sf8nj.png",
-    "lib3yo08jmor": "screen-images/lib3yo08jmor.png",
-    "lib40tkv6zkd": "screen-images/lib40tkv6zkd.png",
-    "lib4kchcfpct": "screen-images/lib4kchcfpct.png",
-    "lib4tge6a2wn": "screen-images/lib4tge6a2wn.png",
-    "lib5jhji9e7m": "screen-images/lib5jhji9e7m.png",
-    "lib5nid2ktsf": "screen-images/lib5nid2ktsf.png",
-    "lib73wqhphnn": "screen-images/lib73wqhphnn.png",
-    "lib88rby7amf": "screen-images/lib88rby7amf.png",
-    "lib8brxeiucf": "screen-images/lib8brxeiucf.png",
-    "lib8hdvtbq9m": "screen-images/lib8hdvtbq9m.png",
-    "lib8o79wuyx1": "screen-images/lib8o79wuyx1.png",
-    "lib912s60g24": "screen-images/lib912s60g24.png",
-    "lib9e48p5aeb": "screen-images/lib9e48p5aeb.png",
-    "libaums394si": "screen-images/libaums394si.png",
-    "libazfy1m4zp": "screen-images/libazfy1m4zp.png",
-    "libb8asvqlfq": "screen-images/libb8asvqlfq.png",
-    "libccixs7mic": "screen-images/libccixs7mic.png",
-    "libcf12kr3s1": "screen-images/libcf12kr3s1.png",
-    "libcg95wpvwc": "screen-images/libcg95wpvwc.png",
-    "liben8fgv7mr": "screen-images/liben8fgv7mr.png",
-    "libeorew8dhd": "screen-images/libeorew8dhd.png",
-    "libf7j8ya7m9": "screen-images/libf7j8ya7m9.png",
-    "libfhm654yuu": "screen-images/libfhm654yuu.png",
-    "libfkbs8apxb": "screen-images/libfkbs8apxb.png",
-    "libfye5q7g0x": "screen-images/libfye5q7g0x.png",
-    "libg275r51rg": "screen-images/libg275r51rg.png",
-    "libhvv790gm6": "screen-images/libhvv790gm6.png",
-    "libi42s3k6rq": "screen-images/libi42s3k6rq.png",
-    "libi43hjldtl": "screen-images/libi43hjldtl.png",
+    "lib00mgrcfnd": "screen-images/lib00mgrcfnd.jpg",
+    "lib0hur66912": "screen-images/lib0hur66912.jpg",
+    "lib0qiwvjtwe": "screen-images/lib0qiwvjtwe.jpg",
+    "lib16ol6nbgm": "screen-images/lib16ol6nbgm.jpg",
+    "lib1ao8tsbki": "screen-images/lib1ao8tsbki.jpg",
+    "lib1e6gduvan": "screen-images/lib1e6gduvan.jpg",
+    "lib2cyvm50ai": "screen-images/lib2cyvm50ai.png",
+    "lib3e75xplc8": "screen-images/lib3e75xplc8.jpg",
+    "lib3to5sf8nj": "screen-images/lib3to5sf8nj.jpg",
+    "lib3yo08jmor": "screen-images/lib3yo08jmor.jpg",
+    "lib40tkv6zkd": "screen-images/lib40tkv6zkd.jpg",
+    "lib4kchcfpct": "screen-images/lib4kchcfpct.jpg",
+    "lib4nbb4gqr0": "screen-images/lib4nbb4gqr0.png",
+    "lib4tge6a2wn": "screen-images/lib4tge6a2wn.jpg",
+    "lib5jhji9e7m": "screen-images/lib5jhji9e7m.jpg",
+    "lib5nid2ktsf": "screen-images/lib5nid2ktsf.jpg",
+    "lib73wqhphnn": "screen-images/lib73wqhphnn.jpg",
+    "lib7cndrqn74": "screen-images/lib7cndrqn74.png",
+    "lib80mmh0jcp": "screen-images/lib80mmh0jcp.png",
+    "lib88rby7amf": "screen-images/lib88rby7amf.jpg",
+    "lib8brxeiucf": "screen-images/lib8brxeiucf.jpg",
+    "lib8hdvtbq9m": "screen-images/lib8hdvtbq9m.jpg",
+    "lib8o79wuyx1": "screen-images/lib8o79wuyx1.jpg",
+    "lib8s0j8ppbo": "screen-images/lib8s0j8ppbo.png",
+    "lib912s60g24": "screen-images/lib912s60g24.jpg",
+    "lib9e48p5aeb": "screen-images/lib9e48p5aeb.jpg",
+    "lib9xs2bwn4a": "screen-images/lib9xs2bwn4a.png",
+    "liba177m2szv": "screen-images/liba177m2szv.png",
+    "liba6hlh7xbu": "screen-images/liba6hlh7xbu.png",
+    "libazfy1m4zp": "screen-images/libazfy1m4zp.jpg",
+    "libb8asvqlfq": "screen-images/libb8asvqlfq.jpg",
+    "libccixs7mic": "screen-images/libccixs7mic.jpg",
+    "libcf12kr3s1": "screen-images/libcf12kr3s1.jpg",
+    "libcg95wpvwc": "screen-images/libcg95wpvwc.jpg",
+    "liben8fgv7mr": "screen-images/liben8fgv7mr.jpg",
+    "libeorew8dhd": "screen-images/libeorew8dhd.jpg",
+    "libeyi66id4t": "screen-images/libeyi66id4t.png",
+    "libf7j8ya7m9": "screen-images/libf7j8ya7m9.jpg",
+    "libfhm654yuu": "screen-images/libfhm654yuu.jpg",
+    "libfkbs8apxb": "screen-images/libfkbs8apxb.jpg",
+    "libfye5q7g0x": "screen-images/libfye5q7g0x.jpg",
+    "libg275r51rg": "screen-images/libg275r51rg.jpg",
+    "libho1drrob5": "screen-images/libho1drrob5.png",
+    "libhvv790gm6": "screen-images/libhvv790gm6.jpg",
+    "libi42s3k6rq": "screen-images/libi42s3k6rq.jpg",
+    "libi43hjldtl": "screen-images/libi43hjldtl.jpg",
     "libkw8uibasb": "screen-images/libkw8uibasb.jpg",
-    "libl8kydc5ct": "screen-images/libl8kydc5ct.png",
-    "libm0qp0uf44": "screen-images/libm0qp0uf44.png",
-    "libm3brkvcs1": "screen-images/libm3brkvcs1.png",
-    "libmlujmw6em": "screen-images/libmlujmw6em.png",
-    "libmvlf0otcm": "screen-images/libmvlf0otcm.png",
-    "libn2izpsiln": "screen-images/libn2izpsiln.png",
-    "libo1rtgmzrf": "screen-images/libo1rtgmzrf.png",
-    "libo4kiqc052": "screen-images/libo4kiqc052.png",
-    "libp4v8g48sw": "screen-images/libp4v8g48sw.png",
-    "libp84m1b7xp": "screen-images/libp84m1b7xp.png",
-    "libph9b6heqb": "screen-images/libph9b6heqb.png",
-    "libpnuc42uhi": "screen-images/libpnuc42uhi.png",
-    "libpvazbp6iy": "screen-images/libpvazbp6iy.png",
-    "libq2pzl4q2y": "screen-images/libq2pzl4q2y.png",
-    "libtvihlf8b0": "screen-images/libtvihlf8b0.png",
-    "libu3komt3qx": "screen-images/libu3komt3qx.png",
-    "libu4ct517js": "screen-images/libu4ct517js.png",
-    "libz1lha7rux": "screen-images/libz1lha7rux.png",
-    "libzdq41eym1": "screen-images/libzdq41eym1.png",
-    "lib3ltpmtyeo": "screen-images/lib3ltpmtyeo.png"
+    "libl8kydc5ct": "screen-images/libl8kydc5ct.jpg",
+    "liblh8buqkgq": "screen-images/liblh8buqkgq.png",
+    "liblur830fgj": "screen-images/liblur830fgj.png",
+    "libm0qp0uf44": "screen-images/libm0qp0uf44.jpg",
+    "libm3brkvcs1": "screen-images/libm3brkvcs1.jpg",
+    "libmlujmw6em": "screen-images/libmlujmw6em.jpg",
+    "libmp02vpkud": "screen-images/libmp02vpkud.png",
+    "libn2izpsiln": "screen-images/libn2izpsiln.jpg",
+    "libo1rtgmzrf": "screen-images/libo1rtgmzrf.jpg",
+    "libo4kiqc052": "screen-images/libo4kiqc052.jpg",
+    "libo9t4bwvnt": "screen-images/libo9t4bwvnt.png",
+    "libog2g9mf8a": "screen-images/libog2g9mf8a.png",
+    "libp4v8g48sw": "screen-images/libp4v8g48sw.jpg",
+    "libp84m1b7xp": "screen-images/libp84m1b7xp.jpg",
+    "libph9b6heqb": "screen-images/libph9b6heqb.jpg",
+    "libpnuc42uhi": "screen-images/libpnuc42uhi.jpg",
+    "libpokcntvqf": "screen-images/libpokcntvqf.png",
+    "libpvazbp6iy": "screen-images/libpvazbp6iy.jpg",
+    "libq2pzl4q2y": "screen-images/libq2pzl4q2y.jpg",
+    "librsp92wn5v": "screen-images/librsp92wn5v.png",
+    "libtvihlf8b0": "screen-images/libtvihlf8b0.jpg",
+    "libu3komt3qx": "screen-images/libu3komt3qx.jpg",
+    "libu4ct517js": "screen-images/libu4ct517js.jpg",
+    "libuoqhmmscm": "screen-images/libuoqhmmscm.png",
+    "libvf2zn889h": "screen-images/libvf2zn889h.png",
+    "libwairy4j3z": "screen-images/libwairy4j3z.png",
+    "libz1lha7rux": "screen-images/libz1lha7rux.jpg",
+    "libzdq41eym1": "screen-images/libzdq41eym1.jpg",
+    "libzqi5vs72s": "screen-images/libzqi5vs72s.png"
   },
   "patterns": [
     {
-      "id": "schxl2l21o",
+      "id": "sc1enskfs7",
       "name": "パターン1",
       "screens": [
         {
-          "id": "sc7rawh68b",
-          "name": "［Info］00.トップ",
+          "id": "scrhh2pdlg",
+          "name": "［Info］00.ﾄｯﾌﾟ",
           "note": "",
-          "imageSrc": "lib:libtvihlf8b0",
           "hotspots": [
             {
-              "id": "schbso79f0",
+              "id": "scobdaafmj",
               "libHsId": "lhso4iywl44n",
               "x": 0,
               "y": 0,
               "w": 0.08402196652719665,
               "h": 0.03199431212228937,
               "note": "［Info ］≡メニュー",
-              "targetId": "sctxp03jf2",
+              "targetId": "sctuitpe46",
               "targetType": "screen",
               "libUnresolved": false,
               "libTargetId": "libm0qp0uf44",
@@ -90,22 +107,22 @@ window.APP_SCREEN_DATA = {
               "mailBtnTargets": []
             },
             {
-              "id": "scyvoijtr5",
+              "id": "scull10jwg",
               "libHsId": "lhsxuwkezo0e",
               "x": 0.9041056485355649,
               "y": 0,
               "w": 0.09589435146443515,
               "h": 0.03199431212228937,
               "note": "［Info ］NHKONE",
-              "targetId": "",
+              "targetId": "scpu4k3wzd",
               "targetType": "screen",
               "libUnresolved": false,
-              "libTargetId": "",
+              "libTargetId": "lib3to5sf8nj",
               "enabled": true,
               "mailBtnTargets": []
             },
             {
-              "id": "schpjagy8n",
+              "id": "scuzmraawg",
               "libHsId": "lhsir4t97zfu",
               "x": 0.6623622849381225,
               "y": 0.9294871794871795,
@@ -120,7 +137,7 @@ window.APP_SCREEN_DATA = {
               "mailBtnTargets": []
             },
             {
-              "id": "scbffwrcjy",
+              "id": "sc0m2evyru",
               "libHsId": "lhsz9jl65k9x",
               "x": 0.6623622849381225,
               "y": 0.9566666666666667,
@@ -134,23 +151,23 @@ window.APP_SCREEN_DATA = {
               "enabled": true,
               "mailBtnTargets": []
             }
-          ]
+          ],
+          "imageSrc": "lib:libtvihlf8b0"
         },
         {
-          "id": "sctxp03jf2",
-          "name": "［Info］01.メニュー",
+          "id": "sctuitpe46",
+          "name": "［Info］01.ﾒﾆｭｰ",
           "note": "",
-          "imageSrc": "lib:libm0qp0uf44",
           "hotspots": [
             {
-              "id": "sc1b70wshc",
+              "id": "sccg7wyvx9",
               "libHsId": "lhstlf521xt7",
               "x": 0.011047979797979798,
               "y": 0,
               "w": 0.08013468013468013,
               "h": 0.022119233199915735,
               "note": "メニュー",
-              "targetId": "sc7rawh68b",
+              "targetId": "scrhh2pdlg",
               "targetType": "screen",
               "libUnresolved": false,
               "libTargetId": "libtvihlf8b0",
@@ -158,22 +175,22 @@ window.APP_SCREEN_DATA = {
               "mailBtnTargets": []
             },
             {
-              "id": "scfucnnuza",
+              "id": "sc8bgjwvej",
               "libHsId": "lhs6d72in4ur",
               "x": 0.9046506734006734,
               "y": 0,
               "w": 0.08013468013468013,
               "h": 0.022119233199915735,
               "note": "NHKONE",
-              "targetId": "",
+              "targetId": "scpu4k3wzd",
               "targetType": "screen",
               "libUnresolved": false,
-              "libTargetId": "",
+              "libTargetId": "lib3to5sf8nj",
               "enabled": true,
               "mailBtnTargets": []
             },
             {
-              "id": "scnpdluoaf",
+              "id": "scut1n4fjl",
               "libHsId": "lhsr449wckde",
               "x": 0.6623622849381225,
               "y": 0.9497843637796286,
@@ -188,7 +205,7 @@ window.APP_SCREEN_DATA = {
               "mailBtnTargets": []
             },
             {
-              "id": "scs1iy7w03",
+              "id": "scgbszll28",
               "libHsId": "lhs3icvfxxdg",
               "x": 0.6623622849381225,
               "y": 0.9689915229956662,
@@ -203,14 +220,14 @@ window.APP_SCREEN_DATA = {
               "mailBtnTargets": []
             },
             {
-              "id": "scg8km059m",
+              "id": "scll5gt68j",
               "libHsId": "lhso4r6orcpz",
               "x": 0,
               "y": 0.05011135857461024,
               "w": 1,
               "h": 0.021529324424647365,
               "note": "ご利用方法",
-              "targetId": "sclzl2d4mk",
+              "targetId": "scdi0osmti",
               "targetType": "screen",
               "libUnresolved": false,
               "libTargetId": "libhvv790gm6",
@@ -218,7 +235,7 @@ window.APP_SCREEN_DATA = {
               "mailBtnTargets": []
             },
             {
-              "id": "sc2myhuzzd",
+              "id": "sc33cly6zm",
               "libHsId": "lhsjqk9dvcre",
               "x": 0,
               "y": 0.8504011326097216,
@@ -233,37 +250,37 @@ window.APP_SCREEN_DATA = {
               "mailBtnTargets": []
             },
             {
-              "id": "schx3aj180",
+              "id": "sclxfj67pu",
               "libHsId": "lhsa63z6enoz",
               "x": 0,
               "y": 0.8726524415102451,
               "w": 1,
               "h": 0.017225106182161526,
               "note": "閉じる",
-              "targetId": "sc7rawh68b",
+              "targetId": "scrhh2pdlg",
               "targetType": "screen",
               "libUnresolved": false,
               "libTargetId": "libtvihlf8b0",
               "enabled": true,
               "mailBtnTargets": []
             }
-          ]
+          ],
+          "imageSrc": "lib:libm0qp0uf44"
         },
         {
-          "id": "sclzl2d4mk",
-          "name": "［Info］02.メニュー＞ご利用方法",
+          "id": "scdi0osmti",
+          "name": "［Info］02.ﾒﾆｭｰ>ご利用方法",
           "note": "",
-          "imageSrc": "lib:libhvv790gm6",
           "hotspots": [
             {
-              "id": "scugte7j2s",
+              "id": "scbosb0dpd",
               "libHsId": "lhsrkwjmkodt",
               "x": 0.01038781163434903,
               "y": 0,
               "w": 0.08094023096582016,
               "h": 0.019789734075448363,
               "note": "メニュー",
-              "targetId": "sc7rawh68b",
+              "targetId": "scrhh2pdlg",
               "targetType": "screen",
               "libUnresolved": false,
               "libTargetId": "libtvihlf8b0",
@@ -271,22 +288,22 @@ window.APP_SCREEN_DATA = {
               "mailBtnTargets": []
             },
             {
-              "id": "sc8my61nr2",
+              "id": "sc8jw5fxwn",
               "libHsId": "lhsxyd2ryl0a",
               "x": 0.9041056485355649,
               "y": 0,
               "w": 0.08094023096582016,
               "h": 0.019789734075448363,
               "note": "NHKONE",
-              "targetId": "",
+              "targetId": "scpu4k3wzd",
               "targetType": "screen",
               "libUnresolved": false,
-              "libTargetId": "",
+              "libTargetId": "lib3to5sf8nj",
               "enabled": true,
               "mailBtnTargets": []
             },
             {
-              "id": "sc2uj7vxwu",
+              "id": "sc7pg7o07k",
               "libHsId": "lhsyiw7rc3g9",
               "x": 0.6623622849381225,
               "y": 0.9724038284557335,
@@ -301,7 +318,7 @@ window.APP_SCREEN_DATA = {
               "mailBtnTargets": []
             },
             {
-              "id": "scxya7cmq9",
+              "id": "scj9shstft",
               "libHsId": "lhsy4a0owyrx",
               "x": 0.6623622849381225,
               "y": 0.955562304435855,
@@ -316,22 +333,22 @@ window.APP_SCREEN_DATA = {
               "mailBtnTargets": []
             },
             {
-              "id": "sc9pw6joas",
+              "id": "sct7n9kg9s",
               "libHsId": "lhs6wdk3j4jo",
               "x": 0,
               "y": 0.13305265691390533,
               "w": 1,
               "h": 0.011886418666079682,
               "note": "アカウント設定(ログイン)",
-              "targetId": "sci4m966wt",
+              "targetId": "",
               "targetType": "screen",
-              "libUnresolved": false,
+              "libUnresolved": true,
               "libTargetId": "lib3ltpmtyeo",
               "enabled": true,
               "mailBtnTargets": []
             },
             {
-              "id": "scv715i6uf",
+              "id": "scknccjxl8",
               "libHsId": "lhsemeig6zrv",
               "x": 0,
               "y": 0.15474356152322255,
@@ -346,7 +363,7 @@ window.APP_SCREEN_DATA = {
               "mailBtnTargets": []
             },
             {
-              "id": "sct28zcaxq",
+              "id": "scizzskxtd",
               "libHsId": "lhs3zulpqpo4",
               "x": 0,
               "y": 0.8687137437429906,
@@ -361,150 +378,37 @@ window.APP_SCREEN_DATA = {
               "mailBtnTargets": []
             },
             {
-              "id": "schn4m57ku",
+              "id": "sc0s2969uv",
               "libHsId": "lhsgxb06wpxw",
               "x": 0,
               "y": 0.8880400827821955,
               "w": 1,
               "h": 0.011886418666079635,
               "note": "閉じる",
-              "targetId": "sc7rawh68b",
+              "targetId": "scrhh2pdlg",
               "targetType": "screen",
               "libUnresolved": false,
               "libTargetId": "libtvihlf8b0",
               "enabled": true,
               "mailBtnTargets": []
             }
-          ]
+          ],
+          "imageSrc": "lib:libhvv790gm6"
         },
         {
-          "id": "sci4m966wt",
-          "name": "［S］99.ログイン",
+          "id": "scpu4k3wzd",
+          "name": "［S］01.ご利用にあたって(1)",
           "note": "",
-          "imageSrc": "lib:lib3ltpmtyeo",
           "hotspots": [
             {
-              "id": "sckxftrbz0",
-              "libHsId": "lhs2kdrp8c81",
-              "x": 0.07202460106382978,
-              "y": 0.3062147913842446,
-              "w": 0.8569148936170212,
-              "h": 0.022222222222222233,
-              "note": "ログイン",
-              "targetId": "",
-              "targetType": "screen",
-              "libUnresolved": false,
-              "libTargetId": "",
-              "enabled": true,
-              "mailBtnTargets": []
-            },
-            {
-              "id": "scq1nlat0t",
-              "libHsId": "lhs6b4frv928",
-              "x": 0.29030686714147547,
-              "y": 0.3463492063492063,
-              "w": 0.4185169370438758,
-              "h": 0.022222222222222223,
-              "note": "メアド忘れ",
-              "targetId": "scqod1qz4e",
-              "targetType": "screen",
-              "libUnresolved": false,
-              "libTargetId": "lib65zua8dyb",
-              "enabled": true,
-              "mailBtnTargets": []
-            },
-            {
-              "id": "scetc1stog",
-              "libHsId": "lhsnwsp1gtn8",
-              "x": 0.29030686714147547,
-              "y": 0.36857142857142855,
-              "w": 0.4185169370438758,
-              "h": 0.022222222222222223,
-              "note": "PW忘れ",
-              "targetId": "sc2jqm27by",
-              "targetType": "screen",
-              "libUnresolved": false,
-              "libTargetId": "libmvlf0otcm",
-              "enabled": true,
-              "mailBtnTargets": []
-            }
-          ]
-        },
-        {
-          "id": "scqod1qz4e",
-          "name": "［S］99.ログイン",
-          "note": "",
-          "imageSrc": "lib:lib65zua8dyb",
-          "hotspots": [
-            {
-              "id": "sc9euq60yr",
-              "libHsId": "lhs2kdrp8c81",
-              "x": 0.07202460106382978,
-              "y": 0.3062147913842446,
-              "w": 0.8569148936170212,
-              "h": 0.022222222222222233,
-              "note": "ログイン",
-              "targetId": "",
-              "targetType": "screen",
-              "libUnresolved": false,
-              "libTargetId": "",
-              "enabled": true,
-              "mailBtnTargets": []
-            },
-            {
-              "id": "scny962bhz",
-              "libHsId": "lhs6b4frv928",
-              "x": 0.29030686714147547,
-              "y": 0.3463492063492063,
-              "w": 0.4185169370438758,
-              "h": 0.022222222222222223,
-              "note": "メアド忘れ",
-              "targetId": "",
-              "targetType": "screen",
-              "libUnresolved": true,
-              "libTargetId": "lib65zua8dyb",
-              "enabled": true,
-              "mailBtnTargets": []
-            },
-            {
-              "id": "scmaqdcoh3",
-              "libHsId": "lhsnwsp1gtn8",
-              "x": 0.29030686714147547,
-              "y": 0.36857142857142855,
-              "w": 0.4185169370438758,
-              "h": 0.022222222222222223,
-              "note": "PW忘れ",
-              "targetId": "sc2jqm27by",
-              "targetType": "screen",
-              "libUnresolved": false,
-              "libTargetId": "libmvlf0otcm",
-              "enabled": true,
-              "mailBtnTargets": []
-            }
-          ]
-        },
-        {
-          "id": "sc2jqm27by",
-          "name": "［S］99.PW忘れ",
-          "note": "",
-          "imageSrc": "lib:libmvlf0otcm",
-          "hotspots": []
-        },
-        {
-          "id": "sc865m8x5g",
-          "name": "［S］01.ご利用にあたって（1）",
-          "note": "",
-          "imageSrc": "lib:lib3to5sf8nj",
-          "hotspots": [
-            {
-              "id": "sc1iz1pk9n",
+              "id": "schdo4ddkn",
               "libHsId": "lhsegtz1i2zk",
               "x": 0.04592314901593252,
               "y": 0.830015923566879,
               "w": 0.8931583880037488,
               "h": 0.02945859872611465,
               "note": "内容について確認しました",
-              "targetId": "sc592p3zlc",
+              "targetId": "scmfx760tp",
               "targetType": "screen",
               "libUnresolved": false,
               "libTargetId": "liben8fgv7mr",
@@ -512,7 +416,7 @@ window.APP_SCREEN_DATA = {
               "mailBtnTargets": []
             },
             {
-              "id": "scuif72cbz",
+              "id": "sc368xyv18",
               "libHsId": "lhs3to5amn5g",
               "x": 0,
               "y": 0,
@@ -527,37 +431,37 @@ window.APP_SCREEN_DATA = {
               "mailBtnTargets": []
             },
             {
-              "id": "sc2pydujgj",
+              "id": "scoi3v1zq0",
               "libHsId": "lhsbr9fc7bc5",
               "x": 0.8088097469540768,
               "y": 0,
               "w": 0.07497656982193064,
               "h": 0.029856687898089172,
               "note": "ログイン",
-              "targetId": "sci4m966wt",
+              "targetId": "scpdcuhfz8",
               "targetType": "screen",
               "libUnresolved": false,
-              "libTargetId": "lib3ltpmtyeo",
+              "libTargetId": "lib7cndrqn74",
               "enabled": true,
               "mailBtnTargets": []
             },
             {
-              "id": "scmjypq2ss",
+              "id": "sc9nzp17aj",
               "libHsId": "lhszqqn0ywk9",
               "x": 0.8837863167760075,
               "y": 0,
               "w": 0.1162136832239925,
               "h": 0.029856687898089172,
               "note": "新規登録",
-              "targetId": "",
+              "targetId": "scm781gk11",
               "targetType": "screen",
               "libUnresolved": false,
-              "libTargetId": "",
+              "libTargetId": "lib0hur66912",
               "enabled": true,
               "mailBtnTargets": []
             },
             {
-              "id": "scdau5oeox",
+              "id": "scsd551nt3",
               "libHsId": "lhsrdrj0fh4i",
               "x": 0.3425925925925926,
               "y": 0.9207952770099749,
@@ -571,16 +475,16 @@ window.APP_SCREEN_DATA = {
               "enabled": true,
               "mailBtnTargets": []
             }
-          ]
+          ],
+          "imageSrc": "lib:lib3to5sf8nj"
         },
         {
-          "id": "sc592p3zlc",
-          "name": "［S］01.ご利用にあたって（2）",
+          "id": "scmfx760tp",
+          "name": "［S］01.ご利用にあたって(2)",
           "note": "",
-          "imageSrc": "lib:liben8fgv7mr",
           "hotspots": [
             {
-              "id": "sc2xkvf929",
+              "id": "scivdml4v1",
               "libHsId": "lhsez44gvdv5",
               "x": 0,
               "y": 0,
@@ -595,44 +499,44 @@ window.APP_SCREEN_DATA = {
               "mailBtnTargets": []
             },
             {
-              "id": "scfchc5om0",
+              "id": "scvu394ros",
               "libHsId": "lhsgy4s5ywo6",
               "x": 0.8088097469540768,
               "y": 0,
               "w": 0.07497656982193064,
               "h": 0.029856687898089172,
               "note": "ログイン",
-              "targetId": "sci4m966wt",
+              "targetId": "scpdcuhfz8",
               "targetType": "screen",
               "libUnresolved": false,
-              "libTargetId": "lib3ltpmtyeo",
+              "libTargetId": "lib7cndrqn74",
               "enabled": true,
               "mailBtnTargets": []
             },
             {
-              "id": "scr6v0u4n9",
+              "id": "scy9bntffh",
               "libHsId": "lhsu9ajnb7xb",
               "x": 0.8837863167760075,
               "y": 0,
               "w": 0.1162136832239925,
               "h": 0.029856687898089172,
               "note": "新規登録",
-              "targetId": "",
+              "targetId": "scm781gk11",
               "targetType": "screen",
               "libUnresolved": false,
-              "libTargetId": "",
+              "libTargetId": "lib0hur66912",
               "enabled": true,
               "mailBtnTargets": []
             },
             {
-              "id": "sca88s5zg4",
+              "id": "scqjswd4g5",
               "libHsId": "lhsy37ms3j24",
               "x": 0.04592314901593252,
               "y": 0.8913366782838602,
               "w": 0.8931583880037488,
               "h": 0.029458598726114574,
               "note": "次へ",
-              "targetId": "sczbcyt85v",
+              "targetId": "sc1hh4ym2o",
               "targetType": "screen",
               "libUnresolved": false,
               "libTargetId": "lib4tge6a2wn",
@@ -640,7 +544,7 @@ window.APP_SCREEN_DATA = {
               "mailBtnTargets": []
             },
             {
-              "id": "scdqs5qge3",
+              "id": "sc2pcdw9vs",
               "libHsId": "lhs4ldb49k3o",
               "x": 0.3425925925925926,
               "y": 0.9207952770099749,
@@ -654,16 +558,16 @@ window.APP_SCREEN_DATA = {
               "enabled": true,
               "mailBtnTargets": []
             }
-          ]
+          ],
+          "imageSrc": "lib:liben8fgv7mr"
         },
         {
-          "id": "sczbcyt85v",
-          "name": "［S］02.ご利用にあたって（1）",
+          "id": "sc1hh4ym2o",
+          "name": "［S］02.ご利用にあたって(1)",
           "note": "",
-          "imageSrc": "lib:lib4tge6a2wn",
           "hotspots": [
             {
-              "id": "scuz7bhjml",
+              "id": "sc21ac14jc",
               "libHsId": "lhs12abl7kc0",
               "x": 0,
               "y": 0,
@@ -678,52 +582,52 @@ window.APP_SCREEN_DATA = {
               "mailBtnTargets": []
             },
             {
-              "id": "scg1djgyjr",
+              "id": "sc1mtx0yb8",
               "libHsId": "lhserl66y1vw",
               "x": 0.8088097469540768,
               "y": 0,
               "w": 0.07497656982193064,
               "h": 0.029856687898089172,
               "note": "ログイン",
-              "targetId": "sci4m966wt",
+              "targetId": "scpdcuhfz8",
               "targetType": "screen",
               "libUnresolved": false,
-              "libTargetId": "lib3ltpmtyeo",
+              "libTargetId": "lib7cndrqn74",
               "enabled": true,
               "mailBtnTargets": []
             },
             {
-              "id": "scwu2xlc5u",
+              "id": "scecy07nr1",
               "libHsId": "lhsi15ncw98s",
               "x": 0.8837863167760075,
               "y": 0,
               "w": 0.1162136832239925,
               "h": 0.029856687898089172,
               "note": "新規登録",
-              "targetId": "",
+              "targetId": "scm781gk11",
               "targetType": "screen",
               "libUnresolved": false,
-              "libTargetId": "",
+              "libTargetId": "lib0hur66912",
               "enabled": true,
               "mailBtnTargets": []
             },
             {
-              "id": "sc01loigf8",
+              "id": "sc7eym3ts9",
               "libHsId": "lhsbcf7b52zu",
               "x": 0.04217432052483599,
               "y": 0.8496700116171936,
               "w": 0.9198627165122011,
               "h": 0.029458598726114574,
               "note": "サービスの利用を開始する",
-              "targetId": "",
+              "targetId": "scgszinaqi",
               "targetType": "screen",
               "libUnresolved": false,
-              "libTargetId": "",
+              "libTargetId": "libm3brkvcs1",
               "enabled": true,
               "mailBtnTargets": []
             },
             {
-              "id": "scjfjkrlpd",
+              "id": "scruplvghh",
               "libHsId": "lhs3pi4m3p2z",
               "x": 0.35555555555555557,
               "y": 0.8846317549973962,
@@ -738,7 +642,7 @@ window.APP_SCREEN_DATA = {
               "mailBtnTargets": []
             },
             {
-              "id": "sc9wchoq3q",
+              "id": "sc3lt58ul2",
               "libHsId": "lhsqc5726c83",
               "x": 0.04217432052483599,
               "y": 0.7059748427672956,
@@ -753,14 +657,14 @@ window.APP_SCREEN_DATA = {
               "mailBtnTargets": []
             },
             {
-              "id": "sc88ermw7g",
+              "id": "scf8fkhc8n",
               "libHsId": "lhstc8mmdzy6",
               "x": 0.23425925925925925,
               "y": 0.7059748427672956,
               "w": 0.12129629629629629,
               "h": 0.019654088050314465,
               "note": "事業",
-              "targetId": "scbb7wnj5y",
+              "targetId": "scqbslkvep",
               "targetType": "screen",
               "libUnresolved": false,
               "libTargetId": "lib00mgrcfnd",
@@ -768,32 +672,32 @@ window.APP_SCREEN_DATA = {
               "mailBtnTargets": []
             },
             {
-              "id": "scwu1b1m0q",
+              "id": "scsolhgecq",
               "libHsId": "lhso92ipsu9v",
               "x": 0.3555555555555555,
               "y": 0.7059748427672956,
               "w": 0.14953703703703708,
               "h": 0.019654088050314465,
               "note": "学校",
-              "targetId": "scb7qtqbzu",
+              "targetId": "sc4du28762",
               "targetType": "screen",
               "libUnresolved": false,
               "libTargetId": "libpvazbp6iy",
               "enabled": true,
               "mailBtnTargets": []
             }
-          ]
+          ],
+          "imageSrc": "lib:lib4tge6a2wn"
         },
         {
-          "id": "scbb7wnj5y",
-          "name": "［S］02.ご利用にあたって（2）",
+          "id": "scqbslkvep",
+          "name": "［S］02.ご利用にあたって(2)",
           "note": "",
-          "imageSrc": "lib:lib00mgrcfnd",
           "hotspots": [
             {
-              "id": "scfautzn3t",
+              "id": "scj9655xkf",
               "libHsId": "lhs9w4lz8af7",
-              "x": 0,
+              "x": 0.003257328990228013,
               "y": 0,
               "w": 0.08434864104967198,
               "h": 0.029856687898089172,
@@ -806,52 +710,52 @@ window.APP_SCREEN_DATA = {
               "mailBtnTargets": []
             },
             {
-              "id": "scutsfsa5b",
+              "id": "sczjnxjf16",
               "libHsId": "lhsjb7v7ioau",
               "x": 0.8088097469540768,
               "y": 0,
               "w": 0.07497656982193064,
               "h": 0.029856687898089172,
               "note": "ログイン",
-              "targetId": "sci4m966wt",
+              "targetId": "scpdcuhfz8",
               "targetType": "screen",
               "libUnresolved": false,
-              "libTargetId": "lib3ltpmtyeo",
+              "libTargetId": "lib7cndrqn74",
               "enabled": true,
               "mailBtnTargets": []
             },
             {
-              "id": "sc49xmqfbd",
+              "id": "scn1xu3ef2",
               "libHsId": "lhs6nov734s6",
               "x": 0.8837863167760075,
               "y": 0,
               "w": 0.1162136832239925,
               "h": 0.029856687898089172,
               "note": "新規登録",
-              "targetId": "",
+              "targetId": "scm781gk11",
               "targetType": "screen",
               "libUnresolved": false,
-              "libTargetId": "",
+              "libTargetId": "lib0hur66912",
               "enabled": true,
               "mailBtnTargets": []
             },
             {
-              "id": "scdidmxyp9",
+              "id": "sctdw2ivy8",
               "libHsId": "lhsu5mvkp0js",
               "x": 0.04217432052483599,
               "y": 0.8768778617510027,
               "w": 0.9198627165122011,
               "h": 0.029458598726114577,
               "note": "サービスの利用を開始する",
-              "targetId": "",
+              "targetId": "scnf3neowd",
               "targetType": "screen",
               "libUnresolved": false,
-              "libTargetId": "",
+              "libTargetId": "libo1rtgmzrf",
               "enabled": true,
               "mailBtnTargets": []
             },
             {
-              "id": "scvuo09nmn",
+              "id": "scfhodyxm0",
               "libHsId": "lhspdilwieqd",
               "x": 0.3555555555555555,
               "y": 0.9109475444710804,
@@ -866,14 +770,14 @@ window.APP_SCREEN_DATA = {
               "mailBtnTargets": []
             },
             {
-              "id": "scq3jbyo8b",
+              "id": "scqi236uxx",
               "libHsId": "lhshhzpgidlk",
               "x": 0.04217432052483599,
               "y": 0.7059748427672956,
               "w": 0.19208493873442326,
               "h": 0.019654088050314465,
               "note": "世帯",
-              "targetId": "sczbcyt85v",
+              "targetId": "sc1hh4ym2o",
               "targetType": "screen",
               "libUnresolved": false,
               "libTargetId": "lib4tge6a2wn",
@@ -881,7 +785,7 @@ window.APP_SCREEN_DATA = {
               "mailBtnTargets": []
             },
             {
-              "id": "scklx661mz",
+              "id": "scahhqhlk7",
               "libHsId": "lhst0ggbe422",
               "x": 0.23425925925925925,
               "y": 0.7059748427672956,
@@ -890,36 +794,36 @@ window.APP_SCREEN_DATA = {
               "note": "事業",
               "targetId": "",
               "targetType": "screen",
-              "libUnresolved": true,
-              "libTargetId": "lib00mgrcfnd",
+              "libUnresolved": false,
+              "libTargetId": "",
               "enabled": true,
               "mailBtnTargets": []
             },
             {
-              "id": "scn4kkgh6u",
+              "id": "scu6tgagxs",
               "libHsId": "lhswxyikc10u",
               "x": 0.3555555555555555,
               "y": 0.7059748427672956,
               "w": 0.14953703703703708,
               "h": 0.019654088050314465,
               "note": "学校",
-              "targetId": "scb7qtqbzu",
+              "targetId": "sc4du28762",
               "targetType": "screen",
               "libUnresolved": false,
               "libTargetId": "libpvazbp6iy",
               "enabled": true,
               "mailBtnTargets": []
             }
-          ]
+          ],
+          "imageSrc": "lib:lib00mgrcfnd"
         },
         {
-          "id": "scb7qtqbzu",
-          "name": "［S］02.ご利用にあたって（3）",
+          "id": "sc4du28762",
+          "name": "［S］02.ご利用にあたって(3)",
           "note": "",
-          "imageSrc": "lib:libpvazbp6iy",
           "hotspots": [
             {
-              "id": "sc38epuga7",
+              "id": "sczthn4wll",
               "libHsId": "lhsgbhrfy82z",
               "x": 0,
               "y": 0,
@@ -934,52 +838,52 @@ window.APP_SCREEN_DATA = {
               "mailBtnTargets": []
             },
             {
-              "id": "sccjoojwnv",
+              "id": "scaichrxo3",
               "libHsId": "lhsfd7pxi6jn",
               "x": 0.8088097469540768,
               "y": 0,
               "w": 0.07497656982193064,
               "h": 0.029856687898089172,
               "note": "ログイン",
-              "targetId": "sci4m966wt",
+              "targetId": "scpdcuhfz8",
               "targetType": "screen",
               "libUnresolved": false,
-              "libTargetId": "lib3ltpmtyeo",
+              "libTargetId": "lib7cndrqn74",
               "enabled": true,
               "mailBtnTargets": []
             },
             {
-              "id": "sctrblkl0p",
+              "id": "sc1vlygw3y",
               "libHsId": "lhsntqo56nl0",
               "x": 0.8837863167760075,
               "y": 0,
               "w": 0.1162136832239925,
               "h": 0.029856687898089172,
               "note": "新規登録",
-              "targetId": "",
+              "targetId": "scm781gk11",
               "targetType": "screen",
               "libUnresolved": false,
-              "libTargetId": "",
+              "libTargetId": "lib0hur66912",
               "enabled": true,
               "mailBtnTargets": []
             },
             {
-              "id": "scs98pnbsd",
+              "id": "scfy5esp6z",
               "libHsId": "lhsioc1l2oho",
               "x": 0.04217432052483599,
               "y": 0.8768778617510027,
               "w": 0.9198627165122011,
               "h": 0.029458598726114577,
               "note": "サービスの利用を開始する",
-              "targetId": "",
+              "targetId": "scupp3lz9u",
               "targetType": "screen",
               "libUnresolved": false,
-              "libTargetId": "",
+              "libTargetId": "lib912s60g24",
               "enabled": true,
               "mailBtnTargets": []
             },
             {
-              "id": "sc03772ppv",
+              "id": "sc3l7dq15x",
               "libHsId": "lhs0uek6jck6",
               "x": 0.3555555555555555,
               "y": 0.9113935748011429,
@@ -994,14 +898,14 @@ window.APP_SCREEN_DATA = {
               "mailBtnTargets": []
             },
             {
-              "id": "scn5e93fu6",
+              "id": "scvs4fdu7h",
               "libHsId": "lhsm8ialwmot",
               "x": 0.04217432052483599,
               "y": 0.7059748427672956,
               "w": 0.19208493873442326,
               "h": 0.019654088050314465,
               "note": "世帯",
-              "targetId": "sczbcyt85v",
+              "targetId": "sc1hh4ym2o",
               "targetType": "screen",
               "libUnresolved": false,
               "libTargetId": "lib4tge6a2wn",
@@ -1009,14 +913,14 @@ window.APP_SCREEN_DATA = {
               "mailBtnTargets": []
             },
             {
-              "id": "scmprxnkmi",
+              "id": "sc38xer474",
               "libHsId": "lhs4okqwy986",
               "x": 0.23425925925925925,
               "y": 0.7059748427672956,
               "w": 0.12129629629629629,
               "h": 0.019654088050314465,
               "note": "事業",
-              "targetId": "scbb7wnj5y",
+              "targetId": "scqbslkvep",
               "targetType": "screen",
               "libUnresolved": false,
               "libTargetId": "lib00mgrcfnd",
@@ -1024,7 +928,7 @@ window.APP_SCREEN_DATA = {
               "mailBtnTargets": []
             },
             {
-              "id": "schxtb9sy0",
+              "id": "sc9o4cb4jb",
               "libHsId": "lhsst8c1dnhc",
               "x": 0.3555555555555555,
               "y": 0.7059748427672956,
@@ -1033,21 +937,21 @@ window.APP_SCREEN_DATA = {
               "note": "学校",
               "targetId": "",
               "targetType": "screen",
-              "libUnresolved": true,
-              "libTargetId": "libpvazbp6iy",
+              "libUnresolved": false,
+              "libTargetId": "",
               "enabled": true,
               "mailBtnTargets": []
             }
-          ]
+          ],
+          "imageSrc": "lib:libpvazbp6iy"
         },
         {
-          "id": "scv8zm0zul",
-          "name": "［S］03.①世帯_アカウントレス",
+          "id": "scgszinaqi",
+          "name": "［S］03.①世帯_ｱｶｳﾝﾄﾚｽ",
           "note": "",
-          "imageSrc": "lib:libm3brkvcs1",
           "hotspots": [
             {
-              "id": "sc8lvxjy9f",
+              "id": "scy1mb8o42",
               "libHsId": "lhsc2pkwzwei",
               "x": 0,
               "y": 0,
@@ -1062,45 +966,45 @@ window.APP_SCREEN_DATA = {
               "mailBtnTargets": []
             },
             {
-              "id": "sc9i879oqm",
+              "id": "sc3b9i4wk0",
               "libHsId": "lhsgnngwrb8x",
               "x": 0.8088097469540768,
               "y": 0,
               "w": 0.07497656982193064,
               "h": 0.029856687898089172,
               "note": "ログイン",
-              "targetId": "sci4m966wt",
+              "targetId": "scpdcuhfz8",
               "targetType": "screen",
               "libUnresolved": false,
-              "libTargetId": "lib3ltpmtyeo",
+              "libTargetId": "lib7cndrqn74",
               "enabled": true,
               "mailBtnTargets": []
             },
             {
-              "id": "sc2qdbhmln",
+              "id": "scqg2nim2b",
               "libHsId": "lhskdvm2c21p",
               "x": 0.8837863167760075,
               "y": 0,
               "w": 0.1162136832239925,
               "h": 0.029856687898089172,
               "note": "新規登録",
-              "targetId": "",
+              "targetId": "scm781gk11",
               "targetType": "screen",
               "libUnresolved": false,
-              "libTargetId": "",
+              "libTargetId": "lib0hur66912",
               "enabled": true,
               "mailBtnTargets": []
             }
-          ]
+          ],
+          "imageSrc": "lib:libm3brkvcs1"
         },
         {
-          "id": "scewgri442",
-          "name": "［S］03.②事業_アカウントレス（入力勧奨）",
+          "id": "scnf3neowd",
+          "name": "［S］03.②事業_ｱｶｳﾝﾄﾚｽ(入力勧奨)",
           "note": "",
-          "imageSrc": "lib:libo1rtgmzrf",
           "hotspots": [
             {
-              "id": "scb9pjeotj",
+              "id": "scrbykm8zc",
               "libHsId": "lhsk328v2wk2",
               "x": 0,
               "y": 0,
@@ -1115,45 +1019,45 @@ window.APP_SCREEN_DATA = {
               "mailBtnTargets": []
             },
             {
-              "id": "sc7wywcmzb",
+              "id": "schl6h2rdu",
               "libHsId": "lhsc8joup1nx",
               "x": 0.8088097469540768,
               "y": 0,
               "w": 0.07497656982193064,
               "h": 0.029856687898089172,
               "note": "ログイン",
-              "targetId": "sci4m966wt",
+              "targetId": "scpdcuhfz8",
               "targetType": "screen",
               "libUnresolved": false,
-              "libTargetId": "lib3ltpmtyeo",
+              "libTargetId": "lib7cndrqn74",
               "enabled": true,
               "mailBtnTargets": []
             },
             {
-              "id": "scjuzs8jdv",
+              "id": "sc13nvd70y",
               "libHsId": "lhs4r9heodq0",
               "x": 0.8837863167760075,
               "y": 0,
               "w": 0.1162136832239925,
               "h": 0.029856687898089172,
               "note": "新規登録",
-              "targetId": "",
+              "targetId": "scm781gk11",
               "targetType": "screen",
               "libUnresolved": false,
-              "libTargetId": "",
+              "libTargetId": "lib0hur66912",
               "enabled": true,
               "mailBtnTargets": []
             }
-          ]
+          ],
+          "imageSrc": "lib:libo1rtgmzrf"
         },
         {
-          "id": "sc921ulded",
-          "name": "［S］03.②事業/③学校_アカウントレス",
+          "id": "scpiug1h8g",
+          "name": "［S］03.②事業/③学校_ｱｶｳﾝﾄﾚｽ",
           "note": "",
-          "imageSrc": "lib:libcg95wpvwc",
           "hotspots": [
             {
-              "id": "scmjs0hyu0",
+              "id": "scpyptwacg",
               "libHsId": "lhszmsxndnzi",
               "x": 0,
               "y": 0,
@@ -1168,51 +1072,51 @@ window.APP_SCREEN_DATA = {
               "mailBtnTargets": []
             },
             {
-              "id": "scffq366fp",
+              "id": "scty87sscp",
               "libHsId": "lhsruv6prad5",
               "x": 0.8088097469540768,
               "y": 0,
               "w": 0.07497656982193064,
               "h": 0.029856687898089172,
               "note": "ログイン",
-              "targetId": "sci4m966wt",
+              "targetId": "scpdcuhfz8",
               "targetType": "screen",
               "libUnresolved": false,
-              "libTargetId": "lib3ltpmtyeo",
+              "libTargetId": "lib7cndrqn74",
               "enabled": true,
               "mailBtnTargets": []
             },
             {
-              "id": "scavi78fhg",
+              "id": "sc2vj2m6mg",
               "libHsId": "lhsgn0hg4zv6",
               "x": 0.8837863167760075,
               "y": 0,
               "w": 0.1162136832239925,
               "h": 0.029856687898089172,
               "note": "新規登録",
-              "targetId": "",
+              "targetId": "scm781gk11",
               "targetType": "screen",
               "libUnresolved": false,
-              "libTargetId": "",
+              "libTargetId": "lib0hur66912",
               "enabled": true,
               "mailBtnTargets": []
             }
-          ]
+          ],
+          "imageSrc": "lib:libcg95wpvwc"
         },
         {
-          "id": "scwumr4391",
-          "name": "［S］04.アカウントの登録にあたって",
+          "id": "scupp3lz9u",
+          "name": "［S］03.③学校_ｱｶｳﾝﾄﾚｽ(入力勧奨)",
           "note": "",
-          "imageSrc": "lib:lib0hur66912",
           "hotspots": [
             {
-              "id": "scv3hlm2yf",
-              "libHsId": "lhsjm0l6jzod",
-              "x": 0.07063284518828451,
-              "y": 0.22893707785282616,
-              "w": 0.8592846524375464,
-              "h": 0.027728403839317465,
-              "note": "新規登録",
+              "id": "sc3bz5pct5",
+              "libHsId": "lhs5b6ip1wio",
+              "x": 0,
+              "y": 0,
+              "w": 0.08434864104967198,
+              "h": 0.029856687898089172,
+              "note": "メニュー",
               "targetId": "",
               "targetType": "screen",
               "libUnresolved": false,
@@ -1221,7 +1125,60 @@ window.APP_SCREEN_DATA = {
               "mailBtnTargets": []
             },
             {
-              "id": "sctrvwn3ax",
+              "id": "scise9xz6d",
+              "libHsId": "lhsk4cxomdp7",
+              "x": 0.8088097469540768,
+              "y": 0,
+              "w": 0.07497656982193064,
+              "h": 0.029856687898089172,
+              "note": "ログイン",
+              "targetId": "scpdcuhfz8",
+              "targetType": "screen",
+              "libUnresolved": false,
+              "libTargetId": "lib7cndrqn74",
+              "enabled": true,
+              "mailBtnTargets": []
+            },
+            {
+              "id": "sc31w2p4j9",
+              "libHsId": "lhsm2cvihkzw",
+              "x": 0.8837863167760075,
+              "y": 0,
+              "w": 0.1162136832239925,
+              "h": 0.029856687898089172,
+              "note": "新規登録",
+              "targetId": "scm781gk11",
+              "targetType": "screen",
+              "libUnresolved": false,
+              "libTargetId": "lib0hur66912",
+              "enabled": true,
+              "mailBtnTargets": []
+            }
+          ],
+          "imageSrc": "lib:lib912s60g24"
+        },
+        {
+          "id": "scm781gk11",
+          "name": "［S］04.ｱｶｳﾝﾄの登録にあたって",
+          "note": "",
+          "hotspots": [
+            {
+              "id": "sc6hq2j9g6",
+              "libHsId": "lhsjm0l6jzod",
+              "x": 0.07063284518828451,
+              "y": 0.22893707785282616,
+              "w": 0.8592846524375464,
+              "h": 0.027728403839317465,
+              "note": "新規登録",
+              "targetId": "scz8q53iec",
+              "targetType": "screen",
+              "libUnresolved": false,
+              "libTargetId": "libu4ct517js",
+              "enabled": true,
+              "mailBtnTargets": []
+            },
+            {
+              "id": "scmlm26l5e",
               "libHsId": "lhs9kvkymksj",
               "x": 0.07063284518828451,
               "y": 0.26535105569468703,
@@ -1235,16 +1192,16 @@ window.APP_SCREEN_DATA = {
               "enabled": true,
               "mailBtnTargets": []
             }
-          ]
+          ],
+          "imageSrc": "lib:lib0hur66912"
         },
         {
-          "id": "sczji74e4t",
+          "id": "scz8q53iec",
           "name": "［S］05.①世帯_用途と地域の選択",
           "note": "",
-          "imageSrc": "lib:libu4ct517js",
           "hotspots": [
             {
-              "id": "scc4iitevg",
+              "id": "sce3esoa63",
               "libHsId": "lhshq81h77wp",
               "x": 0,
               "y": 0.1887664415215073,
@@ -1259,14 +1216,14 @@ window.APP_SCREEN_DATA = {
               "mailBtnTargets": []
             },
             {
-              "id": "scv5bao7y5",
+              "id": "scbbzukgzk",
               "libHsId": "lhsc9ij0eygz",
               "x": 0.19197175732217572,
               "y": 0.1887664415215073,
               "w": 0.12468619246861924,
               "h": 0.015997156061144685,
               "note": "事業",
-              "targetId": "scupbx0nx1",
+              "targetId": "scj3mnmrkq",
               "targetType": "screen",
               "libUnresolved": false,
               "libTargetId": "libu3komt3qx",
@@ -1274,14 +1231,14 @@ window.APP_SCREEN_DATA = {
               "mailBtnTargets": []
             },
             {
-              "id": "scac4r6705",
+              "id": "scx2poiop1",
               "libHsId": "lhsovqueuwus",
               "x": 0.316657949790795,
               "y": 0.1887664415215073,
               "w": 0.13389121338912133,
               "h": 0.015997156061144685,
               "note": "学校",
-              "targetId": "scyvk13ga0",
+              "targetId": "scgcrwsdst",
               "targetType": "screen",
               "libUnresolved": false,
               "libTargetId": "lib5nid2ktsf",
@@ -1289,37 +1246,37 @@ window.APP_SCREEN_DATA = {
               "mailBtnTargets": []
             },
             {
-              "id": "scwvhrck0w",
+              "id": "scks7dtb3p",
               "libHsId": "lhsnn0p1or9k",
               "x": 0.07127659574468086,
               "y": 0.31453025058989814,
               "w": 0.8587267287234043,
               "h": 0.026861525279961756,
               "note": "続ける",
-              "targetId": "scm69vkhox",
+              "targetId": "scckf3el41",
               "targetType": "screen",
               "libUnresolved": false,
               "libTargetId": "libeorew8dhd",
               "enabled": true,
               "mailBtnTargets": []
             }
-          ]
+          ],
+          "imageSrc": "lib:libu4ct517js"
         },
         {
-          "id": "scupbx0nx1",
+          "id": "scj3mnmrkq",
           "name": "［S］05.②事業_用途と地域の選択",
           "note": "",
-          "imageSrc": "lib:libu3komt3qx",
           "hotspots": [
             {
-              "id": "sc955y9j34",
+              "id": "scfm9yymmk",
               "libHsId": "lhsv23655jvj",
               "x": 0,
               "y": 0.1887664415215073,
               "w": 0.19197175732217572,
               "h": 0.015997156061144685,
               "note": "世帯",
-              "targetId": "sczji74e4t",
+              "targetId": "scz8q53iec",
               "targetType": "screen",
               "libUnresolved": false,
               "libTargetId": "libu4ct517js",
@@ -1327,7 +1284,7 @@ window.APP_SCREEN_DATA = {
               "mailBtnTargets": []
             },
             {
-              "id": "sco8fe0byc",
+              "id": "scd28y70ci",
               "libHsId": "lhsz02z4sf3n",
               "x": 0.19197175732217572,
               "y": 0.1887664415215073,
@@ -1336,20 +1293,20 @@ window.APP_SCREEN_DATA = {
               "note": "事業",
               "targetId": "",
               "targetType": "screen",
-              "libUnresolved": true,
-              "libTargetId": "libu3komt3qx",
+              "libUnresolved": false,
+              "libTargetId": "",
               "enabled": true,
               "mailBtnTargets": []
             },
             {
-              "id": "scgzdkcciv",
+              "id": "scbinfjf8a",
               "libHsId": "lhs60fg4szwx",
               "x": 0.316657949790795,
               "y": 0.1887664415215073,
               "w": 0.13389121338912133,
               "h": 0.015997156061144685,
               "note": "学校",
-              "targetId": "scyvk13ga0",
+              "targetId": "scgcrwsdst",
               "targetType": "screen",
               "libUnresolved": false,
               "libTargetId": "lib5nid2ktsf",
@@ -1357,37 +1314,37 @@ window.APP_SCREEN_DATA = {
               "mailBtnTargets": []
             },
             {
-              "id": "scy9x0uq7y",
+              "id": "scoas6wfo7",
               "libHsId": "lhsivt0h33xm",
               "x": 0.07127659574468086,
               "y": 0.34460543855982295,
               "w": 0.8587267287234043,
               "h": 0.026861525279961756,
               "note": "続ける",
-              "targetId": "scm69vkhox",
+              "targetId": "scckf3el41",
               "targetType": "screen",
               "libUnresolved": false,
               "libTargetId": "libeorew8dhd",
               "enabled": true,
               "mailBtnTargets": []
             }
-          ]
+          ],
+          "imageSrc": "lib:libu3komt3qx"
         },
         {
-          "id": "scyvk13ga0",
+          "id": "scgcrwsdst",
           "name": "［S］05.③学校_用途と地域の選択",
           "note": "",
-          "imageSrc": "lib:lib5nid2ktsf",
           "hotspots": [
             {
-              "id": "sc40olwxwf",
+              "id": "scpza9njou",
               "libHsId": "lhsh6qo9d8sy",
               "x": 0,
               "y": 0.1887664415215073,
               "w": 0.19197175732217572,
               "h": 0.015997156061144685,
               "note": "世帯",
-              "targetId": "sczji74e4t",
+              "targetId": "scz8q53iec",
               "targetType": "screen",
               "libUnresolved": false,
               "libTargetId": "libu4ct517js",
@@ -1395,14 +1352,14 @@ window.APP_SCREEN_DATA = {
               "mailBtnTargets": []
             },
             {
-              "id": "sc5gq2pglq",
+              "id": "scyw1kc125",
               "libHsId": "lhs1d2w1377s",
               "x": 0.19197175732217572,
               "y": 0.1887664415215073,
               "w": 0.12468619246861924,
               "h": 0.015997156061144685,
               "note": "事業",
-              "targetId": "scupbx0nx1",
+              "targetId": "scj3mnmrkq",
               "targetType": "screen",
               "libUnresolved": false,
               "libTargetId": "libu3komt3qx",
@@ -1410,7 +1367,7 @@ window.APP_SCREEN_DATA = {
               "mailBtnTargets": []
             },
             {
-              "id": "sc5b9r820k",
+              "id": "scn43euktb",
               "libHsId": "lhspyglzewvf",
               "x": 0.316657949790795,
               "y": 0.1887664415215073,
@@ -1419,1136 +1376,785 @@ window.APP_SCREEN_DATA = {
               "note": "学校",
               "targetId": "",
               "targetType": "screen",
-              "libUnresolved": true,
-              "libTargetId": "lib5nid2ktsf",
+              "libUnresolved": false,
+              "libTargetId": "",
               "enabled": true,
               "mailBtnTargets": []
             },
             {
-              "id": "sc8tongrkt",
+              "id": "sc8bdcvdr8",
               "libHsId": "lhsqwkkravxi",
               "x": 0.07127659574468086,
               "y": 0.5334597777977483,
               "w": 0.8587267287234043,
               "h": 0.026861525279961756,
               "note": "続ける",
-              "targetId": "scm69vkhox",
+              "targetId": "scckf3el41",
               "targetType": "screen",
               "libUnresolved": false,
               "libTargetId": "libeorew8dhd",
               "enabled": true,
               "mailBtnTargets": []
             }
-          ]
+          ],
+          "imageSrc": "lib:lib5nid2ktsf"
         },
         {
-          "id": "scm69vkhox",
+          "id": "scckf3el41",
           "name": "［S］06.利用規約",
           "note": "",
-          "imageSrc": "lib:libeorew8dhd",
           "hotspots": [
             {
-              "id": "sc2qgezr7c",
+              "id": "scifho5lv7",
               "libHsId": "lhs9rpasxlkm",
               "x": 0.07052188802858844,
               "y": 0.19508771929824562,
               "w": 0.8605452662267308,
               "h": 0.026666666666666665,
               "note": "同意して進む",
-              "targetId": "scem65kset",
+              "targetId": "scprmsfiws",
               "targetType": "screen",
               "libUnresolved": false,
               "libTargetId": "lib4kchcfpct",
               "enabled": true,
               "mailBtnTargets": []
             }
-          ]
+          ],
+          "imageSrc": "lib:libeorew8dhd"
         },
         {
-          "id": "scem65kset",
-          "name": "［S］07.①世帯_ノーティス（1）",
+          "id": "scprmsfiws",
+          "name": "［S］07.①世帯_ﾌﾟﾗｲﾊﾞｼｰﾉｰﾃｨｽ(1)",
           "note": "",
-          "imageSrc": "lib:lib4kchcfpct",
           "hotspots": [
             {
-              "id": "scql6z4oml",
+              "id": "scrjq8evus",
               "libHsId": "lhsljra2isew",
               "x": 0.014705882352941244,
               "y": 0.4180819180819181,
               "w": 0.4776470588235294,
               "h": 0.033466533466533464,
               "note": "（1）許可する",
+              "libTargetId": "",
               "targetId": "",
               "targetType": "screen",
               "libUnresolved": false,
-              "libTargetId": "",
               "enabled": true,
               "mailBtnTargets": []
             },
             {
-              "id": "sc37eoscpy",
+              "id": "sc5vj6ztrh",
               "libHsId": "lhsn6cgmhdmn",
               "x": 0.5076470588235295,
               "y": 0.4180819180819181,
               "w": 0.4776470588235294,
               "h": 0.033466533466533464,
               "note": "（1）許可しない",
-              "targetId": "scado7n5ac",
+              "libTargetId": "libmlujmw6em",
+              "targetId": "sclr4dov2v",
               "targetType": "screen",
               "libUnresolved": false,
-              "libTargetId": "libmlujmw6em",
               "enabled": true,
               "mailBtnTargets": []
             },
             {
-              "id": "sc9yuigsbc",
+              "id": "sc0vgfgjbx",
               "libHsId": "lhsnlewvek2i",
               "x": 0.014705882352941244,
               "y": 0.5484515484515484,
               "w": 0.4776470588235294,
               "h": 0.033466533466533464,
               "note": "（2）許可する",
+              "libTargetId": "",
               "targetId": "",
               "targetType": "screen",
               "libUnresolved": false,
-              "libTargetId": "",
               "enabled": true,
               "mailBtnTargets": []
             },
             {
-              "id": "scrue6twuf",
+              "id": "scueiljy6y",
               "libHsId": "lhs2rdgix4i3",
               "x": 0.51,
               "y": 0.5484515484515484,
               "w": 0.4752941176470588,
               "h": 0.033466533466533464,
               "note": "（2）許可しない",
-              "targetId": "scq3x8aj74",
+              "libTargetId": "libpnuc42uhi",
+              "targetId": "scglkqwcr5",
               "targetType": "screen",
               "libUnresolved": false,
-              "libTargetId": "libpnuc42uhi",
               "enabled": true,
               "mailBtnTargets": []
             },
             {
-              "id": "scdv4m8i9k",
+              "id": "sc46b5uuas",
               "libHsId": "lhs7uiq89219",
               "x": 0.07,
               "y": 0.7712287712287712,
               "w": 0.86,
               "h": 0.028471528471528472,
               "note": "次へ進む",
-              "targetId": "scok1028ge",
+              "libTargetId": "libo4kiqc052",
+              "targetId": "scbdboncgg",
               "targetType": "screen",
               "libUnresolved": false,
-              "libTargetId": "libo4kiqc052",
               "enabled": true,
               "mailBtnTargets": []
             }
-          ]
+          ],
+          "imageSrc": "lib:lib4kchcfpct"
         },
         {
-          "id": "scado7n5ac",
-          "name": "［S］07.①世帯_ノーティス（2）",
+          "id": "sclr4dov2v",
+          "name": "［S］07.①世帯_ﾌﾟﾗｲﾊﾞｼｰﾉｰﾃｨｽ(2)",
           "note": "",
-          "imageSrc": "lib:libmlujmw6em",
           "hotspots": [
             {
-              "id": "sc4r90m37q",
+              "id": "sc7kjlgnq0",
               "libHsId": "lhs671cb8qvj",
               "x": 0.014705882352941244,
               "y": 0.4180819180819181,
               "w": 0.4776470588235294,
               "h": 0.033466533466533464,
               "note": "（1）許可する",
-              "targetId": "scem65kset",
+              "libTargetId": "lib4kchcfpct",
+              "targetId": "scprmsfiws",
               "targetType": "screen",
               "libUnresolved": false,
-              "libTargetId": "lib4kchcfpct",
               "enabled": true,
               "mailBtnTargets": []
             },
             {
-              "id": "sc9kvp09c7",
+              "id": "sc5pz9dvub",
               "libHsId": "lhsnisuuxkfn",
               "x": 0.5076470588235295,
               "y": 0.4180819180819181,
               "w": 0.4776470588235294,
               "h": 0.033466533466533464,
               "note": "（1）許可しない",
+              "libTargetId": "",
               "targetId": "",
               "targetType": "screen",
               "libUnresolved": false,
-              "libTargetId": "",
               "enabled": true,
               "mailBtnTargets": []
             },
             {
-              "id": "scn5j89z09",
+              "id": "sc458vaja7",
               "libHsId": "lhsr7gan3cak",
               "x": 0.014705882352941244,
               "y": 0.5484515484515484,
               "w": 0.4776470588235294,
               "h": 0.033466533466533464,
               "note": "（2）許可する",
+              "libTargetId": "",
               "targetId": "",
               "targetType": "screen",
               "libUnresolved": false,
-              "libTargetId": "",
               "enabled": true,
               "mailBtnTargets": []
             },
             {
-              "id": "scpk4g1t5c",
+              "id": "scgco9zlsk",
               "libHsId": "lhs9tea51dha",
               "x": 0.51,
               "y": 0.5484515484515484,
               "w": 0.4752941176470588,
               "h": 0.033466533466533464,
               "note": "（2）許可しない",
-              "targetId": "sc6bzuf4d2",
+              "libTargetId": "libz1lha7rux",
+              "targetId": "sclp7nrorq",
               "targetType": "screen",
               "libUnresolved": false,
-              "libTargetId": "libz1lha7rux",
               "enabled": true,
               "mailBtnTargets": []
             },
             {
-              "id": "sc8bw6t96t",
+              "id": "scg82e6f1p",
               "libHsId": "lhssijzareb5",
               "x": 0.07,
               "y": 0.7712287712287712,
               "w": 0.86,
               "h": 0.028471528471528472,
               "note": "次へ進む",
-              "targetId": "scok1028ge",
+              "libTargetId": "libo4kiqc052",
+              "targetId": "scbdboncgg",
               "targetType": "screen",
               "libUnresolved": false,
-              "libTargetId": "libo4kiqc052",
               "enabled": true,
               "mailBtnTargets": []
             }
-          ]
+          ],
+          "imageSrc": "lib:libmlujmw6em"
         },
         {
-          "id": "scq3x8aj74",
-          "name": "［S］07.①世帯_ノーティス（3）",
+          "id": "scglkqwcr5",
+          "name": "［S］07.①世帯_ﾌﾟﾗｲﾊﾞｼｰﾉｰﾃｨｽ(3)",
           "note": "",
-          "imageSrc": "lib:libpnuc42uhi",
           "hotspots": [
             {
-              "id": "sccv6k5v3u",
+              "id": "scwszywkem",
               "libHsId": "lhsvfok6tqbs",
               "x": 0.014705882352941244,
               "y": 0.4180819180819181,
               "w": 0.4776470588235294,
               "h": 0.033466533466533464,
               "note": "（1）許可する",
+              "libTargetId": "",
               "targetId": "",
               "targetType": "screen",
               "libUnresolved": false,
-              "libTargetId": "",
               "enabled": true,
               "mailBtnTargets": []
             },
             {
-              "id": "sctkb1msef",
+              "id": "sceu6wi73d",
               "libHsId": "lhsxf7okvkvj",
               "x": 0.5076470588235295,
               "y": 0.4180819180819181,
               "w": 0.4776470588235294,
               "h": 0.033466533466533464,
               "note": "（1）許可しない",
-              "targetId": "sc6bzuf4d2",
+              "libTargetId": "libz1lha7rux",
+              "targetId": "sclp7nrorq",
               "targetType": "screen",
               "libUnresolved": false,
-              "libTargetId": "libz1lha7rux",
               "enabled": true,
               "mailBtnTargets": []
             },
             {
-              "id": "scsdsyn76f",
+              "id": "scgmv12qvp",
               "libHsId": "lhsww170vz1c",
               "x": 0.014705882352941244,
               "y": 0.5484515484515484,
               "w": 0.4776470588235294,
               "h": 0.033466533466533464,
               "note": "（2）許可する",
-              "targetId": "scem65kset",
+              "libTargetId": "lib4kchcfpct",
+              "targetId": "scprmsfiws",
               "targetType": "screen",
               "libUnresolved": false,
-              "libTargetId": "lib4kchcfpct",
               "enabled": true,
               "mailBtnTargets": []
             },
             {
-              "id": "scd1deixs6",
+              "id": "scqlm4r167",
               "libHsId": "lhs39z7r3r1i",
               "x": 0.51,
               "y": 0.5484515484515484,
               "w": 0.4752941176470588,
               "h": 0.033466533466533464,
               "note": "（2）許可しない",
+              "libTargetId": "",
               "targetId": "",
               "targetType": "screen",
               "libUnresolved": false,
-              "libTargetId": "",
               "enabled": true,
               "mailBtnTargets": []
             },
             {
-              "id": "sccu79p741",
+              "id": "sco4ji5p5l",
               "libHsId": "lhsuk7f9w4qt",
               "x": 0.07,
               "y": 0.7712287712287712,
               "w": 0.86,
               "h": 0.028471528471528472,
               "note": "次へ進む",
-              "targetId": "scok1028ge",
+              "libTargetId": "libo4kiqc052",
+              "targetId": "scbdboncgg",
               "targetType": "screen",
               "libUnresolved": false,
-              "libTargetId": "libo4kiqc052",
               "enabled": true,
               "mailBtnTargets": []
             }
-          ]
+          ],
+          "imageSrc": "lib:libpnuc42uhi"
         },
         {
-          "id": "sc6bzuf4d2",
-          "name": "［S］07.①世帯_ノーティス（4）",
+          "id": "sclp7nrorq",
+          "name": "［S］07.①世帯_ﾌﾟﾗｲﾊﾞｼｰﾉｰﾃｨｽ(4)",
           "note": "",
-          "imageSrc": "lib:libz1lha7rux",
           "hotspots": [
             {
-              "id": "scl620wvo3",
+              "id": "scrphw67dd",
               "libHsId": "lhs8aygh3iro",
               "x": 0.014705882352941244,
               "y": 0.4180819180819181,
               "w": 0.4776470588235294,
               "h": 0.033466533466533464,
               "note": "（1）許可する",
-              "targetId": "scq3x8aj74",
+              "libTargetId": "libpnuc42uhi",
+              "targetId": "scglkqwcr5",
               "targetType": "screen",
               "libUnresolved": false,
-              "libTargetId": "libpnuc42uhi",
               "enabled": true,
               "mailBtnTargets": []
             },
             {
-              "id": "scnlyo3vxv",
+              "id": "scerstx1ar",
               "libHsId": "lhs1wgko537d",
               "x": 0.5076470588235295,
               "y": 0.4180819180819181,
               "w": 0.4776470588235294,
               "h": 0.033466533466533464,
               "note": "（1）許可しない",
+              "libTargetId": "",
               "targetId": "",
               "targetType": "screen",
               "libUnresolved": false,
-              "libTargetId": "",
               "enabled": true,
               "mailBtnTargets": []
             },
             {
-              "id": "scwszpt5e4",
+              "id": "scb2ctyl3a",
               "libHsId": "lhs6stmklvmg",
               "x": 0.014705882352941244,
               "y": 0.5484515484515484,
               "w": 0.4776470588235294,
               "h": 0.033466533466533464,
               "note": "（2）許可する",
-              "targetId": "scado7n5ac",
+              "libTargetId": "libmlujmw6em",
+              "targetId": "sclr4dov2v",
               "targetType": "screen",
               "libUnresolved": false,
-              "libTargetId": "libmlujmw6em",
               "enabled": true,
               "mailBtnTargets": []
             },
             {
-              "id": "scldi3x4xx",
+              "id": "sc1v3i11gr",
               "libHsId": "lhs4x1ae8zfp",
               "x": 0.51,
               "y": 0.5484515484515484,
               "w": 0.4752941176470588,
               "h": 0.033466533466533464,
               "note": "（2）許可しない",
+              "libTargetId": "",
               "targetId": "",
               "targetType": "screen",
               "libUnresolved": false,
-              "libTargetId": "",
               "enabled": true,
               "mailBtnTargets": []
             },
             {
-              "id": "sc9q2crpg0",
+              "id": "scdt4v15r2",
               "libHsId": "lhse4trxqgm5",
               "x": 0.07,
               "y": 0.7712287712287712,
               "w": 0.86,
               "h": 0.028471528471528472,
               "note": "次へ進む",
-              "targetId": "scok1028ge",
+              "libTargetId": "libo4kiqc052",
+              "targetId": "scbdboncgg",
               "targetType": "screen",
               "libUnresolved": false,
-              "libTargetId": "libo4kiqc052",
               "enabled": true,
               "mailBtnTargets": []
             }
-          ]
+          ],
+          "imageSrc": "lib:libz1lha7rux"
         },
         {
-          "id": "scok1028ge",
-          "name": "［S］08.メアド入力（1）",
+          "id": "sc349qe51b",
+          "name": "［S］07.②事業/③学校_ﾌﾟﾗｲﾊﾞｼｰﾉｰﾃｨｽ",
           "note": "",
-          "imageSrc": "lib:libo4kiqc052",
           "hotspots": [
             {
-              "id": "sc95el7cdw",
+              "id": "sczdwy0xww",
+              "libHsId": "lhsswe9xgo53",
+              "x": 0.06776859504132231,
+              "y": 0.19157894736842104,
+              "w": 0.8611570247933884,
+              "h": 0.02736842105263158,
+              "note": "メアド",
+              "libTargetId": "libo4kiqc052",
+              "targetId": "scbdboncgg",
+              "targetType": "screen",
+              "libUnresolved": false,
+              "enabled": true,
+              "mailBtnTargets": []
+            }
+          ],
+          "imageSrc": "lib:libi43hjldtl"
+        },
+        {
+          "id": "scbdboncgg",
+          "name": "［S］08.ﾒｱﾄﾞ入力(1)",
+          "note": "",
+          "hotspots": [
+            {
+              "id": "scwkvlsylw",
               "libHsId": "lhso7sfffi6s",
               "x": 0,
-              "y": 0.16433566433566432,
+              "y": 0.14092356687898092,
               "w": 1,
-              "h": 0.08391608391608392,
+              "h": 0.11329951895238519,
               "note": "メアド入力",
-              "targetId": "sc9jcdu76t",
+              "libTargetId": "lib1ao8tsbki",
+              "targetId": "sc0i462yjy",
               "targetType": "screen",
               "libUnresolved": false,
-              "libTargetId": "lib1ao8tsbki",
               "enabled": true,
               "mailBtnTargets": []
             }
-          ]
+          ],
+          "imageSrc": "lib:libo4kiqc052"
         },
         {
-          "id": "sc9jcdu76t",
-          "name": "［S］08.メアド入力（2）",
+          "id": "sc0i462yjy",
+          "name": "［S］08.ﾒｱﾄﾞ入力(2)",
           "note": "",
-          "imageSrc": "lib:lib1ao8tsbki",
           "hotspots": [
             {
-              "id": "sco06avooo",
+              "id": "sc881u2knb",
               "libHsId": "lhs8rxjm6hv2",
               "x": 0.07063284518828451,
               "y": 0.28688233202986135,
               "w": 0.8602510460251046,
               "h": 0.027728403839317455,
               "note": "続ける",
-              "targetId": "",
+              "libTargetId": "libcf12kr3s1",
+              "targetId": "sc7jf8jfo1",
               "targetType": "screen",
               "libUnresolved": false,
-              "libTargetId": "",
               "enabled": true,
               "mailBtnTargets": []
             }
-          ]
+          ],
+          "imageSrc": "lib:lib1ao8tsbki"
         },
         {
-          "id": "sc5tyfbqty",
-          "name": "［S］09.認証コード入力（1）",
+          "id": "sc7jf8jfo1",
+          "name": "［S］09.認証ｺｰﾄﾞ入力(1)",
           "note": "",
-          "imageSrc": "lib:libcf12kr3s1",
           "hotspots": [
             {
-              "id": "sc45brk0y4",
+              "id": "sclkzaegtg",
               "libHsId": "lhswn2z1nuny",
               "x": 0.34247790573111947,
               "y": 0.47667804323094426,
               "w": 0.3160149973219068,
               "h": 0.023321956769055744,
               "note": "認証コード入力",
-              "targetId": "scpo66k44r",
+              "libTargetId": "lib8hdvtbq9m",
+              "targetId": "scemzvc06i",
               "targetType": "screen",
               "libUnresolved": false,
-              "libTargetId": "lib8hdvtbq9m",
               "enabled": true,
               "mailBtnTargets": []
             }
-          ]
+          ],
+          "imageSrc": "lib:libcf12kr3s1"
         },
         {
-          "id": "scpo66k44r",
-          "name": "［S］09.認証コード入力（2）",
+          "id": "scemzvc06i",
+          "name": "［S］09.認証ｺｰﾄﾞ入力(2)",
           "note": "",
-          "imageSrc": "lib:lib8hdvtbq9m",
           "hotspots": [
             {
-              "id": "scayodvd37",
+              "id": "scgi6iblwf",
               "libHsId": "lhs8b5fg3ti1",
               "x": 0.4019668018787361,
               "y": 0.5087051142546246,
               "w": 0.1959863364645602,
               "h": 0.022488211824446862,
               "note": "認証コード送信",
-              "targetId": "",
+              "libTargetId": "libph9b6heqb",
+              "targetId": "sct3n90emh",
               "targetType": "screen",
               "libUnresolved": false,
-              "libTargetId": "",
               "enabled": true,
               "mailBtnTargets": []
             }
-          ]
+          ],
+          "imageSrc": "lib:lib8hdvtbq9m"
         },
         {
-          "id": "scdyplhjwk",
-          "name": "［S］10.PW設定（1）",
+          "id": "sct3n90emh",
+          "name": "［S］10.PW設定(1)",
           "note": "",
-          "imageSrc": "lib:libph9b6heqb",
           "hotspots": [
             {
-              "id": "scgi66462p",
+              "id": "scd8wjlbrs",
               "libHsId": "lhsm4odv9arb",
               "x": 0,
-              "y": 0.2926065162907268,
+              "y": 0.2634228187919463,
               "w": 1,
-              "h": 0.12969924812030076,
+              "h": 0.15888294561908123,
               "note": "PW入力",
-              "targetId": "scskvasw0g",
+              "libTargetId": "lib3yo08jmor",
+              "targetId": "sc4ezczauo",
               "targetType": "screen",
               "libUnresolved": false,
-              "libTargetId": "lib3yo08jmor",
               "enabled": true,
               "mailBtnTargets": []
             }
-          ]
+          ],
+          "imageSrc": "lib:libph9b6heqb"
         },
         {
-          "id": "scskvasw0g",
-          "name": "［S］10.PW設定（2）",
+          "id": "sc4ezczauo",
+          "name": "［S］10.PW設定(2)",
           "note": "",
-          "imageSrc": "lib:lib3yo08jmor",
           "hotspots": [
             {
-              "id": "scnzsfby3f",
+              "id": "sc2k65lesj",
               "libHsId": "lhs4qpfb4yq4",
               "x": 0.0697960251046025,
               "y": 0.43690010664770706,
               "w": 0.8602510460251046,
               "h": 0.026661926768574477,
               "note": "続ける",
-              "targetId": "sc0mut0bvs",
+              "libTargetId": "lib5jhji9e7m",
+              "targetId": "scz0k8xdh3",
               "targetType": "screen",
               "libUnresolved": false,
-              "libTargetId": "lib5jhji9e7m",
               "enabled": true,
               "mailBtnTargets": []
             }
-          ]
+          ],
+          "imageSrc": "lib:lib3yo08jmor"
         },
         {
-          "id": "sc0mut0bvs",
-          "name": "［S］11.ログインID",
+          "id": "scz0k8xdh3",
+          "name": "［S］11.ﾛｸﾞｲﾝID",
           "note": "",
-          "imageSrc": "lib:lib5jhji9e7m",
           "hotspots": [
             {
-              "id": "scn7dcr5ib",
+              "id": "sci2v69nf4",
               "libHsId": "lhs9ub1kzml7",
               "x": 0.06985294117647059,
               "y": 0.29304192685102587,
               "w": 0.8602941176470589,
               "h": 0.026761819803746655,
               "note": "続ける",
-              "targetId": "sc9an5gxzi",
+              "libTargetId": "libi42s3k6rq",
+              "targetId": "sc7q9988ra",
               "targetType": "screen",
               "libUnresolved": false,
-              "libTargetId": "libi42s3k6rq",
               "enabled": true,
               "mailBtnTargets": []
             },
             {
-              "id": "schqh6fi27",
+              "id": "scw6coh6k7",
               "libHsId": "lhs95eif9wc7",
               "x": 0.06985294117647059,
               "y": 0.32694023193577165,
               "w": 0.8602941176470589,
               "h": 0.026761819803746655,
               "note": "戻る",
-              "targetId": "scdyplhjwk",
+              "libTargetId": "libph9b6heqb",
+              "targetId": "sct3n90emh",
               "targetType": "screen",
               "libUnresolved": false,
-              "libTargetId": "libph9b6heqb",
               "enabled": true,
               "mailBtnTargets": []
             }
-          ]
+          ],
+          "imageSrc": "lib:lib5jhji9e7m"
         },
         {
-          "id": "sc9an5gxzi",
+          "id": "sc7q9988ra",
           "name": "［S］12.①世帯_内容確認",
           "note": "",
-          "imageSrc": "lib:libi42s3k6rq",
           "hotspots": [
             {
-              "id": "scb3wjkgxl",
+              "id": "sch9jsd4g0",
               "libHsId": "lhsjl9l2892q",
               "x": 0.06935332708528585,
               "y": 0.4729299363057325,
               "w": 0.8594189315838802,
               "h": 0.027070063694267517,
               "note": "アカウントを登録する",
-              "targetId": "scra4uwo7k",
+              "libTargetId": "lib8brxeiucf",
+              "targetId": "sclpywuz7q",
               "targetType": "screen",
               "libUnresolved": false,
-              "libTargetId": "lib8brxeiucf",
               "enabled": true,
               "mailBtnTargets": []
             },
             {
-              "id": "scme6ee2cb",
+              "id": "scsl2a3o7w",
               "libHsId": "lhsmjcokcnns",
               "x": 0.06935332708528585,
               "y": 0.5071656050955414,
               "w": 0.8594189315838802,
               "h": 0.027070063694267517,
               "note": "戻る",
-              "targetId": "sc0mut0bvs",
+              "libTargetId": "lib5jhji9e7m",
+              "targetId": "scz0k8xdh3",
               "targetType": "screen",
               "libUnresolved": false,
-              "libTargetId": "lib5jhji9e7m",
               "enabled": true,
               "mailBtnTargets": []
             }
-          ]
+          ],
+          "imageSrc": "lib:libi42s3k6rq"
         },
         {
-          "id": "scra4uwo7k",
-          "name": "［S］13.①世帯_登録完了",
+          "id": "scikh6r62i",
+          "name": "［S］12.②事業_内容確認",
           "note": "",
-          "imageSrc": "lib:lib8brxeiucf",
           "hotspots": [
             {
-              "id": "sclvub1gxb",
+              "id": "sc697in9s5",
+              "libHsId": "lhspv7kgi5b9",
+              "x": 0.06935332708528585,
+              "y": 0.4729299363057325,
+              "w": 0.8594189315838802,
+              "h": 0.027070063694267517,
+              "note": "アカウントを登録する",
+              "libTargetId": "libp4v8g48sw",
+              "targetId": "scecagzj6x",
+              "targetType": "screen",
+              "libUnresolved": false,
+              "enabled": true,
+              "mailBtnTargets": []
+            },
+            {
+              "id": "sc0kyayzu3",
+              "libHsId": "lhsf7qbsijyd",
+              "x": 0.06935332708528585,
+              "y": 0.5071656050955414,
+              "w": 0.8594189315838802,
+              "h": 0.027070063694267517,
+              "note": "戻る",
+              "libTargetId": "lib5jhji9e7m",
+              "targetId": "scz0k8xdh3",
+              "targetType": "screen",
+              "libUnresolved": false,
+              "enabled": true,
+              "mailBtnTargets": []
+            }
+          ],
+          "imageSrc": "lib:libccixs7mic"
+        },
+        {
+          "id": "sclpywuz7q",
+          "name": "［S］13.①世帯_登録完了",
+          "note": "",
+          "hotspots": [
+            {
+              "id": "sctpf2bs2g",
               "libHsId": "lhsyo9bx9o27",
               "x": 0.06935332708528585,
               "y": 0.17277070063694266,
               "w": 0.8603561387066542,
               "h": 0.027070063694267517,
               "note": "サービスを開始する",
-              "targetId": "scxxwdjac9",
+              "libTargetId": "lib73wqhphnn",
+              "targetId": "scd90yvxlg",
               "targetType": "screen",
               "libUnresolved": false,
-              "libTargetId": "lib73wqhphnn",
               "enabled": true,
               "mailBtnTargets": []
             }
-          ]
+          ],
+          "imageSrc": "lib:lib8brxeiucf"
         },
         {
-          "id": "scxxwdjac9",
-          "name": "［S］14.①世帯_プロファイル新規作成",
+          "id": "scecagzj6x",
+          "name": "［S］13.②事業_登録完了",
           "note": "",
-          "imageSrc": "lib:lib73wqhphnn",
           "hotspots": [
             {
-              "id": "sc6s4zhhux",
+              "id": "sc7q2p7rdq",
+              "libHsId": "lhs91zyqt7kr",
+              "x": 0.07090336134453781,
+              "y": 0.1873327386262266,
+              "w": 0.8602941176470589,
+              "h": 0.027653880463871544,
+              "note": "アカウント設定に進む",
+              "libTargetId": "libfhm654yuu",
+              "targetId": "sc8zspnj57",
+              "targetType": "screen",
+              "libUnresolved": false,
+              "enabled": true,
+              "mailBtnTargets": []
+            }
+          ],
+          "imageSrc": "lib:libp4v8g48sw"
+        },
+        {
+          "id": "scd90yvxlg",
+          "name": "［S］14.①世帯_ﾌﾟﾛﾌｧｲﾙ新規作成",
+          "note": "",
+          "hotspots": [
+            {
+              "id": "scxx72ozlw",
               "libHsId": "lhsmrslctvng",
               "x": 0,
               "y": 0,
               "w": 0.08434864104967198,
               "h": 0.029856687898089172,
               "note": "メニュー",
+              "libTargetId": "",
               "targetId": "",
               "targetType": "screen",
               "libUnresolved": false,
-              "libTargetId": "",
               "enabled": true,
               "mailBtnTargets": []
             },
             {
-              "id": "scl7u4x10w",
+              "id": "sck3k8brza",
               "libHsId": "lhsz9bics43y",
               "x": 0.915651358950328,
               "y": 0,
               "w": 0.08434864104967196,
               "h": 0.029856687898089172,
               "note": "設定",
+              "libTargetId": "",
               "targetId": "",
               "targetType": "screen",
               "libUnresolved": false,
-              "libTargetId": "",
               "enabled": true,
               "mailBtnTargets": []
             },
             {
-              "id": "scjji0zjqj",
+              "id": "scjtgw0g83",
               "libHsId": "lhssnbb22dl1",
               "x": 0.32615546218487396,
               "y": 0.1503122212310437,
               "w": 0.3476890756302521,
               "h": 0.12890276538804638,
               "note": "プロファイル作成",
-              "targetId": "sccxyo3xsi",
+              "libTargetId": "libfye5q7g0x",
+              "targetId": "scu0hgawd1",
               "targetType": "screen",
               "libUnresolved": false,
-              "libTargetId": "libfye5q7g0x",
               "enabled": true,
               "mailBtnTargets": []
             },
             {
-              "id": "scfflg23st",
+              "id": "scmk0ypxjt",
               "libHsId": "lhs4bo4cimtk",
               "x": 0.32615546218487396,
               "y": 0.30196253345227475,
               "w": 0.3476890756302521,
               "h": 0.03791257805530776,
               "note": "プロファイル管理",
-              "targetId": "scyq4p6oim",
-              "targetType": "screen",
-              "libUnresolved": false,
               "libTargetId": "libn2izpsiln",
+              "targetId": "scul6ew9lr",
+              "targetType": "screen",
+              "libUnresolved": false,
               "enabled": true,
               "mailBtnTargets": []
             }
-          ]
+          ],
+          "imageSrc": "lib:lib73wqhphnn"
         },
         {
-          "id": "sccxyo3xsi",
-          "name": "［S］15.①世帯_プロファイルの追加（1）",
+          "id": "sc8zspnj57",
+          "name": "［S］14.②事業_ｱｶｳﾝﾄ設定",
           "note": "",
-          "imageSrc": "lib:libfye5q7g0x",
           "hotspots": [
             {
-              "id": "sct2wlt9bd",
-              "libHsId": "lhscd3dddui7",
-              "x": 0.07216494845360824,
-              "y": 0.2613378684807256,
-              "w": 0.8556701030927835,
-              "h": 0.026927437641723357,
-              "note": "任意のプロファイル名を入力",
-              "targetId": "scb2uipzp0",
-              "targetType": "screen",
-              "libUnresolved": false,
-              "libTargetId": "lib9e48p5aeb",
-              "enabled": true,
-              "mailBtnTargets": []
-            }
-          ]
-        },
-        {
-          "id": "scb2uipzp0",
-          "name": "［S］15.①世帯_プロファイルの追加（2）",
-          "note": "",
-          "imageSrc": "lib:lib9e48p5aeb",
-          "hotspots": [
-            {
-              "id": "schtea2c1j",
-              "libHsId": "lhslq6aua9v5",
-              "x": 0.07300420168067227,
-              "y": 0.47948260481712757,
-              "w": 0.8529411764705882,
-              "h": 0.026761819803746655,
-              "note": "保存する",
-              "targetId": "scl0me6264",
-              "targetType": "screen",
-              "libUnresolved": false,
-              "libTargetId": "libazfy1m4zp",
-              "enabled": true,
-              "mailBtnTargets": []
-            }
-          ]
-        },
-        {
-          "id": "scl0me6264",
-          "name": "［S］16.①世帯_プロファイル作成完了",
-          "note": "",
-          "imageSrc": "lib:libazfy1m4zp",
-          "hotspots": [
-            {
-              "id": "scble6ti9p",
-              "libHsId": "lhsy1vkklqyk",
-              "x": 0.02155576382380506,
-              "y": 0.31369426751592355,
-              "w": 0.9568884723523898,
-              "h": 0.02786624203821656,
-              "note": "アカウント設定に戻る",
-              "targetId": "",
-              "targetType": "screen",
-              "libUnresolved": false,
-              "libTargetId": "",
-              "enabled": true,
-              "mailBtnTargets": []
-            }
-          ]
-        },
-        {
-          "id": "sceml83t0p",
-          "name": "［S］18.①世帯_受信契約の確認",
-          "note": "",
-          "imageSrc": "lib:lib8o79wuyx1",
-          "hotspots": [
-            {
-              "id": "scou3ty077",
-              "libHsId": "lhst7ntnec7b",
-              "x": 0.022492970946579195,
-              "y": 0.2014331210191083,
-              "w": 0.9559512652296157,
-              "h": 0.029060509554140128,
-              "note": "SJ連携",
-              "targetId": "",
-              "targetType": "screen",
-              "libUnresolved": false,
-              "libTargetId": "",
-              "enabled": true,
-              "mailBtnTargets": []
-            },
-            {
-              "id": "scdvsqfb3i",
-              "libHsId": "lhsa1vrh9ucm",
-              "x": 0.022492970946579195,
-              "y": 0.26313694267515925,
-              "w": 0.9559512652296157,
-              "h": 0.029060509554140128,
-              "note": "Jアカ作成",
-              "targetId": "scqxlk2puk",
-              "targetType": "screen",
-              "libUnresolved": false,
-              "libTargetId": "libg275r51rg",
-              "enabled": true,
-              "mailBtnTargets": []
-            },
-            {
-              "id": "scfcjwpndn",
-              "libHsId": "lhshzvfumqj4",
-              "x": 0.022492970946579195,
-              "y": 0.3005573248407643,
-              "w": 0.9559512652296157,
-              "h": 0.029060509554140128,
-              "note": "戻る",
-              "targetId": "",
-              "targetType": "screen",
-              "libUnresolved": false,
-              "libTargetId": "",
-              "enabled": true,
-              "mailBtnTargets": []
-            }
-          ]
-        },
-        {
-          "id": "scqxlk2puk",
-          "name": "［SJ］19.①世帯_トップ",
-          "note": "",
-          "imageSrc": "lib:libg275r51rg",
-          "hotspots": [
-            {
-              "id": "scperdqtxa",
-              "libHsId": "lhsdn5dpd0jy",
-              "x": 0.27064100655151874,
-              "y": 0.4888663967611336,
-              "w": 0.4586063132817153,
-              "h": 0.04377530364372469,
-              "note": "移行",
-              "targetId": "",
-              "targetType": "screen",
-              "libUnresolved": false,
-              "libTargetId": "",
-              "enabled": true,
-              "mailBtnTargets": []
-            },
-            {
-              "id": "scn0dy211z",
-              "libHsId": "lhsp4wm217q5",
-              "x": 0.27064100655151874,
-              "y": 0.542257085020243,
-              "w": 0.4586063132817153,
-              "h": 0.04377530364372469,
-              "note": "新規",
-              "targetId": "scu3s8f4mm",
-              "targetType": "screen",
-              "libUnresolved": false,
-              "libTargetId": "lib40tkv6zkd",
-              "enabled": true,
-              "mailBtnTargets": []
-            }
-          ]
-        },
-        {
-          "id": "scu3s8f4mm",
-          "name": "［SJ］20.①世帯_利用規約（1）",
-          "note": "",
-          "imageSrc": "lib:lib40tkv6zkd",
-          "hotspots": [
-            {
-              "id": "scwy99yz10",
-              "libHsId": "lhsmzo6gh8lw",
-              "x": 0.15071521842355176,
-              "y": 0.3157151502925156,
-              "w": 0.6989553656220323,
-              "h": 0.040548718983256,
-              "note": "利用規約に同意する",
-              "targetId": "scdwu6zziy",
-              "targetType": "screen",
-              "libUnresolved": false,
-              "libTargetId": "lib16ol6nbgm",
-              "enabled": true,
-              "mailBtnTargets": []
-            }
-          ]
-        },
-        {
-          "id": "scfcko5o92",
-          "name": "［SJ］20.①世帯_利用規約（3）",
-          "note": "",
-          "imageSrc": "lib:libf7j8ya7m9",
-          "hotspots": [
-            {
-              "id": "sc6hmaggxu",
-              "libHsId": "lhs799cy74oi",
-              "x": 0.2694214876033058,
-              "y": 0.6244916403072752,
-              "w": 0.45950413223140496,
-              "h": 0.03253502033438771,
-              "note": "認証コード送信",
-              "targetId": "sc80ykjaib",
-              "targetType": "screen",
-              "libUnresolved": false,
-              "libTargetId": "lib88rby7amf",
-              "enabled": true,
-              "mailBtnTargets": []
-            }
-          ]
-        },
-        {
-          "id": "scdwu6zziy",
-          "name": "［SJ］20.①世帯_利用規約（2）",
-          "note": "",
-          "imageSrc": "lib:lib16ol6nbgm",
-          "hotspots": [
-            {
-              "id": "scysjwpjdu",
-              "libHsId": "lhsztzvsa1ss",
-              "x": 0.15071521842355176,
-              "y": 0.46403596403596403,
-              "w": 0.6989553656220323,
-              "h": 0.14285714285714285,
-              "note": "メアド入力",
-              "targetId": "scfcko5o92",
-              "targetType": "screen",
-              "libUnresolved": false,
-              "libTargetId": "libf7j8ya7m9",
-              "enabled": true,
-              "mailBtnTargets": []
-            }
-          ]
-        },
-        {
-          "id": "sc80ykjaib",
-          "name": "［SJ］21.①世帯_確認コード※メール（1）",
-          "note": "",
-          "imageSrc": "lib:lib88rby7amf",
-          "hotspots": [
-            {
-              "id": "scajaxv3ub",
-              "libHsId": "lhs35a1t2obe",
-              "x": 0.2651142428285524,
-              "y": 0.2825963718820862,
-              "w": 0.4703135423615744,
-              "h": 0.03713151927437642,
-              "note": "認証コード入力",
-              "targetId": "sczpppo1v3",
-              "targetType": "screen",
-              "libUnresolved": false,
-              "libTargetId": "libp84m1b7xp",
-              "enabled": true,
-              "mailBtnTargets": []
-            }
-          ]
-        },
-        {
-          "id": "sczpppo1v3",
-          "name": "［SJ］21.①世帯_確認コード※メール（2）",
-          "note": "",
-          "imageSrc": "lib:libp84m1b7xp",
-          "hotspots": [
-            {
-              "id": "scwc2wpzvk",
-              "libHsId": "lhsteskjeg9h",
-              "x": 0.2717853569046031,
-              "y": 0.3472222222222222,
-              "w": 0.45697131420947296,
-              "h": 0.03259637188208617,
-              "note": "次へ",
-              "targetId": "scs726d0pd",
-              "targetType": "screen",
-              "libUnresolved": false,
-              "libTargetId": "libfkbs8apxb",
-              "enabled": true,
-              "mailBtnTargets": []
-            }
-          ]
-        },
-        {
-          "id": "scs726d0pd",
-          "name": "［SJ］22.①世帯_申請情報入力（1）",
-          "note": "",
-          "imageSrc": "lib:libfkbs8apxb",
-          "hotspots": [
-            {
-              "id": "sckcksj2r6",
-              "libHsId": "lhs51gu6k4ti",
+              "id": "scqy8yit9j",
+              "libHsId": "lhsmrp0at7yh",
               "x": 0,
-              "y": 0.18736017897091722,
+              "y": 0.4856743535988819,
               "w": 1,
-              "h": 0.41387024608501116,
-              "note": "入力箇所",
-              "targetId": "sc3o266ipt",
-              "targetType": "screen",
-              "libUnresolved": false,
-              "libTargetId": "libaums394si",
-              "enabled": true,
-              "mailBtnTargets": []
-            }
-          ]
-        },
-        {
-          "id": "sc3o266ipt",
-          "name": "［SJ］22.①世帯_申請情報入力（2）",
-          "note": "",
-          "imageSrc": "lib:libaums394si",
-          "hotspots": [
-            {
-              "id": "sczg8a5r9b",
-              "libHsId": "lhs1gxkfqj5s",
-              "x": 0.2722903996524761,
-              "y": 0.7180298237686399,
-              "w": 0.45612510860121636,
-              "h": 0.019882512426570267,
-              "note": "確認画面へ進む",
-              "targetId": "sc9wkg4tmn",
-              "targetType": "screen",
-              "libUnresolved": false,
-              "libTargetId": "libl8kydc5ct",
-              "enabled": true,
-              "mailBtnTargets": []
-            }
-          ]
-        },
-        {
-          "id": "sc9wkg4tmn",
-          "name": "［SJ］23.①世帯_申請情報確認",
-          "note": "",
-          "imageSrc": "lib:libl8kydc5ct",
-          "hotspots": [
-            {
-              "id": "scj6kxymef",
-              "libHsId": "lhshazl6kpvl",
-              "x": 0.27102526521496373,
-              "y": 0.6878417497587649,
-              "w": 0.4584031267448353,
-              "h": 0.02122869089739466,
-              "note": "申請する",
-              "targetId": "scuxjvdf64",
-              "targetType": "screen",
-              "libUnresolved": false,
-              "libTargetId": "libq2pzl4q2y",
-              "enabled": true,
-              "mailBtnTargets": []
-            },
-            {
-              "id": "sc4xo0cxxd",
-              "libHsId": "lhs7ak5j47yj",
-              "x": 0.07563025210084033,
-              "y": 0.7233470957341532,
-              "w": 0.28781512605042014,
-              "h": 0.021228690897394674,
-              "note": "戻る",
-              "targetId": "sc3o266ipt",
-              "targetType": "screen",
-              "libUnresolved": false,
-              "libTargetId": "libaums394si",
-              "enabled": true,
-              "mailBtnTargets": []
-            }
-          ]
-        },
-        {
-          "id": "scuxjvdf64",
-          "name": "［SJ］24.①世帯_申請完了",
-          "note": "",
-          "imageSrc": "lib:libq2pzl4q2y",
-          "hotspots": []
-        },
-        {
-          "id": "sct49srzza",
-          "name": "［SJ］26.①世帯_ログイン（1）",
-          "note": "",
-          "imageSrc": "lib:libzdq41eym1",
-          "hotspots": [
-            {
-              "id": "scixh4eccy",
-              "libHsId": "lhsto1mx0lbn",
-              "x": 0,
-              "y": 0.17058165548098433,
-              "w": 1,
-              "h": 0.15212527964205816,
-              "note": "ログイン情報入力",
-              "targetId": "scvs51vc76",
-              "targetType": "screen",
-              "libUnresolved": false,
-              "libTargetId": "lib2sx5xcj8f",
-              "enabled": true,
-              "mailBtnTargets": []
-            }
-          ]
-        },
-        {
-          "id": "scvs51vc76",
-          "name": "［SJ］26.①世帯_ログイン（2）",
-          "note": "",
-          "imageSrc": "lib:lib2sx5xcj8f",
-          "hotspots": [
-            {
-              "id": "sc4e3db0tu",
-              "libHsId": "lhsrqopmcjdc",
-              "x": 0.2706328451882845,
-              "y": 0.34091717028083895,
-              "w": 0.4594142259414226,
-              "h": 0.03241616305249439,
-              "note": "ログイン",
-              "targetId": "scqya5210w",
-              "targetType": "screen",
-              "libUnresolved": false,
-              "libTargetId": "lib1e6gduvan",
-              "enabled": true,
-              "mailBtnTargets": []
-            }
-          ]
-        },
-        {
-          "id": "scqya5210w",
-          "name": "［SJ］27.①世帯_連携完了",
-          "note": "",
-          "imageSrc": "lib:lib1e6gduvan",
-          "hotspots": [
-            {
-              "id": "sckirxjkda",
-              "libHsId": "lhs16w9cu719",
-              "x": 0.022285690460306873,
-              "y": 0.18735827664399093,
-              "w": 0.9559706470980653,
-              "h": 0.026927437641723357,
-              "note": "アカウント設定ページに戻る",
-              "targetId": "scyzl2zu6h",
-              "targetType": "screen",
-              "libUnresolved": false,
-              "libTargetId": "libb8asvqlfq",
-              "enabled": true,
-              "mailBtnTargets": []
-            }
-          ]
-        },
-        {
-          "id": "scyzl2zu6h",
-          "name": "［SJ］28.①世帯_アカウント設定※連携済",
-          "note": "",
-          "imageSrc": "lib:libb8asvqlfq",
-          "hotspots": [
-            {
-              "id": "scp0sulxmp",
-              "libHsId": "lhs4x2uwn3iq",
-              "x": 0,
-              "y": 0.37778768956289027,
-              "w": 1,
-              "h": 0.04504906333630687,
+              "h": 0.0496156533892383,
               "note": "アカウント管理",
               "targetId": "",
               "targetType": "screen",
@@ -2556,9 +2162,489 @@ window.APP_SCREEN_DATA = {
               "libTargetId": "",
               "enabled": true,
               "mailBtnTargets": []
+            }
+          ],
+          "imageSrc": "lib:libfhm654yuu"
+        },
+        {
+          "id": "scu0hgawd1",
+          "name": "［S］15.①世帯_ﾌﾟﾛﾌｧｲﾙの追加(1)",
+          "note": "",
+          "hotspots": [
+            {
+              "id": "scc8j2onyy",
+              "libHsId": "lhscd3dddui7",
+              "x": 0.07216494845360824,
+              "y": 0.2613378684807256,
+              "w": 0.8556701030927835,
+              "h": 0.026927437641723357,
+              "note": "任意のプロファイル名を入力",
+              "libTargetId": "lib9e48p5aeb",
+              "targetId": "scx9dftm6f",
+              "targetType": "screen",
+              "libUnresolved": false,
+              "enabled": true,
+              "mailBtnTargets": []
+            }
+          ],
+          "imageSrc": "lib:libfye5q7g0x"
+        },
+        {
+          "id": "scx9dftm6f",
+          "name": "［S］15.①世帯_ﾌﾟﾛﾌｧｲﾙの追加(2)",
+          "note": "",
+          "hotspots": [
+            {
+              "id": "sctzqu1h6y",
+              "libHsId": "lhslq6aua9v5",
+              "x": 0.07300420168067227,
+              "y": 0.47948260481712757,
+              "w": 0.8529411764705882,
+              "h": 0.026761819803746655,
+              "note": "保存する",
+              "libTargetId": "libazfy1m4zp",
+              "targetId": "scjexwy9gh",
+              "targetType": "screen",
+              "libUnresolved": false,
+              "enabled": true,
+              "mailBtnTargets": []
+            }
+          ],
+          "imageSrc": "lib:lib9e48p5aeb"
+        },
+        {
+          "id": "scul6ew9lr",
+          "name": "［S］15.①世帯_ﾌﾟﾛﾌｧｲﾙ管理",
+          "note": "",
+          "hotspots": [
+            {
+              "id": "sca2tgw299",
+              "libHsId": "lhsvdpiev1yy",
+              "x": 0.020618556701030927,
+              "y": 0.3140923566878981,
+              "w": 0.9578256794751641,
+              "h": 0.027070063694267517,
+              "note": "アカウント設定に戻る",
+              "libTargetId": "",
+              "targetId": "",
+              "targetType": "screen",
+              "libUnresolved": false,
+              "enabled": true,
+              "mailBtnTargets": []
             },
             {
-              "id": "scvat3mnsy",
+              "id": "sck7xfjvmi",
+              "libHsId": "lhsp3zsk0jt7",
+              "x": 0.3735294117647059,
+              "y": 0.16283716283716285,
+              "w": 0.25058823529411767,
+              "h": 0.13036963036963037,
+              "note": "新規作成",
+              "libTargetId": "libfye5q7g0x",
+              "targetId": "scu0hgawd1",
+              "targetType": "screen",
+              "libUnresolved": false,
+              "enabled": true,
+              "mailBtnTargets": []
+            }
+          ],
+          "imageSrc": "lib:libn2izpsiln"
+        },
+        {
+          "id": "scjexwy9gh",
+          "name": "［S］16.①世帯_ﾌﾟﾛﾌｧｲﾙ作成完了",
+          "note": "",
+          "hotspots": [
+            {
+              "id": "scbo83owcj",
+              "libHsId": "lhsy1vkklqyk",
+              "x": 0.02155576382380506,
+              "y": 0.31369426751592355,
+              "w": 0.9568884723523898,
+              "h": 0.02786624203821656,
+              "note": "アカウント設定に戻る",
+              "libTargetId": "lib3e75xplc8",
+              "targetId": "sc85jvkma8",
+              "targetType": "screen",
+              "libUnresolved": false,
+              "enabled": true,
+              "mailBtnTargets": []
+            }
+          ],
+          "imageSrc": "lib:libazfy1m4zp"
+        },
+        {
+          "id": "sc85jvkma8",
+          "name": "［S］17.①世帯_ｱｶｳﾝﾄ設定 ※ﾌﾟﾛﾌｧｲﾙ作成済/SJ未連携",
+          "note": "",
+          "hotspots": [
+            {
+              "id": "sc7vm45l1g",
+              "libHsId": "lhsrmvhi8gla",
+              "x": 0,
+              "y": 0.5215072875933168,
+              "w": 1,
+              "h": 0.0458585140419481,
+              "note": "受信契約の確認（未連携）",
+              "libTargetId": "lib8o79wuyx1",
+              "targetId": "sc8tn5wfvq",
+              "targetType": "screen",
+              "libUnresolved": false,
+              "enabled": true,
+              "mailBtnTargets": []
+            }
+          ],
+          "imageSrc": "lib:lib3e75xplc8"
+        },
+        {
+          "id": "scj6wa8hkz",
+          "name": "［S］17.①世帯_ｱｶｳﾝﾄ設定 ※ﾌﾟﾛﾌｧｲﾙ未作成/SJ未連携",
+          "note": "",
+          "hotspots": [],
+          "imageSrc": "lib:lib0qiwvjtwe"
+        },
+        {
+          "id": "sc8tn5wfvq",
+          "name": "［S］18.①世帯_受信契約の確認",
+          "note": "",
+          "hotspots": [
+            {
+              "id": "scjt6g3tmc",
+              "libHsId": "lhst7ntnec7b",
+              "x": 0.022492970946579195,
+              "y": 0.2014331210191083,
+              "w": 0.9559512652296157,
+              "h": 0.029060509554140128,
+              "note": "SJ連携",
+              "libTargetId": "libzdq41eym1",
+              "targetId": "sc9rpp35mq",
+              "targetType": "screen",
+              "libUnresolved": false,
+              "enabled": true,
+              "mailBtnTargets": []
+            },
+            {
+              "id": "sc7ew1ja1e",
+              "libHsId": "lhsa1vrh9ucm",
+              "x": 0.022492970946579195,
+              "y": 0.26313694267515925,
+              "w": 0.9559512652296157,
+              "h": 0.029060509554140128,
+              "note": "Jアカ作成",
+              "libTargetId": "libg275r51rg",
+              "targetId": "scek9ked8q",
+              "targetType": "screen",
+              "libUnresolved": false,
+              "enabled": true,
+              "mailBtnTargets": []
+            },
+            {
+              "id": "scj8xfoar1",
+              "libHsId": "lhshzvfumqj4",
+              "x": 0.022492970946579195,
+              "y": 0.3005573248407643,
+              "w": 0.9559512652296157,
+              "h": 0.029060509554140128,
+              "note": "戻る",
+              "libTargetId": "lib3e75xplc8",
+              "targetId": "sc85jvkma8",
+              "targetType": "screen",
+              "libUnresolved": false,
+              "enabled": true,
+              "mailBtnTargets": []
+            }
+          ],
+          "imageSrc": "lib:lib8o79wuyx1"
+        },
+        {
+          "id": "scek9ked8q",
+          "name": "［SJ］19.①世帯_ﾄｯﾌﾟ",
+          "note": "",
+          "hotspots": [
+            {
+              "id": "scuxsl86bi",
+              "libHsId": "lhsdn5dpd0jy",
+              "x": 0.27064100655151874,
+              "y": 0.4888663967611336,
+              "w": 0.4586063132817153,
+              "h": 0.04377530364372469,
+              "note": "移行",
+              "libTargetId": "",
+              "targetId": "",
+              "targetType": "screen",
+              "libUnresolved": false,
+              "enabled": true,
+              "mailBtnTargets": []
+            },
+            {
+              "id": "sci6yocu4l",
+              "libHsId": "lhsp4wm217q5",
+              "x": 0.27064100655151874,
+              "y": 0.542257085020243,
+              "w": 0.4586063132817153,
+              "h": 0.04377530364372469,
+              "note": "新規",
+              "libTargetId": "lib40tkv6zkd",
+              "targetId": "scu13ac8ot",
+              "targetType": "screen",
+              "libUnresolved": false,
+              "enabled": true,
+              "mailBtnTargets": []
+            }
+          ],
+          "imageSrc": "lib:libg275r51rg"
+        },
+        {
+          "id": "scu13ac8ot",
+          "name": "［SJ］20.①世帯_利用規約(1)",
+          "note": "",
+          "hotspots": [
+            {
+              "id": "scr04okxqc",
+              "libHsId": "lhsmzo6gh8lw",
+              "x": 0.15071521842355176,
+              "y": 0.3157151502925156,
+              "w": 0.6989553656220323,
+              "h": 0.040548718983256,
+              "note": "利用規約に同意する",
+              "libTargetId": "lib16ol6nbgm",
+              "targetId": "sc0wlppdyc",
+              "targetType": "screen",
+              "libUnresolved": false,
+              "enabled": true,
+              "mailBtnTargets": []
+            }
+          ],
+          "imageSrc": "lib:lib40tkv6zkd"
+        },
+        {
+          "id": "sc0wlppdyc",
+          "name": "［SJ］20.①世帯_利用規約(2)",
+          "note": "",
+          "hotspots": [
+            {
+              "id": "scawbgxoyc",
+              "libHsId": "lhsztzvsa1ss",
+              "x": 0.15071521842355176,
+              "y": 0.46403596403596403,
+              "w": 0.6989553656220323,
+              "h": 0.14285714285714285,
+              "note": "メアド入力",
+              "libTargetId": "libf7j8ya7m9",
+              "targetId": "scj609u05s",
+              "targetType": "screen",
+              "libUnresolved": false,
+              "enabled": true,
+              "mailBtnTargets": []
+            }
+          ],
+          "imageSrc": "lib:lib16ol6nbgm"
+        },
+        {
+          "id": "scj609u05s",
+          "name": "［SJ］20.①世帯_利用規約(3)",
+          "note": "",
+          "hotspots": [
+            {
+              "id": "scv6xaihpd",
+              "libHsId": "lhs799cy74oi",
+              "x": 0.2694214876033058,
+              "y": 0.6244916403072752,
+              "w": 0.45950413223140496,
+              "h": 0.03253502033438771,
+              "note": "認証コード送信",
+              "libTargetId": "lib88rby7amf",
+              "targetId": "scf3qpvt3d",
+              "targetType": "screen",
+              "libUnresolved": false,
+              "enabled": true,
+              "mailBtnTargets": []
+            }
+          ],
+          "imageSrc": "lib:libf7j8ya7m9"
+        },
+        {
+          "id": "scf3qpvt3d",
+          "name": "［SJ］21.①世帯_確認ｺｰﾄﾞ※ﾒｰﾙ(1)",
+          "note": "",
+          "hotspots": [
+            {
+              "id": "sc0ckfivli",
+              "libHsId": "lhs35a1t2obe",
+              "x": 0.2651142428285524,
+              "y": 0.2825963718820862,
+              "w": 0.4703135423615744,
+              "h": 0.03713151927437642,
+              "note": "認証コード入力",
+              "libTargetId": "libp84m1b7xp",
+              "targetId": "sc08fubmsl",
+              "targetType": "screen",
+              "libUnresolved": false,
+              "enabled": true,
+              "mailBtnTargets": []
+            }
+          ],
+          "imageSrc": "lib:lib88rby7amf"
+        },
+        {
+          "id": "sc08fubmsl",
+          "name": "［SJ］21.①世帯_確認ｺｰﾄﾞ※ﾒｰﾙ(2)",
+          "note": "",
+          "hotspots": [
+            {
+              "id": "sc7ezfi3ih",
+              "libHsId": "lhsteskjeg9h",
+              "x": 0.2717853569046031,
+              "y": 0.3472222222222222,
+              "w": 0.45697131420947296,
+              "h": 0.03259637188208617,
+              "note": "次へ",
+              "libTargetId": "libfkbs8apxb",
+              "targetId": "sc4p6d5msm",
+              "targetType": "screen",
+              "libUnresolved": false,
+              "enabled": true,
+              "mailBtnTargets": []
+            }
+          ],
+          "imageSrc": "lib:libp84m1b7xp"
+        },
+        {
+          "id": "sc4p6d5msm",
+          "name": "［SJ］22.①世帯_申請情報入力(1)",
+          "note": "",
+          "hotspots": [
+            {
+              "id": "sc7v801474",
+              "libHsId": "lhs51gu6k4ti",
+              "x": 0,
+              "y": 0.18736017897091722,
+              "w": 1,
+              "h": 0.41387024608501116,
+              "note": "入力箇所",
+              "libTargetId": "libaums394si",
+              "targetId": "",
+              "targetType": "screen",
+              "libUnresolved": true,
+              "enabled": true,
+              "mailBtnTargets": []
+            }
+          ],
+          "imageSrc": "lib:libfkbs8apxb"
+        },
+        {
+          "id": "sc71w4lvqn",
+          "name": "［SJ］23.①世帯_申請情報確認",
+          "note": "",
+          "hotspots": [
+            {
+              "id": "sc5fcysi74",
+              "libHsId": "lhshazl6kpvl",
+              "x": 0.27102526521496373,
+              "y": 0.6878417497587649,
+              "w": 0.4584031267448353,
+              "h": 0.02122869089739466,
+              "note": "申請する",
+              "libTargetId": "libq2pzl4q2y",
+              "targetId": "scx6sxwcx0",
+              "targetType": "screen",
+              "libUnresolved": false,
+              "enabled": true,
+              "mailBtnTargets": []
+            },
+            {
+              "id": "scedlyut41",
+              "libHsId": "lhs7ak5j47yj",
+              "x": 0.07563025210084033,
+              "y": 0.7233470957341532,
+              "w": 0.28781512605042014,
+              "h": 0.021228690897394674,
+              "note": "戻る",
+              "libTargetId": "libaums394si",
+              "targetId": "",
+              "targetType": "screen",
+              "libUnresolved": true,
+              "enabled": true,
+              "mailBtnTargets": []
+            }
+          ],
+          "imageSrc": "lib:libl8kydc5ct"
+        },
+        {
+          "id": "scx6sxwcx0",
+          "name": "［SJ］24.①世帯_申請完了",
+          "note": "",
+          "hotspots": [],
+          "imageSrc": "lib:libq2pzl4q2y"
+        },
+        {
+          "id": "sc9rpp35mq",
+          "name": "［SJ］26.①世帯_ﾛｸﾞｲﾝ(1)",
+          "note": "",
+          "hotspots": [
+            {
+              "id": "sc9zw49jot",
+              "libHsId": "lhsto1mx0lbn",
+              "x": 0,
+              "y": 0.10011185682326622,
+              "w": 1,
+              "h": 0.23210290827740493,
+              "note": "ログイン情報入力",
+              "libTargetId": "lib2sx5xcj8f",
+              "targetId": "",
+              "targetType": "screen",
+              "libUnresolved": true,
+              "enabled": true,
+              "mailBtnTargets": []
+            }
+          ],
+          "imageSrc": "lib:libzdq41eym1"
+        },
+        {
+          "id": "sc5en21odl",
+          "name": "［SJ］27.①世帯_連携完了",
+          "note": "",
+          "hotspots": [
+            {
+              "id": "scvsl7fk6v",
+              "libHsId": "lhs16w9cu719",
+              "x": 0.022285690460306873,
+              "y": 0.18735827664399093,
+              "w": 0.9559706470980653,
+              "h": 0.026927437641723357,
+              "note": "アカウント設定ページに戻る",
+              "libTargetId": "libb8asvqlfq",
+              "targetId": "scbn51u9cz",
+              "targetType": "screen",
+              "libUnresolved": false,
+              "enabled": true,
+              "mailBtnTargets": []
+            }
+          ],
+          "imageSrc": "lib:lib1e6gduvan"
+        },
+        {
+          "id": "scbn51u9cz",
+          "name": "［SJ］28.①世帯_ｱｶｳﾝﾄ設定※連携済",
+          "note": "",
+          "hotspots": [
+            {
+              "id": "scax9ccuh8",
+              "libHsId": "lhs4x2uwn3iq",
+              "x": 0,
+              "y": 0.37778768956289027,
+              "w": 1,
+              "h": 0.04504906333630687,
+              "note": "アカウント管理",
+              "targetId": "sc4creckmt",
+              "targetType": "screen",
+              "libUnresolved": false,
+              "libTargetId": "libuoqhmmscm",
+              "enabled": true,
+              "mailBtnTargets": []
+            },
+            {
+              "id": "sc39ao4hmh",
               "libHsId": "lhsenvgbehnq",
               "x": 0,
               "y": 0.42283675289919714,
@@ -2573,7 +2659,7 @@ window.APP_SCREEN_DATA = {
               "mailBtnTargets": []
             },
             {
-              "id": "scy9ruf4ay",
+              "id": "sc4v0cncxu",
               "libHsId": "lhsrtsbv1bvu",
               "x": 0,
               "y": 0.5227475468331847,
@@ -2588,7 +2674,7 @@ window.APP_SCREEN_DATA = {
               "mailBtnTargets": []
             },
             {
-              "id": "sclp6yiy75",
+              "id": "scifa0emrk",
               "libHsId": "lhsm66c9pzjm",
               "x": 0,
               "y": 0.5677966101694916,
@@ -2603,7 +2689,7 @@ window.APP_SCREEN_DATA = {
               "mailBtnTargets": []
             },
             {
-              "id": "sc7vgzyj7e",
+              "id": "scaazfjv79",
               "libHsId": "lhsh8i4rwo2l",
               "x": 0,
               "y": 0,
@@ -2618,7 +2704,7 @@ window.APP_SCREEN_DATA = {
               "mailBtnTargets": []
             },
             {
-              "id": "sctiddtn69",
+              "id": "scz08tx5dp",
               "libHsId": "lhso6e7jklf6",
               "x": 0.08140756302521009,
               "y": 0,
@@ -2633,7 +2719,7 @@ window.APP_SCREEN_DATA = {
               "mailBtnTargets": []
             },
             {
-              "id": "sclona9xma",
+              "id": "sci7fk1e0x",
               "libHsId": "lhs2qrhpdy2l",
               "x": 0.9185924369747899,
               "y": 0,
@@ -2647,52 +2733,189 @@ window.APP_SCREEN_DATA = {
               "enabled": true,
               "mailBtnTargets": []
             }
-          ]
+          ],
+          "imageSrc": "lib:libb8asvqlfq"
         },
         {
-          "id": "scwuqa69n2",
-          "name": "［S］03.②事業_アカウントレス（入力勧奨）",
+          "id": "scpdcuhfz8",
+          "name": "00.ログイン",
           "note": "",
-          "imageSrc": "lib:libo1rtgmzrf",
           "hotspots": [
             {
-              "id": "scgf9hs8pj",
-              "libHsId": "lhsk328v2wk2",
+              "id": "sc2ke9n95i",
+              "libHsId": "lhsx5i0tudzl",
               "x": 0,
-              "y": 0,
-              "w": 0.08434864104967198,
-              "h": 0.029856687898089172,
-              "note": "メニュー",
+              "y": 0.08913649025069638,
+              "w": 1,
+              "h": 0.1309192200557103,
+              "note": "ログイン情報入力",
+              "libTargetId": "",
               "targetId": "",
               "targetType": "screen",
               "libUnresolved": false,
-              "libTargetId": "",
               "enabled": true,
               "mailBtnTargets": []
             },
             {
-              "id": "scriyvlr4x",
-              "libHsId": "lhsc8joup1nx",
-              "x": 0.8088097469540768,
-              "y": 0,
-              "w": 0.07497656982193064,
-              "h": 0.029856687898089172,
+              "id": "scfrb3tfxf",
+              "libHsId": "lhsgz02jncsg",
+              "x": 0.07020997375328084,
+              "y": 0.30362116991643456,
+              "w": 0.8608923884514436,
+              "h": 0.027298050139275765,
               "note": "ログイン",
-              "targetId": "sci4m966wt",
+              "libTargetId": "",
+              "targetId": "",
               "targetType": "screen",
               "libUnresolved": false,
-              "libTargetId": "lib3ltpmtyeo",
               "enabled": true,
               "mailBtnTargets": []
             },
             {
-              "id": "scmpngumr3",
-              "libHsId": "lhs4r9heodq0",
-              "x": 0.8837863167760075,
-              "y": 0,
-              "w": 0.1162136832239925,
-              "h": 0.029856687898089172,
-              "note": "新規登録",
+              "id": "scsvxq1ezp",
+              "libHsId": "lhsultbomoik",
+              "x": 0.07020997375328084,
+              "y": 0.34707520891364924,
+              "w": 0.8608923884514436,
+              "h": 0.022284122562674032,
+              "note": "メアド忘れ",
+              "libTargetId": "libpokcntvqf",
+              "targetId": "scirbl4za2",
+              "targetType": "screen",
+              "libUnresolved": false,
+              "enabled": true,
+              "mailBtnTargets": []
+            },
+            {
+              "id": "sc5g1unvp0",
+              "libHsId": "lhsaklk5uzg2",
+              "x": 0.07020997375328084,
+              "y": 0.36935933147632327,
+              "w": 0.8608923884514436,
+              "h": 0.022284122562674032,
+              "note": "PW忘れ",
+              "libTargetId": "libog2g9mf8a",
+              "targetId": "sc2en0dgh7",
+              "targetType": "screen",
+              "libUnresolved": false,
+              "enabled": true,
+              "mailBtnTargets": []
+            }
+          ],
+          "imageSrc": "lib:lib7cndrqn74"
+        },
+        {
+          "id": "scirbl4za2",
+          "name": "01.メアド忘れ",
+          "note": "",
+          "hotspots": [],
+          "imageSrc": "lib:libpokcntvqf"
+        },
+        {
+          "id": "sc2en0dgh7",
+          "name": "02.PW忘れ(1)",
+          "note": "",
+          "hotspots": [
+            {
+              "id": "scudt34313",
+              "libHsId": "lhst47vfsews",
+              "x": 0,
+              "y": 0.12218327491236855,
+              "w": 1,
+              "h": 0.05408112168252378,
+              "note": "メアド入力",
+              "targetId": "scjpr6jn5i",
+              "targetType": "screen",
+              "libUnresolved": false,
+              "libTargetId": "lib80mmh0jcp",
+              "enabled": true,
+              "mailBtnTargets": []
+            }
+          ],
+          "imageSrc": "lib:libog2g9mf8a"
+        },
+        {
+          "id": "scjpr6jn5i",
+          "name": "02.PW忘れ(2)",
+          "note": "",
+          "hotspots": [
+            {
+              "id": "scmlfdv5xf",
+              "libHsId": "lhs7k37oram1",
+              "x": 0.07201405152224824,
+              "y": 0.17960199004975125,
+              "w": 0.8594847775175644,
+              "h": 0.028855721393034824,
+              "note": "次に進む",
+              "targetId": "scrhz2g7fo",
+              "targetType": "screen",
+              "libUnresolved": false,
+              "libTargetId": "liblh8buqkgq",
+              "enabled": true,
+              "mailBtnTargets": []
+            }
+          ],
+          "imageSrc": "lib:lib80mmh0jcp"
+        },
+        {
+          "id": "scrhz2g7fo",
+          "name": "02.PW忘れ(3)",
+          "note": "",
+          "hotspots": [
+            {
+              "id": "scqr6sco2r",
+              "libHsId": "lhs2wi7yswev",
+              "x": 0.07084309133489461,
+              "y": 0.245273631840796,
+              "w": 0.8594847775175644,
+              "h": 0.028855721393034824,
+              "note": "認証コード送信",
+              "targetId": "scv4eby9rt",
+              "targetType": "screen",
+              "libUnresolved": false,
+              "libTargetId": "lib9xs2bwn4a",
+              "enabled": true,
+              "mailBtnTargets": []
+            }
+          ],
+          "imageSrc": "lib:liblh8buqkgq"
+        },
+        {
+          "id": "scv4eby9rt",
+          "name": "02.PW忘れ(4)",
+          "note": "",
+          "hotspots": [
+            {
+              "id": "schhvk7itp",
+              "libHsId": "lhsmuolviw51",
+              "x": 0.3415282392026578,
+              "y": 0.47671464860287893,
+              "w": 0.31627906976744186,
+              "h": 0.023285351397121085,
+              "note": "認証コード入力",
+              "targetId": "sczqu9bk14",
+              "targetType": "screen",
+              "libUnresolved": false,
+              "libTargetId": "lib8s0j8ppbo",
+              "enabled": true,
+              "mailBtnTargets": []
+            }
+          ],
+          "imageSrc": "lib:lib9xs2bwn4a"
+        },
+        {
+          "id": "sczqu9bk14",
+          "name": "02.PW忘れ(5)",
+          "note": "",
+          "hotspots": [
+            {
+              "id": "sc6lhx7yzy",
+              "libHsId": "lhs62tpxd962",
+              "x": 0.4030720338983051,
+              "y": 0.5093363329583802,
+              "w": 0.19385593220338984,
+              "h": 0.021372328458942633,
+              "note": "次へ進む",
               "targetId": "",
               "targetType": "screen",
               "libUnresolved": false,
@@ -2700,150 +2923,652 @@ window.APP_SCREEN_DATA = {
               "enabled": true,
               "mailBtnTargets": []
             }
-          ]
+          ],
+          "imageSrc": "lib:lib8s0j8ppbo"
         },
         {
-          "id": "scsk93yqls",
-          "name": "［S］03.③学校_アカウントレス（入力勧奨）",
+          "id": "scx8tkuhtb",
+          "name": "02.PW忘れ(7)",
           "note": "",
-          "imageSrc": "lib:lib912s60g24",
-          "hotspots": []
-        },
-        {
-          "id": "sc0xx1i499",
-          "name": "［S］07.②事業/③学校_ノーティス",
-          "note": "",
-          "imageSrc": "lib:libi43hjldtl",
           "hotspots": [
             {
-              "id": "scee3rp60r",
-              "libHsId": "lhsswe9xgo53",
-              "x": 0.06776859504132231,
-              "y": 0.19157894736842104,
-              "w": 0.8611570247933884,
-              "h": 0.02736842105263158,
-              "note": "メアド",
-              "targetId": "scok1028ge",
+              "id": "sche1okz4e",
+              "libHsId": "lhsbw09iixp0",
+              "x": 0.06903765690376569,
+              "y": 0.30595026642984013,
+              "w": 0.8598326359832636,
+              "h": 0.027975133214920123,
+              "note": "パスワードを変更する",
+              "targetId": "sch4t57mvb",
               "targetType": "screen",
               "libUnresolved": false,
-              "libTargetId": "libo4kiqc052",
+              "libTargetId": "librsp92wn5v",
               "enabled": true,
               "mailBtnTargets": []
             }
-          ]
+          ],
+          "imageSrc": "lib:liba6hlh7xbu"
         },
         {
-          "id": "sc0z4ujqw5",
-          "name": "［S］12.②事業_内容確認",
+          "id": "sch4t57mvb",
+          "name": "02.PW忘れ(8)",
           "note": "",
-          "imageSrc": "lib:libccixs7mic",
           "hotspots": [
             {
-              "id": "sclu2rl976",
-              "libHsId": "lhspv7kgi5b9",
-              "x": 0.06935332708528585,
-              "y": 0.4729299363057325,
-              "w": 0.8594189315838802,
-              "h": 0.027070063694267517,
-              "note": "アカウントを登録する",
-              "targetId": "scthugej2x",
+              "id": "scrj6fd9x8",
+              "libHsId": "lhsjiqgxt9mq",
+              "x": 0.06947368421052631,
+              "y": 0.1440071556350626,
+              "w": 0.860836979097618,
+              "h": 0.02817531305903399,
+              "note": "ログイン画面に戻る",
+              "targetId": "scpdcuhfz8",
               "targetType": "screen",
               "libUnresolved": false,
-              "libTargetId": "libp4v8g48sw",
-              "enabled": true,
-              "mailBtnTargets": []
-            },
-            {
-              "id": "scgz4xmepj",
-              "libHsId": "lhsf7qbsijyd",
-              "x": 0.06935332708528585,
-              "y": 0.5071656050955414,
-              "w": 0.8594189315838802,
-              "h": 0.027070063694267517,
-              "note": "戻る",
-              "targetId": "sc0mut0bvs",
-              "targetType": "screen",
-              "libUnresolved": false,
-              "libTargetId": "lib5jhji9e7m",
+              "libTargetId": "lib7cndrqn74",
               "enabled": true,
               "mailBtnTargets": []
             }
-          ]
+          ],
+          "imageSrc": "lib:librsp92wn5v"
         },
         {
-          "id": "scthugej2x",
-          "name": "［S］13.②事業_登録完了",
-          "note": "",
-          "imageSrc": "lib:libp4v8g48sw",
-          "hotspots": [
-            {
-              "id": "sc2t1aa822",
-              "libHsId": "lhs91zyqt7kr",
-              "x": 0.07090336134453781,
-              "y": 0.1873327386262266,
-              "w": 0.8602941176470589,
-              "h": 0.027653880463871544,
-              "note": "アカウント設定に進む",
-              "targetId": "scd1ith6v5",
-              "targetType": "screen",
-              "libUnresolved": false,
-              "libTargetId": "libfhm654yuu",
-              "enabled": true,
-              "mailBtnTargets": []
-            }
-          ]
-        },
-        {
-          "id": "scd1ith6v5",
-          "name": "［S］14.②事業_アカウント設定",
-          "note": "",
-          "imageSrc": "lib:libfhm654yuu",
-          "hotspots": []
-        },
-        {
-          "id": "scyq4p6oim",
-          "name": "［S］15.①世帯_プロファイル管理",
-          "note": "",
-          "imageSrc": "lib:libn2izpsiln",
-          "hotspots": [
-            {
-              "id": "sczg4hzl99",
-              "libHsId": "lhsvdpiev1yy",
-              "x": 0.020618556701030927,
-              "y": 0.3140923566878981,
-              "w": 0.9578256794751641,
-              "h": 0.027070063694267517,
-              "note": "アカウント設定に戻る",
-              "targetId": "",
-              "targetType": "screen",
-              "libUnresolved": false,
-              "libTargetId": "",
-              "enabled": true,
-              "mailBtnTargets": []
-            },
-            {
-              "id": "sc3pqgay3l",
-              "libHsId": "lhsp3zsk0jt7",
-              "x": 0.3735294117647059,
-              "y": 0.16283716283716285,
-              "w": 0.25058823529411767,
-              "h": 0.13036963036963037,
-              "note": "新規作成",
-              "targetId": "sccxyo3xsi",
-              "targetType": "screen",
-              "libUnresolved": false,
-              "libTargetId": "libfye5q7g0x",
-              "enabled": true,
-              "mailBtnTargets": []
-            }
-          ]
-        },
-        {
-          "id": "sckggm3r3s",
+          "id": "sce9u95t7b",
           "name": "ホワイトリスト",
           "note": "",
-          "imageSrc": "lib:libkw8uibasb",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:libkw8uibasb"
+        },
+        {
+          "id": "scirhkccgd",
+          "name": "［S］①世帯_情報>ID",
+          "note": "",
+          "imageSrc": "lib:lib4nbb4gqr0",
+          "hotspots": [
+            {
+              "id": "scori3i2q9",
+              "libHsId": "lhsb06knttd2",
+              "x": 0.021662763466042154,
+              "y": 0.24975124378109453,
+              "w": 0.9578454332552693,
+              "h": 0.027860696517412936,
+              "note": "設定する",
+              "targetId": "",
+              "targetType": "screen",
+              "libUnresolved": false,
+              "libTargetId": "",
+              "enabled": true,
+              "mailBtnTargets": []
+            },
+            {
+              "id": "scsakmy16i",
+              "libHsId": "lhs0fti6ftog",
+              "x": 0.021662763466042154,
+              "y": 0.2840796019900497,
+              "w": 0.9578454332552692,
+              "h": 0.027860696517412936,
+              "note": "キャンセル",
+              "targetId": "scm0f1npwi",
+              "targetType": "screen",
+              "libUnresolved": false,
+              "libTargetId": "libwairy4j3z",
+              "enabled": true,
+              "mailBtnTargets": []
+            },
+            {
+              "id": "scg78ijw1z",
+              "libHsId": "lhsydi1crx9b",
+              "x": 0.021662763466042154,
+              "y": 0.31492537313432833,
+              "w": 0.9578454332552692,
+              "h": 0.027860696517412877,
+              "note": "削除",
+              "targetId": "",
+              "targetType": "screen",
+              "libUnresolved": false,
+              "libTargetId": "",
+              "enabled": true,
+              "mailBtnTargets": []
+            }
+          ]
+        },
+        {
+          "id": "sct4rp2mc8",
+          "name": "［S］①世帯_情報>PW",
+          "note": "",
+          "imageSrc": "lib:libeyi66id4t",
+          "hotspots": [
+            {
+              "id": "scxtopf8bg",
+              "libHsId": "lhs92k6vn29n",
+              "x": 0.021662763466042154,
+              "y": 0.30051466803911475,
+              "w": 0.9578454332552693,
+              "h": 0.027860696517412936,
+              "note": "変更する",
+              "targetId": "",
+              "targetType": "screen",
+              "libUnresolved": false,
+              "libTargetId": "",
+              "enabled": true,
+              "mailBtnTargets": []
+            },
+            {
+              "id": "sch7w7li5i",
+              "libHsId": "lhshia3nwitg",
+              "x": 0.021662763466042154,
+              "y": 0.33511408474867044,
+              "w": 0.9578454332552693,
+              "h": 0.027860696517412936,
+              "note": "キャンセル",
+              "targetId": "scm0f1npwi",
+              "targetType": "screen",
+              "libUnresolved": false,
+              "libTargetId": "libwairy4j3z",
+              "enabled": true,
+              "mailBtnTargets": []
+            }
+          ]
+        },
+        {
+          "id": "sc35fqzfso",
+          "name": "［S］①世帯_情報>TEL",
+          "note": "",
+          "imageSrc": "lib:libmp02vpkud",
+          "hotspots": [
+            {
+              "id": "sccwyqsnnb",
+              "libHsId": "lhszgglvmi0k",
+              "x": 0.021662763466042154,
+              "y": 0.2616445783804177,
+              "w": 0.9578454332552692,
+              "h": 0.027860696517412936,
+              "note": "設定する",
+              "targetId": "",
+              "targetType": "screen",
+              "libUnresolved": false,
+              "libTargetId": "",
+              "enabled": true,
+              "mailBtnTargets": []
+            },
+            {
+              "id": "sc5xzex2je",
+              "libHsId": "lhsqigimytok",
+              "x": 0.021662763466042154,
+              "y": 0.2954983702178761,
+              "w": 0.9578454332552693,
+              "h": 0.027860696517412936,
+              "note": "キャンセル",
+              "targetId": "scm0f1npwi",
+              "targetType": "screen",
+              "libUnresolved": false,
+              "libTargetId": "libwairy4j3z",
+              "enabled": true,
+              "mailBtnTargets": []
+            },
+            {
+              "id": "sc0u91y00b",
+              "libHsId": "lhsykw6wdz7j",
+              "x": 0.021662763466042154,
+              "y": 0.3367678847143592,
+              "w": 0.9578454332552693,
+              "h": 0.027860696517412877,
+              "note": "削除",
+              "targetId": "",
+              "targetType": "screen",
+              "libUnresolved": false,
+              "libTargetId": "",
+              "enabled": true,
+              "mailBtnTargets": []
+            }
+          ]
+        },
+        {
+          "id": "sc1reps13s",
+          "name": "［S］①世帯_管理>ﾌﾟﾗｲﾊﾞｼｰﾉｰﾃｨｽ",
+          "note": "",
+          "imageSrc": "lib:liba177m2szv",
+          "hotspots": [
+            {
+              "id": "scmnw4kk9e",
+              "libHsId": "lhso52ujjj4i",
+              "x": 0.021662763466042154,
+              "y": 0.6566477955052326,
+              "w": 0.9578454332552693,
+              "h": 0.027860696517412936,
+              "note": "保存する",
+              "targetId": "",
+              "targetType": "screen",
+              "libUnresolved": false,
+              "libTargetId": "",
+              "enabled": true,
+              "mailBtnTargets": []
+            },
+            {
+              "id": "scho8ww11o",
+              "libHsId": "lhsl4aw70khw",
+              "x": 0.021662763466042154,
+              "y": 0.7047692571624635,
+              "w": 0.9578454332552693,
+              "h": 0.027860696517412936,
+              "note": "アカウント管理に戻る",
+              "targetId": "sc4creckmt",
+              "targetType": "screen",
+              "libUnresolved": false,
+              "libTargetId": "libuoqhmmscm",
+              "enabled": true,
+              "mailBtnTargets": []
+            }
+          ]
+        },
+        {
+          "id": "sc4creckmt",
+          "name": "［S］①世帯_設定>管理",
+          "note": "",
+          "imageSrc": "lib:libuoqhmmscm",
+          "hotspots": [
+            {
+              "id": "sc4v33mjyo",
+              "libHsId": "lhstrx2n3xog",
+              "x": 0,
+              "y": 0.12664453733039832,
+              "w": 1,
+              "h": 0.0353332972817074,
+              "note": "アカウント情報",
+              "targetId": "scm0f1npwi",
+              "targetType": "screen",
+              "libUnresolved": false,
+              "libTargetId": "libwairy4j3z",
+              "enabled": true,
+              "mailBtnTargets": []
+            },
+            {
+              "id": "scslf1irqi",
+              "libHsId": "lhsr682o09ts",
+              "x": 0,
+              "y": 0.16197783461210571,
+              "w": 1,
+              "h": 0.03182722364308044,
+              "note": "お住まいの地域",
+              "targetId": "scimmz7d3n",
+              "targetType": "screen",
+              "libUnresolved": false,
+              "libTargetId": "lib2cyvm50ai",
+              "enabled": true,
+              "mailBtnTargets": []
+            },
+            {
+              "id": "sc4vak31lh",
+              "libHsId": "lhszkn3ianyr",
+              "x": 0,
+              "y": 0.22579245136789894,
+              "w": 1,
+              "h": 0.03182722364308044,
+              "note": "アカウントプライバシーノーティス",
+              "targetId": "sc1reps13s",
+              "targetType": "screen",
+              "libUnresolved": false,
+              "libTargetId": "liba177m2szv",
+              "enabled": true,
+              "mailBtnTargets": []
+            },
+            {
+              "id": "scf6qkj0ci",
+              "libHsId": "lhs5uprqg5oi",
+              "x": 0.0218303946263644,
+              "y": 0.26809269162210336,
+              "w": 0.9563392107472712,
+              "h": 0.026737967914438502,
+              "note": "アカウント設定に戻る",
+              "targetId": "scbn51u9cz",
+              "targetType": "screen",
+              "libUnresolved": false,
+              "libTargetId": "libb8asvqlfq",
+              "enabled": true,
+              "mailBtnTargets": []
+            }
+          ]
+        },
+        {
+          "id": "scm0f1npwi",
+          "name": "［S］①世帯_管理>情報",
+          "note": "",
+          "imageSrc": "lib:libwairy4j3z",
+          "hotspots": [
+            {
+              "id": "scutw15lvc",
+              "libHsId": "lhs95clnwriv",
+              "x": 0,
+              "y": 0.1260904044409199,
+              "w": 1,
+              "h": 0.033306899286280715,
+              "note": "ログインID",
+              "targetId": "scirhkccgd",
+              "targetType": "screen",
+              "libUnresolved": false,
+              "libTargetId": "lib4nbb4gqr0",
+              "enabled": true,
+              "mailBtnTargets": []
+            },
+            {
+              "id": "sczsoh3sus",
+              "libHsId": "lhsc2d98q1u9",
+              "x": 0,
+              "y": 0.15939730372720062,
+              "w": 1,
+              "h": 0.04523154188386345,
+              "note": "メールアドレス",
+              "targetId": "sc59w9f5wg",
+              "targetType": "screen",
+              "libUnresolved": false,
+              "libTargetId": "libvf2zn889h",
+              "enabled": true,
+              "mailBtnTargets": []
+            },
+            {
+              "id": "scx2ara6al",
+              "libHsId": "lhs7nzfmwna8",
+              "x": 0,
+              "y": 0.20462884561106406,
+              "w": 1,
+              "h": 0.0316116285633644,
+              "note": "パスワード",
+              "targetId": "sct4rp2mc8",
+              "targetType": "screen",
+              "libUnresolved": false,
+              "libTargetId": "libeyi66id4t",
+              "enabled": true,
+              "mailBtnTargets": []
+            },
+            {
+              "id": "sc0tjxjsm9",
+              "libHsId": "lhsg1bvcl42s",
+              "x": 0,
+              "y": 0.23624047417442848,
+              "w": 1,
+              "h": 0.0316116285633644,
+              "note": "携帯電話番号",
+              "targetId": "sc35fqzfso",
+              "targetType": "screen",
+              "libUnresolved": false,
+              "libTargetId": "libmp02vpkud",
+              "enabled": true,
+              "mailBtnTargets": []
+            },
+            {
+              "id": "sc6a7n5s2j",
+              "libHsId": "lhsdws8x5mhk",
+              "x": 0,
+              "y": 0.2678521027377928,
+              "w": 1,
+              "h": 0.03161162856336433,
+              "note": "復旧用メールアドレス",
+              "targetId": "scjwyd18rv",
+              "targetType": "screen",
+              "libUnresolved": false,
+              "libTargetId": "libho1drrob5",
+              "enabled": true,
+              "mailBtnTargets": []
+            },
+            {
+              "id": "sce86rm3zy",
+              "libHsId": "lhs72qaffg07",
+              "x": 0,
+              "y": 0.29946373130115717,
+              "w": 1,
+              "h": 0.03439828297322822,
+              "note": "アカウント削除",
+              "targetId": "sc2mzr7jvs",
+              "targetType": "screen",
+              "libUnresolved": false,
+              "libTargetId": "libzqi5vs72s",
+              "enabled": true,
+              "mailBtnTargets": []
+            },
+            {
+              "id": "scq0cyhscd",
+              "libHsId": "lhsecl5mzg0k",
+              "x": 0.021577380952380952,
+              "y": 0.3419721871049305,
+              "w": 0.9575021169555689,
+              "h": 0.02781289506953226,
+              "note": "アカウント管理に戻る",
+              "targetId": "sc4creckmt",
+              "targetType": "screen",
+              "libUnresolved": false,
+              "libTargetId": "libuoqhmmscm",
+              "enabled": true,
+              "mailBtnTargets": []
+            }
+          ]
+        },
+        {
+          "id": "scimmz7d3n",
+          "name": "［S］①世帯_管理>地域",
+          "note": "",
+          "imageSrc": "lib:lib2cyvm50ai",
+          "hotspots": [
+            {
+              "id": "scksnw9i0t",
+              "libHsId": "lhs6xux86tyy",
+              "x": 0.021662763466042154,
+              "y": 0.1917835904396237,
+              "w": 0.9578454332552694,
+              "h": 0.027860696517412936,
+              "note": "設定する",
+              "targetId": "",
+              "targetType": "screen",
+              "libUnresolved": false,
+              "libTargetId": "",
+              "enabled": true,
+              "mailBtnTargets": []
+            },
+            {
+              "id": "scycyssgfr",
+              "libHsId": "lhsiszkqocv3",
+              "x": 0.021662763466042154,
+              "y": 0.22808936701903967,
+              "w": 0.9578454332552694,
+              "h": 0.027860696517412936,
+              "note": "アカウント管理に戻る",
+              "targetId": "sc4creckmt",
+              "targetType": "screen",
+              "libUnresolved": false,
+              "libTargetId": "libuoqhmmscm",
+              "enabled": true,
+              "mailBtnTargets": []
+            }
+          ]
+        },
+        {
+          "id": "sc59w9f5wg",
+          "name": "［S］①世帯_情報>ﾒｱﾄﾞ",
+          "note": "",
+          "imageSrc": "lib:libvf2zn889h",
+          "hotspots": [
+            {
+              "id": "scqf6gmojz",
+              "libHsId": "lhscghbxhxrh",
+              "x": 0.021662763466042154,
+              "y": 0.3250100695624941,
+              "w": 0.9578454332552693,
+              "h": 0.027860696517412936,
+              "note": "設定する",
+              "targetId": "",
+              "targetType": "screen",
+              "libUnresolved": false,
+              "libTargetId": "",
+              "enabled": true,
+              "mailBtnTargets": []
+            },
+            {
+              "id": "scvhq6zh3w",
+              "libHsId": "lhsh8e4js19p",
+              "x": 0.021662763466042154,
+              "y": 0.36663149020137625,
+              "w": 0.9578454332552693,
+              "h": 0.027860696517412936,
+              "note": "キャンセル",
+              "targetId": "scm0f1npwi",
+              "targetType": "screen",
+              "libUnresolved": false,
+              "libTargetId": "libwairy4j3z",
+              "enabled": true,
+              "mailBtnTargets": []
+            }
+          ]
+        },
+        {
+          "id": "sc2mzr7jvs",
+          "name": "［S］①世帯_管理>情報>削除(1)",
+          "note": "",
+          "imageSrc": "lib:libzqi5vs72s",
+          "hotspots": [
+            {
+              "id": "sccnr981fw",
+              "libHsId": "lhsqfp78ctgz",
+              "x": 0.02092050209205021,
+              "y": 0.3206039076376554,
+              "w": 0.9581589958158996,
+              "h": 0.03241563055062167,
+              "note": "設定する",
+              "targetId": "sc2tu735rr",
+              "targetType": "screen",
+              "libUnresolved": false,
+              "libTargetId": "liblur830fgj",
+              "enabled": true,
+              "mailBtnTargets": []
+            }
+          ]
+        },
+        {
+          "id": "sc2tu735rr",
+          "name": "［S］①世帯_管理>情報>削除(2)",
+          "note": "",
+          "imageSrc": "lib:liblur830fgj",
+          "hotspots": [
+            {
+              "id": "sc0hbey5g8",
+              "libHsId": "lhsd3ez0mkpq",
+              "x": 0.02159656380787319,
+              "y": 0.5257449624551326,
+              "w": 0.9578454332552693,
+              "h": 0.027860696517412936,
+              "note": "削除する",
+              "targetId": "scsh7yaygf",
+              "targetType": "screen",
+              "libUnresolved": false,
+              "libTargetId": "libo9t4bwvnt",
+              "enabled": true,
+              "mailBtnTargets": []
+            },
+            {
+              "id": "scc7coz69r",
+              "libHsId": "lhs5ng5n3xhc",
+              "x": 0.02159656380787319,
+              "y": 0.6009240927109415,
+              "w": 0.9578454332552693,
+              "h": 0.027860696517412936,
+              "note": "キャンセル",
+              "targetId": "",
+              "targetType": "screen",
+              "libUnresolved": false,
+              "libTargetId": "",
+              "enabled": true,
+              "mailBtnTargets": []
+            }
+          ]
+        },
+        {
+          "id": "scsh7yaygf",
+          "name": "［S］①世帯_管理>情報>削除(3)",
+          "note": "",
+          "imageSrc": "lib:libo9t4bwvnt",
+          "hotspots": [
+            {
+              "id": "sc7n3600bl",
+              "libHsId": "lhsv42g5k3rh",
+              "x": 0.08403361344537816,
+              "y": 0.5614753817121291,
+              "w": 0.8329071760283061,
+              "h": 0.027860696517412964,
+              "note": "削除する",
+              "targetId": "",
+              "targetType": "screen",
+              "libUnresolved": false,
+              "libTargetId": "",
+              "enabled": true,
+              "mailBtnTargets": []
+            },
+            {
+              "id": "sct9f42vdx",
+              "libHsId": "lhswnhukq0lb",
+              "x": 0.08403361344537816,
+              "y": 0.5955800531918873,
+              "w": 0.8329071760283061,
+              "h": 0.027860696517412964,
+              "note": "キャンセル",
+              "targetId": "",
+              "targetType": "screen",
+              "libUnresolved": false,
+              "libTargetId": "",
+              "enabled": true,
+              "mailBtnTargets": []
+            }
+          ]
+        },
+        {
+          "id": "scjwyd18rv",
+          "name": "［S］①世帯_情報>復旧用ﾒｱﾄﾞ",
+          "note": "",
+          "imageSrc": "lib:libho1drrob5",
+          "hotspots": [
+            {
+              "id": "scxwxf7pep",
+              "libHsId": "lhs1eiad3wt6",
+              "x": 0.021662763466042154,
+              "y": 0.35448450769975687,
+              "w": 0.9578454332552693,
+              "h": 0.027860696517412936,
+              "note": "設定する",
+              "targetId": "",
+              "targetType": "screen",
+              "libUnresolved": false,
+              "libTargetId": "",
+              "enabled": true,
+              "mailBtnTargets": []
+            },
+            {
+              "id": "scezwpcavo",
+              "libHsId": "lhsghr7jradz",
+              "x": 0.021662763466042154,
+              "y": 0.3884631384633761,
+              "w": 0.9578454332552693,
+              "h": 0.027860696517412936,
+              "note": "キャンセル",
+              "targetId": "scm0f1npwi",
+              "targetType": "screen",
+              "libUnresolved": false,
+              "libTargetId": "libwairy4j3z",
+              "enabled": true,
+              "mailBtnTargets": []
+            },
+            {
+              "id": "scpscn6hqi",
+              "libHsId": "lhs0ltcj3oej",
+              "x": 0.021662763466042154,
+              "y": 0.4299465037768223,
+              "w": 0.9578454332552693,
+              "h": 0.027860696517412877,
+              "note": "削除",
+              "targetId": "",
+              "targetType": "screen",
+              "libUnresolved": false,
+              "libTargetId": "",
+              "enabled": true,
+              "mailBtnTargets": []
+            }
+          ]
         }
       ]
     }
