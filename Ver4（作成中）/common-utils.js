@@ -210,6 +210,23 @@ window.AppFS = (function() {
     });
   }
 
+  /** サブフォルダ名の一覧を返す */
+  function listDirs(subdir) {
+    return ensure(false).then(function(dir) {
+      if (!dir) return [];
+      var p = subdir ? dir.getDirectoryHandle(subdir, { create: false }) : Promise.resolve(dir);
+      return p.then(function(d) {
+        return (async function() {
+          var names = [];
+          for await (var entry of d.values()) {
+            if (entry.kind === 'directory') names.push(entry.name);
+          }
+          return names;
+        })();
+      }).catch(function() { return []; });
+    });
+  }
+
   /** ファイルを削除する */
   function removeFile(path) {
     return ensure(false).then(function(dir) {
@@ -233,7 +250,7 @@ window.AppFS = (function() {
   return {
     isSupported: isSupported, status: status, pick: pick, ensure: ensure,
     readText: readText, writeText: writeText, writeBinary: writeBinary,
-    listFiles: listFiles, removeFile: removeFile,
+    listFiles: listFiles, listDirs: listDirs, removeFile: removeFile,
     forget: forget, dirName: dirName
   };
 })();
@@ -301,6 +318,63 @@ window.initScreenStaticData = function() {
   }).catch(function() { return null; });
 
   return window._screenStaticPromise;
+};
+
+/**
+ * screen-data.js の library を IndexedDB の imageLib へ復元する。
+ *
+ * 以前は screen-data.js にパターンと画像ファイルしか含めていなかったため、
+ * 別PCでフォルダを受け取ると「画面遷移は見えるのに画像ライブラリは空」に
+ * なっていた。ここで一覧を作り直す。
+ * dataUrl には base64 ではなくファイルの相対パスを入れる（<img src> で表示できる）。
+ */
+window.hydrateImageLibrary = function() {
+  var sd = window.APP_SCREEN_DATA;
+  if (!sd || !Array.isArray(sd.library) || !sd.library.length) return Promise.resolve(0);
+
+  return new Promise(function(resolve) {
+    var req = indexedDB.open('screenFlowDB');
+    req.onerror = function() { resolve(0); };
+    req.onsuccess = function(e) {
+      var db = e.target.result;
+      if (!db.objectStoreNames.contains('imageLib')) { db.close(); resolve(0); return; }
+      var tx    = db.transaction('imageLib', 'readwrite');
+      var store = tx.objectStore('imageLib');
+      var added = 0;
+
+      sd.library.forEach(function(meta) {
+        var g = store.get(meta.id);
+        g.onsuccess = function(ev) {
+          var cur = ev.target.result;
+          if (cur) {
+            // 既存レコードは画像データを壊さないよう、欠けている情報だけ補う
+            var patch = false;
+            if (!cur.name && meta.name)                    { cur.name = meta.name; patch = true; }
+            if (cur.folder === undefined && meta.folder)   { cur.folder = meta.folder; patch = true; }
+            if ((!cur.hotspots || !cur.hotspots.length) && meta.hotspots && meta.hotspots.length) {
+              cur.hotspots = meta.hotspots; patch = true;
+            }
+            if (patch) store.put(cur);
+            return;
+          }
+          store.put({
+            id:         meta.id,
+            name:       meta.name || meta.id,
+            folder:     meta.folder || '',
+            dataUrl:    meta.file,          // 相対パス。<img src> で解決される
+            hotspots:   meta.hotspots || [],
+            hsLinkFrom: meta.hsLinkFrom || null,
+            createdAt:  Date.now()
+          });
+          added++;
+        };
+      });
+
+      tx.oncomplete = function() { db.close(); resolve(added); };
+      tx.onerror    = function() { db.close(); resolve(added); };
+      tx.onabort    = function() { db.close(); resolve(added); };
+    };
+  }).catch(function() { return 0; });
 };
 
 /** "lib:xxx" の xxx から画像ファイルの相対パスを返す。無ければ null */
