@@ -1045,9 +1045,16 @@ body.dnd-xlsx-hover::after {
 
 #scrCenterMain { flex: 1; overflow: hidden; position: relative; background: var(--bg); display: flex; flex-direction: column; }
 #scrCenterEmpty { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; gap: 10px; color: var(--muted); font-size: 12px; text-align: center; padding: 40px; }
+/* HS登録エディタ（#imgLibHsCanvasWrap）と同じ中央寄せ方式にそろえる。
+   flex コンテナにして子へ margin:auto を効かせる。
+   justify-content:center だと拡大時に左端が見切れて到達できなくなるため使わない。 */
 #scrCenterCanvas { display: none; flex: 1; overflow: auto; position: relative; padding: 20px; box-sizing: border-box; }
+#scrCenterCanvas.is-shown { display: flex; }
+.scr-canvas-inner { margin: auto; flex-shrink: 0; }
 #scrCenterImgWrap { position: relative; display: inline-block; user-select: none; }
-#scrCenterImg { display: block; max-width: 100%; max-height: calc(100vh - 140px); pointer-events: none; vertical-align: top; }
+/* 実寸指定でズームするため max-width / max-height は付けない。
+   両方を付けると片方だけ制限されて縦横比が崩れる（横に伸びて見える）。 */
+#scrCenterImg { display: block; max-width: none; max-height: none; pointer-events: none; vertical-align: top; }
 #scrCenterOverlay { position: absolute; top: 0; left: 0; cursor: crosshair; touch-action: none; }
 
 /* =====================================================================
@@ -1186,6 +1193,57 @@ html[data-theme="dark"] .nav-arrow-btn { background: rgba(40,42,54,.9); }
   background:rgba(0,0,0,.78);color:#fff;font-size:10px;font-weight:700;
   padding:1px 5px;border-radius:3px;white-space:nowrap;font-variant-numeric:tabular-nums;
 }
+
+/* 右パネルの幅可変ハンドル */
+#scrLibResizer{
+  width:5px;flex-shrink:0;cursor:col-resize;background:transparent;
+  border-left:1px solid var(--border);transition:background .12s;
+}
+#scrLibResizer:hover{background:var(--accent);}
+/* メニュー項目 */
+.scr-lib-menu-item{
+  display:block;width:100%;text-align:left;padding:6px 10px;font-size:11px;
+  background:none;border:none;cursor:pointer;color:var(--text);font-family:inherit;border-radius:5px;
+}
+.scr-lib-menu-item:hover{background:var(--accent-lt);color:var(--accent-text);}
+.scr-lib-menu-sep{height:1px;background:var(--border);margin:4px 2px;}
+/* 行の選択・操作 */
+.scr-lib-cb{width:13px;height:13px;cursor:pointer;flex-shrink:0;accent-color:var(--accent-text);}
+.scr-lib-row.is-selected{background:var(--accent-lt);}
+.scr-lib-more{
+  flex-shrink:0;background:none;border:none;cursor:pointer;color:var(--text3);
+  font-size:13px;padding:0 3px;font-family:inherit;opacity:0;transition:opacity .12s;
+}
+.scr-lib-row:hover .scr-lib-more{opacity:1;}
+.scr-lib-hs{
+  display:inline-block;margin-left:5px;font-size:9px;font-weight:700;
+  color:var(--accent-text);background:var(--accent-lt);border-radius:8px;padding:0 4px;
+}
+/* パターン画面に統合した画像ライブラリ */
+.scr-lib-row{
+  display:flex;align-items:center;gap:7px;padding:5px 8px;cursor:grab;
+  border-bottom:1px solid var(--border);user-select:none;
+}
+.scr-lib-row:hover{background:var(--accent-lt);}
+.scr-lib-row:active{cursor:grabbing;}
+.scr-lib-thumb{
+  width:42px;height:30px;object-fit:contain;flex-shrink:0;
+  background:var(--surface2);border:1px solid var(--border);border-radius:3px;
+}
+.scr-lib-name{
+  flex:1;min-width:0;font-size:11px;color:var(--text);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.scr-lib-folder{
+  display:inline-block;margin-left:5px;font-size:9px;font-weight:700;
+  color:var(--accent-text);background:var(--accent-lt);border-radius:3px;padding:0 4px;
+}
+.scr-lib-row.is-editing{
+  background:var(--accent-lt);
+  box-shadow:inset 3px 0 0 var(--accent);
+}
+/* ドロップ受け入れ中のハイライト */
+.scr-drop-active{outline:2px dashed var(--accent);outline-offset:-3px;background:var(--accent-lt);}
 
 /* パターン側HS：有効/無効スイッチ */
 .scr-hs-sw{position:relative;display:inline-block;width:30px;height:16px;flex-shrink:0;cursor:pointer;}
@@ -1515,68 +1573,55 @@ html[data-theme="dark"] .nav-arrow-btn { background: rgba(40,42,54,.9); }
 </div>
 
 <!-- ===== 画像ライブラリ（画面遷移タブ内オーバーレイパネル） ===== -->
-<div id="imgLibPanel" style="display:none;position:fixed;top:var(--header-h,60px);left:0;right:0;bottom:0;z-index:600;background:var(--surface);flex-direction:column;">
-  <div style="display:flex;flex-direction:column;height:100%;overflow:hidden;">
-    <!-- ヘッダー -->
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:0 18px;height:48px;border-bottom:1px solid var(--border);flex-shrink:0;background:var(--surface2);">
-      <div style="display:flex;align-items:center;gap:12px;">
-        <span style="font-size:14px;font-weight:700;color:var(--text);">🖼 画像ライブラリ</span>
-        <span id="imgLibCount" style="font-size:11px;color:var(--text3);"></span>
+  <!-- 旧・全画面の画像ライブラリは廃止（右パネルに統合） -->
+
+
+
+
+  <!-- ===== 画面遷移タブ（1カラム構成） ===== -->
+  <div class="tab-panel" id="tabScreen">
+    <!--
+      【変更点】2カラム（パターンリスト + 画面リスト）を1カラムに統合。
+      構造: ⠿ パターン名 → 展開で ⠿ [サムネイル] 画面名 を表示
+    -->
+    <aside class="sidebar" id="scrUnifiedSidebar">
+      <div class="sidebar-top">
+        <span class="sidebar-top-label">パターン / 画面</span>
       </div>
-      <div style="display:flex;align-items:center;gap:8px;">
-        <label class="btn btn-secondary" style="font-size:11px;display:inline-flex;align-items:center;cursor:pointer;" title="フォルダ内の画像をまとめてライブラリへ登録します">📁 フォルダ読込<input type="file" webkitdirectory directory multiple style="display:none" onchange="_imgLibImportFolder(this)"></label>
-        <button class="btn btn-secondary" style="font-size:11px;" onclick="_imgLibMergeByContent()">🔀 内容で統合</button>
-        <button class="btn btn-secondary" style="font-size:11px;" onclick="_imgLibMergeDuplicates()">🔗 同名を統合</button>
-        <button class="btn btn-secondary" style="font-size:11px;" onclick="_imgLibCleanup()">🧹 未使用を削除</button>
-        <button onclick="toggleImgLibPanel()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text3);line-height:1;padding:2px 6px;">✕</button>
+      <div class="sidebar-scroll" id="scrUnifiedList"></div>
+      <button class="add-cat-btn" onclick="scrAddPatternInline()">＋ パターンを追加</button>
+    </aside>
+
+    <!-- 中央：画像キャンバスエリア -->
+    <div id="scrCenterMain">
+      <!-- ===== 共通ツールバー（パターン編集／HS登録の両モードで同じ並び） =====
+           [← パターンに戻る] 画面名 [🗑 削除]  ─  [−] [○%] [＋] [Fit]
+           ・戻るボタンは HS登録時のみ表示（非表示でも幅は確保して並びを揃える）
+           ・削除ボタンはパターン編集時のみ表示（同上）                       -->
+      <div class="scr-zoom-bar" id="scrZoomBar" style="display:none;">
+        <button class="scr-zoom-btn" id="scrBarBack" onclick="scrExitHsEdit()" title="パターン編集に戻る"
+                style="visibility:hidden;width:auto;padding:0 10px;font-size:11px;white-space:nowrap;">← パターンに戻る</button>
+        <span id="scrCurScrName" style="margin-left:10px;font-size:12px;font-weight:700;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:340px;"></span>
+        <button class="scr-zoom-btn" id="scrBarDel" onclick="scrQuickDelSel()" title="この画面を削除"
+                style="visibility:hidden;margin-left:8px;width:auto;padding:0 8px;font-size:11px;color:var(--red);white-space:nowrap;">🗑 削除</button>
+        <span style="flex:1;"></span>
+        <button class="scr-zoom-btn" onclick="scrBarZoom(-1)" title="縮小">−</button>
+        <span class="scr-zoom-label" id="scrZoomLabel">100%</span>
+        <button class="scr-zoom-btn" onclick="scrBarZoom(1)" title="拡大">＋</button>
+        <button class="scr-zoom-btn" onclick="scrBarZoomFit()" title="画面に合わせる" style="font-size:11px;width:auto;padding:0 8px;">Fit</button>
       </div>
-    </div>
-    <!-- 本体：左リスト + 右HSエディタ -->
-    <div style="flex:1;display:flex;overflow:hidden;">
-      <!-- 左：画像ライブラリ（比率 1） -->
-      <div style="display:flex;flex-direction:column;flex:1 1 0;min-width:260px;border-right:1px solid var(--border);overflow:hidden;">
-        <!-- 検索バー -->
-        <div style="padding:12px 18px 0;flex-shrink:0;">
-          <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;">
-            <input id="imgLibSearch" type="text" placeholder="画像名で検索"
-                   style="flex:1;height:30px;padding:0 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:inherit;background:var(--surface);color:var(--text);outline:none;"
-                   oninput="_imgLibFilter()"
-                   onfocus="this.style.borderColor='var(--accent)'"
-                   onblur="this.style.borderColor='var(--border)'">
-            <button class="btn btn-secondary" style="font-size:11px;height:30px;padding:0 10px;" onclick="document.getElementById('imgLibSearch').value='';_imgLibFilter()">✕</button>
-          </div>
-          <!-- フォルダ絞り込み（幅が狭いので独立行にする） -->
-          <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;">
-            <select id="imgLibFolderSel" onchange="_imgLibFilter()" title="フォルダで絞り込み"
-                    style="flex:1;min-width:0;height:28px;font-size:11px;font-family:inherit;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);">
-              <option value="">📁 すべて</option>
-            </select>
-            <button class="btn btn-secondary" style="font-size:11px;height:28px;padding:0 8px;flex-shrink:0;"
-                    onclick="_imgLibRenameFolder()" title="選択中のフォルダの名前を変更">✏️</button>
-            <button class="btn btn-secondary" style="font-size:11px;height:28px;padding:0 8px;flex-shrink:0;"
-                    onclick="document.getElementById('imgLibFolderSel').value='';_imgLibFilter()" title="絞り込みを解除">✕</button>
-          </div>
-          <!-- 複数選択ツールバー -->
-          <div id="imgLibSelBar" style="display:none;flex-direction:column;gap:6px;padding:8px 10px;background:var(--accent-lt);border:1px solid var(--accent);border-radius:6px;margin-bottom:8px;font-size:12px;">
-            <span style="color:var(--accent-text);font-weight:700;" id="imgLibSelCount">0件選択中</span>
-            <div style="display:flex;flex-wrap:wrap;gap:6px;">
-              <button class="btn btn-secondary" style="font-size:10px;height:26px;padding:0 8px;flex:1 1 auto;white-space:nowrap;" onclick="_imgLibMoveToFolder()" title="選択した画像をフォルダにまとめます">📁 フォルダへ</button>
-              <button class="btn btn-secondary" style="font-size:10px;height:26px;padding:0 8px;flex:1 1 auto;white-space:nowrap;" onclick="_imgLibClearSelection()">☐ 解除</button>
-              <button class="btn btn-secondary" style="font-size:10px;height:26px;padding:0 8px;flex:1 1 auto;white-space:nowrap;" onclick="_imgLibAddSelectedToPattern()" title="選択中の画像を現在のパターンに画面として追加します">➕ 画面追加</button>
-              <button class="btn" style="font-size:10px;height:26px;padding:0 8px;flex:1 1 auto;white-space:nowrap;background:var(--red);color:#fff;border:none;" onclick="_imgLibDeleteSelected()">🗑 削除</button>
-            </div>
-          </div>
-        </div>
-        <!-- グリッド（スクロール対応） -->
-        <div style="flex:1;overflow-y:auto;padding:0 18px 18px;">
-          <div id="imgLibGrid" style="display:flex;flex-wrap:wrap;gap:12px;align-content:flex-start;min-height:120px;">
-            <div style="width:100%;text-align:center;padding:40px 0;color:var(--text3);font-size:12px;">読み込み中…</div>
-          </div>
-        </div>
+      <!-- 画面メモ（screen.html で備考として表示される） -->
+      <div id="scrMemoBar" style="display:none;align-items:center;gap:8px;padding:6px 12px;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0;">
+        <span style="font-size:11px;color:var(--text3);white-space:nowrap;flex-shrink:0;">📝 メモ</span>
+        <input id="scrRsMemo" class="scr-rs-input" placeholder="この画面の備考（screen.html に表示されます）"
+               oninput="scrRsUpdateMemo()"
+               style="flex:1;min-width:0;height:26px;font-size:12px;">
       </div>
-      <!-- 中央：ホットスポット登録（比率 3） -->
-      <div id="imgLibHsPane" style="flex:3 1 0;min-width:320px;display:flex;flex-direction:column;background:var(--bg);overflow:hidden;border-right:1px solid var(--border);">
-        <div style="padding:10px 14px;border-bottom:1px solid var(--border);background:var(--surface2);flex-shrink:0;display:flex;align-items:center;justify-content:space-between;">
+
+      <!-- ホットスポット登録エディタ（右パネルの画像をクリックで表示） -->
+      <div id="scrHsEditHost" style="display:none;flex:1;min-height:0;overflow:hidden;">
+<div id="imgLibHsPane" style="flex:1;min-width:0;display:flex;flex-direction:column;background:var(--bg);overflow:hidden;">
+        <div id="imgLibHsHeader" style="padding:10px 14px;border-bottom:1px solid var(--border);background:var(--surface2);flex-shrink:0;display:flex;align-items:center;justify-content:space-between;">
           <span style="font-size:12px;font-weight:700;color:var(--text);">📍 ホットスポット登録</span>
           <span style="display:flex;align-items:center;gap:8px;">
             <!-- 画像の拡大縮小 -->
@@ -1604,7 +1649,8 @@ html[data-theme="dark"] .nav-arrow-btn { background: rgba(40,42,54,.9); }
           <!-- キャンバスエリア -->
           <div id="imgLibHsCanvasWrap" style="flex:1;overflow:auto;background:#333;display:flex;padding:16px;position:relative;cursor:crosshair;" title="ドラッグしてホットスポットを描画／Ctrl+ホイールで拡大縮小／Alt+ドラッグで移動">
             <div id="imgLibHsCanvas" style="position:relative;display:inline-block;flex-shrink:0;margin:auto;">
-              <img id="imgLibHsImg" src="" alt="" style="display:block;max-width:none;">
+              <img id="imgLibHsImg" src="" alt="" draggable="false" ondragstart="return false"
+                   style="display:block;max-width:none;-webkit-user-drag:none;user-select:none;">
               <!-- 作図ガイド（十字線・スナップ線・寸法ラベル） -->
               <div class="ilib-guide v" id="ilibGuideV" style="display:none"></div>
               <div class="ilib-guide h" id="ilibGuideH" style="display:none"></div>
@@ -1619,9 +1665,80 @@ html[data-theme="dark"] .nav-arrow-btn { background: rgba(40,42,54,.9); }
           </div>
         </div>
       </div>
+      </div>
+      <div id="scrCenterEmpty">
+        <span style="font-size:48px;">🖼️</span>
+        <span>左の画面一覧から画面を選択してください</span>
+      </div>
+      <div id="scrCenterCanvas">
+        <div class="scr-canvas-inner" id="scrCanvasInner">
+          <div id="scrCenterImgWrap">
+            <img id="scrCenterImg" draggable="false" ondragstart="return false" style="-webkit-user-drag:none;">
+            <canvas id="scrCenterOverlay"></canvas>
+          </div>
+        </div>
+      </div>
+      <!-- ＜＞ ナビは画像ライブラリ内のみに配置する（パターン側では非表示） -->
+    </div>
 
-      <!-- 右：ホットスポット一覧（比率 1） -->
-      <div id="imgLibHsListPane" style="flex:1 1 0;min-width:240px;display:flex;flex-direction:column;background:var(--surface);overflow:hidden;">
+    <!-- 右サイドバー「画面設定」は廃止。
+         ・画面名  → 左の画面一覧をダブルクリックしてリネーム
+         ・メモ    → ズームバー下の入力欄
+         ・HS設定  → キャンバス上のホットスポットをクリックしてモーダルで編集 -->
+    <textarea id="scrRsMemoLegacy" style="display:none"></textarea>
+
+    <!-- ===== 右：画像ライブラリ（全機能を統合） ===== -->
+    <div id="scrLibResizer" title="ドラッグで幅を変更"></div>
+    <aside id="scrLibPanel" style="width:280px;display:flex;flex-direction:column;border-left:1px solid var(--border);background:var(--surface);overflow:hidden;flex-shrink:0;">
+      <div class="sidebar-top" style="display:flex;align-items:center;gap:6px;padding-right:6px;">
+        <span class="sidebar-top-label" style="flex:1;">🖼 画像ライブラリ</span>
+        <span id="scrLibCount" style="font-size:10px;color:var(--text3);white-space:nowrap;"></span>
+        <button class="cat-add-btn" onclick="_scrLibToggleMenu(event)" title="ライブラリの管理メニュー" style="font-size:12px;padding:2px 7px;">⋯</button>
+      </div>
+
+      <!-- 管理メニュー -->
+      <div id="scrLibMenu" style="display:none;position:absolute;z-index:900;background:var(--surface);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow-md);padding:4px;min-width:210px;">
+        <button class="scr-lib-menu-item" onclick="_scrLibMenuDo('add')">📁 フォルダから画像を一括追加</button>
+        <button class="scr-lib-menu-item" onclick="_scrLibMenuDo('addFiles')">🖼 画像ファイルを選んで追加</button>
+        <div class="scr-lib-menu-sep"></div>
+        <button class="scr-lib-menu-item" onclick="_scrLibMenuDo('renameFolder')">✏️ 選択中フォルダの名前を変更</button>
+        <div class="scr-lib-menu-sep"></div>
+        <button class="scr-lib-menu-item" onclick="_scrLibMenuDo('mergeContent')">🔀 内容が同じ画像を統合</button>
+        <button class="scr-lib-menu-item" onclick="_scrLibMenuDo('mergeName')">🔗 同名の画像を統合</button>
+        <button class="scr-lib-menu-item" onclick="_scrLibMenuDo('cleanup')">🧹 未使用の画像を削除</button>
+      </div>
+
+      <!-- 検索・絞り込み -->
+      <div style="padding:6px 8px;display:flex;flex-direction:column;gap:5px;border-bottom:1px solid var(--border);flex-shrink:0;" id="scrLibTools">
+        <input type="text" id="scrLibSearch" placeholder="画像名で検索" oninput="_scrLibRender()"
+               style="height:26px;padding:0 8px;font-size:11px;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text);">
+        <div style="display:flex;gap:5px;align-items:center;">
+          <select id="scrLibFolder" onchange="_scrLibRender()"
+                  style="flex:1;min-width:0;height:26px;font-size:11px;font-family:inherit;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text);">
+            <option value="">📁 すべて</option>
+          </select>
+          <label style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--text3);white-space:nowrap;cursor:pointer;">
+            <input type="checkbox" id="scrLibSelAll" onchange="_scrLibToggleAll(this.checked)" style="width:13px;height:13px;cursor:pointer;">全選択
+          </label>
+        </div>
+        <!-- 選択ツールバー -->
+        <!-- 選択ツールバー：常時表示。未選択のときはボタンを無効化する -->
+        <div id="scrLibSelBar" style="display:flex;flex-direction:column;gap:5px;padding:6px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;">
+          <span id="scrLibSelCount" style="font-size:11px;font-weight:700;color:var(--text3);">未選択</span>
+          <div style="display:flex;flex-wrap:wrap;gap:4px;">
+            <button class="btn btn-secondary scr-lib-selbtn" style="font-size:10px;height:24px;padding:0 7px;flex:1 1 auto;white-space:nowrap;" onclick="_imgLibMoveToFolder()">📁 フォルダへ</button>
+            <button class="btn btn-secondary scr-lib-selbtn" style="font-size:10px;height:24px;padding:0 7px;flex:1 1 auto;white-space:nowrap;" onclick="_imgLibAddSelectedToPattern()">➕ 画面追加</button>
+            <button class="btn btn-secondary scr-lib-selbtn" style="font-size:10px;height:24px;padding:0 7px;flex:1 1 auto;white-space:nowrap;" onclick="_imgLibClearSelection()">☐ 解除</button>
+            <button class="btn scr-lib-selbtn" style="font-size:10px;height:24px;padding:0 7px;flex:1 1 auto;white-space:nowrap;background:var(--red);color:#fff;border:none;" onclick="_imgLibDeleteSelected()">🗑 削除</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="scrLibList" style="flex:1;overflow-y:auto;padding:2px 0;"></div>
+
+      <!-- ホットスポット一覧（HS登録中のみ表示） -->
+      <div id="scrHsListHost" style="display:none;flex:1;min-height:0;overflow:hidden;">
+<div id="imgLibHsListPane" style="flex:1;min-width:0;display:flex;flex-direction:column;background:var(--surface);overflow:hidden;">
         <div style="padding:10px 12px;font-size:12px;font-weight:700;color:var(--text);border-bottom:1px solid var(--border);background:var(--surface2);flex-shrink:0;display:flex;align-items:center;justify-content:space-between;gap:6px;">
           <span style="white-space:nowrap;">📋 ホットスポット一覧</span>
           <span id="imgLibHsListCount" style="font-size:10px;font-weight:400;color:var(--text3);white-space:nowrap;"></span>
@@ -1634,96 +1751,42 @@ html[data-theme="dark"] .nav-arrow-btn { background: rgba(40,42,54,.9); }
         </div>
         <div id="imgLibHsList" style="flex:1;overflow-y:auto;padding:4px 0;"></div>
       </div>
+      
+      </div>
+
+      <div style="padding:5px 8px;border-top:1px solid var(--border);font-size:10px;color:var(--text3);line-height:1.5;flex-shrink:0;">
+        クリック：HS登録／ダブルクリック：末尾に追加／ドラッグ：任意の位置に追加／右クリック：操作メニュー
+      </div>
+    </aside>
+
+    <!-- 行の操作メニュー -->
+    <div id="scrLibRowMenu" style="display:none;position:fixed;z-index:950;background:var(--surface);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow-md);padding:4px;min-width:180px;">
+      <button class="scr-lib-menu-item" onclick="_scrLibRowMenuDo('hs')">📍 ホットスポット登録</button>
+      <button class="scr-lib-menu-item" onclick="_scrLibRowMenuDo('add')">➕ この画面を追加</button>
+      <div class="scr-lib-menu-sep"></div>
+      <button class="scr-lib-menu-item" onclick="_scrLibRowMenuDo('rename')">✏️ 名前を変更</button>
+      <button class="scr-lib-menu-item" onclick="_scrLibRowMenuDo('folder')">📁 フォルダへ移動</button>
+      <button class="scr-lib-menu-item" onclick="_scrLibRowMenuDo('replace')">🔄 画像を差し替え</button>
+      <div class="scr-lib-menu-sep"></div>
+      <button class="scr-lib-menu-item" style="color:var(--red);" onclick="_scrLibRowMenuDo('delete')">🗑 削除</button>
+    </div>
+    <input type="file" id="scrLibReplaceInput" accept="image/*" style="display:none" onchange="_scrLibReplaceFile(this)">
+    <input type="file" id="scrLibAddInput" accept="image/*" multiple style="display:none" onchange="_scrLibAddFiles(this)">
+
+  <!-- ===== ホットスポット設定モーダル ===== -->
+  <div id="scrHsModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:8800;align-items:center;justify-content:center;"
+       onclick="if(event.target===this)scrHsModalClose()">
+    <div style="background:var(--surface);border-radius:14px;width:min(94vw,560px);max-height:88vh;display:flex;flex-direction:column;box-shadow:0 24px 64px rgba(0,0,0,.3);overflow:hidden;">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:13px 18px;border-bottom:1px solid var(--border);">
+        <span style="font-size:14px;font-weight:700;" id="scrHsModalTitle">📍 ホットスポット設定</span>
+        <button onclick="scrHsModalClose()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text3);">✕</button>
+      </div>
+      <div style="flex:1;overflow-y:auto;padding:16px 18px;display:flex;flex-direction:column;gap:14px;" id="scrHsModalBody"></div>
+      <div style="padding:11px 18px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;">
+        <button class="btn btn-secondary" onclick="scrHsModalClose()" style="font-size:12px;">閉じる</button>
+      </div>
     </div>
   </div>
-</div>
-
-
-
-  <!-- ===== 画面遷移タブ（1カラム構成） ===== -->
-  <div class="tab-panel" id="tabScreen">
-    <!--
-      【変更点】2カラム（パターンリスト + 画面リスト）を1カラムに統合。
-      構造: ⠿ パターン名 → 展開で ⠿ [サムネイル] 画面名 を表示
-    -->
-    <aside class="sidebar" id="scrUnifiedSidebar">
-      <div class="sidebar-top" style="display:flex;align-items:center;justify-content:space-between;padding-right:8px;">
-        <span class="sidebar-top-label">パターン / 画面</span>
-        <button class="cat-add-btn" onclick="toggleImgLibPanel()" title="画像ライブラリを表示/非表示" style="font-size:11px;padding:2px 8px;white-space:nowrap;">🖼 画像ライブラリ</button>
-      </div>
-      <div class="sidebar-scroll" id="scrUnifiedList"></div>
-      <button class="add-cat-btn" onclick="scrAddPatternInline()">＋ パターンを追加</button>
-    </aside>
-
-    <!-- 中央：画像キャンバスエリア -->
-    <div id="scrCenterMain">
-      <!-- ズームコントロールバー -->
-      <div class="scr-zoom-bar" id="scrZoomBar" style="display:none;">
-        <button class="scr-zoom-btn" onclick="scrZoom(-1)" title="縮小">−</button>
-        <span class="scr-zoom-label" id="scrZoomLabel">100%</span>
-        <button class="scr-zoom-btn" onclick="scrZoom(1)" title="拡大">＋</button>
-        <button class="scr-zoom-btn" onclick="scrZoomReset()" title="リセット" style="font-size:11px;width:auto;padding:0 6px;">1:1</button>
-      </div>
-      <div id="scrCenterEmpty">
-        <span style="font-size:48px;">🖼️</span>
-        <span>左の画面一覧から画面を選択してください</span>
-      </div>
-      <div id="scrCenterCanvas">
-        <div class="scr-canvas-inner" id="scrCanvasInner">
-          <div id="scrCenterImgWrap">
-            <img id="scrCenterImg">
-            <canvas id="scrCenterOverlay"></canvas>
-          </div>
-        </div>
-      </div>
-      <!-- ＜＞ ナビは画像ライブラリ内のみに配置する（パターン側では非表示） -->
-    </div>
-
-    <!--
-      【変更点】右サイドバー：「画面設定」を常時表示。
-      未選択時は「画面を選択してください」メッセージを表示。
-    -->
-    <aside class="scr-right-sidebar" id="scrRightSidebar">
-      <!-- 画面設定（常時表示） -->
-      <div class="scr-rs-head">画面設定</div>
-      <div id="scrRsContent" style="display:flex;flex:1;flex-direction:column;overflow:hidden;">
-
-        <!-- スクロール可能エリア -->
-        <div class="scr-rs-scroll-area">
-
-          <!-- 画面名（1行） -->
-          <div class="scr-rs-always">
-            <label class="scr-rs-label">画面名</label>
-            <input class="scr-rs-input" id="scrRsName" placeholder="画面を選択してください" oninput="scrRsUpdateName()" disabled>
-          </div>
-
-          <!-- メモ（2行） -->
-          <div class="scr-rs-always">
-            <label class="scr-rs-label">メモ（任意）</label>
-            <textarea class="scr-rs-textarea" id="scrRsMemo" rows="2" placeholder="" oninput="scrRsUpdateMemo()" disabled></textarea>
-          </div>
-
-          <!-- トリミング・リサイズ機能は廃止（画像は画像ライブラリで管理） -->
-
-          <!-- ホットスポット（遷移エリア）: 表示と有効/無効の切り替えのみ -->
-          <div class="scr-rs-hs-section">
-            <label class="scr-rs-label" style="flex-shrink:0;">ホットスポット（遷移エリア）</label>
-            <div class="scr-hs-hint" style="flex-shrink:0;">🔒 位置と遷移先は画像ライブラリで管理します。ここでは有効/無効のみ切り替えできます。</div>
-            <div id="scrRsHsList" style="flex:1;overflow-y:auto;margin-top:4px;min-height:60px;"></div>
-          </div>
-
-        </div><!-- /.scr-rs-scroll-area -->
-
-        <!-- 削除ボタン：固定 -->
-        <div class="scr-rs-del-fixed">
-          <button onclick="scrQuickDelSel()"
-                  class="scr-del-btn"
-                  onmouseover="this.classList.add('hover')"
-                  onmouseout="this.classList.remove('hover')">🗑 この画面を削除</button>
-        </div>
-
-      </div><!-- /#scrRsContent -->
-    </aside>
 
     <input type="hidden" id="scrModalPatId">
     <input type="hidden" id="scrModalScrId">
@@ -2309,17 +2372,18 @@ var HR_OP_OPTIONS = [
 var HR_TYPE_OPTIONS = [{l:'はい/いいえ（2択）',v:'bool'},{l:'選択肢（複数）',v:'str'},{l:'テキスト入力',v:'text'}];
 
 
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeAdminHelp();_closeCalPopup();closeSaveModal();var ilp=document.getElementById('imgLibPanel');if(ilp&&ilp.style.display==='flex')toggleImgLibPanel();}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeAdminHelp();_closeCalPopup();closeSaveModal();if(typeof _scrHsEditOn!=='undefined'&&_scrHsEditOn)scrExitHsEdit();}});
 function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>el.classList.remove('show'),3000);}
 
 // ===================================================================
 // タブ切り替え
 // ===================================================================
 function switchTab(tab){
+  // HS登録エディタをセンターへ移設中なら元に戻してからタブを切り替える
+  if (typeof _scrHsEditOn !== 'undefined' && _scrHsEditOn && typeof scrExitHsEdit === 'function') scrExitHsEdit();
   // 画像ライブラリは画面全体を覆う固定パネルのため、タブを切り替えるときは必ず閉じる。
   // （画面遷移タブ内の機能なので、他タブへ移動したあとも残っていると操作できなくなる）
-  var _ilp = document.getElementById('imgLibPanel');
-  if (_ilp && _ilp.style.display === 'flex') toggleImgLibPanel();
+  // 旧・全画面ライブラリは廃止したため、閉じる処理は不要
 
   ['script','mail','screen','history','hearing','sidemenu'].forEach(t=>{
     // タブIDのキャメルケース変換
@@ -3340,10 +3404,7 @@ if(_bc){
         }
         _imgLibAllItems=[];
         _imgLibCache={};
-        var ilp=document.getElementById('imgLibPanel');
-        if(ilp&&ilp.style.display==='flex'){
-          _imgLibRender();
-        }
+        if (typeof _scrLibRender === 'function') _scrLibRender();
       });
     }
   };
@@ -4264,32 +4325,17 @@ function _hrPatDelete(idx) {
 // ===================================================================
 // 画像ライブラリパネルトグル（画面遷移タブ内）
 // ===================================================================
-function toggleImgLibPanel() {
-  var panel = document.getElementById('imgLibPanel');
-  if (!panel) return;
-  var isOpen = panel.style.display === 'flex';
-  if (isOpen) {
-    panel.style.display = 'none';
-    _imgLibHsDeactivate(); // HSエディタをリセット
-    // ── 閉じた直後にパターン編集画面を再描画する ──
-    // ライブラリ表示中は中央キャンバスが非表示のため offsetWidth が 0 になり、
-    // 保存時の同期で呼んだ再描画が反映されない。パネルを閉じてから描き直す。
-    // 画面遷移タブが非表示のときに描画すると、キャンバス幅が 0 のまま
-    // _scrResizeCenterOverlay() の requestAnimationFrame が回り続けるため、
-    // 表示中のときだけ再描画する。
-    var _scrTab = document.getElementById('tabScreen');
-    if (_scrTab && _scrTab.classList.contains('active')) {
-      requestAnimationFrame(function() {
-        if (typeof scrRenderUnifiedSidebar === 'function') scrRenderUnifiedSidebar();
-        if (typeof _scrUpdateCenterCanvas === 'function')  _scrUpdateCenterCanvas();
-        if (typeof _scrUpdateRightSidebar === 'function')  _scrUpdateRightSidebar();
-      });
-    }
-  } else {
-    panel.style.display = 'flex';
-    _imgLibAllItems = [];
-    _imgLibRender();
-  }
+/**
+ * 旧・全画面の画像ライブラリは廃止し、右パネルに統合した。
+ * 互換のため関数は残し、右パネルの検索欄へフォーカスする動作にしている。
+ */
+function toggleImgLibPanel() { _scrLibFocusPanel(); }
+
+function _scrLibFocusPanel() {
+  if (typeof _scrHsEditOn !== 'undefined' && _scrHsEditOn) scrExitHsEdit();
+  _scrLibRender();
+  var el = document.getElementById('scrLibSearch');
+  if (el) { el.focus(); el.select(); }
 }
 // パネル外クリックで閉じる → 全画面なので不要（✕ボタンのみ）
 
@@ -5783,6 +5829,9 @@ function initScreenEditor(){
     }
     _scrCurrentPatId = screenPatterns[0].id;
   }
+  // 右パネルの画像ライブラリを初期化
+  if (typeof _scrLibRender === 'function') _scrLibRender();
+  if (typeof _scrLibSetupDrop === 'function') _scrLibSetupDrop();
   scrRenderUnifiedSidebar();
   _scrUpdateCenterCanvas();
   _scrUpdateRightSidebar();
@@ -5796,6 +5845,10 @@ function initScreenEditor(){
 function _scrPatColor(idx){ return APP_COLORS[idx % APP_COLORS.length]; }
 
 function scrRenderUnifiedSidebar(){
+  // 描画後にドロップ先の登録とライブラリパネルの更新を行う
+  setTimeout(function() {
+    if (typeof _scrLibSetupDrop === 'function') _scrLibSetupDrop();
+  }, 0);
   var el=document.getElementById('scrUnifiedList');if(!el)return;
   var h='';
   screenPatterns.forEach(function(pat, pIdx){
@@ -5860,7 +5913,18 @@ function scrRenderUnifiedSidebar(){
         // SCR-n ＋ 画面名 の2行テキストエリア
         h += '<div class="scr-screen-info">';
         h += '<div class="scr-screen-num">' + scrNum + '</div>';
-        h += '<div class="scr-screen-name">' + esc(s.name || '（名称なし）') + '</div>';
+        // 画面名：パターン名と同じインライン編集方式
+        if (_scrEditingScrId === s.id) {
+          h += '<input class="cat-name-input editing" id="scrScrInp_' + s.id + '"'
+             + ' value="' + esc(s.name || '') + '" style="width:100%;box-sizing:border-box;font-size:11px;"'
+             + ' onblur="_scrCommitScrName(\'' + pat.id + '\',\'' + s.id + '\',this.value)"'
+             + ' onkeydown="if(event.key===\'Enter\')this.blur();if(event.key===\'Escape\'){_scrEditingScrId=null;scrRenderUnifiedSidebar();}"'
+             + ' onclick="event.stopPropagation()">';
+        } else {
+          h += '<div class="scr-screen-name"'
+             + ' ondblclick="event.stopPropagation();scrStartEditScr(\'' + s.id + '\')"'
+             + ' title="ダブルクリックで名前を編集">' + esc(s.name || '（名称なし）') + '</div>';
+        }
         h += '</div>';
         // ホバー時のみ表示される削除ボタン（script-del クラスで CSS 制御）
         h += '<button class="script-del"'
@@ -5921,7 +5985,15 @@ function scrRenderUnifiedSidebar(){
   }
 }
 var _scrEditingPatId=null;
-function scrStartEditPat(id){_scrEditingPatId=id;scrRenderUnifiedSidebar();}
+function scrStartEditPat(id){
+  _scrEditingPatId = id;
+  scrRenderUnifiedSidebar();
+  // 描画後に入力欄へフォーカスして全選択する（画面名と同じ挙動）
+  setTimeout(function(){
+    var el = document.getElementById('scrPatInp_' + id);
+    if (el) { el.focus(); el.select(); }
+  }, 0);
+}
 function _scrCommitPatName(id,name){
   _scrEditingPatId=null;
   name=(name||'').trim();
@@ -6069,6 +6141,8 @@ function _scrReadFilesToPat(files,patId){
 
 // ── 中央キャンバス ──
 function _scrUpdateCenterCanvas(){
+  // HS登録モード中はセンターをエディタが占有しているので触らない
+  if (typeof _scrHsEditOn !== 'undefined' && _scrHsEditOn) return;
   var empty=document.getElementById('scrCenterEmpty'),canvas=document.getElementById('scrCenterCanvas');
   var zoomBar=document.getElementById('scrZoomBar');
   if(!empty||!canvas)return;
@@ -6077,13 +6151,24 @@ function _scrUpdateCenterCanvas(){
   var pat=screenPatterns.find(function(p){return p.id===_scrCurrentPatId;});if(!pat)return;
   var scr=pat.screens.find(function(s){return s.id===_scrSelScrId;});
   if(!scr||!scr.imageSrc){empty.style.display='flex';canvas.style.display='none';if(zoomBar)zoomBar.style.display='none';return;}
-  empty.style.display='none';canvas.style.display='block';if(zoomBar)zoomBar.style.display='flex';
+  empty.style.display='none';canvas.style.display='flex';
+  if(zoomBar)zoomBar.style.display='flex';
+  // 倍率は「全体表示＝1.0」の相対値なので、画面を切り替えても
+  // 解像度の違う画像に自動で追従する（初期値 1.0 ＝ 常に全体表示）
+  setTimeout(_scrApplyZoom, 0);
+  if(typeof _scrBarSetMode==='function') _scrBarSetMode('pattern');
   var img=document.getElementById('scrCenterImg');
   if(img&&img.getAttribute('data-src')!==scr.imageSrc){
     img.setAttribute('data-src',scr.imageSrc);
     // lib:xxx 形式を解決してから img.src にセット
     resolveImg(scr.imageSrc).then(function(src){
-      img.onload=function(){_scrResizeCenterOverlay();_scrDrawCenterOverlay(null);};
+      img.onload=function(){
+        // 読み込み完了時点で naturalWidth が確定するので、
+        // 倍率を適用してからオーバーレイを描き直す
+        _scrApplyZoom();
+        _scrResizeCenterOverlay();
+        _scrDrawCenterOverlay(null);
+      };
       img.src=src||'';
     });
   }else{_scrResizeCenterOverlay();_scrDrawCenterOverlay(null);}
@@ -6119,12 +6204,18 @@ function _scrDrawCenterOverlay(previewRect){
       }else{
         ctx.strokeStyle='rgba(37,99,235,0.85)';ctx.fillStyle='rgba(37,99,235,0.12)';ctx.lineWidth=2;ctx.setLineDash([]);
       }
+      // 背景が明るい画像でも枠が沈まないよう、外側に白いふちを重ねる
+      ctx.save();
+      ctx.strokeStyle='rgba(255,255,255,0.85)';ctx.lineWidth=4;ctx.setLineDash([]);
+      ctx.strokeRect(hs.x*W,hs.y*H,hs.w*W,hs.h*H);
+      ctx.restore();
+
       ctx.strokeRect(hs.x*W,hs.y*H,hs.w*W,hs.h*H);ctx.fillRect(hs.x*W,hs.y*H,hs.w*W,hs.h*H);
       ctx.setLineDash([]);
-      ctx.fillStyle=off?'rgba(140,145,160,0.9)':'rgba(37,99,235,0.88)';
-      ctx.fillRect(hs.x*W,hs.y*H,off?46:30,15);
-      ctx.fillStyle='#fff';ctx.font='bold 9px sans-serif';
-      ctx.fillText('HS-'+(i+1)+(off?' OFF':''),hs.x*W+3,hs.y*H+11);
+      ctx.fillStyle=off?'rgba(140,145,160,0.95)':'rgba(37,99,235,0.95)';
+      ctx.fillRect(hs.x*W,hs.y*H,off?46:32,16);
+      ctx.fillStyle='#fff';ctx.font='bold 10px sans-serif';
+      ctx.fillText('HS-'+(i+1)+(off?' OFF':''),hs.x*W+4,hs.y*H+12);
     });
   }
   // トリミングの選択枠描画は廃止（トリミング機能を撤去したため）
@@ -6141,33 +6232,27 @@ function _scrDrawCenterOverlay(previewRect){
   }
 }
 
-// ── 右サイドバー（常時表示）──
+// ── 画面情報の表示更新（右サイドバー廃止に伴い、メモ欄と画面名ラベルのみ）──
 function _scrUpdateRightSidebar(){
-  var content=document.getElementById('scrRsContent');
-  if(!content)return;
-  var nameEl=document.getElementById('scrRsName');
-  var memoEl=document.getElementById('scrRsMemo');
-  var cwEl=document.getElementById('scrCropW');
-  var chEl=document.getElementById('scrCropH');
+  var memoBar = document.getElementById('scrMemoBar');
+  var memoEl  = document.getElementById('scrRsMemo');
+  var nameLbl = document.getElementById('scrCurScrName');
+
   if(!_scrSelScrId){
-    // 未選択：フィールドをクリアしdisabled
-    if(nameEl){nameEl.value='';nameEl.placeholder='画面を選択してください';nameEl.disabled=true;}
-    if(memoEl){memoEl.value='';memoEl.disabled=true;}
-    if(cwEl){cwEl.value='';cwEl.disabled=true;}
-    if(chEl){chEl.value='';chEl.disabled=true;}
-    var hl=document.getElementById('scrRsHsList');if(hl)hl.innerHTML='';
-    var vl=document.getElementById('scrRsVariantList');if(vl)vl.innerHTML='';
+    if(memoBar) memoBar.style.display='none';
+    if(memoEl)  memoEl.value='';
+    if(nameLbl) nameLbl.textContent='';
     return;
   }
   var pat=screenPatterns.find(function(p){return p.id===_scrCurrentPatId;});if(!pat)return;
   var scr=pat.screens.find(function(s){return s.id===_scrSelScrId;});if(!scr)return;
-  // 選択中：フィールドを有効化して値を設定
-  if(nameEl){nameEl.disabled=false;nameEl.placeholder='例：ログイン画面';nameEl.value=scr.name||'';}
-  if(memoEl){memoEl.disabled=false;memoEl.value=scr.note||'';}
-  if(cwEl)cwEl.disabled=false;
-  if(chEl)chEl.disabled=false;
-  _scrUpdateImageMeta(scr);
-  _scrRsRenderHsList(scr);
+
+  if(memoBar) memoBar.style.display='flex';
+  if(memoEl)  memoEl.value=scr.note||'';
+  if(nameLbl){
+    var i=pat.screens.findIndex(function(s){return s.id===_scrSelScrId;});
+    nameLbl.textContent='SCR-'+String(i+1).padStart(2,'0')+' '+(scr.name||'（名称なし）');
+  }
 }
 function _scrUpdateImageMeta(scr){
   var cw=document.getElementById('scrCropW'),ch=document.getElementById('scrCropH');
@@ -6179,11 +6264,29 @@ function _scrUpdateImageMeta(scr){
   };
   img.src=scr.imageSrc;
 }
-function scrRsUpdateName(){
-  var pat=screenPatterns.find(function(p){return p.id===_scrCurrentPatId;});if(!pat)return;
-  var scr=pat.screens.find(function(s){return s.id===_scrSelScrId;});if(!scr)return;
-  scr.name=document.getElementById('scrRsName').value||'';
-  scrRenderUnifiedSidebar();scrSaveData();markDirty();
+// 画面名のインライン編集（パターン名と同じ方式）
+var _scrEditingScrId = null;
+
+function scrStartEditScr(id){
+  _scrEditingScrId = id;
+  scrRenderUnifiedSidebar();
+  // 描画後に入力欄へフォーカスして全選択する
+  setTimeout(function(){
+    var el = document.getElementById('scrScrInp_' + id);
+    if (el) { el.focus(); el.select(); }
+  }, 0);
+}
+
+function _scrCommitScrName(patId, scrId, name){
+  _scrEditingScrId = null;
+  name = (name || '').trim();
+  if (name) {
+    var pat = screenPatterns.find(function(p){ return p.id === patId; });
+    var scr = pat && pat.screens.find(function(s){ return s.id === scrId; });
+    if (scr) { scr.name = name; scrSaveData(); markDirty(); }
+  }
+  scrRenderUnifiedSidebar();
+  _scrUpdateRightSidebar();
 }
 function scrRsUpdateMemo(){
   var pat=screenPatterns.find(function(p){return p.id===_scrCurrentPatId;});if(!pat)return;
@@ -6384,6 +6487,849 @@ function scrApplyCropSel(){
 function scrCropSelClear(){_scrCropSel=null;var ab=document.getElementById('scrApplyCropBtn');if(ab)ab.style.display='none';_scrDrawCenterOverlay(null);}
 
 // ── ホットスポットリスト描画 ──
+// ===================================================================
+// パターン画面に統合した画像ライブラリ（右パネル）
+//   ・一覧から画面一覧／キャンバスへドラッグ＆ドロップして画面を追加する
+//   ・サムネイルは表示されたものだけ遅延読み込みする（一覧の初期表示を軽くする）
+// ===================================================================
+var _scrLibObserver = null;
+
+/** パネルを描画する。未ロードなら先にライブラリを読む */
+function _scrLibRender() {
+  var listEl = document.getElementById('scrLibList');
+  if (!listEl) return;
+
+  if (!_imgLibAllItems || !_imgLibAllItems.length) {
+    listEl.innerHTML = '<div style="padding:14px 10px;font-size:11px;color:var(--text3);">読み込み中…</div>';
+    _imgLibLoad(function(items) { _imgLibAllItems = items; _scrLibRender(); });
+    return;
+  }
+
+  var q  = ((document.getElementById('scrLibSearch') || {}).value || '').trim().toLowerCase();
+  var fv = (document.getElementById('scrLibFolder') || {}).value || '';
+
+  // フォルダ選択肢を更新
+  var fSel = document.getElementById('scrLibFolder');
+  if (fSel) {
+    var set = {};
+    _imgLibAllItems.forEach(function(it) { if (it.folder) set[it.folder] = 1; });
+    var names = Object.keys(set).sort(function(a, b){ return _imgLibCollator.compare(a, b); });
+    var keep = fSel.value;
+    fSel.innerHTML = '<option value="">📁 すべて</option>'
+      + '<option value="__root__">📂 未分類</option>'
+      + names.map(function(n) { return '<option value="' + esc(n) + '">📁 ' + esc(n) + '</option>'; }).join('');
+    fSel.value = (keep === '__root__' || set[keep]) ? keep : '';
+    fv = fSel.value;
+  }
+
+  var list = _imgLibAllItems.filter(function(it) {
+    if (q && String(it.name || '').toLowerCase().indexOf(q) < 0) return false;
+    if (fv === '__root__') return !it.folder;
+    if (fv) return it.folder === fv;
+    return true;
+  }).sort(_imgLibCompare);
+
+  var cnt = document.getElementById('scrLibCount');
+  if (cnt) cnt.textContent = list.length + '件';
+
+  // ＜＞ ナビは「いま一覧に表示されている順序」を辿る。
+  // 旧グリッドの描画処理で更新していたため、右パネル化以降ずれていた。
+  _imgLibHsNavList = list.slice();
+  if (typeof _imgLibHsUpdateNav === 'function') _imgLibHsUpdateNav();
+
+  // HS登録中は一覧を上半分に収める（モード間で構造を変えないため）
+  if (typeof _scrHsEditOn !== 'undefined' && _scrHsEditOn) {
+    listEl.style.flex = '1 1 45%';
+    listEl.style.borderBottom = '1px solid var(--border)';
+  }
+
+  if (!list.length) {
+    listEl.innerHTML = '<div style="padding:14px 10px;font-size:11px;color:var(--text3);">該当する画像がありません。</div>';
+    return;
+  }
+
+  listEl.innerHTML = list.map(function(it) {
+    var hsN = (it.hotspots || []).length;
+    return '<div class="scr-lib-row" draggable="true" data-lib-id="' + it.id + '"'
+      + ' ondragstart="_scrLibDragStart(event,\'' + it.id + '\')"'
+      + ' onclick="_scrLibRowClick(\'' + it.id + '\')"'
+      + ' ondblclick="_scrLibRowDblClick(\'' + it.id + '\')"'
+      + ' oncontextmenu="_scrLibRowMenu(event,\'' + it.id + '\')"'
+      + ' title="クリック：HS登録／ダブルクリック：追加／ドラッグ：任意の位置へ／右クリック：メニュー">'
+      + '<input type="checkbox" class="scr-lib-cb" data-lib-id="' + it.id + '" draggable="false"'
+      +   ' onmousedown="event.stopPropagation()"'
+      +   ' onclick="event.stopPropagation();_scrLibToggleOne(\'' + it.id + '\',this.checked)">'
+      + '<img class="scr-lib-thumb" data-lib-id="' + it.id + '" alt="">'
+      + '<span class="scr-lib-name">' + esc(it.name || it.id)
+      + (hsN ? '<span class="scr-lib-hs">📍' + hsN + '</span>' : '')
+      + (it.folder ? '<span class="scr-lib-folder">📁' + esc(it.folder) + '</span>' : '')
+      + '</span>'
+      + '<button class="scr-lib-more" onclick="event.stopPropagation();_scrLibRowMenu(event,\'' + it.id + '\')" title="操作メニュー">⋮</button>'
+      + '</div>';
+  }).join('');
+
+  _scrLibLazyThumbs();
+  _scrLibSyncSelection();
+}
+
+/** 表示された行のサムネイルだけ読み込む */
+function _scrLibLazyThumbs() {
+  if (_scrLibObserver) _scrLibObserver.disconnect();
+  if (typeof IntersectionObserver !== 'function') return;
+  _scrLibObserver = new IntersectionObserver(function(entries) {
+    entries.forEach(function(en) {
+      if (!en.isIntersecting) return;
+      var img = en.target;
+      _scrLibObserver.unobserve(img);
+      if (img.dataset.loaded) return;
+      img.dataset.loaded = '1';
+      resolveImg('lib:' + img.dataset.libId).then(function(src) {
+        if (src) img.src = src;
+      }).catch(function(){});
+    });
+  }, { root: document.getElementById('scrLibList'), rootMargin: '120px' });
+
+  document.querySelectorAll('#scrLibList .scr-lib-thumb').forEach(function(img) {
+    _scrLibObserver.observe(img);
+  });
+}
+
+// ===================================================================
+// センターキャンバスをライブラリ画像の「ホットスポット登録」に切り替える
+//   既存の HS 登録エディタ（#imgLibHsPane / #imgLibHsListPane）を
+//   DOM ごとセンター側へ移設して使う。ロジックを二重に持たずに済み、
+//   ズーム・スナップ・使い回しなどの機能もそのまま利用できる。
+// ===================================================================
+var _scrHsEditOn = false;
+
+/**
+ * 共通ツールバーの表示をモードに合わせる。
+ * ボタンは display ではなく visibility で切り替え、非表示時も幅を確保して
+ * 両モードで要素の並び位置がずれないようにする。
+ */
+function _scrBarSetMode(mode) {
+  var bar  = document.getElementById('scrZoomBar');
+  var back = document.getElementById('scrBarBack');
+  var del  = document.getElementById('scrBarDel');
+  if (bar)  bar.style.display = 'flex';
+  if (back) back.style.visibility = (mode === 'hs')      ? 'visible' : 'hidden';
+  if (del)  del.style.visibility  = (mode === 'pattern') ? 'visible' : 'hidden';
+  _scrBarSyncZoomLabel();
+}
+
+// パターン編集とHS登録で倍率を共有する。
+// モードを切り替えても表示サイズが変わらないよう、_scrZoom を唯一の値として扱う。
+var _scrZoomMinShared = 0.25, _scrZoomMaxShared = 8;   // 相対値（1.0 = 全体表示）
+
+/** 相対ズーム（両モード共通・1.25倍ずつ） */
+function scrBarZoom(dir) {
+  scrBarSetZoom(_scrZoom * (dir > 0 ? 1.25 : 1 / 1.25));
+}
+
+/** 倍率を指定して両モードに適用する */
+function scrBarSetZoom(z) {
+  _scrZoom = Math.max(_scrZoomMinShared, Math.min(_scrZoomMaxShared, z));
+  if (_scrHsEditOn) {
+    // HS登録側は実倍率で動くので、Fit倍率を掛けて渡す
+    var fit = (typeof _imgLibHsCalcFit === 'function') ? _imgLibHsCalcFit() : 1;
+    if (typeof _imgLibHsApplyZoom === 'function') _imgLibHsApplyZoom(fit * _scrZoom);
+  } else {
+    _scrApplyZoom();
+  }
+  _scrBarSyncZoomLabel();
+}
+
+/** 全体表示（＝100%）に戻す */
+function scrBarZoomFit() { scrBarSetZoom(1); }
+
+/** 倍率表示を同期する */
+function _scrBarSyncZoomLabel() {
+  var lbl = document.getElementById('scrZoomLabel');
+  if (lbl) lbl.textContent = Math.round(_scrZoom * 100) + '%';
+}
+
+// ===================================================================
+// センターキャンバスをライブラリ画像の「ホットスポット登録」に切り替える
+//   エディタはセンターに常設してあるので、表示の出し分けだけを行う。
+// ===================================================================
+function scrEnterHsEdit(libId) {
+  var host  = document.getElementById('scrHsEditHost');
+  var lhost = document.getElementById('scrHsListHost');
+  if (!host) return;
+  _scrHsEditOn = true;
+
+  _scrBarSetMode('hs');
+  host.style.display = 'flex';
+
+  // 右パネルはライブラリ一覧を残したまま、下半分にHS一覧を出す。
+  // 一覧ごと差し替えると切り替えのたびに画面構造が変わってしまうため。
+  if (lhost) { lhost.style.display = 'flex'; lhost.style.flex = '1 1 55%'; }
+  var ll = document.getElementById('scrLibList');
+  if (ll) { ll.style.display = ''; ll.style.flex = '1 1 45%'; ll.style.borderBottom = '1px solid var(--border)'; }
+
+  // メモ欄は行ごと残して高さのズレを防ぐ（内容は編集不可の案内に差し替える）
+  var mb = document.getElementById('scrMemoBar');
+  var mi = document.getElementById('scrRsMemo');
+  if (mb) mb.style.display = 'flex';
+  if (mi) { mi.value = ''; mi.placeholder = 'ホットスポット登録中はメモを編集できません'; mi.disabled = true; }
+
+  ['scrCenterCanvas','scrCenterEmpty'].forEach(function(id) {
+    var el = document.getElementById(id); if (el) el.style.display = 'none';
+  });
+
+  imgLibGetAll().then(function(all) {
+    var item = (all || []).find(function(x){ return x.id === libId; });
+    if (!item) { toast('❌ 画像が見つかりません'); return; }
+    _imgLibAllItems = all;
+    var nm = document.getElementById('scrCurScrName');
+    if (nm) nm.textContent = '📍 ' + (item.folder ? '📁' + item.folder + '　' : '') + (item.name || item.id);
+    _imgLibHsActivate(item);
+    document.querySelectorAll('#scrLibList .scr-lib-row').forEach(function(r) {
+      r.classList.toggle('is-editing', r.dataset.libId === libId);
+    });
+  });
+}
+
+/** パターン編集に戻す */
+function scrExitHsEdit() {
+  var host  = document.getElementById('scrHsEditHost');
+  var lhost = document.getElementById('scrHsListHost');
+  _scrHsEditOn = false;
+  if (host)  host.style.display = 'none';
+  if (lhost) lhost.style.display = 'none';
+
+  // 右パネルを通常の1面構成に戻す
+  var ll = document.getElementById('scrLibList');
+  if (ll) { ll.style.display = ''; ll.style.flex = '1'; ll.style.borderBottom = 'none'; }
+
+  // メモ欄を編集可能に戻す
+  var mi = document.getElementById('scrRsMemo');
+  if (mi) { mi.disabled = false; mi.placeholder = 'この画面の備考（screen.html に表示されます）'; }
+
+  _imgLibHsDeactivate();
+  document.querySelectorAll('#scrLibList .scr-lib-row').forEach(function(r) {
+    r.classList.remove('is-editing');
+  });
+
+  _scrBarSetMode('pattern');
+  _scrUpdateCenterCanvas();
+  _scrUpdateRightSidebar();
+  _scrLibRender();
+  // HS登録側で変更した倍率をパターン側にも反映する
+  setTimeout(_scrApplyZoom, 0);
+}
+
+/** ドロップ先を登録する（キャンバス領域・画面一覧） */
+function _scrLibSetupDrop() {
+  var center = document.getElementById('scrCenterMain');
+  if (center && !center._libDropBound) {
+    center._libDropBound = true;
+    center.addEventListener('dragover', function(e) {
+      if (!window._scrLibDragId) return;
+      e.preventDefault(); e.dataTransfer.dropEffect = 'copy';
+      center.classList.add('scr-drop-active');
+    });
+    center.addEventListener('dragleave', function(e) {
+      // 子要素へ移っただけの dragleave では消さない。領域外に出たときだけ消す。
+      if (!center.contains(e.relatedTarget)) center.classList.remove('scr-drop-active');
+    });
+    center.addEventListener('drop', function(e) {
+      center.classList.remove('scr-drop-active');
+      var id = _scrLibDropId(e);
+      if (!id) return;
+      e.preventDefault();
+      if (!_scrCurrentPatId) { toast('⚠️ 先にパターンを選択してください'); return; }
+      _scrLibAddToPattern(_scrCurrentPatId, id, -1);
+      window._scrLibDragId = null;
+    });
+  }
+
+  // 画面一覧側は描画のたびに作り直されるので、毎回登録する
+  document.querySelectorAll('#scrUnifiedList .cat-block').forEach(function(block) {
+    var patId = block.dataset.patId;
+    if (!patId || block._libDropBound) return;
+    block._libDropBound = true;
+    block.addEventListener('dragover', function(e) {
+      if (!window._scrLibDragId) return;
+      e.preventDefault(); e.dataTransfer.dropEffect = 'copy';
+      block.classList.add('scr-drop-active');
+    });
+    block.addEventListener('dragleave', function(e) {
+      if (!block.contains(e.relatedTarget)) block.classList.remove('scr-drop-active');
+    });
+    block.addEventListener('drop', function(e) {
+      block.classList.remove('scr-drop-active');
+      var id = _scrLibDropId(e);
+      if (!id) return;
+      e.preventDefault(); e.stopPropagation();
+
+      // ドロップ位置の画面の直前に挿入する（画面の上でなければ末尾）
+      var at = -1;
+      var row = e.target.closest ? e.target.closest('.scr-screen-row') : null;
+      if (row) {
+        var pat = screenPatterns.find(function(p){ return p.id === patId; });
+        var i = pat ? pat.screens.findIndex(function(x){ return x.id === row.dataset.scrId; }) : -1;
+        if (i >= 0) {
+          var r = row.getBoundingClientRect();
+          at = (e.clientY > r.top + r.height / 2) ? i + 1 : i;
+        }
+      }
+      _scrLibAddToPattern(patId, id, at);
+      window._scrLibDragId = null;
+    });
+  });
+}
+
+/** ドラッグ開始：画像IDを載せる */
+function _scrLibDragStart(e, id) {
+  try {
+    e.dataTransfer.setData('text/x-imglib-id', id);
+    e.dataTransfer.setData('text/plain', 'lib:' + id);
+    e.dataTransfer.effectAllowed = 'copy';
+  } catch (err) {}
+  window._scrLibDragId = id;
+}
+
+/** ドラッグ終了時（成功・キャンセル問わず）にハイライトを全消しする */
+function _scrLibClearDropHighlight() {
+  document.querySelectorAll('.scr-drop-active').forEach(function(el) {
+    el.classList.remove('scr-drop-active');
+  });
+  window._scrLibDragId = null;
+}
+document.addEventListener('dragend',  _scrLibClearDropHighlight);
+document.addEventListener('drop',     _scrLibClearDropHighlight);
+document.addEventListener('mouseup',  function() {
+  if (window._scrLibDragId) _scrLibClearDropHighlight();
+});
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') _scrLibClearDropHighlight();
+});
+
+/** ドロップされた画像IDを取り出す */
+function _scrLibDropId(e) {
+  var id = '';
+  try { id = e.dataTransfer.getData('text/x-imglib-id') || ''; } catch (err) {}
+  if (!id) {
+    var t = '';
+    try { t = e.dataTransfer.getData('text/plain') || ''; } catch (err) {}
+    if (t.indexOf('lib:') === 0) id = t.slice(4);
+  }
+  return id || window._scrLibDragId || '';
+}
+
+// ── 右パネルの幅可変 ──
+(function _scrLibInitResizer() {
+  function bind() {
+    var rz = document.getElementById('scrLibResizer');
+    var pn = document.getElementById('scrLibPanel');
+    if (!rz || !pn || rz._bound) return;
+    rz._bound = true;
+
+    var saved = null;
+    try { saved = localStorage.getItem('scrLibPanelW'); } catch (e) {}
+    if (saved) pn.style.width = saved;
+
+    var dragging = false;
+    rz.addEventListener('mousedown', function(e) {
+      dragging = true; e.preventDefault();
+      document.body.style.cursor = 'col-resize';
+      document.body.style.userSelect = 'none';
+    });
+    document.addEventListener('mousemove', function(e) {
+      if (!dragging) return;
+      var w = Math.max(220, Math.min(680, window.innerWidth - e.clientX));
+      pn.style.width = w + 'px';
+    });
+    document.addEventListener('mouseup', function() {
+      if (!dragging) return;
+      dragging = false;
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+      try { localStorage.setItem('scrLibPanelW', pn.style.width); } catch (e) {}
+    });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bind);
+  else bind();
+})();
+
+// ── 管理メニュー ──
+function _scrLibToggleMenu(e) {
+  var m = document.getElementById('scrLibMenu');
+  if (!m) return;
+  if (m.style.display === 'block') { m.style.display = 'none'; return; }
+  var r = e.currentTarget.getBoundingClientRect();
+  m.style.display = 'block';
+  m.style.position = 'fixed';
+  m.style.top  = (r.bottom + 4) + 'px';
+  m.style.left = Math.max(8, r.right - m.offsetWidth) + 'px';
+  setTimeout(function() {
+    document.addEventListener('click', _scrLibCloseMenuOnce, { once: true });
+  }, 0);
+}
+function _scrLibCloseMenuOnce() {
+  var m = document.getElementById('scrLibMenu'); if (m) m.style.display = 'none';
+}
+
+function _scrLibMenuDo(act) {
+  _scrLibCloseMenuOnce();
+  if (act === 'add')           { _scrOpenAddFolderDialog(_scrCurrentPatId || null); }
+  else if (act === 'addFiles') { var i = document.getElementById('scrLibAddInput'); if (i) { i.value=''; i.click(); } }
+  else if (act === 'renameFolder') { _imgLibRenameFolderFromPanel(); }
+  else if (act === 'mergeContent') { _imgLibMergeByContent(); }
+  else if (act === 'mergeName')    { _imgLibMergeDuplicates(); }
+  else if (act === 'cleanup')      { _imgLibCleanup(); }
+}
+
+/** フォルダ名変更（右パネルの絞り込み選択を対象にする） */
+function _imgLibRenameFolderFromPanel() {
+  var sel = document.getElementById('scrLibFolder');
+  var cur = sel ? sel.value : '';
+  if (!cur || cur === '__root__') { toast('⚠️ 名前を変更したいフォルダを選んでください'); return; }
+  var name = prompt('フォルダ名を変更します。\n\n現在： ' + cur, cur);
+  if (name === null) return;
+  var next = _imgLibSafeFolder(name);
+  if (!next || next === cur) return;
+  var targets = (_imgLibAllItems || []).filter(function(it){ return it.folder === cur; });
+  if (!targets.length) return;
+  var exists = (_imgLibAllItems || []).some(function(it){ return it.folder === next; });
+  if (exists && !confirm('「' + next + '」は既に存在します。統合しますか？')) return;
+  _imgLibBulkUpdate(targets.map(function(it){ return { id: it.id, fields: { folder: next } }; }), function() {
+    targets.forEach(function(it){ it.folder = next; });
+    if (sel) sel.value = next;
+    _scrLibRender();
+    toast('✏️ 「' + cur + '」→「' + next + '」に変更しました（' + targets.length + ' 件）');
+  });
+}
+
+// ── 選択操作 ──
+function _scrLibToggleAll(on) {
+  var rows = document.querySelectorAll('#scrLibList .scr-lib-row');
+  rows.forEach(function(r) {
+    if (on) _imgLibSelectedIds.add(r.dataset.libId);
+    else    _imgLibSelectedIds.delete(r.dataset.libId);
+  });
+  _scrLibSyncSelection();
+}
+
+function _scrLibToggleOne(id, on) {
+  if (on) _imgLibSelectedIds.add(id); else _imgLibSelectedIds.delete(id);
+  _scrLibSyncSelection();
+}
+
+/** 選択状態とツールバーを同期する */
+function _scrLibSyncSelection() {
+  document.querySelectorAll('#scrLibList .scr-lib-cb').forEach(function(cb) {
+    cb.checked = _imgLibSelectedIds.has(cb.dataset.libId);
+  });
+  document.querySelectorAll('#scrLibList .scr-lib-row').forEach(function(r) {
+    r.classList.toggle('is-selected', _imgLibSelectedIds.has(r.dataset.libId));
+  });
+  var n = _imgLibSelectedIds.size;
+  var bar = document.getElementById('scrLibSelBar');
+  if (bar) {
+    // 常時表示し、選択の有無は枠色で示す（表示/非表示だと高さが変わってレイアウトが動く）
+    bar.style.display = 'flex';
+    bar.style.background   = n > 0 ? 'var(--accent-lt)' : 'var(--surface2)';
+    bar.style.borderColor  = n > 0 ? 'var(--accent)'    : 'var(--border)';
+  }
+  var lbl = document.getElementById('scrLibSelCount');
+  if (lbl) {
+    lbl.textContent = n > 0 ? (n + '件選択中') : '未選択';
+    lbl.style.color = n > 0 ? 'var(--accent-text)' : 'var(--text3)';
+  }
+  document.querySelectorAll('.scr-lib-selbtn').forEach(function(b) {
+    b.disabled = (n === 0);
+    b.style.opacity = (n === 0) ? '.45' : '1';
+    b.style.cursor  = (n === 0) ? 'not-allowed' : 'pointer';
+  });
+  var all = document.getElementById('scrLibSelAll');
+  if (all) all.checked = (n > 0 && n === (_imgLibAllItems || []).length);
+}
+
+// ── 行の操作メニュー（右クリック）──
+var _scrLibMenuId = null;
+
+function _scrLibRowMenu(e, id) {
+  e.preventDefault(); e.stopPropagation();
+  _scrLibMenuId = id;
+  var m = document.getElementById('scrLibRowMenu');
+  if (!m) return;
+  m.style.display = 'block';
+  var w = m.offsetWidth || 180, h = m.offsetHeight || 220;
+  m.style.left = Math.min(e.clientX, window.innerWidth  - w - 8) + 'px';
+  m.style.top  = Math.min(e.clientY, window.innerHeight - h - 8) + 'px';
+  setTimeout(function() {
+    document.addEventListener('click', function close() {
+      m.style.display = 'none';
+    }, { once: true });
+  }, 0);
+}
+
+function _scrLibRowMenuDo(act) {
+  var id = _scrLibMenuId;
+  var m = document.getElementById('scrLibRowMenu'); if (m) m.style.display = 'none';
+  if (!id) return;
+  var item = (_imgLibAllItems || []).find(function(x){ return x.id === id; });
+  if (!item) return;
+
+  if (act === 'hs')       { scrEnterHsEdit(id); }
+  else if (act === 'add') { _scrLibAddOne(id); }
+  else if (act === 'rename') {
+    var nm = prompt('画像名を変更します', item.name || '');
+    if (nm === null) return;
+    nm = nm.trim(); if (!nm) return;
+    item._prevName = item.name;   // 画面名の同期判定に使う
+    // _imgLibRename は存在しないため、汎用の更新ヘルパーで書き込む
+    _imgLibBulkUpdate([{ id: id, fields: { name: nm } }], function() {
+      item.name = nm;
+      // 使用中の画面名も同期する（画像名を画面名として取り込んでいるため）
+      _scrSyncScreenNamesFromLib(id, nm);
+      _scrLibRender();
+      if (_scrHsEditOn && _imgLibHsItem && _imgLibHsItem.id === id) {
+        _imgLibHsItem.name = nm;
+        var nmEl = document.getElementById('scrCurScrName');
+        if (nmEl) nmEl.textContent = '📍 ' + (item.folder ? '📁' + item.folder + '　' : '') + nm;
+      }
+      toast('✏️ 名前を変更しました');
+    });
+  }
+  else if (act === 'folder') {
+    _imgLibSelectedIds.clear(); _imgLibSelectedIds.add(id);
+    _imgLibMoveToFolder();
+  }
+  else if (act === 'replace') {
+    var inp = document.getElementById('scrLibReplaceInput');
+    if (inp) { inp.dataset.libId = id; inp.value = ''; inp.click(); }
+  }
+  else if (act === 'delete') {
+    if (!confirm('「' + (item.name || id) + '」をライブラリから削除しますか？')) return;
+    imgLibDelete(id).then(function() {
+      _imgLibAllItems = (_imgLibAllItems || []).filter(function(x){ return x.id !== id; });
+      _imgLibSelectedIds.delete(id);
+      _scrLibRender(); toast('🗑 削除しました');
+    });
+  }
+}
+
+/**
+ * 画像名を変更したとき、その画像を使っている画面の名前も追随させる。
+ * 画面追加時に画像名をそのまま画面名にしているため、揃えないと食い違う。
+ * ただし利用者が画面名を個別に変更している場合は上書きしない。
+ */
+function _scrSyncScreenNamesFromLib(libId, newName) {
+  var ref = 'lib:' + libId, n = 0;
+  var oldName = null;
+  var it = (_imgLibAllItems || []).find(function(x){ return x.id === libId; });
+  if (it) oldName = it._prevName || null;
+
+  screenPatterns.forEach(function(p) {
+    (p.screens || []).forEach(function(sc) {
+      if (sc.imageSrc !== ref) return;
+      // 画面名が未設定、または旧画像名のままのものだけ更新する
+      if (!sc.name || (oldName && sc.name === oldName)) { sc.name = newName; n++; }
+    });
+  });
+  if (n) { scrSaveIndex(); scrSaveData(); markDirty(); scrRenderUnifiedSidebar(); _scrUpdateRightSidebar(); }
+  return n;
+}
+
+/** 画像の差し替え */
+function _scrLibReplaceFile(input) {
+  var id = input.dataset.libId;
+  var f  = input.files && input.files[0];
+  if (!id || !f) return;
+  var reader = new FileReader();
+  reader.onload = function(ev) {
+    _imgLibBulkUpdate([{ id: id, fields: { dataUrl: ev.target.result } }], function() {
+      delete _imgLibCache[id];
+      _scrLibRender();
+      if (_scrHsEditOn) scrEnterHsEdit(id);
+      _scrUpdateCenterCanvas();
+      toast('🔄 画像を差し替えました');
+    });
+  };
+  reader.readAsDataURL(f);
+}
+
+/** 画像ファイルを選んでライブラリに追加 */
+function _scrLibAddFiles(input) {
+  var files = Array.from(input.files || []);
+  if (!files.length) return;
+  var done = 0;
+  files.forEach(function(f) {
+    var reader = new FileReader();
+    reader.onload = function(ev) {
+      imgLibFindOrPut(ev.target.result, f.name.replace(/\.[^.]+$/, '')).then(function() {
+        if (++done === files.length) {
+          _imgLibAllItems = [];
+          _scrLibRender();
+          toast('✅ ' + files.length + ' 枚を追加しました');
+        }
+      });
+    };
+    reader.readAsDataURL(f);
+  });
+}
+
+// シングルクリックとダブルクリックを両立させるため、判定を少し待つ
+var _scrLibClickTimer = null;
+
+function _scrLibRowClick(id) {
+  if (_scrLibClickTimer) return;
+  _scrLibClickTimer = setTimeout(function() {
+    _scrLibClickTimer = null;
+    scrEnterHsEdit(id);
+  }, 220);
+}
+
+function _scrLibRowDblClick(id) {
+  if (_scrLibClickTimer) { clearTimeout(_scrLibClickTimer); _scrLibClickTimer = null; }
+  _scrLibAddOne(id);
+}
+
+/** ダブルクリック：現在のパターンの末尾に追加 */
+function _scrLibAddOne(id) {
+  if (!_scrCurrentPatId) { toast('⚠️ 先にパターンを選択してください'); return; }
+  _scrLibAddToPattern(_scrCurrentPatId, id, -1);
+}
+
+/**
+ * ライブラリの画像をパターンへ画面として追加する。
+ * @param patId  追加先パターン
+ * @param libId  画像ID
+ * @param at     挿入位置（-1 で末尾）
+ */
+function _scrLibAddToPattern(patId, libId, at) {
+  var pat = screenPatterns.find(function(p){ return p.id === patId; });
+  if (!pat) { toast('❌ 追加先のパターンが見つかりません'); return; }
+  var item = (_imgLibAllItems || []).find(function(x){ return x.id === libId; });
+  if (!item) { toast('❌ 画像が見つかりません'); return; }
+
+  imgLibGetAll().then(function(all) {
+    var full = (all || []).find(function(x){ return x.id === libId; }) || item;
+    var scr = {
+      id: _scrGenId(),
+      name: full.name || libId,
+      imageSrc: 'lib:' + libId,
+      note: '',
+      hotspots: (full.hotspots || []).map(function(lh) { return _scrHsFromLib(lh); })
+    };
+    if (at != null && at >= 0 && at <= pat.screens.length) pat.screens.splice(at, 0, scr);
+    else pat.screens.push(scr);
+
+    _scrCurrentPatId = patId;
+    _scrReresolveAllLibTargets(function() {
+      scrSaveIndex(); scrSaveData(); markDirty();
+      scrRenderUnifiedSidebar();
+      scrSelectScreen(scr.id);
+      toast('✅ 「' + scr.name + '」を追加しました');
+    });
+  });
+}
+
+// ===================================================================
+// ホットスポット設定モーダル
+//   キャンバス上のホットスポットをクリックして開く。
+//   位置は画像ライブラリ管理のため変更できず、ここではパターンごとの
+//   有効/無効・メモ・遷移先・メール表示ボタンを設定する。
+// ===================================================================
+var _scrHsModalIdx = -1;
+
+function scrHsModalOpen(idx) {
+  var pat = screenPatterns.find(function(p){ return p.id === _scrCurrentPatId; });
+  if (!pat) return;
+  var scr = pat.screens.find(function(s){ return s.id === _scrSelScrId; });
+  if (!scr || !scr.hotspots || !scr.hotspots[idx]) return;
+  _scrHsModalIdx = idx;
+  document.getElementById('scrHsModalTitle').textContent =
+    '📍 HS-' + String(idx + 1).padStart(2, '0') + ' の設定';
+  scrHsModalRender();
+  document.getElementById('scrHsModal').style.display = 'flex';
+}
+
+function scrHsModalClose() {
+  document.getElementById('scrHsModal').style.display = 'none';
+  _scrHsModalIdx = -1;
+  _scrDrawCenterOverlay(null);
+}
+
+function scrHsModalRender() {
+  var body = document.getElementById('scrHsModalBody');
+  var pat  = screenPatterns.find(function(p){ return p.id === _scrCurrentPatId; });
+  if (!body || !pat) return;
+  var scr = pat.screens.find(function(s){ return s.id === _scrSelScrId; });
+  if (!scr) return;
+  var hs  = scr.hotspots[_scrHsModalIdx];
+  if (!hs) return;
+
+  var idx = _scrHsModalIdx;
+  var enabled = (hs.enabled !== false);
+  var type = hs.targetType || 'screen';
+  // 別パターンは targetId を "パターンID::画面ID" で保持する（screen.html の既存仕様）
+  var patSel = '', scrSel = hs.targetId || '';
+  if (type === 'pattern') {
+    var pp = String(hs.targetId || '').split('::');
+    patSel = pp[0] || ''; scrSel = pp[1] || '';
+  }
+
+  var sec = function(title, inner) {
+    return '<div><div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:6px;">' + title + '</div>' + inner + '</div>';
+  };
+
+  // ── 有効/無効 ──
+  var h = sec('有効 / 無効',
+    '<label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;">' +
+      '<input type="checkbox"' + (enabled ? ' checked' : '') +
+      ' onchange="scrHsModalSet(\'enabled\', this.checked)" style="width:16px;height:16px;">' +
+      '<span>このパターンで有効にする</span></label>' +
+    '<div style="font-size:10px;color:var(--text3);margin-top:4px;">無効にすると screen.html でクリックできなくなります。</div>');
+
+  // ── メモ ──
+  h += sec('メモ（screen.html でカーソルを合わせたときに表示）',
+    '<textarea rows="2" placeholder="例）ログインボタン／押すとマイページへ" ' +
+      'oninput="scrHsModalSet(\'note\', this.value)" ' +
+      'style="width:100%;box-sizing:border-box;font-size:12px;padding:6px 8px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);font-family:inherit;resize:vertical;">' +
+      esc(hs.note || '') + '</textarea>');
+
+  // ── 遷移先 ──
+  var tBtn = function(v, lbl) {
+    var on = (type === v);
+    return '<button onclick="scrHsModalSetType(\'' + v + '\')" style="flex:1;height:26px;font-size:11px;font-family:inherit;border-radius:5px;cursor:pointer;' +
+      (on ? 'background:var(--accent);color:var(--accent-on);border:1px solid var(--accent);'
+          : 'background:var(--surface);color:var(--text3);border:1px solid var(--border);') + '">' + lbl + '</button>';
+  };
+
+  var tInner = '<div style="display:flex;gap:5px;margin-bottom:8px;">' +
+    tBtn('none', 'なし') + tBtn('screen', '同パターン') + tBtn('pattern', '別パターン') + tBtn('url', '🔗 URL') + '</div>';
+
+  if (type === 'screen') {
+    tInner += '<select onchange="scrHsModalSet(\'targetId\', this.value)" class="scr-rs-input" style="width:100%;height:28px;font-size:12px;">' +
+      '<option value="">— 遷移先の画面を選択 —</option>' +
+      pat.screens.filter(function(x){ return x.id !== scr.id; }).map(function(x, i2) {
+        var n = pat.screens.findIndex(function(y){ return y.id === x.id; });
+        return '<option value="' + x.id + '"' + (hs.targetId === x.id ? ' selected' : '') + '>' +
+          'SCR-' + String(n + 1).padStart(2, '0') + ' ' + esc(x.name || '（名称なし）') + '</option>';
+      }).join('') + '</select>';
+  } else if (type === 'pattern') {
+    tInner += '<select onchange="scrHsModalSetPat(this.value)" class="scr-rs-input" style="width:100%;height:28px;font-size:12px;margin-bottom:6px;">' +
+      '<option value="">— 遷移先のパターンを選択 —</option>' +
+      screenPatterns.filter(function(p2){ return p2.id !== pat.id; }).map(function(p2) {
+        return '<option value="' + p2.id + '"' + (patSel === p2.id ? ' selected' : '') + '>📂 ' + esc(p2.name) + '</option>';
+      }).join('') + '</select>';
+    var tp = screenPatterns.find(function(p2){ return p2.id === patSel; });
+    if (tp) {
+      tInner += '<select onchange="scrHsModalSetPatScr(this.value)" class="scr-rs-input" style="width:100%;height:28px;font-size:12px;">' +
+        '<option value="">— 遷移先の画面を選択 —</option>' +
+        (tp.screens || []).map(function(x, i2) {
+          return '<option value="' + x.id + '"' + (scrSel === x.id ? ' selected' : '') + '>' +
+            'SCR-' + String(i2 + 1).padStart(2, '0') + ' ' + esc(x.name || '（名称なし）') + '</option>';
+        }).join('') + '</select>';
+    } else {
+      tInner += '<div style="font-size:10px;color:var(--text3);">先にパターンを選択してください。</div>';
+    }
+  } else if (type === 'url') {
+    tInner += '<input type="text" value="' + esc(hs.targetId || '') + '" placeholder="https://..." ' +
+      'oninput="scrHsModalSet(\'targetId\', this.value)" class="scr-rs-input" style="width:100%;height:28px;font-size:12px;">';
+  }
+  // ライブラリ追従中か、このパターンで上書き済みかを明示する
+  var isLib = !!hs.libHsId;
+  var over  = !!(hs.targetOverride || hs.noteOverride);
+  if (isLib) {
+    tInner = '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;padding:5px 8px;border-radius:5px;font-size:11px;'
+      + (over ? 'background:#fff8e1;color:#a86400;border:1px solid #ffcf7a;'
+              : 'background:var(--surface2);color:var(--text2);border:1px solid var(--border);') + '">'
+      + '<span style="flex:1;">' + (over
+          ? '✏️ このパターンで上書き中（ライブラリを変更しても更新されません）'
+          : '🔗 画像ライブラリの設定に追従しています') + '</span>'
+      + (over ? '<button onclick="scrHsModalResetToLib()" style="font-size:10px;padding:2px 8px;border:1px solid currentColor;border-radius:4px;background:var(--surface);cursor:pointer;color:inherit;font-family:inherit;white-space:nowrap;">🔗 戻す</button>' : '')
+      + '</div>' + tInner;
+  }
+  h += sec('遷移先', tInner);
+
+  // ── メール表示ボタン ──
+  var mailTpls = (typeof mailData !== 'undefined' && mailData) ? mailData : [];
+  h += sec('📩 メール表示ボタン（複数設定可）',
+    _scrRsMailBtns(idx, hs, mailTpls) +
+    '<button onclick="_scrRsAddMailBtn(' + idx + ')" style="margin-top:5px;font-size:11px;padding:3px 10px;border:1px solid var(--accent);border-radius:5px;background:var(--surface);cursor:pointer;color:var(--accent-text);font-family:inherit;">＋ ボタンを追加</button>');
+
+  body.innerHTML = h;
+}
+
+/** モーダル上の変更を反映する */
+function scrHsModalSet(key, val) {
+  var hs = _scrHsModalCur(); if (!hs) return;
+  hs[key] = val;
+  // 遷移先・メモをこのパターンで変更したら、以後ライブラリ同期の対象外にする
+  if (key === 'targetId')  hs.targetOverride = true;
+  if (key === 'note')      hs.noteOverride   = true;
+  scrSaveData(); markDirty();
+  _scrDrawCenterOverlay(null);
+  if (key === 'enabled') scrHsModalRender();
+}
+
+/** このHSの遷移先・メモをライブラリの設定に戻す（上書きを解除する） */
+function scrHsModalResetToLib() {
+  var hs = _scrHsModalCur(); if (!hs) return;
+  if (!confirm('遷移先とメモを画像ライブラリの設定に戻します。\nこのパターンでの変更内容は失われます。よろしいですか？')) return;
+  hs.targetOverride = false;
+  hs.noteOverride   = false;
+  scrSaveData(); markDirty();
+
+  // ライブラリの値で解決し直す
+  var libId = null;
+  var pat = screenPatterns.find(function(p){ return p.id === _scrCurrentPatId; });
+  var scr = pat && pat.screens.find(function(s){ return s.id === _scrSelScrId; });
+  if (scr && scr.imageSrc && scr.imageSrc.indexOf('lib:') === 0) libId = scr.imageSrc.slice(4);
+  if (!libId) { scrHsModalRender(); return; }
+
+  imgLibGetAll().then(function(all) {
+    var item = (all || []).find(function(x){ return x.id === libId; });
+    if (item) _imgLibSyncHsToPatterns(item);
+    scrHsModalRender();
+    _scrDrawCenterOverlay(null);
+    toast('🔗 ライブラリの設定に戻しました');
+  });
+}
+
+function _scrHsModalCur() {
+  var pat = screenPatterns.find(function(p){ return p.id === _scrCurrentPatId; });
+  if (!pat) return null;
+  var scr = pat.screens.find(function(s){ return s.id === _scrSelScrId; });
+  if (!scr || !scr.hotspots || !scr.hotspots[_scrHsModalIdx]) return null;
+  return scr.hotspots[_scrHsModalIdx];
+}
+
+function scrHsModalSetType(type) {
+  var hs = _scrHsModalCur(); if (!hs) return;
+  hs.targetType = type;
+  hs.targetId = '';
+  hs.targetOverride = true;
+  scrSaveData(); markDirty();
+  scrHsModalRender(); _scrDrawCenterOverlay(null);
+}
+
+/** 別パターン：パターンを選んだ段階では画面未選択のまま保持する */
+function scrHsModalSetPat(patId) {
+  var hs = _scrHsModalCur(); if (!hs) return;
+  hs.targetType = 'pattern';
+  hs.targetId = patId ? (patId + '::') : '';
+  hs.targetOverride = true;
+  scrSaveData(); markDirty();
+  scrHsModalRender();
+}
+
+/** 別パターン：遷移先の画面を確定する */
+function scrHsModalSetPatScr(scrId) {
+  var hs = _scrHsModalCur(); if (!hs) return;
+  var patId = String(hs.targetId || '').split('::')[0] || '';
+  hs.targetType = 'pattern';
+  hs.targetId = patId + '::' + (scrId || '');
+  hs.targetOverride = true;
+  scrSaveData(); markDirty();
+  scrHsModalRender(); _scrDrawCenterOverlay(null);
+}
+
 function _scrRsRenderHsList(scr){
   var el=document.getElementById('scrRsHsList');if(!el)return;
   if(!scr||!scr.hotspots||!scr.hotspots.length){el.innerHTML='<div style="font-size:11px;color:var(--muted);padding:4px 0;">ホットスポットなし</div>';return;}
@@ -6526,22 +7472,31 @@ function _scrRsGetMailBtns(idx) {
   return hs.mailBtnTargets;
 }
 
+/**
+ * メールボタンの増減後に画面を描き直す。
+ * 右サイドバーは廃止したため、モーダルが開いていればモーダルを、
+ * そうでなければ従来の一覧を更新する。
+ */
+function _scrRsRefreshAfterMailBtn() {
+  var modal = document.getElementById('scrHsModal');
+  if (modal && modal.style.display === 'flex') { scrHsModalRender(); return; }
+  var pat = screenPatterns.find(function(p){ return p.id === _scrCurrentPatId; });
+  var scr = pat ? pat.screens.find(function(s){ return s.id === _scrSelScrId; }) : null;
+  if (scr && typeof _scrRsRenderHsList === 'function') _scrRsRenderHsList(scr);
+}
+
 function _scrRsAddMailBtn(idx) {
   var btns = _scrRsGetMailBtns(idx); if(!btns) return;
   btns.push({id:'', label:''});
   scrSaveData(); markDirty();
-  var pat=screenPatterns.find(function(p){return p.id===_scrCurrentPatId;});
-  var scr=pat?pat.screens.find(function(s){return s.id===_scrSelScrId;}):null;
-  if(scr) _scrRsRenderHsList(scr);
+  _scrRsRefreshAfterMailBtn();
 }
 
 function _scrRsDelMailBtn(idx, bi) {
   var btns = _scrRsGetMailBtns(idx); if(!btns) return;
   btns.splice(bi, 1);
   scrSaveData(); markDirty();
-  var pat=screenPatterns.find(function(p){return p.id===_scrCurrentPatId;});
-  var scr=pat?pat.screens.find(function(s){return s.id===_scrSelScrId;}):null;
-  if(scr) _scrRsRenderHsList(scr);
+  _scrRsRefreshAfterMailBtn();
 }
 
 function _scrRsMailBtnSet(idx, bi, field, val) {
@@ -6566,10 +7521,47 @@ var _scrCenterOvInited=false;
  */
 function _scrInitCenterOverlayEvents(){
   var ov = document.getElementById('scrCenterOverlay');
-  if (ov) {
-    ov.style.cursor = 'default';
-    ov.style.pointerEvents = 'none';   // クリックを透過させ、誤操作を防ぐ
-  }
+  if (!ov || ov._hsClickBound) return;
+  ov._hsClickBound = true;
+  ov.style.cursor = 'pointer';
+  ov.style.touchAction = 'auto';
+
+  // ホットスポットをクリックすると設定モーダルを開く（ドラッグ作成はしない）
+  ov.addEventListener('click', function(e) {
+    if (!_scrSelScrId) return;
+    var pat = screenPatterns.find(function(p){ return p.id === _scrCurrentPatId; });
+    if (!pat) return;
+    var scr = pat.screens.find(function(s){ return s.id === _scrSelScrId; });
+    if (!scr || !scr.hotspots || !scr.hotspots.length) return;
+
+    var r = ov.getBoundingClientRect();
+    if (!r.width || !r.height) return;
+    var rx = (e.clientX - r.left) / r.width;
+    var ry = (e.clientY - r.top)  / r.height;
+
+    // 重なっている場合は後から描かれたもの（前面）を優先する
+    for (var i = scr.hotspots.length - 1; i >= 0; i--) {
+      var h = scr.hotspots[i];
+      if (rx >= h.x && rx <= h.x + h.w && ry >= h.y && ry <= h.y + h.h) {
+        scrHsModalOpen(i);
+        return;
+      }
+    }
+  });
+
+  // カーソルの下にホットスポットがあるときだけ指マークにする
+  ov.addEventListener('mousemove', function(e) {
+    var pat = screenPatterns.find(function(p){ return p.id === _scrCurrentPatId; });
+    var scr = pat ? pat.screens.find(function(s){ return s.id === _scrSelScrId; }) : null;
+    if (!scr || !scr.hotspots) { ov.style.cursor = 'default'; return; }
+    var r = ov.getBoundingClientRect();
+    if (!r.width) return;
+    var rx = (e.clientX - r.left) / r.width, ry = (e.clientY - r.top) / r.height;
+    var hit = scr.hotspots.some(function(h) {
+      return rx >= h.x && rx <= h.x + h.w && ry >= h.y && ry <= h.y + h.h;
+    });
+    ov.style.cursor = hit ? 'pointer' : 'default';
+  });
 }
 
 // データ保存（markDirty のみ。実際の書き込みは saveAllManual）
@@ -6614,7 +7606,11 @@ function _imgLibHsActivate(item) {
 
   img.onload = function() {
     _imgLibHsFitZoom = _imgLibHsCalcFit();
-    _imgLibHsApplyZoom(_imgLibHsFitZoom);
+    // パターン編集と倍率を共有する。センターで開いている間は現在の倍率を引き継ぎ、
+    // 単独で開いた場合のみ収まるサイズにする。
+    var useShared = (typeof _scrHsEditOn !== 'undefined' && _scrHsEditOn && typeof _scrZoom === 'number');
+    // 共有倍率は「全体表示＝1.0」の相対値なので、Fit倍率を掛けて実倍率にする
+    _imgLibHsApplyZoom(useShared ? (_imgLibHsFitZoom * _scrZoom) : _imgLibHsFitZoom);
   };
   // 一覧は dataUrl を持たないメタ情報なので、ここで初めて画像本体を読む
   if (item.dataUrl) {
@@ -6633,8 +7629,12 @@ function _imgLibHsActivate(item) {
   _imgLibHsSetupDrag(); // 初回のみ登録（フラグで二重登録防止）
   _imgLibHsSetupZoom(); // Ctrl+ホイール／キーボードズーム（初回のみ）
   _imgLibHsUpdateNav(); // ＜＞ ボタン・位置表示を更新
+  // センターへ移設中は共通ツールバーが同じ情報を出すため、内蔵ヘッダーごと隠す
+  var inCenter = (typeof _scrHsEditOn !== 'undefined' && _scrHsEditOn);
   var zb = document.getElementById('imgLibHsZoomBar');
-  if (zb) zb.style.display = 'flex';
+  if (zb) zb.style.display = inCenter ? 'none' : 'flex';
+  var hd = document.getElementById('imgLibHsHeader');
+  if (hd) hd.style.display = inCenter ? 'none' : 'flex';
   var la = document.getElementById('imgLibHsListActions');
   if (la) la.style.display = 'flex';
   _imgLibHsUpdateLinkBar();
@@ -6677,6 +7677,12 @@ function _imgLibHsApplyZoom(z) {
   img.style.height = Math.round(img.naturalHeight * _imgLibHsZoom) + 'px';
   var lbl = document.getElementById('imgLibHsZoomVal');
   if (lbl) lbl.textContent = Math.round(_imgLibHsZoom * 100) + '%';
+  // Ctrl+ホイールなど HS 側から変更された倍率を、Fit基準の相対値に直して共有値へ書き戻す
+  if (typeof _scrHsEditOn !== 'undefined' && _scrHsEditOn) {
+    var fitNow = (typeof _imgLibHsCalcFit === 'function') ? _imgLibHsCalcFit() : 1;
+    if (fitNow > 0) _scrZoom = _imgLibHsZoom / fitNow;
+  }
+  if (typeof _scrBarSyncZoomLabel === 'function') _scrBarSyncZoomLabel();
   _imgLibHsRedrawOverlays();
 }
 
@@ -6730,9 +7736,7 @@ function _imgLibHsSetupZoom() {
 
   function _hsActive() {
     var editor = document.getElementById('imgLibHsEditor');
-    var panel  = document.getElementById('imgLibPanel');
-    return editor && editor.style.display !== 'none' &&
-           panel  && panel.style.display  !== 'none';
+    return !!(editor && editor.style.display !== 'none');
   }
 
   // Ctrl + ホイールでカーソル位置を中心に拡大縮小
@@ -6954,9 +7958,7 @@ function _imgLibHsSelectRow(idx) {
 document.addEventListener('keydown', function(e) {
   if (!/^Arrow/.test(e.key)) return;
   var editor = document.getElementById('imgLibHsEditor');
-  var panel  = document.getElementById('imgLibPanel');
   if (!editor || editor.style.display === 'none') return;
-  if (!panel  || panel.style.display  === 'none') return;
   var t = e.target;
   if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable)) return;
   var hs = _imgLibHsList[_imgLibHsSelIdx];
@@ -7042,20 +8044,34 @@ function _imgLibSyncHsToPatterns(item) {
       var byLib = {};
       old.forEach(function(h) { if (h.libHsId) byLib[h.libHsId] = h; });
 
-      // ライブラリ由来HS：座標・遷移先は上書き、有効/無効とメールボタンは引き継ぎ
+      // ライブラリ由来HS：
+      //   座標   … 常にライブラリが正（上書き）
+      //   遷移先・メモ … ライブラリの値を初期値とし、パターン側で変更されていれば
+      //                  （targetOverride / noteOverride）そちらを維持する
+      //   有効/無効・メールボタン … パターンごとの値なので常に引き継ぐ
       var merged = libHs.map(function(lh) {
         var prev = byLib[lh.id];
         var resolved = _scrResolveLibTarget(p, s, lh);
+
+        var overridden = !!(prev && prev.targetOverride);
+        var noteOver   = !!(prev && prev.noteOverride);
+
         return {
           id:       prev ? prev.id : _scrGenId(),
           libHsId:  lh.id,
           x: lh.x, y: lh.y, w: lh.w, h: lh.h,
-          note:     lh.note || (prev ? prev.note : '') || '',
-          targetId:   resolved.targetId,
-          targetType: resolved.targetType,
+
+          note:         noteOver ? prev.note : (lh.note || ''),
+          noteOverride: noteOver,
+
+          targetId:       overridden ? prev.targetId   : resolved.targetId,
+          targetType:     overridden ? prev.targetType : resolved.targetType,
+          targetOverride: overridden,
+
           // 未解決（対象画像の画面がこのパターンに無い）ことを画面側に伝える
-          libUnresolved: resolved.unresolved || false,
+          libUnresolved: overridden ? false : (resolved.unresolved || false),
           libTargetId:   lh.targetLibId || '',
+
           // パターンごとの値
           enabled: (prev && prev.enabled === false) ? false : true,
           mailBtnTargets: prev ? (prev.mailBtnTargets || []) : []
@@ -7118,6 +8134,7 @@ function _scrReresolveAllLibTargets(cb) {
       (p.screens || []).forEach(function(s) {
         (s.hotspots || []).forEach(function(h) {
           if (!h.libHsId || !h.libTargetId) return;
+          if (h.targetOverride) return;   // パターン側で上書き済みは触らない
           var lh = { targetType: 'lib', targetLibId: h.libTargetId };
           var r = _scrResolveLibTarget(p, s, lh);
           h.targetId = r.targetId;
@@ -7534,9 +8551,7 @@ function _imgLibHsSetupDrag() {
   document.addEventListener('mousedown', function(e) {
     // HSエディタが非表示 or パネルが閉じている → 無視
     var editor = document.getElementById('imgLibHsEditor');
-    var panel  = document.getElementById('imgLibPanel');
     if (!editor || editor.style.display === 'none') return;
-    if (!panel  || panel.style.display  === 'none') return;
 
     // クリック対象が imgLibHsCanvasWrap の内側でなければ無視
     var wrap = document.getElementById('imgLibHsCanvasWrap');
@@ -7876,8 +8891,8 @@ function _imgLibClearSelection() {
   _imgLibUpdateSelectionUI();
 }
 function _imgLibUpdateSelectionUI() {
-  // すでにライブラリに存在しないIDは選択から外す。
-  // 削除後やフィルタ後に残骸が残ると、0件のはずなのに件数が合わなくなる。
+  // 旧・全画面ライブラリの DOM は撤去したため、右パネルの同期処理へ委譲する。
+  // （ここを旧DOM向けのままにしていたため「解除できない」状態になっていた）
   if (_imgLibAllItems && _imgLibAllItems.length) {
     var alive = {};
     _imgLibAllItems.forEach(function(x) { alive[x.id] = 1; });
@@ -7885,22 +8900,7 @@ function _imgLibUpdateSelectionUI() {
       if (!alive[id]) _imgLibSelectedIds.delete(id);
     });
   }
-  // チェックボックスの見た目を更新
-  document.querySelectorAll('.imglib-cb').forEach(function(cb) {
-    cb.checked = _imgLibSelectedIds.has(cb.dataset.id);
-  });
-  // 行のハイライト
-  document.querySelectorAll('.imglib-row').forEach(function(row) {
-    row.style.background = _imgLibSelectedIds.has(row.dataset.id) ? 'var(--accent-lt)' : '';
-  });
-  // 選択ツールバー表示
-  var bar = document.getElementById('imgLibSelBar');
-  if (bar) {
-    var n = _imgLibSelectedIds.size;
-    bar.style.display = n > 0 ? 'flex' : 'none';
-    var lbl = document.getElementById('imgLibSelCount');
-    if (lbl) lbl.textContent = n + '件選択中';
-  }
+  if (typeof _scrLibSyncSelection === 'function') _scrLibSyncSelection();
 }
 function _imgLibDeleteSelected() {
   var ids = Array.from(_imgLibSelectedIds);
@@ -8572,19 +9572,45 @@ var _scrZoomStep = 0.2;
 var _scrZoomMin = 0.2;
 var _scrZoomMax = 3.0;
 
-function scrZoom(dir) {
-  _scrZoom = Math.min(_scrZoomMax, Math.max(_scrZoomMin, _scrZoom + dir * _scrZoomStep));
-  _scrApplyZoom();
+function scrZoom(dir) { scrBarZoom(dir); }
+function scrZoomReset() { scrBarSetZoom(1); }
+
+/**
+ * パターン側で画像全体が収まる実倍率。
+ * 表示上の「100%」はこの状態を指す（画像の実寸ではない）。
+ * 画像ごとに解像度が違っても、100% と表示されていれば必ず全体が見える。
+ */
+function _scrCalcFit() {
+  var img  = document.getElementById('scrCenterImg');
+  var wrap = document.getElementById('scrCenterCanvas');
+  if (!img || !img.naturalWidth || !wrap) return 1;
+  var wW = wrap.clientWidth  - 40;
+  var wH = wrap.clientHeight - 40;
+  if (wW <= 0 || wH <= 0) return 1;
+  return Math.min(wW / img.naturalWidth, wH / img.naturalHeight, 1);
 }
-function scrZoomReset() {
-  _scrZoom = 1;
-  _scrApplyZoom();
-}
+
+/**
+ * パターン側のズーム適用。
+ * HS登録側と同じ「実寸を指定する」方式にそろえる。
+ * transform:scale はレイアウトサイズが変わらないため、拡大時にスクロール範囲が
+ * 画像とずれる（端まで到達できない）。
+ */
 function _scrApplyZoom() {
+  var img   = document.getElementById('scrCenterImg');
   var inner = document.getElementById('scrCanvasInner');
-  if (inner) inner.style.transform = 'scale(' + _scrZoom + ')';
-  var lbl = document.getElementById('scrZoomLabel');
-  if (lbl) lbl.textContent = Math.round(_scrZoom * 100) + '%';
+  if (inner) inner.style.transform = 'none';
+  if (img && img.naturalWidth) {
+    // 実倍率 ＝ 全体が収まる倍率 × 表示倍率（_scrZoom は 1.0 が「100%＝全体表示」）
+    var abs = _scrCalcFit() * _scrZoom;
+    img.style.width  = Math.round(img.naturalWidth  * abs) + 'px';
+    img.style.height = Math.round(img.naturalHeight * abs) + 'px';
+  }
+  // canvas は width/height を代入した時点で中身が消えるため、
+  // リサイズしたら必ず描き直す（これを忘れるとホットスポットが表示されない）
+  if (typeof _scrResizeCenterOverlay === 'function') _scrResizeCenterOverlay();
+  if (typeof _scrDrawCenterOverlay === 'function')   _scrDrawCenterOverlay(null);
+  _scrBarSyncZoomLabel();
 }
 
 // D&Dドロップ（labelタグ経由）
@@ -9314,6 +10340,10 @@ window.addEventListener('resize',function(){
     document.body.addEventListener('dragover', function(e) {
       var types = Array.from(e.dataTransfer.types || []);
       if (!types.includes('Files')) return; // ファイル以外は無視
+      // ホットスポットの範囲指定中に画像のネイティブドラッグが起きても
+      // インポート用オーバーレイを出さない
+      if (typeof _scrHsEditOn !== 'undefined' && _scrHsEditOn) return;
+      if (e.target && e.target.closest && e.target.closest('#imgLibHsCanvasWrap, #scrCenterCanvas')) return;
       e.preventDefault();
       e.dataTransfer.dropEffect = 'copy';
       var kind = _classifyDragItems(e);
@@ -10384,13 +11414,10 @@ function _imgLibAddSelectedToPattern() {
     var items = _scrExpandSetMembers(ids, all || []);
     if (!items.length) { toast('⚠️ 対象の画像が見つかりませんでした'); return; }
     var n = _scrCountScreensFor(items);
-    var setN = items.filter(function(x){ return x.setId; }).length;
-    var msg = items.length + ' 枚（' + n + ' 画面）をパターン「' + pat.name + '」に追加します。'
-            + (setN ? '\n🧩 うち ' + setN + ' 枚はセットとして1画面にまとまります。' : '');
+    var msg = items.length + ' 枚（' + n + ' 画面）をパターン「' + pat.name + '」に追加します。';
     if (!confirm(msg)) return;
     _scrAddScreensFromLibItems(pat.id, items);
     _imgLibClearSelection();
-    toggleImgLibPanel();
   });
 }
 
@@ -10473,7 +11500,12 @@ function _imgLibHsGoRel(d) {
   var n = i + d;
   if (n < 0 || n >= list.length) return;
   // 現在の編集内容をサイレント保存してから次の画像を開く
-  _imgLibHsSave(function() { _imgLibHsActivate(list[n]); }, true);
+  _imgLibHsSave(function() {
+    var nx = list[n];
+    // センターで編集中なら、右パネルのハイライトと画像名表示もそろえる
+    if (typeof _scrHsEditOn !== 'undefined' && _scrHsEditOn) scrEnterHsEdit(nx.id);
+    else _imgLibHsActivate(nx);
+  }, true);
 }
 
 function _imgLibHsUpdateNav() {
@@ -10509,8 +11541,8 @@ document.addEventListener('keydown', function(e) {
 
   var d = (e.key === 'ArrowRight') ? 1 : -1;
 
-  var panel = document.getElementById('imgLibPanel');
-  if (panel && panel.style.display !== 'none' && _imgLibHsItem) {
+  // HS登録中は ←→ で前後の画像へ移動できる
+  if (typeof _scrHsEditOn !== 'undefined' && _scrHsEditOn && _imgLibHsItem) {
     e.preventDefault(); _imgLibHsGoRel(d); return;
   }
   // パターン側の ←→ 移動は廃止（＜＞ は画像ライブラリ内のみ）
