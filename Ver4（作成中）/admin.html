@@ -5095,8 +5095,8 @@ function imgLibPut(dataUrl, name) {
     var id = 'lib' + Math.random().toString(36).substr(2, 9);
     return new Promise(function(resolve, reject) {
       var tx  = db.transaction('imageLib', 'readwrite');
-      var req = tx.objectStore('imageLib').put({ id: id, name: name || id, tags: [], dataUrl: dataUrl }, id);
-      tx.oncomplete = function() { resolve('lib:' + id); };
+      var req = tx.objectStore('imageLib').put({ id: id, name: name || id, folder: '', dataUrl: dataUrl }, id);
+      tx.oncomplete = function() { _imgLibInvalidateMeta(); resolve('lib:' + id); };
       tx.onerror    = function(e) { reject(e.target.error); };
     });
   });
@@ -5163,7 +5163,35 @@ function imgLibGetAll() {
  * 一覧表示はサムネイルを廃止して画像名しか使わないので、
  * カーソルで1件ずつ走査して dataUrl を捨てながら読む。
  */
-function imgLibGetAllMeta() {
+/**
+ * 一覧表示に必要なメタ情報だけを取得する。
+ *
+ * imageLib のレコードには dataUrl（base64）が含まれるため、
+ * カーソルで全件走査すると名前だけ欲しい場面でも数十MBを毎回
+ * デシリアライズすることになり、これが表示の待ち時間の主因だった。
+ *
+ *  ① screen-data.js の library（すでにメモリ上・同期）を使う
+ *  ② 無い場合だけ IndexedDB を走査する（初回や旧データ向け）
+ */
+var _imgLibMetaCache = null;
+
+function imgLibGetAllMeta(force) {
+  if (!force && _imgLibMetaCache) return Promise.resolve(_imgLibMetaCache);
+
+  var sd = window.APP_SCREEN_DATA;
+  if (!force && sd && Array.isArray(sd.library) && sd.library.length) {
+    _imgLibMetaCache = sd.library.map(function(m) {
+      return {
+        id: m.id, name: m.name || m.id,
+        folder: m.folder || '',
+        hotspots: m.hotspots || [],
+        hsLinkFrom: m.hsLinkFrom || null,
+        _metaOnly: true
+      };
+    });
+    return Promise.resolve(_imgLibMetaCache);
+  }
+
   return _imgLibOpen().then(function(db) {
     return new Promise(function(resolve) {
       var out = [];
@@ -5171,14 +5199,14 @@ function imgLibGetAllMeta() {
       var req = tx.objectStore('imageLib').openCursor();
       req.onsuccess = function(e) {
         var cur = e.target.result;
-        if (!cur) { resolve(out); return; }
+        if (!cur) { _imgLibMetaCache = out; resolve(out); return; }
         var v = cur.value || {};
         out.push({
           id: v.id, name: v.name,
           folder: v.folder || '',
           hotspots: v.hotspots || [],
           hsLinkFrom: v.hsLinkFrom || null,
-          _metaOnly: true          // dataUrl を持たない印
+          _metaOnly: true
         });
         cur.continue();
       };
@@ -5186,6 +5214,9 @@ function imgLibGetAllMeta() {
     });
   });
 }
+
+/** メタのキャッシュを捨てる（追加・削除・リネームの後に呼ぶ） */
+function _imgLibInvalidateMeta() { _imgLibMetaCache = null; }
 
 /** 1件だけ dataUrl 込みで取得する（表示直前に呼ぶ） */
 function imgLibGetOne(libId) {
@@ -5211,6 +5242,7 @@ function imgLibGetOne(libId) {
  */
 function imgLibDelete(libId) {
   delete _imgLibCache[libId];
+  _imgLibInvalidateMeta();
   return _imgLibOpen().then(function(db) {
     return new Promise(function(resolve) {
       var tx, store;
@@ -8763,15 +8795,18 @@ function _imgLibFilter(cb) {
   }
 }
 
+var _imgLibHydrated = false;
+
 function _imgLibLoad(cb) {
-  var grid = document.getElementById('imgLibGrid');
-  if (grid) grid.innerHTML = '<div style="width:100%;text-align:center;padding:40px 0;color:var(--text3);font-size:12px;">読み込み中…</div>';
-  // 別PCでフォルダを受け取った直後は IDB が空なので、
-  // screen-data.js の library からライブラリ一覧を復元してから読み込む
-  var hydrate = window.hydrateImageLibrary ? window.hydrateImageLibrary() : Promise.resolve(0);
+  // 復元はセッションに1回だけでよい。毎回走らせると
+  // 全レコード（base64込み）を読み直すことになり非常に重い。
+  var hydrate = (!_imgLibHydrated && window.hydrateImageLibrary)
+    ? window.hydrateImageLibrary()
+    : Promise.resolve(0);
+
   hydrate.then(function(n) {
-    if (n) console.info('[imageLib] screen-data.js から ' + n + ' 件を復元しました');
-    // 一覧は画像名しか使わないので dataUrl を読まない（大幅に高速化）
+    _imgLibHydrated = true;
+    if (n) { console.info('[imageLib] screen-data.js から ' + n + ' 件を復元しました'); _imgLibInvalidateMeta(); }
     imgLibGetAllMeta().then(function(items){ cb(items); });
   });
 }
@@ -11109,6 +11144,7 @@ function _imgLibBulkUpdate(updates, cb) {
       };
     });
     tx.oncomplete = function() {
+      _imgLibInvalidateMeta();
       // メモリキャッシュも同期
       updates.forEach(function(u) {
         var c = _imgLibAllItems.find(function(x) { return x.id === u.id; });

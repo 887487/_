@@ -349,25 +349,24 @@ window.hydrateImageLibrary = function() {
     req.onsuccess = function(e) {
       var db = e.target.result;
       if (!db.objectStoreNames.contains('imageLib')) { db.close(); resolve(0); return; }
-      var tx    = db.transaction('imageLib', 'readwrite');
-      var store = tx.objectStore('imageLib');
-      var added = 0;
 
-      sd.library.forEach(function(meta) {
-        var g = store.get(meta.id);
-        g.onsuccess = function(ev) {
-          var cur = ev.target.result;
-          if (cur) {
-            // 既存レコードは画像データを壊さないよう、欠けている情報だけ補う
-            var patch = false;
-            if (!cur.name && meta.name)                    { cur.name = meta.name; patch = true; }
-            if (cur.folder === undefined && meta.folder)   { cur.folder = meta.folder; patch = true; }
-            if ((!cur.hotspots || !cur.hotspots.length) && meta.hotspots && meta.hotspots.length) {
-              cur.hotspots = meta.hotspots; patch = true;
-            }
-            if (patch) store.put(cur);
-            return;
-          }
+      // まずキーだけを取得して差分を求める。
+      // レコード本体には base64 画像が入っているため、1件ずつ get すると
+      // 数十MBを読み込むことになり、起動が目に見えて遅くなる。
+      var ktx = db.transaction('imageLib', 'readonly');
+      var kq  = ktx.objectStore('imageLib').getAllKeys();
+
+      kq.onerror = function() { db.close(); resolve(0); };
+      kq.onsuccess = function(ev) {
+        var have = {};
+        (ev.target.result || []).forEach(function(k) { have[k] = 1; });
+
+        var missing = sd.library.filter(function(m) { return !have[m.id]; });
+        if (!missing.length) { db.close(); resolve(0); return; }
+
+        var wtx   = db.transaction('imageLib', 'readwrite');
+        var store = wtx.objectStore('imageLib');
+        missing.forEach(function(meta) {
           store.put({
             id:         meta.id,
             name:       meta.name || meta.id,
@@ -377,13 +376,11 @@ window.hydrateImageLibrary = function() {
             hsLinkFrom: meta.hsLinkFrom || null,
             createdAt:  Date.now()
           });
-          added++;
-        };
-      });
-
-      tx.oncomplete = function() { db.close(); resolve(added); };
-      tx.onerror    = function() { db.close(); resolve(added); };
-      tx.onabort    = function() { db.close(); resolve(added); };
+        });
+        wtx.oncomplete = function() { db.close(); resolve(missing.length); };
+        wtx.onerror    = function() { db.close(); resolve(0); };
+        wtx.onabort    = function() { db.close(); resolve(0); };
+      };
     };
   }).catch(function() { return 0; });
 };
