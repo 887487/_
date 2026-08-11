@@ -371,6 +371,7 @@ window.hydrateImageLibrary = function() {
             id:         meta.id,
             name:       meta.name || meta.id,
             folder:     meta.folder || '',
+            note:       meta.note || '',
             dataUrl:    meta.file,          // 相対パス。<img src> で解決される
             hotspots:   meta.hotspots || [],
             hsLinkFrom: meta.hsLinkFrom || null,

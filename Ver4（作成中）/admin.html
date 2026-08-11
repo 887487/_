@@ -1087,6 +1087,16 @@ body.dnd-xlsx-hover::after {
   font-family: inherit;
   padding: 0;
 }
+/* ＜＞ ナビはスクロール領域の外側（#imgLibHsCanvasHost）に固定配置する。
+   既定では隠しておき、キャンバス上にカーソルを乗せたときだけ表示する。 */
+#imgLibHsCanvasHost .nav-arrow-btn,
+#imgLibHsCanvasHost .nav-pos-label { opacity: 0; pointer-events: none; transition: opacity .15s; }
+#imgLibHsCanvasHost.has-nav:hover .nav-arrow-btn,
+#imgLibHsCanvasHost.has-nav:hover .nav-pos-label { opacity: 1; pointer-events: auto; }
+#imgLibHsCanvasHost:not(.has-nav) .nav-arrow-btn,
+#imgLibHsCanvasHost:not(.has-nav) .nav-pos-label { display: none; }
+#imgLibHsCanvasHost .nav-arrow-btn { display: flex; }
+
 .nav-arrow-btn:hover:not(:disabled) { background: var(--accent); color: var(--accent-on); border-color: var(--accent); }
 .nav-arrow-btn:disabled { opacity: .28; cursor: default; }
 .nav-arrow-btn.prev { left: 8px; }
@@ -1616,6 +1626,10 @@ html[data-theme="dark"] .nav-arrow-btn { background: rgba(40,42,54,.9); }
         <input id="scrRsMemo" class="scr-rs-input" placeholder="この画面の備考（screen.html に表示されます）"
                oninput="scrRsUpdateMemo()"
                style="flex:1;min-width:0;height:26px;font-size:12px;">
+        <span id="scrMemoState" style="font-size:10px;white-space:nowrap;color:var(--text3);"></span>
+        <button id="scrMemoReset" class="scr-zoom-btn" onclick="scrMemoResetToLib()"
+                title="画像ライブラリで登録した初期値に戻す"
+                style="display:none;width:auto;padding:0 8px;font-size:10px;white-space:nowrap;">↩ 初期値に戻す</button>
       </div>
 
       <!-- ホットスポット登録エディタ（右パネルの画像をクリックで表示） -->
@@ -1646,7 +1660,10 @@ html[data-theme="dark"] .nav-arrow-btn { background: rgba(40,42,54,.9); }
             <span id="imgLibHsLinkName" style="flex:1;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
             <button class="btn btn-secondary" style="font-size:10px;height:22px;padding:0 8px;" onclick="_imgLibHsUnlink()" title="リンクを解除してこの画像だけの設定にします">🔓 リンク解除</button>
           </div>
-          <!-- キャンバスエリア -->
+          <!-- キャンバスエリア。
+               ＜＞ ナビはスクロール領域の外側に置き、拡大・スクロールしても
+               常に同じ位置に留まるようにする（内側だと画像と一緒に流れる）。 -->
+          <div id="imgLibHsCanvasHost" style="flex:1;position:relative;min-height:0;display:flex;">
           <div id="imgLibHsCanvasWrap" style="flex:1;overflow:auto;background:#333;display:flex;padding:16px;position:relative;cursor:crosshair;" title="ドラッグしてホットスポットを描画／Ctrl+ホイールで拡大縮小／Alt+ドラッグで移動">
             <div id="imgLibHsCanvas" style="position:relative;display:inline-block;flex-shrink:0;margin:auto;">
               <img id="imgLibHsImg" src="" alt="" draggable="false" ondragstart="return false"
@@ -1658,10 +1675,11 @@ html[data-theme="dark"] .nav-arrow-btn { background: rgba(40,42,54,.9); }
               <div class="ilib-guide h" id="ilibSnapH" style="display:none"></div>
               <div class="ilib-dim" id="ilibDim" style="display:none"></div>
             </div>
+          </div>
             <!-- 連続ホットスポット登録用：前後の画像へ移動（移動前に自動保存） -->
             <button class="nav-arrow-btn prev" id="imgLibHsPrev" onclick="event.stopPropagation();_imgLibHsGoRel(-1)" title="前の画像へ（自動保存）">‹</button>
             <button class="nav-arrow-btn next" id="imgLibHsNext" onclick="event.stopPropagation();_imgLibHsGoRel(1)" title="次の画像へ（自動保存）">›</button>
-            <div class="nav-pos-label" id="imgLibHsPosLabel" style="display:none;"></div>
+            <div class="nav-pos-label" id="imgLibHsPosLabel"></div>
           </div>
         </div>
       </div>
@@ -5096,7 +5114,7 @@ function imgLibPut(dataUrl, name) {
     return new Promise(function(resolve, reject) {
       var tx  = db.transaction('imageLib', 'readwrite');
       var req = tx.objectStore('imageLib').put({ id: id, name: name || id, folder: '', dataUrl: dataUrl }, id);
-      tx.oncomplete = function() { _imgLibInvalidateMeta(); resolve('lib:' + id); };
+      tx.oncomplete = function() { _imgLibInvalidateMeta(); _imgLibMarkDirty(id); resolve('lib:' + id); };
       tx.onerror    = function(e) { reject(e.target.error); };
     });
   });
@@ -5175,6 +5193,41 @@ function imgLibGetAll() {
  */
 var _imgLibMetaCache = null;
 
+// ── 画像の変更追跡 ──
+// 保存のたびに全画像を書き直すと数十MBの読み書きが発生する。
+// 追加・差し替えのあった画像だけを対象にするため、IDを控えておく。
+var _imgLibDirty = new Set();
+
+function _imgLibMarkDirty(id) {
+  if (!id) return;
+  _imgLibDirty.add(id);
+  try { window.idbSetAppData('imgLibDirty', Array.from(_imgLibDirty)); } catch (e) {}
+}
+function _imgLibClearDirty() {
+  _imgLibDirty.clear();
+  try { window.idbSetAppData('imgLibDirty', []); } catch (e) {}
+}
+// リロードしても未書き出しの画像を覚えておく
+(function _restoreDirty() {
+  if (!window.idbGetAppData) return;
+  window.idbGetAppData('imgLibDirty').then(function(a) {
+    (a || []).forEach(function(id) { _imgLibDirty.add(id); });
+  }).catch(function(){});
+})();
+
+
+/** 画像1件の実データを取得する（dataUrl 込み） */
+function imgLibGetOne(id) {
+  return _imgLibOpen().then(function(db) {
+    return new Promise(function(resolve) {
+      var tx  = db.transaction('imageLib', 'readonly');
+      var req = tx.objectStore('imageLib').get(id);
+      req.onsuccess = function(e) { resolve(e.target.result || null); };
+      req.onerror   = function()  { resolve(null); };
+    });
+  });
+}
+
 function imgLibGetAllMeta(force) {
   if (!force && _imgLibMetaCache) return Promise.resolve(_imgLibMetaCache);
 
@@ -5184,6 +5237,7 @@ function imgLibGetAllMeta(force) {
       return {
         id: m.id, name: m.name || m.id,
         folder: m.folder || '',
+        note: m.note || '',
         hotspots: m.hotspots || [],
         hsLinkFrom: m.hsLinkFrom || null,
         _metaOnly: true
@@ -5378,50 +5432,81 @@ function _exportScreenToFiles() {
       });
     });
 
-    return imgLibGetAll().then(function(libItems) {
+    // メタ情報（軽い）で一覧を組み立て、画像の実データは
+    // 「変更があったもの」「ファイルがまだ無いもの」だけを読み書きする。
+    return imgLibGetAllMeta().then(function(metaItems) {
       var imgMap  = {};   // id → ファイルパス
       var library = [];   // ライブラリのメタ情報（別PCで復元するために必要）
       var writes  = [];
       var keepFiles = {}; // 残すべきファイルの実名（掃除の判断に使う）
+      var needData = [];  // 実データの読み込みが必要なID
 
-      // ── ① ライブラリの全画像をファイルへ書き出す ──
-      //    以前は「パターンで使用中の画像」だけを書き出していたため、
-      //    別PCではライブラリが空になり、未使用画像も失われていた。
-      (libItems || []).forEach(function(item) {
+      (metaItems || []).forEach(function(item) {
         if (!item || !item.id) return;
-        var path = null;
+        var prev = window.screenImgFileSrc(item.id);
+        var changed = _imgLibDirty.has(item.id);
+        var path = (!changed && prev) ? prev : null;   // 変更なし＆既存ファイルあり → 再書き出し不要
 
-        if (item.dataUrl && item.dataUrl.indexOf('data:') === 0) {
-          var blob = window.dataUrlToBlob(item.dataUrl);
-          if (blob) {
-            path = _imgLibFilePath(item, window.mimeToExt(blob.type));
-            writes.push(window.AppFS.writeBinary(path, blob, false));
-          }
-        } else if (item.dataUrl) {
-          // すでにファイル参照（別PCで受け取ったデータ）はそのまま使う
-          path = item.dataUrl;
-        }
-        if (!path) path = window.screenImgFileSrc(item.id) || null;
-        if (!path) return;
+        if (!path) needData.push(item.id);
+        else { imgMap[item.id] = path; keepFiles[path] = true; }
 
-        imgMap[item.id] = path;
-        keepFiles[path] = true;
         library.push({
           id:         item.id,
           name:       item.name || item.id,
           folder:     _imgLibSafeFolder(item.folder),
-          file:       path,
+          file:       path || '',      // 後で確定する
+          note:       item.note || '',
           hotspots:   item.hotspots || [],
           hsLinkFrom: item.hsLinkFrom || null
         });
       });
 
-      // ── ② ライブラリに無いがパターンが参照している画像は、ファイルを維持する ──
-      Object.keys(usedIds).forEach(function(id) {
-        if (imgMap[id]) return;
-        var prev = window.screenImgFileSrc(id);
-        if (prev) { imgMap[id] = prev; keepFiles[prev] = true; }
-      });
+      // 必要な画像だけ実データを取りに行く
+      var fetchAll = needData.length
+        ? Promise.all(needData.map(function(id) {
+            return imgLibGetOne(id).then(function(rec) { return rec; }).catch(function(){ return null; });
+          }))
+        : Promise.resolve([]);
+
+      return fetchAll.then(function(recs) {
+        (recs || []).forEach(function(rec) {
+          if (!rec || !rec.id) return;
+          var meta = library.find(function(m){ return m.id === rec.id; });
+          var path = null;
+
+          if (rec.dataUrl && rec.dataUrl.indexOf('data:') === 0) {
+            var blob = window.dataUrlToBlob(rec.dataUrl);
+            if (blob) {
+              path = _imgLibFilePath({ id: rec.id, folder: meta ? meta.folder : '' }, window.mimeToExt(blob.type));
+              writes.push(window.AppFS.writeBinary(path, blob, false));
+            }
+          } else if (rec.dataUrl) {
+            path = rec.dataUrl;   // すでにファイル参照
+          }
+          if (!path) path = window.screenImgFileSrc(rec.id) || null;
+          if (!path) return;
+
+          imgMap[rec.id] = path;
+          keepFiles[path] = true;
+          if (meta) meta.file = path;
+        });
+
+        // フォルダを移動した画像は、変更なしでもパスが変わるので付け替える
+        library.forEach(function(m) {
+          if (!m.file) return;
+          var want = m.file.replace(/^screen-images\/(?:[^\/]+\/)?/, SCREEN_IMG_DIR + '/' + (m.folder ? m.folder + '/' : ''));
+          if (want !== m.file && imgMap[m.id]) {
+            // パスが変わる場合は書き出し直しが必要
+            _imgLibMarkDirty(m.id);
+          }
+        });
+
+        // パターンだけが参照している画像のファイルは維持する
+        Object.keys(usedIds).forEach(function(id) {
+          if (imgMap[id]) return;
+          var prev = window.screenImgFileSrc(id);
+          if (prev) { imgMap[id] = prev; keepFiles[prev] = true; }
+        });
 
       return Promise.all(writes).then(function() {
         // ── ③ screen-data.js を書き出す ──
@@ -5450,12 +5535,14 @@ function _exportScreenToFiles() {
             .then(function() {
               // ── ⑤ IDB にも反映して screen.html と同期させる ──
               window._SCREEN_IMG_MAP = imgMap;
+              _imgLibClearDirty();   // 書き出し済みなので変更フラグを落とす
               return window.idbSetAppData('screenSavedAt', savedAt)
                 .then(function() { return _idbPutScreenPatterns(pats || []); })
                 .then(function() { return 'file'; })
                 .catch(function() { return 'file'; });
             });
         });
+      });
       });
     });
   }).catch(function(e) {
@@ -5876,10 +5963,38 @@ function initScreenEditor(){
 // _scrPatColor: 表示時は APP_COLORS を順番で参照（追加時は randColor() を使用）
 function _scrPatColor(idx){ return APP_COLORS[idx % APP_COLORS.length]; }
 
+var _scrSbObserver = null;
+
+/** 画面一覧のサムネイルを、表示されたものだけ読み込む */
+function _scrLazyThumbs() {
+  if (_scrSbObserver) _scrSbObserver.disconnect();
+  var root = document.getElementById('scrUnifiedList');
+  if (!root || typeof IntersectionObserver !== 'function') {
+    // 非対応環境ではまとめて読み込む
+    document.querySelectorAll('#scrUnifiedList .scr-lazy-thumb').forEach(function(img) {
+      resolveImg(img.dataset.src).then(function(d){ if (d) img.src = d; });
+    });
+    return;
+  }
+  _scrSbObserver = new IntersectionObserver(function(entries) {
+    entries.forEach(function(en) {
+      if (!en.isIntersecting) return;
+      var img = en.target;
+      _scrSbObserver.unobserve(img);
+      if (img.dataset.loaded) return;
+      img.dataset.loaded = '1';
+      resolveImg(img.dataset.src).then(function(d){ if (d) img.src = d; }).catch(function(){});
+    });
+  }, { root: root, rootMargin: '150px' });
+
+  root.querySelectorAll('.scr-lazy-thumb').forEach(function(img) { _scrSbObserver.observe(img); });
+}
+
 function scrRenderUnifiedSidebar(){
-  // 描画後にドロップ先の登録とライブラリパネルの更新を行う
+  // 描画後にドロップ先の登録・サムネイル遅延読み込み・パネル更新を行う
   setTimeout(function() {
     if (typeof _scrLibSetupDrop === 'function') _scrLibSetupDrop();
+    _scrLazyThumbs();
   }, 0);
   var el=document.getElementById('scrUnifiedList');if(!el)return;
   var h='';
@@ -5926,14 +6041,10 @@ function scrRenderUnifiedSidebar(){
         var scrNum = 'SCR-' + String(si + 1).padStart(2, '0');
         // サムネイル（画像あり：img / なし：🖼️プレースホルダー）
         var thumbId = 'scrThumb_' + s.id;
+        // サムネイルは表示された行だけ読み込む（初回描画で全画像を読むと非常に重い）
         var thumb = s.imageSrc
-          ? '<img id="' + thumbId + '" src="" alt="">'
+          ? '<img id="' + thumbId + '" class="scr-lazy-thumb" data-src="' + s.imageSrc + '" src="" alt="">'
           : '<span style="font-size:10px;color:var(--muted);">🖼️</span>';
-        if (s.imageSrc) {
-          (function(_id,_src){ resolveImg(_src).then(function(d){
-            var el=document.getElementById(_id);if(el&&d)el.src=d;
-          });})(thumbId, s.imageSrc);
-        }
         h += '<div class="script-item scr-screen-row' + (active ? ' active' : '') + '"'
            + ' data-scr-id="' + s.id + '"'
            + ' onclick="scrSelectScreen(\'' + s.id + '\')"'
@@ -6206,6 +6317,7 @@ function _scrUpdateCenterCanvas(){
   }else{_scrResizeCenterOverlay();_scrDrawCenterOverlay(null);}
 }
 var _scrResizeRetry=0;
+var _scrRedrawPending=false;
 function _scrResizeCenterOverlay(){
   var img=document.getElementById('scrCenterImg'),ov=document.getElementById('scrCenterOverlay');
   if(!img||!ov)return;
@@ -6217,14 +6329,30 @@ function _scrResizeCenterOverlay(){
     requestAnimationFrame(_scrResizeCenterOverlay);return;
   }
   _scrResizeRetry=0;
+  var changed = (ov.width!==img.offsetWidth||ov.height!==img.offsetHeight);
   ov.width=img.offsetWidth;ov.height=img.offsetHeight;
   ov.style.width=img.offsetWidth+'px';ov.style.height=img.offsetHeight+'px';
+  // canvas はサイズ変更で中身が消えるため、確定したこのタイミングで描き直す。
+  // 再入を避けるためフラグで1回に絞る。
+  if(changed && !_scrRedrawPending){
+    _scrRedrawPending=true;
+    requestAnimationFrame(function(){ _scrRedrawPending=false; _scrDrawCenterOverlay(null); });
+  }
 }
 function _scrDrawCenterOverlay(previewRect){
   var ov=document.getElementById('scrCenterOverlay'),img=document.getElementById('scrCenterImg');
   if(!ov||!img)return;
-  if(ov.width!==img.offsetWidth||ov.height!==img.offsetHeight)_scrResizeCenterOverlay();
-  var W=ov.width,H=ov.height,ctx=ov.getContext('2d');ctx.clearRect(0,0,W,H);
+  // 画像の表示サイズが未確定のまま描くと、比率(0〜1)の座標が
+  // 別のサイズに対して展開されて意図しない位置に線が出る。
+  // サイズが確定するまで描画せず、確定後に呼び直す。
+  if(!img.offsetWidth||!img.offsetHeight){ _scrResizeCenterOverlay(); return; }
+  if(ov.width!==img.offsetWidth||ov.height!==img.offsetHeight){
+    _scrResizeCenterOverlay();
+    if(ov.width!==img.offsetWidth||ov.height!==img.offsetHeight) return;
+  }
+  var W=ov.width,H=ov.height,ctx=ov.getContext('2d');
+  ctx.clearRect(0,0,W,H);
+  ctx.setLineDash([]);   // 前回の破線設定が残らないようにする
   var pat=screenPatterns.find(function(p){return p.id===_scrCurrentPatId;});
   var scr=pat?pat.screens.find(function(s){return s.id===_scrSelScrId;}):null;
   if(scr&&scr.hotspots){
@@ -6281,6 +6409,7 @@ function _scrUpdateRightSidebar(){
 
   if(memoBar) memoBar.style.display='flex';
   if(memoEl)  memoEl.value=scr.note||'';
+  _scrMemoUpdateState();
   if(nameLbl){
     var i=pat.screens.findIndex(function(s){return s.id===_scrSelScrId;});
     nameLbl.textContent='SCR-'+String(i+1).padStart(2,'0')+' '+(scr.name||'（名称なし）');
@@ -6320,10 +6449,89 @@ function _scrCommitScrName(patId, scrId, name){
   scrRenderUnifiedSidebar();
   _scrUpdateRightSidebar();
 }
+/**
+ * メモの入力。
+ *  ・HS登録画面 … 画像ライブラリ側の「初期値」として保存する
+ *  ・パターン画面 … この画面だけの値として保存し、初期値から外れた印を付ける
+ *    （ホットスポットの遷移先と同じ「初期値＋上書き」方式）
+ */
 function scrRsUpdateMemo(){
+  var v = (document.getElementById('scrRsMemo')||{}).value || '';
+
+  if (_scrHsEditOn) {
+    if (!_imgLibHsItem) return;
+    _imgLibHsItem.note = v;
+    _imgLibBulkUpdate([{ id: _imgLibHsItem.id, fields: { note: v } }], function() {
+      _imgLibInvalidateMeta();
+      _scrSyncNotesFromLib(_imgLibHsItem.id, v);
+    });
+    return;
+  }
+
   var pat=screenPatterns.find(function(p){return p.id===_scrCurrentPatId;});if(!pat)return;
   var scr=pat.screens.find(function(s){return s.id===_scrSelScrId;});if(!scr)return;
-  scr.note=document.getElementById('scrRsMemo').value||'';scrSaveData();markDirty();
+  scr.note = v;
+  scr.noteOverride = true;          // 初期値から外れた
+  scrSaveData(); markDirty();
+  _scrMemoUpdateState();
+}
+
+/**
+ * ライブラリのメモを変更したとき、まだ上書きされていない画面に反映する。
+ * 上書き済み（noteOverride）の画面は触らない。
+ */
+function _scrSyncNotesFromLib(libId, note) {
+  var ref = 'lib:' + libId, n = 0;
+  screenPatterns.forEach(function(p) {
+    (p.screens || []).forEach(function(sc) {
+      if (sc.imageSrc !== ref || sc.noteOverride) return;
+      sc.note = note; n++;
+    });
+  });
+  if (n) { scrSaveData(); markDirty(); }
+  return n;
+}
+
+/** メモを画像ライブラリの初期値に戻す */
+function scrMemoResetToLib() {
+  var pat=screenPatterns.find(function(p){return p.id===_scrCurrentPatId;});if(!pat)return;
+  var scr=pat.screens.find(function(s){return s.id===_scrSelScrId;});if(!scr)return;
+  if (!scr.imageSrc || scr.imageSrc.indexOf('lib:') !== 0) return;
+  var libId = scr.imageSrc.slice(4);
+
+  imgLibGetAll().then(function(all) {
+    var item = (all || []).find(function(x){ return x.id === libId; });
+    var def  = (item && item.note) || '';
+    scr.note = def;
+    scr.noteOverride = false;
+    var el = document.getElementById('scrRsMemo');
+    if (el) el.value = def;
+    scrSaveData(); markDirty();
+    _scrMemoUpdateState();
+    toast(def ? '↩ 初期値に戻しました' : '↩ 初期値（未登録）に戻しました');
+  });
+}
+
+/** メモの状態表示（初期値のまま／上書き中）を更新する */
+function _scrMemoUpdateState() {
+  var st  = document.getElementById('scrMemoState');
+  var btn = document.getElementById('scrMemoReset');
+  if (!st || !btn) return;
+
+  if (_scrHsEditOn) {
+    st.textContent = '初期値として保存';
+    st.style.color = 'var(--accent-text)';
+    btn.style.display = 'none';
+    return;
+  }
+  var pat=screenPatterns.find(function(p){return p.id===_scrCurrentPatId;});
+  var scr=pat?pat.screens.find(function(s){return s.id===_scrSelScrId;}):null;
+  var isLib = !!(scr && scr.imageSrc && scr.imageSrc.indexOf('lib:') === 0);
+  var over  = !!(scr && scr.noteOverride);
+
+  st.textContent = !isLib ? '' : (over ? '✏️ この画面で上書き中' : '🔗 初期値のまま');
+  st.style.color = over ? '#a86400' : 'var(--text3)';
+  btn.style.display = (isLib && over) ? '' : 'none';
 }
 function scrRsImgUpload(e){
   var files=Array.from(e.target.files);if(!files.length)return;
@@ -6703,7 +6911,10 @@ function scrEnterHsEdit(libId) {
   var mb = document.getElementById('scrMemoBar');
   var mi = document.getElementById('scrRsMemo');
   if (mb) mb.style.display = 'flex';
-  if (mi) { mi.value = ''; mi.placeholder = 'ホットスポット登録中はメモを編集できません'; mi.disabled = true; }
+  if (mi) {
+    mi.disabled = false;
+    mi.placeholder = 'この画像の備考（初期値。追加した画面に引き継がれます）';
+  }
 
   ['scrCenterCanvas','scrCenterEmpty'].forEach(function(id) {
     var el = document.getElementById(id); if (el) el.style.display = 'none';
@@ -6716,6 +6927,9 @@ function scrEnterHsEdit(libId) {
     var nm = document.getElementById('scrCurScrName');
     if (nm) nm.textContent = '📍 ' + (item.folder ? '📁' + item.folder + '　' : '') + (item.name || item.id);
     _imgLibHsActivate(item);
+    var memoEl = document.getElementById('scrRsMemo');
+    if (memoEl) memoEl.value = item.note || '';
+    _scrMemoUpdateState();
     document.querySelectorAll('#scrLibList .scr-lib-row').forEach(function(r) {
       r.classList.toggle('is-editing', r.dataset.libId === libId);
     });
@@ -6734,7 +6948,7 @@ function scrExitHsEdit() {
   var ll = document.getElementById('scrLibList');
   if (ll) { ll.style.display = ''; ll.style.flex = '1'; ll.style.borderBottom = 'none'; }
 
-  // メモ欄を編集可能に戻す
+  // メモ欄をパターン用に戻す
   var mi = document.getElementById('scrRsMemo');
   if (mi) { mi.disabled = false; mi.placeholder = 'この画面の備考（screen.html に表示されます）'; }
 
@@ -7144,7 +7358,8 @@ function _scrLibAddToPattern(patId, libId, at) {
       id: _scrGenId(),
       name: full.name || libId,
       imageSrc: 'lib:' + libId,
-      note: '',
+      note: full.note || '',        // ライブラリのメモを初期値として引き継ぐ
+      noteOverride: false,
       hotspots: (full.hotspots || []).map(function(lh) { return _scrHsFromLib(lh); })
     };
     if (at != null && at >= 0 && at <= pat.screens.length) pat.screens.splice(at, 0, scr);
@@ -11145,6 +11360,8 @@ function _imgLibBulkUpdate(updates, cb) {
     });
     tx.oncomplete = function() {
       _imgLibInvalidateMeta();
+      // 画像そのものが変わった場合だけ書き出し対象にする
+      updates.forEach(function(u) { if (u.fields && u.fields.dataUrl) _imgLibMarkDirty(u.id); });
       // メモリキャッシュも同期
       updates.forEach(function(u) {
         var c = _imgLibAllItems.find(function(x) { return x.id === u.id; });
@@ -11555,10 +11772,10 @@ function _imgLibHsUpdateNav() {
   var i = _imgLibHsItem ? list.findIndex(function(x) { return x.id === _imgLibHsItem.id; }) : -1;
   var show = (i >= 0 && list.length > 1);
 
-  prev.style.display = show ? 'flex' : 'none';
-  next.style.display = show ? 'flex' : 'none';
-  if (lbl)  lbl.style.display  = show ? 'block' : 'none';
-  if (head) head.textContent   = show ? ((i + 1) + ' / ' + list.length) : '';
+  // display で出し分けるとホバー表示の CSS と競合するため、クラスで制御する
+  var host = document.getElementById('imgLibHsCanvasHost');
+  if (host) host.classList.toggle('has-nav', show);
+  if (head) head.textContent = show ? ((i + 1) + ' / ' + list.length) : '';
   if (show) {
     prev.disabled = (i <= 0);
     next.disabled = (i >= list.length - 1);
@@ -11567,22 +11784,10 @@ function _imgLibHsUpdateNav() {
 }
 
 /* ── キーボードショートカット ──
-   画面遷移タブ表示中：← / → で前後の画面
-   画像ライブラリのHSエディタ表示中：← / → で前後の画像 */
-document.addEventListener('keydown', function(e) {
-  if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
-  var t = e.target;
-  if (t && /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)) return;
-  if (t && t.isContentEditable) return;
-
-  var d = (e.key === 'ArrowRight') ? 1 : -1;
-
-  // HS登録中は ←→ で前後の画像へ移動できる
-  if (typeof _scrHsEditOn !== 'undefined' && _scrHsEditOn && _imgLibHsItem) {
-    e.preventDefault(); _imgLibHsGoRel(d); return;
-  }
-  // パターン側の ←→ 移動は廃止（＜＞ は画像ライブラリ内のみ）
-});
+   矢印キーによる画像の切り替えは廃止した。
+   HS登録画面では矢印キーが「選択中ホットスポットの微調整」に割り当てられており、
+   画像送りと干渉して意図せず別の画像へ移動してしまうため。
+   前後の画像へは、キャンバス左右の ＜ ＞ ボタンを使う。 */
 
 /* ===================================================================
    既存の画像追加処理を新パイプラインへ差し替え
