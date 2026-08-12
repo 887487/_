@@ -1218,7 +1218,7 @@ html[data-theme="dark"] .nav-arrow-btn { background: rgba(40,42,54,.9); }
 .scr-lib-menu-item:hover{background:var(--accent-lt);color:var(--accent-text);}
 .scr-lib-menu-sep{height:1px;background:var(--border);margin:4px 2px;}
 /* 行の選択・操作 */
-.scr-lib-cb{width:13px;height:13px;cursor:pointer;flex-shrink:0;accent-color:var(--accent-text);}
+.scr-lib-cb{width:15px;height:15px;cursor:pointer;flex-shrink:0;accent-color:var(--accent-text);margin:0 2px 0 0;}
 .scr-lib-row.is-selected{background:var(--accent-lt);}
 .scr-lib-more{
   flex-shrink:0;background:none;border:none;cursor:pointer;color:var(--text3);
@@ -1230,12 +1230,19 @@ html[data-theme="dark"] .nav-arrow-btn { background: rgba(40,42,54,.9); }
   color:var(--accent-text);background:var(--accent-lt);border-radius:8px;padding:0 4px;
 }
 /* パターン画面に統合した画像ライブラリ */
+/* D&D は廃止したので「掴める」見た目・挙動を残さない。
+   サムネイル画像はブラウザ既定でドラッグ可能なため明示的に無効化する。 */
 .scr-lib-row{
-  display:flex;align-items:center;gap:7px;padding:5px 8px;cursor:grab;
+  display:flex;align-items:center;gap:7px;padding:5px 8px;cursor:pointer;
   border-bottom:1px solid var(--border);user-select:none;
 }
 .scr-lib-row:hover{background:var(--accent-lt);}
-.scr-lib-row:active{cursor:grabbing;}
+.scr-lib-row img,
+.scr-lib-row .scr-lib-name{
+  -webkit-user-drag:none;
+  user-drag:none;
+  pointer-events:none;   /* 画像・名前の上でも行のクリック判定を優先する */
+}
 .scr-lib-thumb{
   width:42px;height:30px;object-fit:contain;flex-shrink:0;
   background:var(--surface2);border:1px solid var(--border);border-radius:3px;
@@ -1248,12 +1255,14 @@ html[data-theme="dark"] .nav-arrow-btn { background: rgba(40,42,54,.9); }
   display:inline-block;margin-left:5px;font-size:9px;font-weight:700;
   color:var(--accent-text);background:var(--accent-lt);border-radius:3px;padding:0 4px;
 }
+.scr-lib-row.is-current{
+  background:var(--surface2);
+  box-shadow:inset 3px 0 0 var(--text3);
+}
 .scr-lib-row.is-editing{
   background:var(--accent-lt);
   box-shadow:inset 3px 0 0 var(--accent);
 }
-/* ドロップ受け入れ中のハイライト */
-.scr-drop-active{outline:2px dashed var(--accent);outline-offset:-3px;background:var(--accent-lt);}
 
 /* パターン側HS：有効/無効スイッチ */
 .scr-hs-sw{position:relative;display:inline-block;width:30px;height:16px;flex-shrink:0;cursor:pointer;}
@@ -1728,15 +1737,19 @@ html[data-theme="dark"] .nav-arrow-btn { background: rgba(40,42,54,.9); }
 
       <!-- 検索・絞り込み -->
       <div style="padding:6px 8px;display:flex;flex-direction:column;gap:5px;border-bottom:1px solid var(--border);flex-shrink:0;" id="scrLibTools">
-        <input type="text" id="scrLibSearch" placeholder="画像名で検索" oninput="_scrLibRender()"
-               style="height:26px;padding:0 8px;font-size:11px;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text);">
+        <div style="display:flex;gap:5px;align-items:center;">
+          <input type="text" id="scrLibSearch" placeholder="画像名で検索" oninput="_scrLibRender()"
+                 style="flex:1;min-width:0;height:26px;padding:0 8px;font-size:11px;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text);">
+          <button class="btn btn-secondary" style="font-size:11px;height:26px;padding:0 9px;flex-shrink:0;"
+                  onclick="_scrLibClearSearch()" title="検索をクリア">✕</button>
+        </div>
         <div style="display:flex;gap:5px;align-items:center;">
           <select id="scrLibFolder" onchange="_scrLibRender()"
                   style="flex:1;min-width:0;height:26px;font-size:11px;font-family:inherit;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text);">
             <option value="">📁 すべて</option>
           </select>
           <label style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--text3);white-space:nowrap;cursor:pointer;">
-            <input type="checkbox" id="scrLibSelAll" onchange="_scrLibToggleAll(this.checked)" style="width:13px;height:13px;cursor:pointer;">全選択
+            <input type="checkbox" id="scrLibSelAll" onchange="_scrLibToggleAll(this.checked)" style="width:15px;height:15px;cursor:pointer;">全選択
           </label>
         </div>
         <!-- 選択ツールバー -->
@@ -1773,9 +1786,39 @@ html[data-theme="dark"] .nav-arrow-btn { background: rgba(40,42,54,.9); }
       </div>
 
       <div style="padding:5px 8px;border-top:1px solid var(--border);font-size:10px;color:var(--text3);line-height:1.5;flex-shrink:0;">
-        クリック：HS登録／ダブルクリック：末尾に追加／ドラッグ：任意の位置に追加／右クリック：操作メニュー
+        クリック：HS登録／ダブルクリック：画面として追加／右クリック：操作メニュー
       </div>
     </aside>
+
+    <!-- フォルダ移動モーダル -->
+    <div id="scrFolderModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:8900;align-items:center;justify-content:center;"
+         onclick="if(event.target===this)_imgLibCloseFolderModal()">
+      <div style="background:var(--surface);border-radius:14px;width:min(94vw,440px);display:flex;flex-direction:column;box-shadow:0 24px 64px rgba(0,0,0,.3);overflow:hidden;">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:13px 18px;border-bottom:1px solid var(--border);">
+          <span style="font-size:14px;font-weight:700;">📁 フォルダへ移動</span>
+          <button onclick="_imgLibCloseFolderModal()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text3);">✕</button>
+        </div>
+        <div style="padding:16px 18px;display:flex;flex-direction:column;gap:12px;">
+          <div id="scrFolderModalInfo" style="font-size:12px;color:var(--text2);line-height:1.7;"></div>
+          <div>
+            <div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:5px;">移動先</div>
+            <select id="scrFolderModalSel" onchange="_imgLibFolderModalChange()"
+                    style="width:100%;height:30px;font-size:12px;font-family:inherit;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);"></select>
+          </div>
+          <div id="scrFolderModalNewWrap" style="display:none;">
+            <div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:5px;">新しいフォルダ名</div>
+            <input type="text" id="scrFolderModalNew" placeholder="例）ログイン"
+                   onkeydown="if(event.key==='Enter')_imgLibRunFolderMove()"
+                   style="width:100%;box-sizing:border-box;height:30px;padding:0 9px;font-size:12px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);">
+            <div style="font-size:10px;color:var(--text3);margin-top:4px;">／ \ : * ? " &lt; &gt; | は使えません（自動で _ に置き換わります）</div>
+          </div>
+        </div>
+        <div style="padding:11px 18px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;">
+          <button class="btn btn-secondary" onclick="_imgLibCloseFolderModal()" style="font-size:12px;">キャンセル</button>
+          <button class="btn btn-primary" onclick="_imgLibRunFolderMove()" style="font-size:12px;">移動する</button>
+        </div>
+      </div>
+    </div>
 
     <!-- 行の操作メニュー -->
     <div id="scrLibRowMenu" style="display:none;position:fixed;z-index:950;background:var(--surface);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow-md);padding:4px;min-width:180px;">
@@ -5278,8 +5321,13 @@ function imgLibGetOne(id) {
 function imgLibGetAllMeta(force) {
   if (!force && _imgLibMetaCache) return Promise.resolve(_imgLibMetaCache);
 
+  // screen-data.js の library は「前回保存時のスナップショット」でしかない。
+  // 保存後に編集（リネーム・フォルダ移動・削除など）があった状態でこれを使うと、
+  //   ・リロードすると編集前の名前に戻って見える
+  //   ・その状態で保存すると古い名前が library に書き戻され、編集が失われる
+  // という不整合が起きる。編集済み（_imgLibMetaStale）のときは必ず IndexedDB を読む。
   var sd = window.APP_SCREEN_DATA;
-  if (!force && sd && Array.isArray(sd.library) && sd.library.length) {
+  if (!force && !_imgLibMetaStale && sd && Array.isArray(sd.library) && sd.library.length) {
     _imgLibMetaCache = sd.library.map(function(m) {
       return {
         id: m.id, name: m.name || m.id,
@@ -5303,8 +5351,9 @@ function imgLibGetAllMeta(force) {
         if (!cur) { _imgLibMetaCache = out; resolve(out); return; }
         var v = cur.value || {};
         out.push({
-          id: v.id, name: v.name,
+          id: v.id, name: v.name || v.id,
           folder: v.folder || '',
+          note: v.note || '',          // メモが落ちると保存時に消えるので必ず拾う
           hotspots: v.hotspots || [],
           hsLinkFrom: v.hsLinkFrom || null,
           _metaOnly: true
@@ -5316,8 +5365,58 @@ function imgLibGetAllMeta(force) {
   });
 }
 
-/** メタのキャッシュを捨てる（追加・削除・リネームの後に呼ぶ） */
-function _imgLibInvalidateMeta() { _imgLibMetaCache = null; }
+// 前回保存以降に画像ライブラリを編集したか。
+// true の間は screen-data.js の library を信用せず IndexedDB を読む。
+var _imgLibMetaStale = false;
+
+/** メタのキャッシュを捨てる（追加・削除・リネーム・フォルダ移動などの後に呼ぶ） */
+function _imgLibInvalidateMeta(markStale) {
+  _imgLibMetaCache = null;
+  if (markStale !== false) {
+    _imgLibMetaStale = true;
+    try { window.idbSetAppData('imgLibMetaStale', true); } catch (e) {}
+  }
+}
+
+/** 保存が完了して library を作り直したら、編集済みフラグを下ろす */
+function _imgLibMetaSynced() {
+  _imgLibMetaStale = false;
+  try { window.idbSetAppData('imgLibMetaStale', false); } catch (e) {}
+}
+
+// リロードしても編集済みかどうかを引き継ぐ。
+// あわせて、library と IndexedDB の内容が食い違っていないかを起動時に照合する。
+// （フラグ導入前に編集して保存し損ねたデータを救済するため）
+(function _restoreMetaStale() {
+  if (!window.idbGetAppData) return;
+  window.idbGetAppData('imgLibMetaStale').then(function(v) {
+    if (v) { _imgLibMetaStale = true; return; }
+    var sd = window.APP_SCREEN_DATA;
+    if (!sd || !Array.isArray(sd.library) || !sd.library.length) return;
+
+    // 名前・フォルダだけを突き合わせる（dataUrl は読まない）
+    _imgLibOpen().then(function(db) {
+      var tx  = db.transaction('imageLib', 'readonly');
+      var req = tx.objectStore('imageLib').openCursor();
+      var byId = {};
+      sd.library.forEach(function(m) { byId[m.id] = m; });
+      var diff = false;
+      req.onsuccess = function(e) {
+        var cur = e.target.result;
+        if (!cur) {
+          if (diff) {
+            console.info('[imageLib] 保存されていない編集を検出したため IndexedDB を優先します');
+            _imgLibInvalidateMeta();
+          }
+          return;
+        }
+        var v2 = cur.value || {}, m = byId[v2.id];
+        if (m && ((v2.name || v2.id) !== (m.name || m.id) || (v2.folder || '') !== (m.folder || ''))) diff = true;
+        cur.continue();
+      };
+    }).catch(function(){});
+  }).catch(function(){});
+})();
 
 /** 1件だけ dataUrl 込みで取得する（表示直前に呼ぶ） */
 function imgLibGetOne(libId) {
@@ -5481,7 +5580,27 @@ function _exportScreenToFiles() {
 
     // メタ情報（軽い）で一覧を組み立て、画像の実データは
     // 「変更があったもの」「ファイルがまだ無いもの」だけを読み書きする。
-    return imgLibGetAllMeta().then(function(metaItems) {
+    // 実際に screen-images/ に存在するファイル名を集める。
+    // 「library にパスが書いてある＝ファイルがある」とは限らない（別PCから
+    // フォルダを受け取った直後や、ファイルだけ削除された場合など）。
+    // ここを確認しないと、書き出しを省略して永遠に生成されない。
+    var existingP = window.AppFS.listDirs(SCREEN_IMG_DIR).then(function(subs) {
+      var dirs = [''].concat(subs || []);
+      return Promise.all(dirs.map(function(sub) {
+        var dp = SCREEN_IMG_DIR + (sub ? '/' + sub : '');
+        return window.AppFS.listFiles(dp).then(function(names) {
+          return (names || []).map(function(n) { return dp + '/' + n; });
+        }).catch(function() { return []; });
+      })).then(function(arrs) {
+        var set = {};
+        arrs.forEach(function(a) { a.forEach(function(p) { set[p] = 1; }); });
+        return set;
+      });
+    }).catch(function() { return null; });   // 取得できない場合は判定に使わない
+
+    return Promise.all([imgLibGetAllMeta(), existingP]).then(function(res) {
+      var metaItems = res[0];
+      var existing  = res[1];
       var imgMap  = {};   // id → ファイルパス
       var library = [];   // ライブラリのメタ情報（別PCで復元するために必要）
       var writes  = [];
@@ -5495,7 +5614,9 @@ function _exportScreenToFiles() {
         // 既存ファイルのパスが取れる場合だけ再書き出しを省略する。
         var prev = window.screenImgFileSrc(item.id);
         var changed = _imgLibDirty.has(item.id);
-        var path = (!changed && prev) ? prev : null;
+        // 実ファイルが確認できた場合だけ書き出しを省略する
+        var fileOk = prev && (!existing || existing[prev]);
+        var path = (!changed && fileOk) ? prev : null;
 
         if (!path) needData.push(item.id);
         else { imgMap[item.id] = path; keepFiles[path] = true; }
@@ -5586,6 +5707,7 @@ function _exportScreenToFiles() {
               // ── ⑤ IDB にも反映して screen.html と同期させる ──
               window._SCREEN_IMG_MAP = imgMap;
               _imgLibClearDirty();   // 書き出し済みなので変更フラグを落とす
+              _imgLibMetaSynced();   // library を最新化したので編集済みフラグも落とす
               return window.idbSetAppData('screenSavedAt', savedAt)
                 .then(function() { return _idbPutScreenPatterns(pats || []); })
                 .then(function() { return 'file'; })
@@ -6000,7 +6122,6 @@ function initScreenEditor(){
   }
   // 右パネルの画像ライブラリを初期化
   if (typeof _scrLibRender === 'function') _scrLibRender();
-  if (typeof _scrLibSetupDrop === 'function') _scrLibSetupDrop();
   scrRenderUnifiedSidebar();
   _scrUpdateCenterCanvas();
   _scrUpdateRightSidebar();
@@ -6043,7 +6164,6 @@ function _scrLazyThumbs() {
 function scrRenderUnifiedSidebar(){
   // 描画後にドロップ先の登録・サムネイル遅延読み込み・パネル更新を行う
   setTimeout(function() {
-    if (typeof _scrLibSetupDrop === 'function') _scrLibSetupDrop();
     _scrLazyThumbs();
   }, 0);
   var el=document.getElementById('scrUnifiedList');if(!el)return;
@@ -6205,6 +6325,67 @@ function scrSelectScreen(scrId){
   scrRenderUnifiedSidebar();
   _scrUpdateCenterCanvas();
   _scrUpdateRightSidebar();
+  _scrLibFocusCurrent();   // 右パネルで対応する画像を強調してスクロール
+}
+
+/**
+ * いま選択している画面が使っている画像を、右パネルの一覧で強調表示する。
+ * 絞り込みで一覧に出ていない場合は、絞り込みを解除してから合わせる。
+ */
+function _scrLibFocusCurrent() {
+  if (_scrHsEditOn) return;   // HS登録中は編集対象の強調を優先する
+  if (!_scrSelScrId) return;
+
+  // 選択中の画面は現在のパターン以外にある場合もあるため、全パターンから探す。
+  // （_scrCurrentPatId だけを見ていると別パターンの画面を選んだときに見つからない）
+  var scr = null;
+  for (var i = 0; i < screenPatterns.length; i++) {
+    var f = (screenPatterns[i].screens || []).find(function(x){ return x.id === _scrSelScrId; });
+    if (f) { scr = f; break; }
+  }
+  if (!scr || !scr.imageSrc || scr.imageSrc.indexOf('lib:') !== 0) {
+    document.querySelectorAll('#scrLibList .scr-lib-row').forEach(function(r) {
+      r.classList.remove('is-current');
+    });
+    return;
+  }
+  var libId = scr.imageSrc.slice(4);
+  _scrLibCurrentId = libId;   // 再描画後もこのIDを強調し続ける
+
+  var apply = function() {
+    var target = null;
+    var rows = document.querySelectorAll('#scrLibList .scr-lib-row');
+    rows.forEach(function(r) {
+      var on = (r.dataset.libId === libId);
+      r.classList.toggle('is-current', on);
+      if (on) target = r;
+    });
+    if (target) target.scrollIntoView({ block: 'nearest' });
+    return { hit: !!target, rendered: rows.length > 0 };
+  };
+
+  var r1 = apply();
+  if (r1.hit) return;
+
+  // 一覧がまだ描画されていない（初回読み込み中）場合は、描画を待って再試行する
+  if (!r1.rendered) {
+    var tries = 0;
+    var wait = setInterval(function() {
+      var r = apply();
+      if (r.hit || ++tries > 20) clearInterval(wait);
+    }, 100);
+    return;
+  }
+
+  // 描画済みなのに無い＝検索やフォルダで絞り込まれている。条件を外して出し直す。
+  var q = document.getElementById('scrLibSearch');
+  var f2 = document.getElementById('scrLibFolder');
+  var changed = false;
+  if (q && q.value)  { q.value = '';  changed = true; }
+  if (f2 && f2.value){ f2.value = ''; changed = true; }
+  if (!changed) return;
+  _scrLibRender();
+  setTimeout(apply, 0);
 }
 
 // パターン追加（add-cat-btn から呼ばれる）
@@ -6783,6 +6964,7 @@ function scrCropSelClear(){_scrCropSel=null;var ab=document.getElementById('scrA
 //   ・サムネイルは表示されたものだけ遅延読み込みする（一覧の初期表示を軽くする）
 // ===================================================================
 var _scrLibObserver = null;
+var _scrLibCurrentId = null;  // パターンで選択中の画面が使っている画像ID
 var _imgLibLoaded  = false;   // 一度でも読み込んだか
 var _imgLibLoading = false;   // 読み込み中か
 
@@ -6821,14 +7003,20 @@ function _scrLibRender() {
   // フォルダ選択肢を更新
   var fSel = document.getElementById('scrLibFolder');
   if (fSel) {
-    var set = {};
-    _imgLibAllItems.forEach(function(it) { if (it.folder) set[it.folder] = 1; });
-    var names = Object.keys(set).sort(function(a, b){ return _imgLibCollator.compare(a, b); });
+    // フォルダごとの件数を数えてプルダウンに添える
+    var cnt = {}, nRoot = 0;
+    _imgLibAllItems.forEach(function(it) {
+      if (it.folder) cnt[it.folder] = (cnt[it.folder] || 0) + 1;
+      else nRoot++;
+    });
+    var names = Object.keys(cnt).sort(function(a, b){ return _imgLibCollator.compare(a, b); });
     var keep = fSel.value;
-    fSel.innerHTML = '<option value="">📁 すべて</option>'
-      + '<option value="__root__">📂 未分類</option>'
-      + names.map(function(n) { return '<option value="' + esc(n) + '">📁 ' + esc(n) + '</option>'; }).join('');
-    fSel.value = (keep === '__root__' || set[keep]) ? keep : '';
+    fSel.innerHTML = '<option value="">📁 すべて（' + _imgLibAllItems.length + '）</option>'
+      + (nRoot ? '<option value="__root__">📂 未分類（' + nRoot + '）</option>' : '')
+      + names.map(function(n) {
+          return '<option value="' + esc(n) + '">📁 ' + esc(n) + '（' + cnt[n] + '）</option>';
+        }).join('');
+    fSel.value = (keep === '__root__' || cnt[keep]) ? keep : '';
     fv = fSel.value;
   }
 
@@ -6860,16 +7048,16 @@ function _scrLibRender() {
 
   listEl.innerHTML = list.map(function(it) {
     var hsN = (it.hotspots || []).length;
-    return '<div class="scr-lib-row" draggable="true" data-lib-id="' + it.id + '"'
-      + ' ondragstart="_scrLibDragStart(event,\'' + it.id + '\')"'
+    // D&D は廃止（チェックが入れにくくなるため）。追加はダブルクリックで行う。
+    return '<div class="scr-lib-row" data-lib-id="' + it.id + '" draggable="false"'
+      + ' ondragstart="return false"'
       + ' onclick="_scrLibRowClick(\'' + it.id + '\')"'
       + ' ondblclick="_scrLibRowDblClick(\'' + it.id + '\')"'
       + ' oncontextmenu="_scrLibRowMenu(event,\'' + it.id + '\')"'
-      + ' title="クリック：HS登録／ダブルクリック：追加／ドラッグ：任意の位置へ／右クリック：メニュー">'
-      + '<input type="checkbox" class="scr-lib-cb" data-lib-id="' + it.id + '" draggable="false"'
-      +   ' onmousedown="event.stopPropagation()"'
+      + ' title="クリック：HS登録／ダブルクリック：画面として追加／右クリック：メニュー">'
+      + '<input type="checkbox" class="scr-lib-cb" data-lib-id="' + it.id + '"'
       +   ' onclick="event.stopPropagation();_scrLibToggleOne(\'' + it.id + '\',this.checked)">'
-      + '<img class="scr-lib-thumb" data-lib-id="' + it.id + '" alt="">'
+      + '<img class="scr-lib-thumb" data-lib-id="' + it.id + '" alt="" draggable="false" ondragstart="return false">'
       + '<span class="scr-lib-name">' + esc(it.name || it.id)
       + (hsN ? '<span class="scr-lib-hs">📍' + hsN + '</span>' : '')
       + (it.folder ? '<span class="scr-lib-folder">📁' + esc(it.folder) + '</span>' : '')
@@ -6880,6 +7068,12 @@ function _scrLibRender() {
 
   _scrLibLazyThumbs();
   _scrLibSyncSelection();
+  // 再描画で強調が消えるため付け直す
+  if (!_scrHsEditOn && _scrLibCurrentId) {
+    document.querySelectorAll('#scrLibList .scr-lib-row').forEach(function(r) {
+      r.classList.toggle('is-current', r.dataset.libId === _scrLibCurrentId);
+    });
+  }
 }
 
 /** 表示された行のサムネイルだけ読み込む */
@@ -7002,6 +7196,7 @@ function scrEnterHsEdit(libId) {
     _scrMemoUpdateState();
     document.querySelectorAll('#scrLibList .scr-lib-row').forEach(function(r) {
       r.classList.toggle('is-editing', r.dataset.libId === libId);
+      r.classList.remove('is-current');   // 編集中の強調と重ならないようにする
     });
   });
 }
@@ -7031,108 +7226,11 @@ function scrExitHsEdit() {
   _scrUpdateCenterCanvas();
   _scrUpdateRightSidebar();
   _scrLibRender();
+  _scrLibFocusCurrent();   // 選択中の画面に対応する行へ戻す
   // HS登録側で変更した倍率をパターン側にも反映する
   setTimeout(_scrApplyZoom, 0);
 }
 
-/** ドロップ先を登録する（キャンバス領域・画面一覧） */
-function _scrLibSetupDrop() {
-  var center = document.getElementById('scrCenterMain');
-  if (center && !center._libDropBound) {
-    center._libDropBound = true;
-    center.addEventListener('dragover', function(e) {
-      if (!window._scrLibDragId) return;
-      e.preventDefault(); e.dataTransfer.dropEffect = 'copy';
-      center.classList.add('scr-drop-active');
-    });
-    center.addEventListener('dragleave', function(e) {
-      // 子要素へ移っただけの dragleave では消さない。領域外に出たときだけ消す。
-      if (!center.contains(e.relatedTarget)) center.classList.remove('scr-drop-active');
-    });
-    center.addEventListener('drop', function(e) {
-      center.classList.remove('scr-drop-active');
-      var id = _scrLibDropId(e);
-      if (!id) return;
-      e.preventDefault();
-      if (!_scrCurrentPatId) { toast('⚠️ 先にパターンを選択してください'); return; }
-      _scrLibAddToPattern(_scrCurrentPatId, id, -1);
-      window._scrLibDragId = null;
-    });
-  }
-
-  // 画面一覧側は描画のたびに作り直されるので、毎回登録する
-  document.querySelectorAll('#scrUnifiedList .cat-block').forEach(function(block) {
-    var patId = block.dataset.patId;
-    if (!patId || block._libDropBound) return;
-    block._libDropBound = true;
-    block.addEventListener('dragover', function(e) {
-      if (!window._scrLibDragId) return;
-      e.preventDefault(); e.dataTransfer.dropEffect = 'copy';
-      block.classList.add('scr-drop-active');
-    });
-    block.addEventListener('dragleave', function(e) {
-      if (!block.contains(e.relatedTarget)) block.classList.remove('scr-drop-active');
-    });
-    block.addEventListener('drop', function(e) {
-      block.classList.remove('scr-drop-active');
-      var id = _scrLibDropId(e);
-      if (!id) return;
-      e.preventDefault(); e.stopPropagation();
-
-      // ドロップ位置の画面の直前に挿入する（画面の上でなければ末尾）
-      var at = -1;
-      var row = e.target.closest ? e.target.closest('.scr-screen-row') : null;
-      if (row) {
-        var pat = screenPatterns.find(function(p){ return p.id === patId; });
-        var i = pat ? pat.screens.findIndex(function(x){ return x.id === row.dataset.scrId; }) : -1;
-        if (i >= 0) {
-          var r = row.getBoundingClientRect();
-          at = (e.clientY > r.top + r.height / 2) ? i + 1 : i;
-        }
-      }
-      _scrLibAddToPattern(patId, id, at);
-      window._scrLibDragId = null;
-    });
-  });
-}
-
-/** ドラッグ開始：画像IDを載せる */
-function _scrLibDragStart(e, id) {
-  try {
-    e.dataTransfer.setData('text/x-imglib-id', id);
-    e.dataTransfer.setData('text/plain', 'lib:' + id);
-    e.dataTransfer.effectAllowed = 'copy';
-  } catch (err) {}
-  window._scrLibDragId = id;
-}
-
-/** ドラッグ終了時（成功・キャンセル問わず）にハイライトを全消しする */
-function _scrLibClearDropHighlight() {
-  document.querySelectorAll('.scr-drop-active').forEach(function(el) {
-    el.classList.remove('scr-drop-active');
-  });
-  window._scrLibDragId = null;
-}
-document.addEventListener('dragend',  _scrLibClearDropHighlight);
-document.addEventListener('drop',     _scrLibClearDropHighlight);
-document.addEventListener('mouseup',  function() {
-  if (window._scrLibDragId) _scrLibClearDropHighlight();
-});
-document.addEventListener('keydown', function(e) {
-  if (e.key === 'Escape') _scrLibClearDropHighlight();
-});
-
-/** ドロップされた画像IDを取り出す */
-function _scrLibDropId(e) {
-  var id = '';
-  try { id = e.dataTransfer.getData('text/x-imglib-id') || ''; } catch (err) {}
-  if (!id) {
-    var t = '';
-    try { t = e.dataTransfer.getData('text/plain') || ''; } catch (err) {}
-    if (t.indexOf('lib:') === 0) id = t.slice(4);
-  }
-  return id || window._scrLibDragId || '';
-}
 
 // ── 右パネルの幅可変 ──
 (function _scrLibInitResizer() {
@@ -8679,6 +8777,7 @@ function _imgLibHsSave(cb, silent) {
       tx.objectStore('imageLib').put(rec, _imgLibHsItem.id);
     };
     tx.oncomplete = function() {
+      _imgLibInvalidateMeta();   // ホットスポットも library に含まれるため
       _imgLibHsItem.hotspots = JSON.parse(JSON.stringify(_imgLibHsList));
       var cached = _imgLibAllItems.find(function(x){ return x.id === _imgLibHsItem.id; });
       if (cached) cached.hotspots = _imgLibHsItem.hotspots;
@@ -8689,7 +8788,7 @@ function _imgLibHsSave(cb, silent) {
         toast('✅ ホットスポットを保存しました（' + _imgLibHsList.length + '件）'
           + (synced > 0 ? '　画面 ' + synced + '件に同期' : ''));
       }
-      _imgLibFilter(); // ボタン表示を更新
+      _scrLibRender(); // ボタン表示を更新
       if (typeof cb === 'function') cb();
     };
   });
@@ -9047,40 +9146,28 @@ function _imgLibHsSetupDrag() {
 /**
  * ライブラリを再読み込みして描画する。
  * 削除・統合の直後に呼ばれるため、必ずキャッシュを破棄して IndexedDB から読み直す。
- * （検索の絞り込みは _imgLibFilter() が担当し、そちらはキャッシュを使う）
+ * （検索の絞り込みは _scrLibRender() が担当する）
  */
 function _imgLibRender() {
+  // キャッシュを捨てて読み直し、右パネルを描き直す
   _imgLibAllItems = []; _imgLibLoaded = false;
-  // 消えた画像を掴んだままにしないよう、選択状態とHSエディタを掃除する
+  _imgLibInvalidateMeta();
   if (_imgLibSelectedIds) _imgLibSelectedIds.clear();
-  _imgLibFilter(function(items) {
+
+  _imgLibLoad(function(items) {
+    _imgLibAllItems = items || [];
+    _imgLibLoaded   = true;
+    _imgLibLoading  = false;
+    _scrLibRender();
     _imgLibUpdateSelectionUI();
     // HSエディタで編集中の画像が削除されていたらエディタを閉じる
-    if (_imgLibHsItem && !items.some(function(x){ return x.id === _imgLibHsItem.id; })) {
+    if (_imgLibHsItem && !_imgLibAllItems.some(function(x){ return x.id === _imgLibHsItem.id; })) {
       _imgLibHsDeactivate();
     }
   });
 }
 
-// 現在の検索クエリで絞り込んでグリッドを描画する
 var _imgLibAllItems = []; // キャッシュ（再フィルター用）
-
-function _imgLibFilter(cb) {
-  var query = (document.getElementById('imgLibSearch')||{}).value || '';
-  query = query.trim().toLowerCase();
-
-  // items が未ロードなら取得してから描画
-  if (!_imgLibAllItems.length) {
-    _imgLibLoad(function(items){
-      _imgLibAllItems = items;
-      _imgLibDraw(items, query);
-      if (typeof cb === 'function') cb(items);
-    });
-  } else {
-    _imgLibDraw(_imgLibAllItems, query);
-    if (typeof cb === 'function') cb(_imgLibAllItems);
-  }
-}
 
 var _imgLibHydrated = false;
 
@@ -9101,7 +9188,8 @@ function _imgLibLoad(cb) {
     return 0;
   }).then(function(n) {
     _imgLibHydrated = true;
-    if (n) { console.info('[imageLib] screen-data.js から ' + n + ' 件を復元しました'); _imgLibInvalidateMeta(); }
+    // 復元は library の内容を IDB に入れ直しただけなので「編集」ではない
+    if (n) { console.info('[imageLib] screen-data.js から ' + n + ' 件を復元しました'); _imgLibInvalidateMeta(false); }
     return imgLibGetAllMeta();
   }).then(function(items) {
     cb(items || []);
@@ -9114,9 +9202,16 @@ function _imgLibLoad(cb) {
 // 画像ライブラリ複数選択状態
 var _imgLibSelectedIds = new Set();
 
+/** 画像名の検索欄を空にする */
+function _scrLibClearSearch() {
+  var el = document.getElementById('scrLibSearch');
+  if (el) { el.value = ''; el.focus(); }
+  _scrLibRender();
+}
+
 /** フォルダ一覧を集めてプルダウンを更新する */
 function _imgLibRefreshFolderSel(items) {
-  var sel = document.getElementById('imgLibFolderSel');
+  var sel = document.getElementById('scrLibFolder');
   if (!sel) return;
   var cur = sel.value;
   var set = {};
@@ -9135,7 +9230,7 @@ function _imgLibRefreshFolderSel(items) {
 
 /** 絞り込み中のフォルダを一括リネームする */
 function _imgLibRenameFolder() {
-  var sel = document.getElementById('imgLibFolderSel');
+  var sel = document.getElementById('scrLibFolder');
   var cur = sel ? sel.value : '';
   if (!cur || cur === '__root__') {
     toast('⚠️ 名前を変更したいフォルダを選んでください');
@@ -9159,37 +9254,98 @@ function _imgLibRenameFolder() {
   _imgLibBulkUpdate(updates, function() {
     targets.forEach(function(it) { it.folder = next; });
     if (sel) sel.value = next;
-    _imgLibFilter();
+    _scrLibRender();
     toast('✏️ 「' + cur + '」→「' + next + '」に変更しました（' + targets.length + ' 件）');
   });
 }
 
 /** 選択中の画像をフォルダへ移動する（空入力＝未分類に戻す） */
+/** フォルダ移動モーダルを開く（既存フォルダから選択できる） */
 function _imgLibMoveToFolder() {
   var ids = Array.from(_imgLibSelectedIds);
   if (!ids.length) { toast('⚠️ 画像を選択してください'); return; }
 
-  // 選択中の画像が今どこに入っているか
   var inFolder = (_imgLibAllItems || []).filter(function(it) {
     return ids.indexOf(it.id) >= 0 && it.folder;
   }).length;
 
-  var existing = {};
-  (_imgLibAllItems || []).forEach(function(it) { if (it.folder) existing[it.folder] = 1; });
-  var hint = Object.keys(existing).sort(function(a, b){ return _imgLibCollator.compare(a, b); }).join(' / ');
+  // 既存フォルダを件数つきで集める
+  var cnt = {};
+  (_imgLibAllItems || []).forEach(function(it) {
+    if (it.folder) cnt[it.folder] = (cnt[it.folder] || 0) + 1;
+  });
+  var names = Object.keys(cnt).sort(function(a, b){ return _imgLibCollator.compare(a, b); });
 
-  var msg = ids.length + ' 件のフォルダを変更します。\n\n'
-          + '・フォルダ名を入力 → そのフォルダへ移動\n'
-          + '・空欄のまま OK → 未分類に戻す（フォルダ解除）'
-          + (inFolder ? '\n\n※ うち ' + inFolder + ' 件は現在フォルダに入っています' : '')
-          + (hint ? '\n\n既存フォルダ： ' + hint : '');
+  // 選択中が全部同じフォルダなら、それを初期選択にする
+  var cur = null, same = true;
+  ids.forEach(function(id) {
+    var it = (_imgLibAllItems || []).find(function(x){ return x.id === id; });
+    var f = (it && it.folder) || '';
+    if (cur === null) cur = f; else if (cur !== f) same = false;
+  });
+  if (!same) cur = null;
 
-  var name = prompt(msg, '');
-  if (name === null) return;   // キャンセル
+  var info = document.getElementById('scrFolderModalInfo');
+  if (info) {
+    info.innerHTML = '<strong>' + ids.length + ' 件</strong>の画像を移動します。'
+      + (inFolder ? '<br>うち ' + inFolder + ' 件は現在フォルダに入っています。' : '');
+  }
 
-  var folder = _imgLibSafeFolder(name);
+  var sel = document.getElementById('scrFolderModalSel');
+  if (sel) {
+    sel.innerHTML = '<option value="">📂 未分類（フォルダから出す）</option>'
+      + names.map(function(n) {
+          return '<option value="' + esc(n) + '"' + (cur === n ? ' selected' : '') + '>📁 ' + esc(n) + '（' + cnt[n] + '）</option>';
+        }).join('')
+      + '<option value="__new__">➕ 新しいフォルダを作成…</option>';
+    if (cur === null || cur === '') sel.value = (cur === '') ? '' : (names.length ? sel.value : '');
+  }
 
-  // 解除は取り消せないので確認する
+  var nw = document.getElementById('scrFolderModalNewWrap');
+  if (nw) nw.style.display = 'none';
+  var ni = document.getElementById('scrFolderModalNew');
+  if (ni) ni.value = '';
+
+  document.getElementById('scrFolderModal').style.display = 'flex';
+}
+
+function _imgLibCloseFolderModal() {
+  var m = document.getElementById('scrFolderModal');
+  if (m) m.style.display = 'none';
+}
+
+/** 「新しいフォルダを作成」を選んだときだけ入力欄を出す */
+function _imgLibFolderModalChange() {
+  var sel = document.getElementById('scrFolderModalSel');
+  var nw  = document.getElementById('scrFolderModalNewWrap');
+  var ni  = document.getElementById('scrFolderModalNew');
+  if (!sel || !nw) return;
+  var isNew = (sel.value === '__new__');
+  nw.style.display = isNew ? '' : 'none';
+  if (isNew && ni) setTimeout(function(){ ni.focus(); }, 0);
+}
+
+/** 移動を実行する */
+function _imgLibRunFolderMove() {
+  var ids = Array.from(_imgLibSelectedIds);
+  if (!ids.length) { _imgLibCloseFolderModal(); return; }
+
+  var sel = document.getElementById('scrFolderModalSel');
+  var val = sel ? sel.value : '';
+  var folder;
+
+  if (val === '__new__') {
+    var ni = document.getElementById('scrFolderModalNew');
+    folder = _imgLibSafeFolder(ni ? ni.value : '');
+    if (!folder) { toast('⚠️ フォルダ名を入力してください'); if (ni) ni.focus(); return; }
+  } else {
+    folder = _imgLibSafeFolder(val);
+  }
+
+  // 未分類に戻すのは取り消せないので確認する
+  var inFolder = (_imgLibAllItems || []).filter(function(it) {
+    return ids.indexOf(it.id) >= 0 && it.folder;
+  }).length;
   if (!folder && inFolder) {
     if (!confirm(inFolder + ' 件のフォルダを解除して未分類に戻します。よろしいですか？')) return;
   }
@@ -9198,15 +9354,17 @@ function _imgLibMoveToFolder() {
   _imgLibBulkUpdate(updates, function() {
     (_imgLibAllItems || []).forEach(function(it) {
       if (ids.indexOf(it.id) >= 0) it.folder = folder;
+      // フォルダが変わると保存先パスも変わるので書き出し対象にする
+      if (ids.indexOf(it.id) >= 0) _imgLibMarkDirty(it.id);
     });
     _imgLibClearSelection();
+    _imgLibCloseFolderModal();
 
-    // 絞り込み中だと移動先が表示範囲外になり「変わっていない」ように見えるため、
-    // 移動先のフォルダ（解除なら「すべて」）に絞り込みを合わせる
-    var fs = document.getElementById('imgLibFolderSel');
+    // 移動先が絞り込みの外だと「変わっていない」ように見えるため合わせる
+    var fs = document.getElementById('scrLibFolder');
     if (fs) fs.value = folder || '';
 
-    _imgLibFilter();
+    _scrLibRender();
     toast(folder ? '📁 「' + folder + '」に ' + ids.length + ' 件を移動しました'
                  : '📂 ' + ids.length + ' 件を未分類に戻しました');
   });
@@ -9304,7 +9462,7 @@ function _imgLibDraw(items, query) {
 
   // フォルダ絞り込み（プルダウンの選択に従う）
   _imgLibRefreshFolderSel(items);
-  var folderSel = (document.getElementById('imgLibFolderSel') || {}).value || '';
+  var folderSel = (document.getElementById('scrLibFolder') || {}).value || '';
   if (folderSel === '__root__')      filtered = filtered.filter(function(it) { return !it.folder; });
   else if (folderSel)                filtered = filtered.filter(function(it) { return it.folder === folderSel; });
 
@@ -9513,8 +9671,8 @@ function _imgLibDraw(items, query) {
       fChip.style.cssText = 'display:inline-block;background:var(--accent-lt);color:var(--accent-text);border-radius:4px;padding:0 5px;margin-right:4px;cursor:pointer;font-weight:700;';
       fChip.onclick = function(e) {
         e.stopPropagation();
-        var fs = document.getElementById('imgLibFolderSel');
-        if (fs) { fs.value = item.folder; _imgLibFilter(); }
+        var fs = document.getElementById('scrLibFolder');
+        if (fs) { fs.value = item.folder; _scrLibRender(); }
       };
       usageRow.appendChild(fChip);
     }
@@ -9570,7 +9728,7 @@ function _imgLibDraw(items, query) {
             scrRenderUnifiedSidebar();
             _scrUpdateCenterCanvas();
             toast('✅ 画像を差し替えました');
-            _imgLibFilter(); // グリッド再描画
+            _scrLibRender(); // グリッド再描画
           };
         });
       };
@@ -11624,7 +11782,7 @@ function _imgLibImportFolder(input) {
     if (!items.length) return;
     // セット機能は廃止したため、読み込んだ画像はそのまま1枚＝1画面で扱う
     (function() {
-      _imgLibFilter();
+      _scrLibRender();
       // パターンのアコーディオンが閉じていると _scrCurrentPatId が null になるため、
       // その場合は先頭パターンへフォールバックする（従来は無言で何も起きなかった）
       var pat = _scrResolveTargetPattern();
