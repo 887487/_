@@ -3292,21 +3292,54 @@ function applyImport(impScripts,impMail,choices,conflicts,impHistory,impScreen){
       var v3Lib = window._pendingImgLib;
       window._pendingImgLib = null;
       _importProgressShow('画像をライブラリに登録中…', '0 / '+v3Lib.length+' 枚', 5);
-      imgLibGetAll().then(function(existingItems) {
-        var existingIds = new Set(existingItems.map(function(x){ return x.id; }));
+      // 既存判定はキーだけで行う（レコード本体には base64 が入っており、
+      // 全件読むと数十MBのデシリアライズが発生するため）
+      imgLibGetAllKeys().then(function(existingIds) {
         var toInsert = v3Lib.filter(function(x){ return !existingIds.has(x.id); });
         var done = 0, total = toInsert.length;
-        if(!total) { _importProgressHide(); _applyScreenData(impScreen); return; }
+
+        // 既に全件が登録済みでも、ファイル未書き出しなら「保存して反映」の
+        // 対象にする必要がある。ここを素通りすると screen-images に出力されない。
+        if(!total) {
+          v3Lib.forEach(function(x){ if (!window.screenImgFileSrc(x.id)) _imgLibMarkDirty(x.id); });
+          _imgLibInvalidateMeta();
+          _imgLibAllItems = [];
+          _imgLibHydrated = false;
+          _imgLibLoaded   = false;
+          if (typeof _scrLibRender === 'function') _scrLibRender();
+          _importProgressHide();
+          _applyScreenData(impScreen);
+          return;
+        }
         var batches = [];
         for(var i=0;i<toInsert.length;i+=5) batches.push(toInsert.slice(i,i+5));
         function _insertBatch(bi) {
-          if(bi >= batches.length) { _importProgressHide(); _applyScreenData(impScreen); return; }
+          if(bi >= batches.length) {
+            _importProgressHide();
+            // 一覧のキャッシュを捨て、次回表示で読み直させる
+            _imgLibInvalidateMeta();
+            _imgLibAllItems = [];
+            _imgLibHydrated = false;
+            _imgLibLoaded   = false;
+            if (typeof _scrLibRender === 'function') _scrLibRender();
+            _applyScreenData(impScreen);
+            return;
+          }
           Promise.all(batches[bi].map(function(item) {
             return _imgLibOpen().then(function(db) {
               return new Promise(function(resolve) {
                 var tx = db.transaction('imageLib','readwrite');
                 tx.objectStore('imageLib').put(item, item.id);
-                tx.oncomplete = function(){ done++; _importProgressUpdate('画像をライブラリに登録中…',done+' / '+total+' 枚',5+Math.round(done/total*90)); resolve(); };
+                tx.oncomplete = function(){
+                  done++;
+                  // インポートした画像はまだファイル書き出しされていないので、
+                  // 「保存して反映」の対象として記録する（これが無いと
+                  // 差分判定で対象外になり screen-images に出力されない）
+                  _imgLibMarkDirty(item.id);
+                  _imgLibInvalidateMeta();
+                  _importProgressUpdate('画像をライブラリに登録中…',done+' / '+total+' 枚',5+Math.round(done/total*90));
+                  resolve();
+                };
                 tx.onerror = resolve;
               });
             });
@@ -3580,7 +3613,9 @@ function exportJSON(){
             updateHistory: loadHistory(),
             sideMenuFiles: menuFiles || []   // ← 添付ファイル（base64含む）
           };
-          var json = JSON.stringify(combined);
+          // 人が読めるようインデントと改行を入れて出力する。
+          // base64 画像が大半を占めるため、整形してもサイズ増は 1% 程度。
+          var json = JSON.stringify(combined, null, 2);
           var sizeMB = (json.length / 1024 / 1024).toFixed(1);
           var blob = new Blob([json], {type:'application/json'});
           var _now = new Date();
@@ -5216,6 +5251,18 @@ function _imgLibClearDirty() {
 })();
 
 
+/** imageLib のキー一覧だけを取得する（本体を読まないので軽い） */
+function imgLibGetAllKeys() {
+  return _imgLibOpen().then(function(db) {
+    return new Promise(function(resolve) {
+      var tx  = db.transaction('imageLib', 'readonly');
+      var req = tx.objectStore('imageLib').getAllKeys();
+      req.onsuccess = function(e) { resolve(new Set(e.target.result || [])); };
+      req.onerror   = function()  { resolve(new Set()); };
+    });
+  });
+}
+
 /** 画像1件の実データを取得する（dataUrl 込み） */
 function imgLibGetOne(id) {
   return _imgLibOpen().then(function(db) {
@@ -5443,9 +5490,12 @@ function _exportScreenToFiles() {
 
       (metaItems || []).forEach(function(item) {
         if (!item || !item.id) return;
+        // 「変更あり」または「まだファイルが無い」画像は書き出す。
+        // インポート直後など、ライブラリにあってもファイル未生成のことがあるため、
+        // 既存ファイルのパスが取れる場合だけ再書き出しを省略する。
         var prev = window.screenImgFileSrc(item.id);
         var changed = _imgLibDirty.has(item.id);
-        var path = (!changed && prev) ? prev : null;   // 変更なし＆既存ファイルあり → 再書き出し不要
+        var path = (!changed && prev) ? prev : null;
 
         if (!path) needData.push(item.id);
         else { imgMap[item.id] = path; keepFiles[path] = true; }
@@ -6733,15 +6783,35 @@ function scrCropSelClear(){_scrCropSel=null;var ab=document.getElementById('scrA
 //   ・サムネイルは表示されたものだけ遅延読み込みする（一覧の初期表示を軽くする）
 // ===================================================================
 var _scrLibObserver = null;
+var _imgLibLoaded  = false;   // 一度でも読み込んだか
+var _imgLibLoading = false;   // 読み込み中か
 
 /** パネルを描画する。未ロードなら先にライブラリを読む */
 function _scrLibRender() {
   var listEl = document.getElementById('scrLibList');
   if (!listEl) return;
 
-  if (!_imgLibAllItems || !_imgLibAllItems.length) {
+  // 未ロードのときだけ読みに行く。
+  // 「0件」と「未ロード」を区別しないと、本当に0件のときに
+  // 読み込み→再描画→また未ロード判定…と繰り返して
+  // 「読み込み中…」から進まなくなる。
+  if (!_imgLibLoaded) {
+    if (_imgLibLoading) return;                 // 二重読み込みを防ぐ
+    _imgLibLoading = true;
     listEl.innerHTML = '<div style="padding:14px 10px;font-size:11px;color:var(--text3);">読み込み中…</div>';
-    _imgLibLoad(function(items) { _imgLibAllItems = items; _scrLibRender(); });
+    try {
+      _imgLibLoad(function(items) {
+        _imgLibAllItems = items || [];
+        _imgLibLoaded  = true;
+        _imgLibLoading = false;
+        _scrLibRender();
+      });
+    } catch (e) {
+      // 例外時もローディングを解除して空表示にする
+      console.warn('[imageLib] 読み込みに失敗しました:', e && e.message);
+      _imgLibAllItems = []; _imgLibLoaded = true; _imgLibLoading = false;
+      _scrLibRender();
+    }
     return;
   }
 
@@ -7308,7 +7378,7 @@ function _scrLibAddFiles(input) {
     reader.onload = function(ev) {
       imgLibFindOrPut(ev.target.result, f.name.replace(/\.[^.]+$/, '')).then(function() {
         if (++done === files.length) {
-          _imgLibAllItems = [];
+          _imgLibAllItems = []; _imgLibLoaded = false;
           _scrLibRender();
           toast('✅ ' + files.length + ' 枚を追加しました');
         }
@@ -7699,6 +7769,8 @@ function _scrRsMailBtns(hi, hs, mailTpls) {
       + '<div style="flex:1;min-width:0;">'
       + '<select class="scr-hs-select" style="margin-bottom:3px;" onchange="_scrRsMailBtnSet('+hi+','+bi+',\'id\',this.value)">'+selOpts+'</select>'
       + '<input type="text" class="scr-size-input" style="width:100%;box-sizing:border-box;font-size:10px;padding:2px 5px;" placeholder="ボタン名（省略可・省略時は📩）" value="'+esc(btn.label||'')+'" oninput="_scrRsMailBtnSet('+hi+','+bi+',\'label\',this.value)">'
+      // 対応方針：このボタンから開くメールモーダルに表示する文章
+      + '<textarea class="scr-size-input" rows="2" style="width:100%;box-sizing:border-box;font-size:10px;padding:3px 5px;margin-top:3px;resize:vertical;font-family:inherit;line-height:1.6;" placeholder="📌 対応方針（省略可）" oninput="_scrRsMailBtnSet('+hi+','+bi+',\'policy\',this.value)">'+esc(btn.policy||'')+'</textarea>'
       + '</div>'
       + '<button onclick="_scrRsDelMailBtn('+hi+','+bi+')" style="flex-shrink:0;height:22px;padding:0 6px;border:1px solid var(--border);border-radius:4px;background:var(--surface2);cursor:pointer;font-size:10px;font-family:inherit;">✕</button>'
       + '</div>';
@@ -8978,7 +9050,7 @@ function _imgLibHsSetupDrag() {
  * （検索の絞り込みは _imgLibFilter() が担当し、そちらはキャッシュを使う）
  */
 function _imgLibRender() {
-  _imgLibAllItems = [];
+  _imgLibAllItems = []; _imgLibLoaded = false;
   // 消えた画像を掴んだままにしないよう、選択状態とHSエディタを掃除する
   if (_imgLibSelectedIds) _imgLibSelectedIds.clear();
   _imgLibFilter(function(items) {
@@ -9015,14 +9087,27 @@ var _imgLibHydrated = false;
 function _imgLibLoad(cb) {
   // 復元はセッションに1回だけでよい。毎回走らせると
   // 全レコード（base64込み）を読み直すことになり非常に重い。
-  var hydrate = (!_imgLibHydrated && window.hydrateImageLibrary)
-    ? window.hydrateImageLibrary()
-    : Promise.resolve(0);
+  var hydrate;
+  try {
+    hydrate = (!_imgLibHydrated && window.hydrateImageLibrary)
+      ? Promise.resolve(window.hydrateImageLibrary())
+      : Promise.resolve(0);
+  } catch (e) { hydrate = Promise.resolve(0); }
 
-  hydrate.then(function(n) {
+  // 復元に失敗しても一覧の読み込みは続行する。
+  // ここで例外が漏れるとコールバックが呼ばれず「読み込み中…」のまま止まる。
+  hydrate.catch(function(e) {
+    console.warn('[imageLib] 復元に失敗しました:', e && e.message);
+    return 0;
+  }).then(function(n) {
     _imgLibHydrated = true;
     if (n) { console.info('[imageLib] screen-data.js から ' + n + ' 件を復元しました'); _imgLibInvalidateMeta(); }
-    imgLibGetAllMeta().then(function(items){ cb(items); });
+    return imgLibGetAllMeta();
+  }).then(function(items) {
+    cb(items || []);
+  }).catch(function(e) {
+    console.warn('[imageLib] 一覧の取得に失敗しました:', e && e.message);
+    cb([]);   // 失敗時も必ずコールバックを呼び、ローディング表示を解除する
   });
 }
 

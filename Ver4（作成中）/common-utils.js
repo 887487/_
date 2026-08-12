@@ -367,6 +367,8 @@ window.hydrateImageLibrary = function() {
         var wtx   = db.transaction('imageLib', 'readwrite');
         var store = wtx.objectStore('imageLib');
         missing.forEach(function(meta) {
+          // imageLib は out-of-line key（keyPath なし・自動採番なし）のため、
+          // put の第2引数でキーを明示しないと DataError になる
           store.put({
             id:         meta.id,
             name:       meta.name || meta.id,
@@ -376,7 +378,7 @@ window.hydrateImageLibrary = function() {
             hotspots:   meta.hotspots || [],
             hsLinkFrom: meta.hsLinkFrom || null,
             createdAt:  Date.now()
-          });
+          }, meta.id);
         });
         wtx.oncomplete = function() { db.close(); resolve(missing.length); };
         wtx.onerror    = function() { db.close(); resolve(0); };
