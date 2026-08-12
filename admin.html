@@ -3292,11 +3292,25 @@ function applyImport(impScripts,impMail,choices,conflicts,impHistory,impScreen){
       var v3Lib = window._pendingImgLib;
       window._pendingImgLib = null;
       _importProgressShow('画像をライブラリに登録中…', '0 / '+v3Lib.length+' 枚', 5);
-      imgLibGetAll().then(function(existingItems) {
-        var existingIds = new Set(existingItems.map(function(x){ return x.id; }));
+      // 既存判定はキーだけで行う（レコード本体には base64 が入っており、
+      // 全件読むと数十MBのデシリアライズが発生するため）
+      imgLibGetAllKeys().then(function(existingIds) {
         var toInsert = v3Lib.filter(function(x){ return !existingIds.has(x.id); });
         var done = 0, total = toInsert.length;
-        if(!total) { _importProgressHide(); _applyScreenData(impScreen); return; }
+
+        // 既に全件が登録済みでも、ファイル未書き出しなら「保存して反映」の
+        // 対象にする必要がある。ここを素通りすると screen-images に出力されない。
+        if(!total) {
+          v3Lib.forEach(function(x){ if (!window.screenImgFileSrc(x.id)) _imgLibMarkDirty(x.id); });
+          _imgLibInvalidateMeta();
+          _imgLibAllItems = [];
+          _imgLibHydrated = false;
+          _imgLibLoaded   = false;
+          if (typeof _scrLibRender === 'function') _scrLibRender();
+          _importProgressHide();
+          _applyScreenData(impScreen);
+          return;
+        }
         var batches = [];
         for(var i=0;i<toInsert.length;i+=5) batches.push(toInsert.slice(i,i+5));
         function _insertBatch(bi) {
@@ -3306,6 +3320,7 @@ function applyImport(impScripts,impMail,choices,conflicts,impHistory,impScreen){
             _imgLibInvalidateMeta();
             _imgLibAllItems = [];
             _imgLibHydrated = false;
+            _imgLibLoaded   = false;
             if (typeof _scrLibRender === 'function') _scrLibRender();
             _applyScreenData(impScreen);
             return;
@@ -5236,6 +5251,18 @@ function _imgLibClearDirty() {
 })();
 
 
+/** imageLib のキー一覧だけを取得する（本体を読まないので軽い） */
+function imgLibGetAllKeys() {
+  return _imgLibOpen().then(function(db) {
+    return new Promise(function(resolve) {
+      var tx  = db.transaction('imageLib', 'readonly');
+      var req = tx.objectStore('imageLib').getAllKeys();
+      req.onsuccess = function(e) { resolve(new Set(e.target.result || [])); };
+      req.onerror   = function()  { resolve(new Set()); };
+    });
+  });
+}
+
 /** 画像1件の実データを取得する（dataUrl 込み） */
 function imgLibGetOne(id) {
   return _imgLibOpen().then(function(db) {
@@ -6756,15 +6783,28 @@ function scrCropSelClear(){_scrCropSel=null;var ab=document.getElementById('scrA
 //   ・サムネイルは表示されたものだけ遅延読み込みする（一覧の初期表示を軽くする）
 // ===================================================================
 var _scrLibObserver = null;
+var _imgLibLoaded  = false;   // 一度でも読み込んだか
+var _imgLibLoading = false;   // 読み込み中か
 
 /** パネルを描画する。未ロードなら先にライブラリを読む */
 function _scrLibRender() {
   var listEl = document.getElementById('scrLibList');
   if (!listEl) return;
 
-  if (!_imgLibAllItems || !_imgLibAllItems.length) {
+  // 未ロードのときだけ読みに行く。
+  // 「0件」と「未ロード」を区別しないと、本当に0件のときに
+  // 読み込み→再描画→また未ロード判定…と繰り返して
+  // 「読み込み中…」から進まなくなる。
+  if (!_imgLibLoaded) {
+    if (_imgLibLoading) return;                 // 二重読み込みを防ぐ
+    _imgLibLoading = true;
     listEl.innerHTML = '<div style="padding:14px 10px;font-size:11px;color:var(--text3);">読み込み中…</div>';
-    _imgLibLoad(function(items) { _imgLibAllItems = items; _scrLibRender(); });
+    _imgLibLoad(function(items) {
+      _imgLibAllItems = items || [];
+      _imgLibLoaded  = true;
+      _imgLibLoading = false;
+      _scrLibRender();
+    });
     return;
   }
 
@@ -7331,7 +7371,7 @@ function _scrLibAddFiles(input) {
     reader.onload = function(ev) {
       imgLibFindOrPut(ev.target.result, f.name.replace(/\.[^.]+$/, '')).then(function() {
         if (++done === files.length) {
-          _imgLibAllItems = [];
+          _imgLibAllItems = []; _imgLibLoaded = false;
           _scrLibRender();
           toast('✅ ' + files.length + ' 枚を追加しました');
         }
@@ -9003,7 +9043,7 @@ function _imgLibHsSetupDrag() {
  * （検索の絞り込みは _imgLibFilter() が担当し、そちらはキャッシュを使う）
  */
 function _imgLibRender() {
-  _imgLibAllItems = [];
+  _imgLibAllItems = []; _imgLibLoaded = false;
   // 消えた画像を掴んだままにしないよう、選択状態とHSエディタを掃除する
   if (_imgLibSelectedIds) _imgLibSelectedIds.clear();
   _imgLibFilter(function(items) {
