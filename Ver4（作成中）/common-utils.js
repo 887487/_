@@ -193,12 +193,25 @@ window.AppFS = (function() {
     });
   }
 
+  /**
+   * 'a/b/c' 形式のパスからディレクトリハンドルを取得する。
+   * getDirectoryHandle は「名前」しか受け取らないため、1階層ずつ辿る必要がある。
+   * （スラッシュ入りの文字列をそのまま渡すと必ず失敗する）
+   */
+  function _resolveDir(root, path) {
+    var parts = String(path == null ? '' : path).split('/').filter(Boolean);
+    var p = Promise.resolve(root);
+    parts.forEach(function(seg) {
+      p = p.then(function(d) { return d.getDirectoryHandle(seg, { create: false }); });
+    });
+    return p;
+  }
+
   /** サブフォルダ内のファイル名一覧を返す（存在しなければ空配列） */
   function listFiles(subdir) {
     return ensure(false).then(function(dir) {
       if (!dir) return [];
-      var p = subdir ? dir.getDirectoryHandle(subdir, { create: false }) : Promise.resolve(dir);
-      return p.then(function(d) {
+      return _resolveDir(dir, subdir).then(function(d) {
         return (async function() {
           var names = [];
           for await (var entry of d.values()) {
@@ -214,8 +227,7 @@ window.AppFS = (function() {
   function listDirs(subdir) {
     return ensure(false).then(function(dir) {
       if (!dir) return [];
-      var p = subdir ? dir.getDirectoryHandle(subdir, { create: false }) : Promise.resolve(dir);
-      return p.then(function(d) {
+      return _resolveDir(dir, subdir).then(function(d) {
         return (async function() {
           var names = [];
           for await (var entry of d.values()) {

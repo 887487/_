@@ -1,65 +1,12 @@
 // 画面遷移データ — admin.html の「💾 保存して反映」で自動更新されます。
 // 画像は screen-images/ フォルダに実ファイルとして保存されています。
 // library は画像ライブラリの復元用です（別PCでも一覧が再現されます）。
-// 生成日時: 2026-08-12T23:35:44.854Z
+// 生成日時: 2026-08-13T14:24:01.502Z
 window.APP_SCREEN_DATA = {
-  "savedAt": "2026-08-12T23:35:44.854Z",
+  "savedAt": "2026-08-13T14:24:01.502Z",
   "images": {
-    "lib05670wknj": "screen-images/lib05670wknj.png",
-    "lib1q8f71v58": "screen-images/lib1q8f71v58.jpg",
-    "lib1v0838i5h": "screen-images/lib1v0838i5h.png",
-    "lib23s00ydki": "screen-images/lib23s00ydki.jpg",
-    "lib2ljfi3umx": "screen-images/lib2ljfi3umx.png",
-    "lib3et8sf846": "screen-images/lib3et8sf846.png",
-    "lib4uy0gwgx5": "screen-images/lib4uy0gwgx5.jpg",
-    "lib5c2w20v55": "screen-images/lib5c2w20v55.jpg",
-    "lib5k97gnafk": "screen-images/lib5k97gnafk.png",
-    "lib6egd8m69h": "screen-images/lib6egd8m69h.jpg",
-    "lib6xyl3hxyw": "screen-images/lib6xyl3hxyw.png",
-    "lib7cndrqn74": "screen-images/lib7cndrqn74.jpg",
-    "lib7gxdxc60c": "screen-images/lib7gxdxc60c.jpg",
-    "lib7rpyqpxjb": "screen-images/lib7rpyqpxjb.jpg",
-    "lib80mmh0jcp": "screen-images/lib80mmh0jcp.jpg",
-    "lib8s0j8ppbo": "screen-images/lib8s0j8ppbo.jpg",
-    "lib8vei4zhgl": "screen-images/lib8vei4zhgl.png",
-    "lib9uwt2qmur": "screen-images/lib9uwt2qmur.png",
-    "lib9xs2bwn4a": "screen-images/lib9xs2bwn4a.jpg",
-    "liba2zd06ljg": "screen-images/liba2zd06ljg.png",
-    "liba6hlh7xbu": "screen-images/liba6hlh7xbu.jpg",
-    "liba6msl9qpu": "screen-images/liba6msl9qpu.png",
-    "libbpp8jv4n2": "screen-images/libbpp8jv4n2.png",
-    "libbz2x7s5p0": "screen-images/libbz2x7s5p0.jpg",
-    "libcfz29yt6j": "screen-images/libcfz29yt6j.jpg",
-    "libelt7z0ley": "screen-images/libelt7z0ley.png",
-    "libetc8w0551": "screen-images/libetc8w0551.jpg",
-    "libeyppwpozw": "screen-images/libeyppwpozw.png",
-    "libf741f02w3": "screen-images/libf741f02w3.jpg",
-    "libg3yfn2qlc": "screen-images/libg3yfn2qlc.png",
-    "libgbfdclidv": "screen-images/libgbfdclidv.png",
-    "libh8ld2i82h": "screen-images/libh8ld2i82h.jpg",
-    "libi5sju1m94": "screen-images/libi5sju1m94.png",
-    "libl0wvvmrft": "screen-images/libl0wvvmrft.png",
-    "libl3ylir5j4": "screen-images/libl3ylir5j4.jpg",
-    "liblh8buqkgq": "screen-images/liblh8buqkgq.jpg",
-    "libn4at7c77l": "screen-images/libn4at7c77l.png",
-    "libo183b1qkk": "screen-images/libo183b1qkk.jpg",
-    "libo4b89nuqq": "screen-images/libo4b89nuqq.jpg",
-    "libog2g9mf8a": "screen-images/libog2g9mf8a.jpg",
-    "libp17x46sjb": "screen-images/libp17x46sjb.jpg",
-    "libpokcntvqf": "screen-images/libpokcntvqf.jpg",
-    "libr5qietvry": "screen-images/libr5qietvry.png",
-    "librsp92wn5v": "screen-images/librsp92wn5v.jpg",
-    "librxc9kxcuo": "screen-images/librxc9kxcuo.png",
-    "libtl82c45z4": "screen-images/libtl82c45z4.png",
-    "libtn32hdc1a": "screen-images/libtn32hdc1a.jpg",
-    "libuzg5akghl": "screen-images/libuzg5akghl.jpg",
-    "libvulzxzdnx": "screen-images/libvulzxzdnx.jpg",
-    "libwwg1x4ixe": "screen-images/libwwg1x4ixe.png",
-    "libx81rlr00l": "screen-images/libx81rlr00l.png",
-    "libxawjtl374": "screen-images/libxawjtl374.png",
-    "libxsphddbyo": "screen-images/libxsphddbyo.png",
-    "libywgca6wpa": "screen-images/libywgca6wpa.jpg",
     "lib00mgrcfnd": "screen-images/Sアカウント/lib00mgrcfnd.jpg",
+    "lib05670wknj": "screen-images/lib05670wknj.png",
     "lib062vsithr": "screen-images/Tv/lib062vsithr.jpg",
     "lib0hur66912": "screen-images/世帯/lib0hur66912.jpg",
     "lib0iangby6p": "screen-images/Oasis/lib0iangby6p.jpg",
@@ -71,9 +18,14 @@ window.APP_SCREEN_DATA = {
     "lib17h921m7g": "screen-images/世帯/lib17h921m7g.png",
     "lib1ao8tsbki": "screen-images/Sアカウント/lib1ao8tsbki.jpg",
     "lib1e6gduvan": "screen-images/世帯/lib1e6gduvan.jpg",
+    "lib1q8f71v58": "screen-images/lib1q8f71v58.jpg",
+    "lib1v0838i5h": "screen-images/lib1v0838i5h.png",
+    "lib23s00ydki": "screen-images/lib23s00ydki.jpg",
     "lib2cyvm50ai": "screen-images/Sアカウント/lib2cyvm50ai.jpg",
+    "lib2ljfi3umx": "screen-images/lib2ljfi3umx.png",
     "lib2sx5xcj8f": "screen-images/世帯/lib2sx5xcj8f.png",
     "lib3e75xplc8": "screen-images/世帯/lib3e75xplc8.jpg",
+    "lib3et8sf846": "screen-images/lib3et8sf846.png",
     "lib3tc0jmnvo": "screen-images/Sアカウント/lib3tc0jmnvo.jpg",
     "lib3to5sf8nj": "screen-images/世帯/lib3to5sf8nj.jpg",
     "lib3xoni3ap7": "screen-images/Tv/lib3xoni3ap7.jpg",
@@ -83,39 +35,58 @@ window.APP_SCREEN_DATA = {
     "lib4nbb4gqr0": "screen-images/Sアカウント/lib4nbb4gqr0.jpg",
     "lib4s0qekt1k": "screen-images/Tv/lib4s0qekt1k.png",
     "lib4tge6a2wn": "screen-images/世帯/lib4tge6a2wn.jpg",
+    "lib4uy0gwgx5": "screen-images/lib4uy0gwgx5.jpg",
     "lib4yvgxe8qi": "screen-images/Tv/lib4yvgxe8qi.jpg",
     "lib57n2g34ky": "screen-images/Other/lib57n2g34ky.jpg",
+    "lib5c2w20v55": "screen-images/lib5c2w20v55.jpg",
     "lib5isdf7o3z": "screen-images/世帯/lib5isdf7o3z.png",
     "lib5jhji9e7m": "screen-images/世帯/lib5jhji9e7m.jpg",
+    "lib5k97gnafk": "screen-images/lib5k97gnafk.png",
     "lib5nid2ktsf": "screen-images/Sアカウント/lib5nid2ktsf.jpg",
     "lib5znm6ut74": "screen-images/App/lib5znm6ut74.jpg",
+    "lib6egd8m69h": "screen-images/lib6egd8m69h.jpg",
     "lib6h9mi36pl": "screen-images/Sアカウント/lib6h9mi36pl.jpg",
     "lib6k2vr6f8u": "screen-images/Sアカウント/lib6k2vr6f8u.jpg",
     "lib6oqzovg4g": "screen-images/世帯/lib6oqzovg4g.png",
+    "lib6xyl3hxyw": "screen-images/lib6xyl3hxyw.png",
     "lib73wqhphnn": "screen-images/世帯/lib73wqhphnn.jpg",
+    "lib7cndrqn74": "screen-images/lib7cndrqn74.jpg",
+    "lib7gxdxc60c": "screen-images/lib7gxdxc60c.jpg",
     "lib7gy9g0ap5": "screen-images/世帯/lib7gy9g0ap5.png",
+    "lib7rpyqpxjb": "screen-images/lib7rpyqpxjb.jpg",
     "lib7vat03uas": "screen-images/Sアカウント/lib7vat03uas.jpg",
+    "lib80mmh0jcp": "screen-images/lib80mmh0jcp.jpg",
     "lib885tggz17": "screen-images/世帯/lib885tggz17.png",
     "lib88rby7amf": "screen-images/世帯/lib88rby7amf.jpg",
     "lib8brxeiucf": "screen-images/世帯/lib8brxeiucf.jpg",
     "lib8hdvtbq9m": "screen-images/Sアカウント/lib8hdvtbq9m.jpg",
     "lib8hzurebyh": "screen-images/Oasis/lib8hzurebyh.jpg",
     "lib8o79wuyx1": "screen-images/世帯/lib8o79wuyx1.jpg",
+    "lib8s0j8ppbo": "screen-images/lib8s0j8ppbo.jpg",
+    "lib8vei4zhgl": "screen-images/lib8vei4zhgl.png",
     "lib912s60g24": "screen-images/Sアカウント/lib912s60g24.jpg",
     "lib97relr6ux": "screen-images/Tv/lib97relr6ux.jpg",
     "lib9e48p5aeb": "screen-images/Sアカウント/lib9e48p5aeb.jpg",
     "lib9pqhjopqq": "screen-images/App/lib9pqhjopqq.jpg",
+    "lib9uwt2qmur": "screen-images/lib9uwt2qmur.png",
+    "lib9xs2bwn4a": "screen-images/lib9xs2bwn4a.jpg",
     "liba177m2szv": "screen-images/Sアカウント/liba177m2szv.jpg",
+    "liba2zd06ljg": "screen-images/liba2zd06ljg.png",
+    "liba6hlh7xbu": "screen-images/liba6hlh7xbu.jpg",
+    "liba6msl9qpu": "screen-images/liba6msl9qpu.png",
     "libaums394si": "screen-images/世帯/libaums394si.png",
     "libauojb7ha6": "screen-images/Oasis/libauojb7ha6.jpg",
     "libazfy1m4zp": "screen-images/世帯/libazfy1m4zp.jpg",
     "libb8asvqlfq": "screen-images/世帯/libb8asvqlfq.jpg",
     "libbapdu37nt": "screen-images/世帯/libbapdu37nt.png",
+    "libbpp8jv4n2": "screen-images/libbpp8jv4n2.png",
     "libbr2zniesh": "screen-images/Tv/libbr2zniesh.png",
     "libbw9ik46rs": "screen-images/Sアカウント/libbw9ik46rs.jpg",
+    "libbz2x7s5p0": "screen-images/libbz2x7s5p0.jpg",
     "libc72bgfbi5": "screen-images/Tv/libc72bgfbi5.jpg",
     "libccixs7mic": "screen-images/Sアカウント/libccixs7mic.jpg",
     "libcf12kr3s1": "screen-images/世帯/libcf12kr3s1.png",
+    "libcfz29yt6j": "screen-images/libcfz29yt6j.jpg",
     "libcg95wpvwc": "screen-images/世帯/libcg95wpvwc.jpg",
     "libcuh77d86g": "screen-images/Tv/libcuh77d86g.jpg",
     "libcvfzri0x1": "screen-images/Oasis/libcvfzri0x1.jpg",
@@ -123,32 +94,43 @@ window.APP_SCREEN_DATA = {
     "libdgvu1eknd": "screen-images/Sアカウント/libdgvu1eknd.jpg",
     "libdwqhlwv9r": "screen-images/世帯/libdwqhlwv9r.png",
     "libe3nz2bh8l": "screen-images/Sアカウント/libe3nz2bh8l.jpg",
+    "libelt7z0ley": "screen-images/libelt7z0ley.png",
     "liben8fgv7mr": "screen-images/世帯/liben8fgv7mr.jpg",
     "libeorew8dhd": "screen-images/世帯/libeorew8dhd.jpg",
+    "libetc8w0551": "screen-images/libetc8w0551.jpg",
     "libeyi66id4t": "screen-images/Sアカウント/libeyi66id4t.jpg",
+    "libeyppwpozw": "screen-images/libeyppwpozw.png",
+    "libf741f02w3": "screen-images/libf741f02w3.jpg",
     "libf7j8ya7m9": "screen-images/世帯/libf7j8ya7m9.png",
     "libfhm654yuu": "screen-images/Sアカウント/libfhm654yuu.jpg",
     "libfkbs8apxb": "screen-images/世帯/libfkbs8apxb.png",
     "libfna7guaed": "screen-images/Sアカウント/libfna7guaed.jpg",
     "libfye5q7g0x": "screen-images/世帯/libfye5q7g0x.jpg",
     "libg275r51rg": "screen-images/世帯/libg275r51rg.jpg",
+    "libg3yfn2qlc": "screen-images/libg3yfn2qlc.png",
+    "libgbfdclidv": "screen-images/libgbfdclidv.png",
     "libgru261gdr": "screen-images/Tv/libgru261gdr.png",
     "libh6uyp95d0": "screen-images/App/libh6uyp95d0.jpg",
     "libh7lqfp6m0": "screen-images/Other/libh7lqfp6m0.jpg",
+    "libh8ld2i82h": "screen-images/libh8ld2i82h.jpg",
     "libhfuuatxf4": "screen-images/Sアカウント/libhfuuatxf4.jpg",
     "libho1drrob5": "screen-images/Sアカウント/libho1drrob5.jpg",
     "libhvv790gm6": "screen-images/Info/libhvv790gm6.jpg",
     "libhyasqq1o7": "screen-images/Tv/libhyasqq1o7.jpg",
     "libi42s3k6rq": "screen-images/世帯/libi42s3k6rq.png",
     "libi43hjldtl": "screen-images/Sアカウント/libi43hjldtl.jpg",
+    "libi5sju1m94": "screen-images/libi5sju1m94.png",
     "libiefktcq59": "screen-images/App/libiefktcq59.jpg",
     "libj2v7exv8f": "screen-images/Tv/libj2v7exv8f.jpg",
     "libj3ojd588m": "screen-images/Sアカウント/libj3ojd588m.jpg",
     "libjczpx4s16": "screen-images/App/libjczpx4s16.jpg",
     "libk7r1rn1w9": "screen-images/Sアカウント/libk7r1rn1w9.jpg",
     "libkw8uibasb": "screen-images/Other/libkw8uibasb.jpg",
+    "libl0wvvmrft": "screen-images/libl0wvvmrft.png",
+    "libl3ylir5j4": "screen-images/libl3ylir5j4.jpg",
     "libl75ius8lm": "screen-images/App/libl75ius8lm.jpg",
     "libl8kydc5ct": "screen-images/世帯/libl8kydc5ct.png",
+    "liblh8buqkgq": "screen-images/liblh8buqkgq.jpg",
     "liblmnhxjfxy": "screen-images/Sアカウント/liblmnhxjfxy.jpg",
     "liblucz1fx1y": "screen-images/Tv/liblucz1fx1y.png",
     "liblur830fgj": "screen-images/Sアカウント/liblur830fgj.jpg",
@@ -160,32 +142,44 @@ window.APP_SCREEN_DATA = {
     "libmy33qxkdj": "screen-images/世帯/libmy33qxkdj.png",
     "libn2izpsiln": "screen-images/Sアカウント/libn2izpsiln.jpg",
     "libn45hw3fuc": "screen-images/Tv/libn45hw3fuc.jpg",
+    "libn4at7c77l": "screen-images/libn4at7c77l.png",
     "libnb3pw63g6": "screen-images/App/libnb3pw63g6.jpg",
     "libnufosid84": "screen-images/App/libnufosid84.jpg",
     "libnwrn6q0i1": "screen-images/Web/libnwrn6q0i1.jpg",
     "libo1189r59l": "screen-images/世帯/libo1189r59l.png",
+    "libo183b1qkk": "screen-images/libo183b1qkk.jpg",
     "libo1rtgmzrf": "screen-images/Sアカウント/libo1rtgmzrf.jpg",
+    "libo4b89nuqq": "screen-images/libo4b89nuqq.jpg",
     "libo4kiqc052": "screen-images/世帯/libo4kiqc052.jpg",
     "libo7zmz6txn": "screen-images/App/libo7zmz6txn.jpg",
     "libo9t4bwvnt": "screen-images/Sアカウント/libo9t4bwvnt.jpg",
     "libofww22xwz": "screen-images/Tv/libofww22xwz.png",
     "libog0tdudlj": "screen-images/Sアカウント/libog0tdudlj.jpg",
+    "libog2g9mf8a": "screen-images/libog2g9mf8a.jpg",
     "libokocjg65d": "screen-images/Tv/libokocjg65d.jpg",
+    "libp17x46sjb": "screen-images/libp17x46sjb.jpg",
     "libp4v8g48sw": "screen-images/Sアカウント/libp4v8g48sw.jpg",
     "libp6e33ed0y": "screen-images/Oasis/libp6e33ed0y.jpg",
     "libp84m1b7xp": "screen-images/世帯/libp84m1b7xp.jpg",
     "libph9b6heqb": "screen-images/世帯/libph9b6heqb.png",
     "libpji6ezmhx": "screen-images/世帯/libpji6ezmhx.png",
     "libpnuc42uhi": "screen-images/世帯/libpnuc42uhi.jpg",
+    "libpokcntvqf": "screen-images/libpokcntvqf.jpg",
     "libpvazbp6iy": "screen-images/Sアカウント/libpvazbp6iy.jpg",
     "libq2pzl4q2y": "screen-images/世帯/libq2pzl4q2y.jpg",
     "libqxao4liry": "screen-images/Tv/libqxao4liry.jpg",
+    "libr5qietvry": "screen-images/libr5qietvry.png",
     "libreg13gn92": "screen-images/Tv/libreg13gn92.png",
+    "librsp92wn5v": "screen-images/librsp92wn5v.jpg",
     "librw5pr7liz": "screen-images/世帯/librw5pr7liz.png",
+    "librxc9kxcuo": "screen-images/librxc9kxcuo.png",
+    "libs7wb383lx": "screen-images/新しいフォルダー/libywgca6wpa.jpg",
     "libt0cnr6kwa": "screen-images/Sアカウント/libt0cnr6kwa.jpg",
     "libtebm3odvl": "screen-images/世帯/libtebm3odvl.png",
     "libtkovt5rb3": "screen-images/世帯/libtkovt5rb3.png",
+    "libtl82c45z4": "screen-images/libtl82c45z4.png",
     "libtlfwnf9zz": "screen-images/Oasis/libtlfwnf9zz.jpg",
+    "libtn32hdc1a": "screen-images/libtn32hdc1a.jpg",
     "libtujcrp4w4": "screen-images/世帯/libtujcrp4w4.png",
     "libtvihlf8b0": "screen-images/Info/libtvihlf8b0.jpg",
     "libtzlq94uiv": "screen-images/App/libtzlq94uiv.jpg",
@@ -193,17 +187,24 @@ window.APP_SCREEN_DATA = {
     "libu4ct517js": "screen-images/世帯/libu4ct517js.jpg",
     "libuoqhmmscm": "screen-images/Sアカウント/libuoqhmmscm.jpg",
     "libuyttha99f": "screen-images/Tv/libuyttha99f.png",
+    "libuzg5akghl": "screen-images/libuzg5akghl.jpg",
     "libveiya9sth": "screen-images/世帯/libveiya9sth.png",
     "libvf2zn889h": "screen-images/Sアカウント/libvf2zn889h.jpg",
     "libvh89r0dk6": "screen-images/Tv/libvh89r0dk6.jpg",
+    "libvulzxzdnx": "screen-images/libvulzxzdnx.jpg",
     "libwairy4j3z": "screen-images/Sアカウント/libwairy4j3z.jpg",
     "libwe91ucgsi": "screen-images/Tv/libwe91ucgsi.jpg",
+    "libwwg1x4ixe": "screen-images/libwwg1x4ixe.png",
+    "libx81rlr00l": "screen-images/libx81rlr00l.png",
+    "libxawjtl374": "screen-images/libxawjtl374.png",
+    "libxsphddbyo": "screen-images/libxsphddbyo.png",
     "libxt6lsu7sg": "screen-images/Sアカウント/libxt6lsu7sg.jpg",
     "libxv5i7q6gu": "screen-images/世帯/libxv5i7q6gu.png",
     "liby2ciamv38": "screen-images/世帯/liby2ciamv38.png",
     "liby6omghw11": "screen-images/Sアカウント/liby6omghw11.jpg",
     "liby9wm6dq7z": "screen-images/Sアカウント/liby9wm6dq7z.jpg",
     "libymzhgt48i": "screen-images/世帯/libymzhgt48i.png",
+    "libywgca6wpa": "screen-images/libywgca6wpa.jpg",
     "libz1lha7rux": "screen-images/世帯/libz1lha7rux.jpg",
     "libz8evexv7k": "screen-images/Sアカウント/libz8evexv7k.jpg",
     "libzdq41eym1": "screen-images/世帯/libzdq41eym1.jpg",
@@ -4344,6 +4345,15 @@ window.APP_SCREEN_DATA = {
       "hsLinkFrom": null
     },
     {
+      "id": "libs7wb383lx",
+      "name": "libywgca6wpa",
+      "folder": "新しいフォルダー",
+      "file": "screen-images/新しいフォルダー/libywgca6wpa.jpg",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
       "id": "libt0cnr6kwa",
       "name": "16.［S］お住まいの地域_②事業",
       "folder": "Sアカウント",
@@ -5126,9 +5136,7 @@ window.APP_SCREEN_DATA = {
         {
           "id": "scdty9mai4",
           "name": "００．Infoトップ",
-          "imageSrc": "lib:libtvihlf8b0",
           "note": "",
-          "noteOverride": false,
           "hotspots": [
             {
               "id": "sc7cquukod",
@@ -5190,14 +5198,13 @@ window.APP_SCREEN_DATA = {
               "enabled": true,
               "mailBtnTargets": []
             }
-          ]
+          ],
+          "imageSrc": "lib:libtvihlf8b0"
         },
         {
           "id": "sco35hzpoi",
           "name": "０１．誤受信防止措置 ⑴",
-          "imageSrc": "lib:lib3to5sf8nj",
           "note": "",
-          "noteOverride": false,
           "hotspots": [
             {
               "id": "scvqxbot5x",
@@ -5274,14 +5281,13 @@ window.APP_SCREEN_DATA = {
               "enabled": true,
               "mailBtnTargets": []
             }
-          ]
+          ],
+          "imageSrc": "lib:lib3to5sf8nj"
         },
         {
           "id": "sck01u1wz6",
           "name": "０１．誤受信防止措置 ⑵",
-          "imageSrc": "lib:liben8fgv7mr",
           "note": "",
-          "noteOverride": false,
           "hotspots": [
             {
               "id": "sc3eo7r6ji",
@@ -5358,14 +5364,13 @@ window.APP_SCREEN_DATA = {
               "enabled": true,
               "mailBtnTargets": []
             }
-          ]
+          ],
+          "imageSrc": "lib:liben8fgv7mr"
         },
         {
           "id": "sc7u4g3t0u",
           "name": "０２．誤受信防止措置 ①世帯",
-          "imageSrc": "lib:lib4tge6a2wn",
           "note": "",
-          "noteOverride": false,
           "hotspots": [
             {
               "id": "sca3ekzxny",
@@ -5472,14 +5477,13 @@ window.APP_SCREEN_DATA = {
               "enabled": true,
               "mailBtnTargets": []
             }
-          ]
+          ],
+          "imageSrc": "lib:lib4tge6a2wn"
         },
         {
           "id": "scelmvafc1",
           "name": "０３．アカウントレス",
-          "imageSrc": "lib:libcg95wpvwc",
           "note": "",
-          "noteOverride": false,
           "hotspots": [
             {
               "id": "scdbiq5utr",
@@ -5526,14 +5530,13 @@ window.APP_SCREEN_DATA = {
               "enabled": true,
               "mailBtnTargets": []
             }
-          ]
+          ],
+          "imageSrc": "lib:libcg95wpvwc"
         },
         {
           "id": "scu9jfhpb8",
           "name": "０４．アカウントの登録にあたって",
-          "imageSrc": "lib:lib0hur66912",
           "note": "",
-          "noteOverride": false,
           "hotspots": [
             {
               "id": "sctivs80k1",
@@ -5565,78 +5568,71 @@ window.APP_SCREEN_DATA = {
               "enabled": true,
               "mailBtnTargets": []
             }
-          ]
+          ],
+          "imageSrc": "lib:lib0hur66912"
         },
         {
           "id": "scuxyokdkp",
           "name": "０５．移行手続きをされる方へ ⑴",
-          "imageSrc": "lib:libtujcrp4w4",
           "note": "",
-          "noteOverride": false,
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:libtujcrp4w4"
         },
         {
           "id": "scg4l9k7cw",
           "name": "０５．移行手続きをされる方へ ⑵",
-          "imageSrc": "lib:libveiya9sth",
           "note": "",
-          "noteOverride": false,
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:libveiya9sth"
         },
         {
           "id": "scf66i1xkx",
           "name": "０５．移行手続きをされる方へ ⑶",
-          "imageSrc": "lib:lib6oqzovg4g",
           "note": "",
-          "noteOverride": false,
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:lib6oqzovg4g"
         },
         {
           "id": "scj0cdje5g",
           "name": "０５．移行手続きをされる方へ ⑷",
-          "imageSrc": "lib:lib5isdf7o3z",
           "note": "",
-          "noteOverride": false,
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:lib5isdf7o3z"
         },
         {
           "id": "sco9pglx1v",
           "name": "０６．パスワード設定 ⑴",
-          "imageSrc": "lib:librw5pr7liz",
           "note": "",
-          "noteOverride": false,
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:librw5pr7liz"
         },
         {
           "id": "scu9so222b",
           "name": "０６．パスワード設定 ⑵",
-          "imageSrc": "lib:libxv5i7q6gu",
           "note": "",
-          "noteOverride": false,
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:libxv5i7q6gu"
         },
         {
           "id": "scm2flmd7j",
           "name": "０６．パスワード設定 ⑶",
-          "imageSrc": "lib:lib17h921m7g",
           "note": "",
-          "noteOverride": false,
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:lib17h921m7g"
         },
         {
           "id": "sc75oddeit",
           "name": "０６．パスワード設定 ⑷",
-          "imageSrc": "lib:libbapdu37nt",
           "note": "",
-          "noteOverride": false,
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:libbapdu37nt"
         },
         {
           "id": "scaoo4xklv",
           "name": "０６．パスワード設定 ⑸",
           "note": "",
-          "imageSrc": "lib:lib7gy9g0ap5",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:lib7gy9g0ap5"
         }
       ]
     },

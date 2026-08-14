@@ -898,13 +898,25 @@ var _pvImgCache = {};
 // フロー図では同じ画像が複数のカードに出るため、これが無いと
 // 1枚の画像に対して何本もトランザクションが走る。
 var _pvImgPending = {};
+/**
+ * 実ファイル参照（screen-images/…）は日本語やスペースを含むため、
+ * エンコードしないと file:// で読み込めない。
+ */
+function _pvSrcForDisplay(v) {
+  if (!v) return v;
+  if (v.indexOf('data:') === 0) return v;
+  if (/^[a-z][a-z0-9+.\-]*:/i.test(v)) return v;
+  if (/%[0-9a-f]{2}/i.test(v)) return v;
+  try { return v.split('/').map(encodeURIComponent).join('/'); } catch (e) { return v; }
+}
+
 function resolveImgPv(src) {
   if (!src) return Promise.resolve(null);
-  if (!src.startsWith('lib:')) return Promise.resolve(src);
+  if (!src.startsWith('lib:')) return Promise.resolve(_pvSrcForDisplay(src));
   var libId = src.slice(4);
   if (_pvImgCache[libId]) return Promise.resolve(_pvImgCache[libId]);
   if (_pvImgPending[libId]) return _pvImgPending[libId];
-  var p = _resolveImgPvRaw(libId);
+  var p = _resolveImgPvRaw(libId).then(function(v){ return _pvSrcForDisplay(v); });
   _pvImgPending[libId] = p;
   p.then(function() { delete _pvImgPending[libId]; },
          function() { delete _pvImgPending[libId]; });

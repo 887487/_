@@ -1675,7 +1675,7 @@ html[data-theme="dark"] .nav-arrow-btn { background: rgba(40,42,54,.9); }
           <div id="imgLibHsCanvasHost" style="flex:1;position:relative;min-height:0;display:flex;">
           <div id="imgLibHsCanvasWrap" style="flex:1;overflow:auto;background:#333;display:flex;padding:16px;position:relative;cursor:crosshair;" title="ドラッグしてホットスポットを描画／Ctrl+ホイールで拡大縮小／Alt+ドラッグで移動">
             <div id="imgLibHsCanvas" style="position:relative;display:inline-block;flex-shrink:0;margin:auto;">
-              <img id="imgLibHsImg" src="" alt="" draggable="false" ondragstart="return false"
+              <img id="imgLibHsImg" alt="" draggable="false" ondragstart="return false"
                    style="display:block;max-width:none;-webkit-user-drag:none;user-select:none;">
               <!-- 作図ガイド（十字線・スナップ線・寸法ラベル） -->
               <div class="ilib-guide v" id="ilibGuideV" style="display:none"></div>
@@ -1727,6 +1727,9 @@ html[data-theme="dark"] .nav-arrow-btn { background: rgba(40,42,54,.9); }
       <div id="scrLibMenu" style="display:none;position:absolute;z-index:900;background:var(--surface);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow-md);padding:4px;min-width:210px;">
         <button class="scr-lib-menu-item" onclick="_scrLibMenuDo('add')">📁 フォルダから画像を一括追加</button>
         <button class="scr-lib-menu-item" onclick="_scrLibMenuDo('addFiles')">🖼 画像ファイルを選んで追加</button>
+        <button class="scr-lib-menu-item" onclick="_scrLibMenuDo('scan')">🔄 screen-images を読み込む</button>
+        <button class="scr-lib-menu-item" onclick="_scrLibMenuDo('migrate')">📦 画像をファイル化（DB軽量化）</button>
+        <button class="scr-lib-menu-item" onclick="_scrLibMenuDo('status')">📊 保存状態を確認</button>
         <div class="scr-lib-menu-sep"></div>
         <button class="scr-lib-menu-item" onclick="_scrLibMenuDo('renameFolder')">✏️ 選択中フォルダの名前を変更</button>
         <div class="scr-lib-menu-sep"></div>
@@ -3339,7 +3342,25 @@ function applyImport(impScripts,impMail,choices,conflicts,impHistory,impScreen){
       // 全件読むと数十MBのデシリアライズが発生するため）
       imgLibGetAllKeys().then(function(existingIds) {
         var toInsert = v3Lib.filter(function(x){ return !existingIds.has(x.id); });
+        var toUpdate = v3Lib.filter(function(x){ return existingIds.has(x.id); });
         var done = 0, total = toInsert.length;
+
+        // 既に同じIDが登録済みでも、フォルダ・名前・メモは取り込み側で更新する。
+        // ここを飛ばすと「PC(A)で作ったフォルダが反映されない」状態になる。
+        if (toUpdate.length) {
+          _imgLibBulkUpdate(toUpdate.map(function(x) {
+            return { id: x.id, fields: {
+              name:       x.name || x.id,
+              folder:     x.folder || '',
+              note:       x.note || '',
+              hotspots:   x.hotspots || [],
+              hsLinkFrom: x.hsLinkFrom || null
+            } };
+          }), function() {
+            // フォルダが変わると保存先パスも変わるので書き出し対象にする
+            toUpdate.forEach(function(x) { _imgLibMarkDirty(x.id); });
+          });
+        }
 
         // 既に全件が登録済みでも、ファイル未書き出しなら「保存して反映」の
         // 対象にする必要がある。ここを素通りすると screen-images に出力されない。
@@ -3627,13 +3648,17 @@ function exportJSON(){
             _importProgressUpdate('エクスポート準備中…',
               (idx+1)+' / '+usedItems.length+' 枚圧縮済み',
               20 + Math.round((idx+1)/usedItems.length * 60));
-            resolve({ id: item.id, name: item.name, tags: item.tags||[], hotspots: item.hotspots||[],
-                      setId: item.setId, setName: item.setName, setLabel: item.setLabel, setOrder: item.setOrder,
+            // folder / note / hsLinkFrom を落とすと、別PCで取り込んだときに
+            // フォルダ分けやメモが失われ、画像が未分類として書き出し直される
+            resolve({ id: item.id, name: item.name,
+                      folder: item.folder || '', note: item.note || '',
+                      hotspots: item.hotspots || [], hsLinkFrom: item.hsLinkFrom || null,
                       dataUrl: compressed });
           };
           img.onerror = function() {
-            resolve({ id: item.id, name: item.name, tags: item.tags||[], hotspots: item.hotspots||[],
-                      setId: item.setId, setName: item.setName, setLabel: item.setLabel, setOrder: item.setOrder,
+            resolve({ id: item.id, name: item.name,
+                      folder: item.folder || '', note: item.note || '',
+                      hotspots: item.hotspots || [], hsLinkFrom: item.hsLinkFrom || null,
                       dataUrl: item.dataUrl });
           };
           img.src = item.dataUrl;
@@ -5233,10 +5258,25 @@ function imgLibGet(libId) {
 }
 
 // "lib:xxx" を解決して dataUrl を返す。直接 base64 ならそのまま返す
+/**
+ * 画像パスを <img src> に渡せる形へ整える。
+ * 実ファイル参照（screen-images/…）は日本語やスペースを含むため、
+ * エンコードしないと file:// で読み込めない。
+ */
+function _imgSrcForDisplay(v) {
+  if (!v) return v;
+  if (v.indexOf('data:') === 0) return v;                 // base64 はそのまま
+  if (/^[a-z][a-z0-9+.\-]*:/i.test(v)) return v;          // http(s): / file: など
+  if (/%[0-9a-f]{2}/i.test(v)) return v;                  // すでにエンコード済み
+  try { return v.split('/').map(encodeURIComponent).join('/'); } catch (e) { return v; }
+}
+
 function resolveImg(src) {
   if (!src) return Promise.resolve(null);
-  if (src.startsWith('lib:')) return imgLibGet(src.slice(4));
-  return Promise.resolve(src);
+  if (src.startsWith('lib:')) {
+    return imgLibGet(src.slice(4)).then(function(v){ return _imgSrcForDisplay(v); });
+  }
+  return Promise.resolve(_imgSrcForDisplay(src));
 }
 
 // 全ライブラリ画像を取得
@@ -5302,6 +5342,341 @@ function imgLibGetAllKeys() {
       var req = tx.objectStore('imageLib').getAllKeys();
       req.onsuccess = function(e) { resolve(new Set(e.target.result || [])); };
       req.onerror   = function()  { resolve(new Set()); };
+    });
+  });
+}
+
+/**
+ * screen-images/ を走査し、ライブラリに未登録の画像ファイルを取り込む。
+ *
+ * 直接フォルダに置いた画像を使えるようにするための処理。
+ * 取り込んだレコードは dataUrl に base64 ではなく「相対パス」を持たせる
+ * （＝実ファイル参照）。こうすると
+ *   ・IndexedDB が肥大化しない
+ *   ・保存時にファイルを書き直さないのでファイル名が変わらない
+ *   ・将来 IndexedDB を廃止して実ファイル一本化する際の土台になる
+ * サブフォルダ名はそのまま画像ライブラリのフォルダとして扱う。
+ *
+ * @param {boolean} silent true なら結果をトーストで通知しない
+ * @returns Promise<number> 取り込んだ件数
+ */
+var IMG_EXT_RE = /\.(png|jpe?g|gif|webp|bmp|svg)$/i;
+
+function _scrLibScanFolder(silent) {
+  if (!window.AppFS || !window.AppFS.isSupported()) {
+    if (!silent) toast('⚠️ このブラウザはフォルダ読み込みに非対応です');
+    return Promise.resolve(0);
+  }
+
+  // 接続状態を先に確かめる。未接続だと listFiles が黙って空を返すため、
+  // 「拾わない」のか「繋がっていない」のか分からなくなる。
+  return window.AppFS.ensure(false).then(function(dir) {
+    if (!dir) {
+      if (!silent) toast('⚠️ 保存先フォルダが未接続です（💾 保存して反映 から接続してください）');
+      return 0;
+    }
+    return _scrLibScanFolderInner(silent);
+  }).catch(function() {
+    if (!silent) toast('⚠️ フォルダにアクセスできませんでした');
+    return 0;
+  });
+}
+
+function _scrLibScanFolderInner(silent) {
+  return window.AppFS.listDirs(SCREEN_IMG_DIR).then(function(subs) {
+    var dirs = [''].concat(subs || []);
+    return Promise.all(dirs.map(function(sub) {
+      var dp = SCREEN_IMG_DIR + (sub ? '/' + sub : '');
+      return window.AppFS.listFiles(dp).then(function(names) {
+        return (names || []).filter(function(n){ return IMG_EXT_RE.test(n); })
+                            .map(function(n){ return { path: dp + '/' + n, name: n, folder: sub }; });
+      }).catch(function(){ return []; });
+    }));
+  }).then(function(arrs) {
+    var files = [];
+    arrs.forEach(function(a){ files = files.concat(a); });
+    console.info('[imageLib] ' + SCREEN_IMG_DIR + ' を走査: 画像 ' + files.length + ' 件');
+    if (!files.length) {
+      if (!silent) toast('⚠️ ' + SCREEN_IMG_DIR + '/ に画像が見つかりませんでした');
+      return 0;
+    }
+
+    // すでにライブラリが管理しているファイルパスを集める。
+    // 取りこぼすと同じ画像を何度も登録してしまうため、3系統すべてを見る。
+    return imgLibGetAllPaths().then(function(known) {
+      // ① IndexedDB のレコードが持つパス（実ファイル参照のもの）＝ imgLibGetAllPaths
+      // ② 保存時のマップ
+      Object.keys(window._SCREEN_IMG_MAP || {}).forEach(function(id) {
+        var p = window._SCREEN_IMG_MAP[id]; if (p) known[p] = 1;
+      });
+      // ③ screen-data.js の library に書かれたパス
+      var sd = window.APP_SCREEN_DATA;
+      if (sd && Array.isArray(sd.library)) {
+        sd.library.forEach(function(m){ if (m.file) known[m.file] = 1; });
+      }
+
+      // libXXXX.png のようにIDで管理されているファイルは、パスが未知でも
+      // そのIDがライブラリに居れば取り込まない（フォルダ移動直後など）
+      var libIds = {};
+      (_imgLibAllItems || []).forEach(function(it){ libIds[it.id] = 1; });
+
+      var added = files.filter(function(f) {
+        if (known[f.path]) return false;
+        var m = /^(lib[0-9a-z]+)\.[^.]+$/i.exec(f.name);
+        if (m && libIds[m[1]]) return false;
+        return true;
+      });
+      console.info('[imageLib] 未登録: ' + added.length + ' 件 / 登録済み: ' + (files.length - added.length) + ' 件');
+      if (!added.length) {
+        if (!silent) toast('✅ ' + files.length + ' 件すべて取り込み済みです');
+        return 0;
+      }
+
+      var recs = added.map(function(f) {
+        return {
+          id:        'lib' + Math.random().toString(36).substr(2, 9),
+          name:      f.name.replace(IMG_EXT_RE, ''),
+          folder:    _imgLibSafeFolder(f.folder),
+          note:      '',
+          dataUrl:   f.path,     // 実ファイル参照（base64 を持たない）
+          hotspots:  [],
+          createdAt: Date.now()
+        };
+      });
+
+      return _imgLibPutMany(recs).then(function() {
+        // ファイルはすでに存在するので書き出し不要。パス解決だけ通しておく
+        recs.forEach(function(r) { window._SCREEN_IMG_MAP[r.id] = r.dataUrl; });
+        _imgLibInvalidateMeta();
+        _imgLibAllItems = []; _imgLibLoaded = false;
+        // 取り込んだ画像を screen-data.js の library に載せるため、
+        // 「保存して反映」の対象として記録する（ファイル自体は書き直さない）
+        recs.forEach(function(r) { _imgLibMarkDirty(r.id); });
+        // library にも即座に載せる（保存前でも一覧・書き出しが一致する）
+        var sd2 = window.APP_SCREEN_DATA;
+        if (sd2 && Array.isArray(sd2.library)) {
+          recs.forEach(function(r) {
+            if (sd2.library.some(function(m){ return m.id === r.id; })) return;
+            sd2.library.push({
+              id: r.id, name: r.name, folder: r.folder, file: r.dataUrl,
+              note: r.note || '', hotspots: r.hotspots || [], hsLinkFrom: null
+            });
+          });
+        }
+
+        // 取り込みが発生したときは自動走査でも必ず知らせる。
+        // 黙って取り込むと、その後に手動実行しても「新しい画像はありません」
+        // としか出ず、取り込めていないように見えてしまう。
+        toast('✅ ' + recs.length + ' 件の画像を screen-images から取り込みました');
+
+        // 読み込み処理の中から呼ばれた場合（silent）は、この後で一覧が
+        // 描画されるので再描画しない。ここで呼ぶと読み込みが再入する。
+        if (!silent && typeof _scrLibRender === 'function') _scrLibRender();
+        return recs.length;
+      });
+    });
+  }).catch(function(e) {
+    console.warn('[imageLib] フォルダ走査に失敗:', e && e.message);
+    if (!silent) toast('❌ 読み込みに失敗しました');
+    return 0;
+  });
+}
+
+/**
+ * 画像ライブラリの「保存状況」を調べる。
+ * base64 が残っている件数と、library に載っていない件数を返す。
+ */
+function _imgLibInspect() {
+  return Promise.all([imgLibGetAllKeys(), imgLibGetAllPaths()]).then(function(res) {
+    var ids = Array.from(res[0]);
+    var pathById = {};
+    // paths はパス集合なので、件数の突き合わせには使わない
+    var sd = window.APP_SCREEN_DATA;
+    var inLib = {};
+    if (sd && Array.isArray(sd.library)) sd.library.forEach(function(m){ inLib[m.id] = 1; });
+    return {
+      total:    ids.length,
+      notInLib: ids.filter(function(id){ return !inLib[id]; }).length
+    };
+  }).catch(function(){ return { total: 0, notInLib: 0 }; });
+}
+
+/** 現在の保存状況をまとめて表示する */
+function _imgLibShowStatus() {
+  Promise.all([_imgLibInspect(), imgLibGetAllKeys()]).then(function(r) {
+    var info = r[0];
+    var ids  = Array.from(r[1]);
+    // base64 が残っている件数を数える（パスを持つものは移行済み）
+    return imgLibGetAllPaths().then(function(paths) {
+      var pathCount = Object.keys(paths).length;
+      var sd = window.APP_SCREEN_DATA;
+      var libCount = (sd && Array.isArray(sd.library)) ? sd.library.length : 0;
+      var b64 = Math.max(0, info.total - pathCount);
+      alert(
+        '📊 画像ライブラリの状態\n\n'
+        + '　IndexedDB の画像　: ' + info.total + ' 件\n'
+        + '　　うちファイル参照 : ' + pathCount + ' 件\n'
+        + '　　うち base64     : ' + b64 + ' 件' + (b64 ? '（📦 ファイル化 で軽量化できます）' : '') + '\n\n'
+        + '　screen-data.js の library : ' + libCount + ' 件\n'
+        + '　　library 未登録  : ' + info.notInLib + ' 件'
+        + (info.notInLib ? '（💾 保存して反映 で解消します）' : '')
+      );
+    });
+  });
+}
+
+/**
+ * base64 レコードを実ファイルへ書き出し、参照方式へ移行する。
+ *
+ * IndexedDB に base64 を抱えたままだと
+ *   ・DBが数十MBに膨らみ、読み書きが遅い
+ *   ・screen-images/ と二重に画像を持つことになる
+ * ため、ファイルへ書き出して dataUrl を相対パスに置き換える。
+ * 移行後は screen-data.js の library ＋ 実ファイルだけで完結する。
+ *
+ * ファイルはすでに書き出し済みのことが多いので、その場合は
+ * 書き込みを省いて参照の付け替えだけを行う。
+ */
+/**
+ * screen-data.js の library（メタ情報の正）をその場で更新する。
+ * IndexedDB と library の二重管理による食い違いを防ぐため、
+ * 編集内容は両方へ同時に反映する。
+ */
+function _imgLibSyncLibrary(updates) {
+  var sd = window.APP_SCREEN_DATA;
+  if (!sd || !Array.isArray(sd.library)) return;
+  var META = ['name', 'folder', 'note', 'hotspots', 'hsLinkFrom'];
+  (updates || []).forEach(function(u) {
+    var m = sd.library.find(function(x){ return x.id === u.id; });
+    if (!m || !u.fields) return;
+    META.forEach(function(k) { if (u.fields[k] !== undefined) m[k] = u.fields[k]; });
+    if (u.fields.dataUrl && u.fields.dataUrl.indexOf('data:') !== 0) m.file = u.fields.dataUrl;
+  });
+}
+
+/** 削除した画像を library からも取り除く */
+function _imgLibRemoveFromLibrary(ids) {
+  var sd = window.APP_SCREEN_DATA;
+  if (!sd || !Array.isArray(sd.library)) return;
+  var del = {}; (ids || []).forEach(function(id){ del[id] = 1; });
+  sd.library = sd.library.filter(function(m){ return !del[m.id]; });
+}
+
+function _imgLibMigrateToFiles() {
+  if (!window.AppFS || !window.AppFS.isSupported()) {
+    toast('⚠️ このブラウザはフォルダ書き込みに非対応です'); return;
+  }
+  window.AppFS.ensure(true).then(function(dir) {
+    if (!dir) { toast('⚠️ 保存先フォルダを接続してください'); return; }
+
+    _importProgressShow('画像をファイル化しています…', '準備中…', 0);
+
+    // 既存ファイルの一覧（書き込みを省けるか判断するため）
+    var existingP = window.AppFS.listDirs(SCREEN_IMG_DIR).then(function(subs) {
+      var dirs = [''].concat(subs || []);
+      return Promise.all(dirs.map(function(sub) {
+        var dp = SCREEN_IMG_DIR + (sub ? '/' + sub : '');
+        return window.AppFS.listFiles(dp).then(function(ns) {
+          return (ns || []).map(function(n){ return dp + '/' + n; });
+        }).catch(function(){ return []; });
+      })).then(function(arrs) {
+        var set = {}; arrs.forEach(function(a){ a.forEach(function(p){ set[p] = 1; }); });
+        return set;
+      });
+    }).catch(function(){ return {}; });
+
+    Promise.all([imgLibGetAllKeys(), existingP]).then(function(res) {
+      var ids = Array.from(res[0]);
+      var existing = res[1];
+      var done = 0, migrated = 0, skipped = 0, failed = 0;
+
+      // 1件ずつ処理する（全件を同時に読むとメモリを大量に使う）
+      var step = function(i) {
+        if (i >= ids.length) {
+          _importProgressHide();
+          _imgLibInvalidateMeta();
+          _imgLibAllItems = []; _imgLibLoaded = false;
+          if (typeof _scrLibRender === 'function') _scrLibRender();
+          var msg = '✅ ' + migrated + ' 件をファイル化しました'
+                  + (skipped ? '（' + skipped + ' 件は移行済み）' : '')
+                  + (failed ? ' / ❌ 失敗 ' + failed + ' 件' : '');
+          toast(msg);
+          if (migrated) toast('💾 保存して反映 を実行してください');
+          return;
+        }
+        var id = ids[i];
+        _importProgressUpdate('画像をファイル化しています…',
+          (i + 1) + ' / ' + ids.length + ' 件', Math.round((i + 1) / ids.length * 100));
+
+        imgLibGetOne(id).then(function(rec) {
+          if (!rec) { failed++; return; }
+          // すでにパス参照なら何もしない
+          if (!rec.dataUrl || rec.dataUrl.indexOf('data:') !== 0) { skipped++; return; }
+
+          var blob = window.dataUrlToBlob(rec.dataUrl);
+          if (!blob) { failed++; return; }
+          var path = _imgLibFilePath(
+            { id: rec.id, folder: rec.folder || '' },
+            window.mimeToExt(blob.type)
+          );
+
+          // 同じ内容のファイルが既にあるなら書き込みを省く
+          var writeP = existing[path]
+            ? Promise.resolve(true)
+            : window.AppFS.writeBinary(path, blob, false);
+
+          return writeP.then(function(ok) {
+            if (!ok) { failed++; return; }
+            rec.dataUrl = path;                       // base64 → 相対パス
+            return _imgLibPutMany([rec]).then(function() {
+              window._SCREEN_IMG_MAP[rec.id] = path;
+              delete _imgLibCache[rec.id];
+              _imgLibMarkDirty(rec.id);
+              migrated++;
+            });
+          });
+        }).catch(function() { failed++; })
+          .then(function() { done++; setTimeout(function(){ step(i + 1); }, 0); });
+      };
+      step(0);
+    }).catch(function(e) {
+      _importProgressHide();
+      toast('❌ ファイル化に失敗: ' + (e && e.message || e));
+    });
+  }).catch(function() { toast('⚠️ フォルダにアクセスできませんでした'); });
+}
+
+/** IndexedDB のレコードが持つ「ファイル参照パス」を集める */
+function imgLibGetAllPaths() {
+  return _imgLibOpen().then(function(db) {
+    return new Promise(function(resolve) {
+      var out = {};
+      var tx  = db.transaction('imageLib', 'readonly');
+      var req = tx.objectStore('imageLib').openCursor();
+      req.onsuccess = function(e) {
+        var cur = e.target.result;
+        if (!cur) { resolve(out); return; }
+        var v = cur.value || {};
+        // base64 ではなくパスを持つレコードだけが対象
+        if (v.dataUrl && v.dataUrl.indexOf('data:') !== 0) out[v.dataUrl] = 1;
+        cur.continue();
+      };
+      req.onerror = function() { resolve(out); };
+    });
+  }).catch(function() { return {}; });
+}
+
+/** 複数レコードをまとめて登録する */
+function _imgLibPutMany(recs) {
+  if (!recs.length) return Promise.resolve();
+  return _imgLibOpen().then(function(db) {
+    return new Promise(function(resolve, reject) {
+      var tx = db.transaction('imageLib', 'readwrite');
+      var st = tx.objectStore('imageLib');
+      recs.forEach(function(r) { st.put(r, r.id); });   // out-of-line key
+      tx.oncomplete = function() { resolve(); };
+      tx.onerror    = function(e) { reject(e.target.error); };
+      tx.onabort    = function(e) { reject(tx.error || e.target.error); };
     });
   });
 }
@@ -5443,6 +5818,7 @@ function imgLibGetOne(libId) {
 function imgLibDelete(libId) {
   delete _imgLibCache[libId];
   _imgLibInvalidateMeta();
+  _imgLibRemoveFromLibrary([libId]);
   return _imgLibOpen().then(function(db) {
     return new Promise(function(resolve) {
       var tx, store;
@@ -5662,19 +6038,31 @@ function _exportScreenToFiles() {
           if (meta) meta.file = path;
         });
 
-        // フォルダを移動した画像は、変更なしでもパスが変わるので付け替える
+        // フォルダを移動した画像は、変更なしでもパスが変わるので付け替える。
+        // ただし実ファイル参照（フォルダに直接置いた画像）は元のファイル名を
+        // 保ちたいので、ファイル自体は動かさず folder だけを実際の位置に合わせる。
         library.forEach(function(m) {
           if (!m.file) return;
-          var want = m.file.replace(/^screen-images\/(?:[^\/]+\/)?/, SCREEN_IMG_DIR + '/' + (m.folder ? m.folder + '/' : ''));
-          if (want !== m.file && imgMap[m.id]) {
-            // パスが変わる場合は書き出し直しが必要
-            _imgLibMarkDirty(m.id);
+          var dir = m.file.slice(0, m.file.lastIndexOf('/'));
+          var actual = (dir === SCREEN_IMG_DIR) ? '' : dir.slice(SCREEN_IMG_DIR.length + 1);
+          var isManaged = /\/lib[0-9a-z]+\.[^.\/]+$/i.test(m.file);
+
+          if (!isManaged) {
+            // 実ファイル参照：フォルダ表記を実際の置き場所に合わせるだけ
+            if (actual !== m.folder) m.folder = actual;
+            return;
           }
+          var want = SCREEN_IMG_DIR + '/' + (m.folder ? m.folder + '/' : '') + m.file.split('/').pop();
+          if (want !== m.file && imgMap[m.id]) _imgLibMarkDirty(m.id);
         });
 
-        // パターンだけが参照している画像のファイルは維持する
+        // ライブラリに無い（＝パターンだけが参照している）画像のファイルを維持する。
+        // ライブラリにある画像は上で正しいパスを決めているので、ここで旧パスを
+        // 拾い直すと、フォルダ移動前後の2つが両方残ってファイル数が増える。
+        var inLibrary = {};
+        library.forEach(function(m) { inLibrary[m.id] = 1; });
         Object.keys(usedIds).forEach(function(id) {
-          if (imgMap[id]) return;
+          if (imgMap[id] || inLibrary[id]) return;
           var prev = window.screenImgFileSrc(id);
           if (prev) { imgMap[id] = prev; keepFiles[prev] = true; }
         });
@@ -5704,10 +6092,20 @@ function _exportScreenToFiles() {
           return _imgLibCleanupFiles(keepFiles)
             .catch(function() { /* 掃除失敗は無視 */ })
             .then(function() {
-              // ── ⑤ IDB にも反映して screen.html と同期させる ──
+              // ── ⑤ IDB とメモリ上のデータを書き出した内容にそろえる ──
               window._SCREEN_IMG_MAP = imgMap;
+              // 書き出した library をメモリにも反映する。
+              // ここを忘れると、ファイルは正しいのに画面上は古いままになり、
+              // 「保存しても未登録が減らない」ように見える。
+              if (window.APP_SCREEN_DATA) {
+                window.APP_SCREEN_DATA.library  = library;
+                window.APP_SCREEN_DATA.images   = imgMap;
+                window.APP_SCREEN_DATA.savedAt  = savedAt;
+              }
               _imgLibClearDirty();   // 書き出し済みなので変更フラグを落とす
               _imgLibMetaSynced();   // library を最新化したので編集済みフラグも落とす
+              console.info('[screen-data] library ' + library.length + ' 件 / images '
+                + Object.keys(imgMap).length + ' 件を書き出しました');
               return window.idbSetAppData('screenSavedAt', savedAt)
                 .then(function() { return _idbPutScreenPatterns(pats || []); })
                 .then(function() { return 'file'; })
@@ -6213,7 +6611,7 @@ function scrRenderUnifiedSidebar(){
         var thumbId = 'scrThumb_' + s.id;
         // サムネイルは表示された行だけ読み込む（初回描画で全画像を読むと非常に重い）
         var thumb = s.imageSrc
-          ? '<img id="' + thumbId + '" class="scr-lazy-thumb" data-src="' + s.imageSrc + '" src="" alt="">'
+          ? '<img id="' + thumbId + '" class="scr-lazy-thumb" data-src="' + s.imageSrc + '" alt="">'
           : '<span style="font-size:10px;color:var(--muted);">🖼️</span>';
         h += '<div class="script-item scr-screen-row' + (active ? ' active' : '') + '"'
            + ' data-scr-id="' + s.id + '"'
@@ -7289,6 +7687,11 @@ function _scrLibMenuDo(act) {
   _scrLibCloseMenuOnce();
   if (act === 'add')           { _scrOpenAddFolderDialog(_scrCurrentPatId || null); }
   else if (act === 'addFiles') { var i = document.getElementById('scrLibAddInput'); if (i) { i.value=''; i.click(); } }
+  else if (act === 'scan')     { _scrLibScanFolder(false); }
+  else if (act === 'status')   { _imgLibShowStatus(); }
+  else if (act === 'migrate')  {
+    if (confirm('IndexedDB 内の画像データを screen-images/ のファイルへ書き出し、\n参照方式に切り替えます。\n\n・画像は消えません（表示も変わりません）\n・IndexedDB が大幅に軽くなります\n・完了後は「💾 保存して反映」を実行してください\n\n実行しますか？')) _imgLibMigrateToFiles();
+  }
   else if (act === 'renameFolder') { _imgLibRenameFolderFromPanel(); }
   else if (act === 'mergeContent') { _imgLibMergeByContent(); }
   else if (act === 'mergeName')    { _imgLibMergeDuplicates(); }
@@ -9170,6 +9573,7 @@ function _imgLibRender() {
 var _imgLibAllItems = []; // キャッシュ（再フィルター用）
 
 var _imgLibHydrated = false;
+var _imgLibScanned  = false;   // フォルダ走査をセッション1回に絞る
 
 function _imgLibLoad(cb) {
   // 復元はセッションに1回だけでよい。毎回走らせると
@@ -9188,6 +9592,13 @@ function _imgLibLoad(cb) {
     return 0;
   }).then(function(n) {
     _imgLibHydrated = true;
+    // フォルダに直接置かれた画像を取り込む（追加のみ。削除は行わない）。
+    // 一覧を開くたびに走らせるとフォルダ走査が何度も発生するため、
+    // セッション中1回だけにする（手動実行は ⋯ メニューから）。
+    if (_imgLibScanned || typeof _scrLibScanFolder !== 'function') return n;
+    _imgLibScanned = true;
+    return _scrLibScanFolder(true).catch(function(){ return 0; }).then(function(){ return n; });
+  }).then(function(n) {
     // 復元は library の内容を IDB に入れ直しただけなので「編集」ではない
     if (n) { console.info('[imageLib] screen-data.js から ' + n + ' 件を復元しました'); _imgLibInvalidateMeta(false); }
     return imgLibGetAllMeta();
@@ -11605,6 +12016,7 @@ function _imgLibBulkUpdate(updates, cb) {
       _imgLibInvalidateMeta();
       // 画像そのものが変わった場合だけ書き出し対象にする
       updates.forEach(function(u) { if (u.fields && u.fields.dataUrl) _imgLibMarkDirty(u.id); });
+      _imgLibSyncLibrary(updates);   // メタの正である library も同時に更新する
       // メモリキャッシュも同期
       updates.forEach(function(u) {
         var c = _imgLibAllItems.find(function(x) { return x.id === u.id; });
