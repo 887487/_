@@ -1323,6 +1323,17 @@ html[data-theme="dark"] .nav-arrow-btn { background: rgba(40,42,54,.9); }
 })();
 </script>
 
+<!-- 保存先フォルダ未接続の案内。ボタン押下＝ユーザー操作なので確実にピッカーを開ける -->
+<div id="fsConnectBanner" style="display:none;align-items:center;gap:12px;padding:10px 16px;background:#fff8e1;border-bottom:1px solid #ffcf7a;color:#8a5a00;font-size:12px;line-height:1.7;">
+  <span style="font-size:18px;flex-shrink:0;">📁</span>
+  <span style="flex:1;min-width:0;">
+    <strong>保存先フォルダが接続されていません。</strong><br>
+    接続すると screen-images/ の画像が自動で読み込まれ、「保存して反映」で data.js などを直接更新できます。
+  </span>
+  <button class="btn btn-primary" style="font-size:12px;flex-shrink:0;white-space:nowrap;" onclick="fsConnectFolder()">📁 フォルダを接続</button>
+  <button class="btn btn-secondary" style="font-size:12px;flex-shrink:0;white-space:nowrap;" onclick="_fsDismissBanner()">あとで</button>
+</div>
+
 <header>
   <div class="hd-left" style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
     <button id="menuBtn" onclick="toggleSideMenu()" style="height:32px;width:32px;padding:0;font-size:18px;background:none;border:none;color:#fff;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;border-radius:6px;">☰</button>
@@ -3607,6 +3618,41 @@ window._processImportText = function(text, noReload) {
   }
 };
 
+/** 相対パスのファイルを読み、base64 の dataURL に変換する */
+function _fileToDataUrl(url) {
+  // まず接続フォルダから読む（file:// でも確実に読める）
+  var p = null;
+  if (window.AppFS && window.AppFS.isSupported()) {
+    var rel = decodeURI(url);
+    p = window.AppFS.ensure(false).then(function(dir) {
+      if (!dir) return null;
+      var parts = rel.split('/').filter(Boolean);
+      var name  = parts.pop();
+      var cur   = Promise.resolve(dir);
+      parts.forEach(function(seg) {
+        cur = cur.then(function(d){ return d.getDirectoryHandle(seg, { create:false }); });
+      });
+      return cur.then(function(d){ return d.getFileHandle(name, { create:false }); })
+                .then(function(fh){ return fh.getFile(); });
+    }).catch(function(){ return null; });
+  } else {
+    p = Promise.resolve(null);
+  }
+
+  return p.then(function(file) {
+    if (file) return file;
+    // フォルダ未接続などのときは fetch を試す（http(s) 配信時のみ成功）
+    return fetch(url).then(function(r){ if (!r.ok) throw 0; return r.blob(); });
+  }).then(function(blob) {
+    return new Promise(function(resolve, reject) {
+      var fr = new FileReader();
+      fr.onload  = function(){ resolve(fr.result); };
+      fr.onerror = function(){ reject(fr.error); };
+      fr.readAsDataURL(blob);
+    });
+  });
+}
+
 function exportJSON(){
   // screenPatterns が空なら localStorage インデックスを読む（スクリーンタブ未開封時対策）
   var inMem = (typeof screenPatterns!=='undefined'&&screenPatterns&&screenPatterns.length)
@@ -3637,35 +3683,70 @@ function exportJSON(){
       _importProgressUpdate('エクスポート準備中…', usedItems.length + ' 枚を圧縮中…', 20);
 
       // 各画像を JPEG 75% に再圧縮（PNG→JPEG で大幅に削減）
-      var compressPromises = usedItems.map(function(item, idx) {
+      var _meta = function(item, dataUrl) {
+        // folder / note / hsLinkFrom を落とすと、別PCで取り込んだときに
+        // フォルダ分けやメモが失われ、画像が未分類として書き出し直される
+        return { id: item.id, name: item.name,
+                 folder: item.folder || '', note: item.note || '',
+                 hotspots: item.hotspots || [], hsLinkFrom: item.hsLinkFrom || null,
+                 dataUrl: dataUrl };
+      };
+
+      var _done = 0;
+      var _tick = function() {
+        _done++;
+        _importProgressUpdate('エクスポート準備中…',
+          _done + ' / ' + usedItems.length + ' 枚処理済み',
+          20 + Math.round(_done / Math.max(1, usedItems.length) * 60));
+      };
+
+      var compressPromises = usedItems.map(function(item) {
         return new Promise(function(resolve) {
+          var src = item.dataUrl || '';
+          var isPath = src && src.indexOf('data:') !== 0;
+
+          // ファイル参照（screen-images/…）の画像を canvas に描くと、
+          // file:// ではキャンバスが汚染されて toDataURL が例外になる。
+          // その場合は fetch でバイト列を読み、base64 に変換して埋め込む。
+          if (isPath) {
+            var url = (typeof _imgSrcForDisplay === 'function') ? _imgSrcForDisplay(src) : src;
+            _fileToDataUrl(url).then(function(b64) {
+              _tick(); resolve(_meta(item, b64 || src));
+            }).catch(function() { _tick(); resolve(_meta(item, src)); });
+            return;
+          }
+
           var img = new Image();
           img.onload = function() {
-            var canvas = document.createElement('canvas');
-            canvas.width = img.naturalWidth; canvas.height = img.naturalHeight;
-            canvas.getContext('2d').drawImage(img, 0, 0);
-            var compressed = canvas.toDataURL('image/jpeg', 0.75);
-            _importProgressUpdate('エクスポート準備中…',
-              (idx+1)+' / '+usedItems.length+' 枚圧縮済み',
-              20 + Math.round((idx+1)/usedItems.length * 60));
-            // folder / note / hsLinkFrom を落とすと、別PCで取り込んだときに
-            // フォルダ分けやメモが失われ、画像が未分類として書き出し直される
-            resolve({ id: item.id, name: item.name,
-                      folder: item.folder || '', note: item.note || '',
-                      hotspots: item.hotspots || [], hsLinkFrom: item.hsLinkFrom || null,
-                      dataUrl: compressed });
+            var out = src;
+            try {
+              var canvas = document.createElement('canvas');
+              canvas.width = img.naturalWidth; canvas.height = img.naturalHeight;
+              canvas.getContext('2d').drawImage(img, 0, 0);
+              out = canvas.toDataURL('image/jpeg', 0.75);   // 例外時は元データを使う
+            } catch (e) { /* 汚染などで失敗したら圧縮しない */ }
+            _tick(); resolve(_meta(item, out));
           };
-          img.onerror = function() {
-            resolve({ id: item.id, name: item.name,
-                      folder: item.folder || '', note: item.note || '',
-                      hotspots: item.hotspots || [], hsLinkFrom: item.hsLinkFrom || null,
-                      dataUrl: item.dataUrl });
-          };
-          img.src = item.dataUrl;
+          img.onerror = function() { _tick(); resolve(_meta(item, src)); };
+          img.src = src;
         });
       });
 
-      Promise.all(compressPromises).then(function(imageLib) {
+      // どれか1件が返ってこなくても全体が止まらないよう、
+      // 各処理に上限時間を設けてから待ち合わせる
+      var guarded = compressPromises.map(function(p, i) {
+        return Promise.race([
+          p,
+          new Promise(function(res) {
+            setTimeout(function() {
+              var it = usedItems[i];
+              res(_meta(it, it.dataUrl));
+            }, 20000);
+          })
+        ]);
+      });
+
+      Promise.all(guarded).then(function(imageLib) {
         _importProgressUpdate('エクスポート準備中…', 'ファイルを生成中…', 85);
 
         // sideMenuFiles（添付ファイル）もエクスポートに含める
@@ -4499,6 +4580,45 @@ function _fsSetStatusUI(state, name) {
   if (btnD) btnD.style.display = (state === 'granted' || state === 'prompt' || state === 'denied') ? '' : 'none';
 }
 
+/**
+ * 起動時にフォルダの接続状態を確かめ、未接続なら接続を促す。
+ *
+ * 未接続のままだと
+ *   ・screen-images の走査ができない（最新の画像が反映されない）
+ *   ・「保存して反映」がダウンロードにフォールバックする
+ * ため、作業を始める前に接続させる。
+ * 「あとで」を選んだ場合はこのセッション中は再度尋ねない。
+ */
+function _fsPromptConnectOnStart() {
+  if (!window.AppFS || !window.AppFS.isSupported()) return;
+  if (sessionStorage.getItem('fsPromptSkipped') === '1') return;
+
+  window.AppFS.status().then(function(st) {
+    // 'granted' はもちろん、'prompt'（登録済みで許可待ち）も接続済みとみなす。
+    // 権限は保存や走査のタイミングでユーザー操作起点に要求される。
+    if (st === 'granted' || st === 'prompt') return;
+
+    // showDirectoryPicker は「ユーザー操作起点」でしか開けない。
+    // confirm の OK から非同期で呼ぶと起点が切れて拒否されることがあるため、
+    // 画面上にバナーを出してボタンを押してもらう。
+    var b = document.getElementById('fsConnectBanner');
+    if (b) b.style.display = 'flex';
+  }).catch(function(){});
+}
+
+// パスワード認証を通過して画面が組み上がったあとに確認する
+document.addEventListener('DOMContentLoaded', function() {
+  setTimeout(_fsPromptConnectOnStart, 600);
+});
+
+/** 案内バナーを閉じる（このセッション中は再表示しない） */
+function _fsDismissBanner() {
+  var b = document.getElementById('fsConnectBanner');
+  if (b) b.style.display = 'none';
+  sessionStorage.setItem('fsPromptSkipped', '1');
+  toast('ℹ️ フォルダは「💾 保存して反映」からいつでも接続できます');
+}
+
 function fsRefreshStatus() {
   if (!window.AppFS) return Promise.resolve();
   return window.AppFS.status().then(function(s) {
@@ -4513,7 +4633,19 @@ function fsConnectFolder() {
   }
   window.AppFS.pick().then(function(dir) {
     _fsSetStatusUI('granted', dir.name);
+    var bn = document.getElementById('fsConnectBanner');
+    if (bn) bn.style.display = 'none';
     toast('✅ フォルダを接続しました：' + dir.name);
+    // 接続できた時点で screen-images を読み直す。
+    // 接続前は走査できないため、ここで拾わないと最新のファイルが反映されない。
+    _imgLibScanned = false;
+    if (typeof _scrLibScanFolder === 'function') {
+      _scrLibScanFolder(false).then(function() {
+        _imgLibInvalidateMeta(false);
+        _imgLibAllItems = []; _imgLibLoaded = false;
+        if (typeof _scrLibRender === 'function') _scrLibRender();
+      });
+    }
   }).catch(function(e) {
     if (e && e.name === 'AbortError') return;   // ユーザーがキャンセル
     toast('❌ フォルダ接続に失敗: ' + (e && e.message || e));
@@ -4675,13 +4807,37 @@ function exportIndividual(type) {
     cloned.forEach(function(p){ (p.screens||[]).forEach(function(s){ if(s.imageSrc&&s.imageSrc.startsWith('lib:'))usedIds.add(s.imageSrc.slice(4)); }); });
     imgLibGetAll().then(function(libItems) {
       var usedItems = libItems.filter(function(item){ return usedIds.has(item.id); });
+      // 個別エクスポートも本体と同じ方式にする。
+      // ファイル参照の画像を canvas に描くと file:// では例外になり、
+      // resolve に到達せず処理が終わらなくなる。
+      var _m = function(item, dataUrl) {
+        return { id:item.id, name:item.name,
+                 folder:item.folder||'', note:item.note||'',
+                 hotspots:item.hotspots||[], hsLinkFrom:item.hsLinkFrom||null,
+                 dataUrl:dataUrl };
+      };
       var compressPromises = usedItems.map(function(item) {
         return new Promise(function(resolve) {
-          var img = new Image(); img.onload = function() {
-            var cv = document.createElement('canvas'); cv.width = img.naturalWidth; cv.height = img.naturalHeight;
-            cv.getContext('2d').drawImage(img,0,0);
-            resolve({id:item.id,name:item.name,tags:item.tags||[],dataUrl:cv.toDataURL('image/jpeg',0.75)});
-          }; img.onerror = function(){ resolve(item); }; img.src = item.dataUrl;
+          var src = item.dataUrl || '';
+          if (src && src.indexOf('data:') !== 0) {
+            var u = (typeof _imgSrcForDisplay === 'function') ? _imgSrcForDisplay(src) : src;
+            _fileToDataUrl(u).then(function(b64){ resolve(_m(item, b64 || src)); })
+                             .catch(function(){ resolve(_m(item, src)); });
+            return;
+          }
+          var img = new Image();
+          img.onload = function() {
+            var out = src;
+            try {
+              var cv = document.createElement('canvas');
+              cv.width = img.naturalWidth; cv.height = img.naturalHeight;
+              cv.getContext('2d').drawImage(img,0,0);
+              out = cv.toDataURL('image/jpeg',0.75);
+            } catch (e) {}
+            resolve(_m(item, out));
+          };
+          img.onerror = function(){ resolve(_m(item, src)); };
+          img.src = src;
         });
       });
       Promise.all(compressPromises).then(function(imageLib) {
@@ -5372,13 +5528,14 @@ function _scrLibScanFolder(silent) {
   // 「拾わない」のか「繋がっていない」のか分からなくなる。
   return window.AppFS.ensure(false).then(function(dir) {
     if (!dir) {
+      // 未接続。0件ではなく「実行できなかった」ことを示す null を返す
       if (!silent) toast('⚠️ 保存先フォルダが未接続です（💾 保存して反映 から接続してください）');
-      return 0;
+      return null;
     }
     return _scrLibScanFolderInner(silent);
   }).catch(function() {
     if (!silent) toast('⚠️ フォルダにアクセスできませんでした');
-    return 0;
+    return null;
   });
 }
 
@@ -7687,7 +7844,16 @@ function _scrLibMenuDo(act) {
   _scrLibCloseMenuOnce();
   if (act === 'add')           { _scrOpenAddFolderDialog(_scrCurrentPatId || null); }
   else if (act === 'addFiles') { var i = document.getElementById('scrLibAddInput'); if (i) { i.value=''; i.click(); } }
-  else if (act === 'scan')     { _scrLibScanFolder(false); }
+  else if (act === 'scan')     {
+    // 手動実行では「セッション中1回」の制限を無視して必ず走らせる。
+    // 権限の再許可が必要な場合もあるため ensure(true) を通す。
+    _imgLibScanned = false;
+    if (window.AppFS && window.AppFS.isSupported()) {
+      window.AppFS.ensure(true).then(function() { _scrLibScanFolder(false); });
+    } else {
+      _scrLibScanFolder(false);
+    }
+  }
   else if (act === 'status')   { _imgLibShowStatus(); }
   else if (act === 'migrate')  {
     if (confirm('IndexedDB 内の画像データを screen-images/ のファイルへ書き出し、\n参照方式に切り替えます。\n\n・画像は消えません（表示も変わりません）\n・IndexedDB が大幅に軽くなります\n・完了後は「💾 保存して反映」を実行してください\n\n実行しますか？')) _imgLibMigrateToFiles();
@@ -9591,13 +9757,21 @@ function _imgLibLoad(cb) {
     console.warn('[imageLib] 復元に失敗しました:', e && e.message);
     return 0;
   }).then(function(n) {
-    _imgLibHydrated = true;
+    // screen-data.js が読めていないうちは復元済みにしない
+    var sdOk = !!(window.APP_SCREEN_DATA && Array.isArray(window.APP_SCREEN_DATA.library)
+                  && window.APP_SCREEN_DATA.library.length);
+    if (sdOk) _imgLibHydrated = true;
     // フォルダに直接置かれた画像を取り込む（追加のみ。削除は行わない）。
     // 一覧を開くたびに走らせるとフォルダ走査が何度も発生するため、
     // セッション中1回だけにする（手動実行は ⋯ メニューから）。
+    // フォルダ未接続だと走査できない。ここで済み扱いにしてしまうと、
+    // 後からフォルダを接続しても二度と走らず、最新のファイルが反映されない。
+    // 走査が成立したときだけフラグを立てる。
     if (_imgLibScanned || typeof _scrLibScanFolder !== 'function') return n;
-    _imgLibScanned = true;
-    return _scrLibScanFolder(true).catch(function(){ return 0; }).then(function(){ return n; });
+    return _scrLibScanFolder(true).then(function(r) {
+      if (r !== null) _imgLibScanned = true;   // null = 未接続で実行できなかった
+      return n;
+    }).catch(function(){ return n; });
   }).then(function(n) {
     // 復元は library の内容を IDB に入れ直しただけなので「編集」ではない
     if (n) { console.info('[imageLib] screen-data.js から ' + n + ' 件を復元しました'); _imgLibInvalidateMeta(false); }
