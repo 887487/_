@@ -364,25 +364,32 @@
     }
 
     function setDate(text, headerLastMod) {
+      if (!dateEl) return;
+
+      // ⓓ 本文中の最新日付を先に確定させる。
+      //    ファイル更新日時の取得は非同期で、フォルダ未接続や権限待ちのときに
+      //    解決しないことがある。先に入れておけば必ず何かは表示される。
+      var fallback = newestDateIn(text || '');
+      if (headerLastMod) {
+        var h = new Date(headerLastMod);
+        if (!isNaN(h)) fallback = h;
+      }
       // ⓐ 手動指定が最優先
       if (window.APP_NOTICE_DATE) {
         var manual = new Date(window.APP_NOTICE_DATE);
-        if (!isNaN(manual)) { if (dateEl) dateEl.textContent = fmt(manual); return; }
+        if (!isNaN(manual)) { dateEl.textContent = fmt(manual); return; }
       }
-      // ⓑ 実ファイルの更新日時
-      fileMtime(FILE_JS).then(function (d) {
-        if (!d) return fileMtime(FILE_TXT);
-        return d;
-      }).then(function (d) {
-        // ⓒ fetch の Last-Modified
-        if (!d && headerLastMod) {
-          var h = new Date(headerLastMod);
-          if (!isNaN(h)) d = h;
-        }
-        // ⓓ 本文中の最新日付
-        if (!d) d = newestDateIn(text || '');
-        if (dateEl) dateEl.textContent = fmt(d);
-      });
+      dateEl.textContent = fmt(fallback);
+
+      // ⓑ 実ファイルの更新日時が取れたら、より正確なのでそちらで上書きする。
+      //    取れない場合は上で入れた日付が残る。
+      var guard = new Promise(function (res) { setTimeout(function () { res(null); }, 3000); });
+      Promise.race([
+        fileMtime(FILE_JS).then(function (d) { return d || fileMtime(FILE_TXT); }),
+        guard
+      ]).then(function (d) {
+        if (d && !isNaN(d)) dateEl.textContent = fmt(d);
+      }).catch(function () { /* 取得できなくても本文の日付が残る */ });
     }
 
     function showText(text, headerLastMod) {
