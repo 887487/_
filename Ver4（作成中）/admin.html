@@ -1323,6 +1323,24 @@ html[data-theme="dark"] .nav-arrow-btn { background: rgba(40,42,54,.9); }
 })();
 </script>
 
+<!-- ネットワークパス（UNC）から開かれている場合の案内 -->
+<div id="fsUncBanner" style="display:none;align-items:flex-start;gap:12px;padding:12px 16px;background:#ffeaea;border-bottom:1px solid #ef9a9a;color:#a03030;font-size:12px;line-height:1.8;">
+  <span style="font-size:18px;flex-shrink:0;">⚠️</span>
+  <span style="flex:1;min-width:0;">
+    <strong>ネットワークパスから開いているため、フォルダ接続が利用できません。</strong><br>
+    ブラウザの仕様で <code>\\サーバー名\共有名\…</code> の形式で開いたページでは、
+    フォルダへの読み書き（保存して反映・screen-images の読み込み）が使えません。<br>
+    <span style="display:block;margin-top:6px;">
+      <strong>対処方法（いずれか）</strong><br>
+      ① 共有フォルダにネットワークドライブを割り当て、<code>Z:\…\admin.html</code> のように開く<br>
+      ② フォルダ一式をローカル（デスクトップ等）にコピーしてから開く
+    </span>
+    <span id="fsUncPath" style="display:block;margin-top:6px;font-size:10px;color:#8a5a5a;word-break:break-all;"></span>
+  </span>
+  <button class="btn btn-secondary" style="font-size:12px;flex-shrink:0;white-space:nowrap;"
+          onclick="document.getElementById('fsUncBanner').style.display='none'">閉じる</button>
+</div>
+
 <!-- 保存先フォルダ未接続の案内。ボタン押下＝ユーザー操作なので確実にピッカーを開ける -->
 <div id="fsConnectBanner" style="display:none;align-items:center;gap:12px;padding:10px 16px;background:#fff8e1;border-bottom:1px solid #ffcf7a;color:#8a5a00;font-size:12px;line-height:1.7;">
   <span style="font-size:18px;flex-shrink:0;">📁</span>
@@ -4590,6 +4608,9 @@ function _fsSetStatusUI(state, name) {
  * 「あとで」を選んだ場合はこのセッション中は再度尋ねない。
  */
 function _fsPromptConnectOnStart() {
+  // ネットワークパスから開いている場合は接続自体ができないため、
+  // 接続を促す前に原因を案内する
+  if (_fsIsUncPath()) { _fsShowUncNotice(); return; }
   if (!window.AppFS || !window.AppFS.isSupported()) return;
   if (sessionStorage.getItem('fsPromptSkipped') === '1') return;
 
@@ -4611,6 +4632,29 @@ document.addEventListener('DOMContentLoaded', function() {
   setTimeout(_fsPromptConnectOnStart, 600);
 });
 
+/**
+ * ネットワークパス（UNC）から開かれていないかを判定する。
+ *
+ * file://tohoku/share/... のように host 付きで開くと、ブラウザは
+ * 「安全なコンテキスト」とみなさないため showDirectoryPicker が使えず、
+ * フォルダ接続そのものができない。コード側では回避できないので、
+ * 原因と対処をはっきり伝える。
+ */
+function _fsIsUncPath() {
+  try {
+    return location.protocol === 'file:' && !!location.host;
+  } catch (e) { return false; }
+}
+
+/** UNC で開かれている場合の案内を出す */
+function _fsShowUncNotice() {
+  var b = document.getElementById('fsUncBanner');
+  if (!b) return;
+  var p = document.getElementById('fsUncPath');
+  if (p) p.textContent = decodeURI(location.href);
+  b.style.display = 'flex';
+}
+
 /** 案内バナーを閉じる（このセッション中は再表示しない） */
 function _fsDismissBanner() {
   var b = document.getElementById('fsConnectBanner');
@@ -4627,6 +4671,11 @@ function fsRefreshStatus() {
 }
 
 function fsConnectFolder() {
+  if (_fsIsUncPath()) {
+    _fsShowUncNotice();
+    toast('⚠️ ネットワークパスからは接続できません（画面上部の案内をご確認ください）');
+    return;
+  }
   if (!window.AppFS || !window.AppFS.isSupported()) {
     toast('⚠️ このブラウザは File System Access API に非対応です');
     return;
@@ -5545,8 +5594,15 @@ function _scrLibScanFolderInner(silent) {
     return Promise.all(dirs.map(function(sub) {
       var dp = SCREEN_IMG_DIR + (sub ? '/' + sub : '');
       return window.AppFS.listFiles(dp).then(function(names) {
-        return (names || []).filter(function(n){ return IMG_EXT_RE.test(n); })
-                            .map(function(n){ return { path: dp + '/' + n, name: n, folder: sub }; });
+        var imgs = (names || []).filter(function(n){ return IMG_EXT_RE.test(n); });
+        // サイズも取っておく。エクスプローラーで改名されたファイルを
+        // 「別物」ではなく「同じ画像の改名」と判別するために使う。
+        return Promise.all(imgs.map(function(n) {
+          var p = dp + '/' + n;
+          return window.AppFS.readBinary(p)
+            .then(function(f){ return { path: p, name: n, folder: sub, size: f ? f.size : 0 }; })
+            .catch(function(){ return { path: p, name: n, folder: sub, size: 0 }; });
+        }));
       }).catch(function(){ return []; });
     }));
   }).then(function(arrs) {
@@ -5572,21 +5628,95 @@ function _scrLibScanFolderInner(silent) {
         sd.library.forEach(function(m){ if (m.file) known[m.file] = 1; });
       }
 
-      // libXXXX.png のようにIDで管理されているファイルは、パスが未知でも
-      // そのIDがライブラリに居れば取り込まない（フォルダ移動直後など）
-      var libIds = {};
-      (_imgLibAllItems || []).forEach(function(it){ libIds[it.id] = 1; });
+      // ファイル名は画像名にそろえているため、同じフォルダに同名の画像が
+      // すでにライブラリにある場合は取り込まない（保存直後の重複登録を防ぐ）
+      var byNameFolder = {};
+      (_imgLibAllItems || []).forEach(function(it) {
+        byNameFolder[((it.folder || '') + '/' + (it.name || '')).toLowerCase()] = 1;
+        byNameFolder[((it.folder || '') + '/' + it.id).toLowerCase()] = 1;   // 旧 libXXXX 形式
+      });
 
       var added = files.filter(function(f) {
         if (known[f.path]) return false;
-        var m = /^(lib[0-9a-z]+)\.[^.]+$/i.exec(f.name);
-        if (m && libIds[m[1]]) return false;
+        var base = f.name.replace(IMG_EXT_RE, '');
+        if (byNameFolder[((f.folder || '') + '/' + base).toLowerCase()]) return false;
         return true;
       });
+
+      // ── エクスプローラーでの改名を拾う ──
+      // ライブラリが指しているファイルが消えていて、代わりに未登録のファイルが
+      // 現れていれば「改名された」とみなし、画像名（＝画面名）を追従させる。
+      var onDisk = {};
+      files.forEach(function(f){ onDisk[f.path] = f; });
+
+      var missing = (_imgLibAllItems || []).map(function(it) {
+        var p = window.screenImgFileSrc(it.id);
+        return (p && !onDisk[p]) ? { item: it, oldPath: p } : null;
+      }).filter(Boolean);
+
+      var renames = [];
+      if (missing.length && added.length) {
+        var pool = added.slice();
+        missing.forEach(function(ms) {
+          // ① 同じフォルダ内でサイズが一致するものを優先
+          var oldFolder = ms.oldPath.slice(0, ms.oldPath.lastIndexOf('/'));
+          var oldSize   = ms.item.fileSize || 0;
+          var idx = -1;
+          if (oldSize) {
+            idx = pool.findIndex(function(f) {
+              var fd = f.path.slice(0, f.path.lastIndexOf('/'));
+              return fd === oldFolder && f.size === oldSize;
+            });
+          }
+          // ② サイズが不明なら、同じフォルダで候補が1つだけのときのみ対応づける
+          if (idx < 0) {
+            var same = pool.filter(function(f) {
+              return f.path.slice(0, f.path.lastIndexOf('/')) === oldFolder;
+            });
+            if (same.length === 1) idx = pool.indexOf(same[0]);
+          }
+          if (idx < 0) return;
+          renames.push({ item: ms.item, file: pool[idx] });
+          pool.splice(idx, 1);
+        });
+        // 改名として扱ったものは新規登録から除く
+        var usedPaths2 = {};
+        renames.forEach(function(r){ usedPaths2[r.file.path] = 1; });
+        added = added.filter(function(f){ return !usedPaths2[f.path]; });
+      }
+
+      // 改名を反映する（画像名 → 使用中の画面名 の順に伝播）
+      if (renames.length) {
+        var ups = renames.map(function(r) {
+          var newName = r.file.name.replace(IMG_EXT_RE, '');
+          r.item._prevName = r.item.name;
+          return { id: r.item.id, fields: {
+            name:     newName,
+            folder:   _imgLibSafeFolder(r.file.folder),
+            dataUrl:  r.file.path,
+            fileSize: r.file.size
+          } };
+        });
+        _imgLibBulkUpdate(ups, function() {
+          renames.forEach(function(r, i) {
+            var nm = ups[i].fields.name;
+            r.item.name   = nm;
+            r.item.folder = ups[i].fields.folder;
+            window._SCREEN_IMG_MAP[r.item.id] = r.file.path;
+            _scrSyncScreenNamesFromLib(r.item.id, nm);   // 画面名も追従
+            _imgLibMarkDirty(r.item.id);
+          });
+          _imgLibInvalidateMeta();
+          _imgLibAllItems = []; _imgLibLoaded = false;
+          if (typeof _scrLibRender === 'function') _scrLibRender();
+          toast('✏️ ' + renames.length + ' 件の画像名をファイル名に合わせました');
+        });
+      }
       console.info('[imageLib] 未登録: ' + added.length + ' 件 / 登録済み: ' + (files.length - added.length) + ' 件');
       if (!added.length) {
-        if (!silent) toast('✅ ' + files.length + ' 件すべて取り込み済みです');
-        return 0;
+        // 改名だけ発生した場合はそちらのトーストが出るので黙る
+        if (!silent && !renames.length) toast('✅ ' + files.length + ' 件すべて取り込み済みです');
+        return renames.length;
       }
 
       var recs = added.map(function(f) {
@@ -5596,6 +5726,7 @@ function _scrLibScanFolderInner(silent) {
           folder:    _imgLibSafeFolder(f.folder),
           note:      '',
           dataUrl:   f.path,     // 実ファイル参照（base64 を持たない）
+          fileSize:  f.size || 0, // 改名検知の突き合わせに使う
           hotspots:  [],
           createdAt: Date.now()
         };
@@ -6086,10 +6217,35 @@ function _imgLibSafeFolder(name) {
   return f.replace(/[\\/:*?"<>|]/g, '_').replace(/^\.+/, '').slice(0, 40);
 }
 
-/** 画像1件の保存先パス */
-function _imgLibFilePath(item, ext) {
-  var f = _imgLibSafeFolder(item.folder);
-  return SCREEN_IMG_DIR + '/' + (f ? f + '/' : '') + item.id + '.' + ext;
+/** ファイル名として使えない文字を除いた画像名を返す */
+function _imgLibSafeName(name, fallbackId) {
+  var n = String(name == null ? '' : name).trim()
+    .replace(/[\\/:*?"<>|]/g, '_')     // Windows で使えない文字
+    .replace(/[\x00-\x1f]/g, '')        // 制御文字
+    .replace(/^\.+/, '')                // 先頭のドット
+    .replace(/[. ]+$/, '')              // 末尾のドット・空白（Windows が嫌う）
+    .slice(0, 80);
+  return n || (fallbackId || 'image');
+}
+
+/**
+ * 画像1件の保存先パス。
+ * ファイル名は画像名（＝画面名）にそろえる。エクスプローラーで開いたときに
+ * 内容が分かるようにするため。同名が衝突する場合は _2, _3 … を付ける。
+ *
+ * @param used 同じ保存で既に使ったパスの集合（重複回避用）
+ */
+function _imgLibFilePath(item, ext, used) {
+  var f    = _imgLibSafeFolder(item.folder);
+  var dir  = SCREEN_IMG_DIR + '/' + (f ? f + '/' : '');
+  var base = _imgLibSafeName(item.name, item.id);
+
+  var path = dir + base + '.' + ext, i = 2;
+  if (used) {
+    while (used[path.toLowerCase()]) { path = dir + base + '_' + i + '.' + ext; i++; }
+    used[path.toLowerCase()] = 1;
+  }
+  return path;
 }
 
 function _exportScreenToFiles() {
@@ -6140,16 +6296,24 @@ function _exportScreenToFiles() {
       var keepFiles = {}; // 残すべきファイルの実名（掃除の判断に使う）
       var needData = [];  // 実データの読み込みが必要なID
 
+      // ファイル名は画像名にそろえる。同じ保存の中で衝突しないよう控えておく。
+      var usedPaths = {};
+      var wantById  = {};
+
       (metaItems || []).forEach(function(item) {
         if (!item || !item.id) return;
-        // 「変更あり」または「まだファイルが無い」画像は書き出す。
-        // インポート直後など、ライブラリにあってもファイル未生成のことがあるため、
-        // 既存ファイルのパスが取れる場合だけ再書き出しを省略する。
         var prev = window.screenImgFileSrc(item.id);
+        var ext  = (prev && /\.([^.\/]+)$/.exec(prev)) ? RegExp.$1 : 'png';
+
+        // 望ましいパス（＝画像名から作ったパス）
+        var want = _imgLibFilePath(item, ext, usedPaths);
+        wantById[item.id] = want;
+
+        // 望ましいパスに実ファイルがあり、変更も無ければそのまま使う。
+        // 名前やフォルダを変えた場合は want が変わるので書き直しになる。
         var changed = _imgLibDirty.has(item.id);
-        // 実ファイルが確認できた場合だけ書き出しを省略する
-        var fileOk = prev && (!existing || existing[prev]);
-        var path = (!changed && fileOk) ? prev : null;
+        var okAsIs  = !changed && prev === want && (!existing || existing[want]);
+        var path    = okAsIs ? want : null;
 
         if (!path) needData.push(item.id);
         else { imgMap[item.id] = path; keepFiles[path] = true; }
@@ -6173,45 +6337,41 @@ function _exportScreenToFiles() {
         : Promise.resolve([]);
 
       return fetchAll.then(function(recs) {
-        (recs || []).forEach(function(rec) {
-          if (!rec || !rec.id) return;
+        // 望ましいパス（＝画像名から作ったパス）へ書き出す。
+        //   base64      … そのまま書き出す
+        //   ファイル参照 … 名前が変わっていれば読み直して新しい名前で書き出す（改名）
+        var moves = (recs || []).map(function(rec) {
+          if (!rec || !rec.id) return Promise.resolve();
           var meta = library.find(function(m){ return m.id === rec.id; });
-          var path = null;
+          var want = wantById[rec.id];
+          var fix  = function(p) {
+            imgMap[rec.id] = p; keepFiles[p] = true;
+            if (meta) meta.file = p;
+          };
 
           if (rec.dataUrl && rec.dataUrl.indexOf('data:') === 0) {
             var blob = window.dataUrlToBlob(rec.dataUrl);
-            if (blob) {
-              path = _imgLibFilePath({ id: rec.id, folder: meta ? meta.folder : '' }, window.mimeToExt(blob.type));
-              writes.push(window.AppFS.writeBinary(path, blob, false));
-            }
-          } else if (rec.dataUrl) {
-            path = rec.dataUrl;   // すでにファイル参照
+            if (!blob) return Promise.resolve();
+            var p = want.replace(/\.[^.\/]+$/, '.' + window.mimeToExt(blob.type));
+            fix(p);
+            writes.push(window.AppFS.writeBinary(p, blob, false));
+            return Promise.resolve();
           }
-          if (!path) path = window.screenImgFileSrc(rec.id) || null;
-          if (!path) return;
+          if (!rec.dataUrl) return Promise.resolve();
+          if (rec.dataUrl === want) { fix(want); return Promise.resolve(); }
 
-          imgMap[rec.id] = path;
-          keepFiles[path] = true;
-          if (meta) meta.file = path;
+          return window.AppFS.readBinary(rec.dataUrl).then(function(file) {
+            if (!file) { fix(rec.dataUrl); return; }   // 元ファイルが無ければ現状維持
+            return window.AppFS.writeBinary(want, file, false).then(function(ok) {
+              fix(ok ? want : rec.dataUrl);
+              if (!ok) return;
+              rec.dataUrl = want;                       // IDB の参照も更新
+              return _imgLibPutMany([rec]).catch(function(){});
+            });
+          }).catch(function() { fix(rec.dataUrl); });
         });
 
-        // フォルダを移動した画像は、変更なしでもパスが変わるので付け替える。
-        // ただし実ファイル参照（フォルダに直接置いた画像）は元のファイル名を
-        // 保ちたいので、ファイル自体は動かさず folder だけを実際の位置に合わせる。
-        library.forEach(function(m) {
-          if (!m.file) return;
-          var dir = m.file.slice(0, m.file.lastIndexOf('/'));
-          var actual = (dir === SCREEN_IMG_DIR) ? '' : dir.slice(SCREEN_IMG_DIR.length + 1);
-          var isManaged = /\/lib[0-9a-z]+\.[^.\/]+$/i.test(m.file);
-
-          if (!isManaged) {
-            // 実ファイル参照：フォルダ表記を実際の置き場所に合わせるだけ
-            if (actual !== m.folder) m.folder = actual;
-            return;
-          }
-          var want = SCREEN_IMG_DIR + '/' + (m.folder ? m.folder + '/' : '') + m.file.split('/').pop();
-          if (want !== m.file && imgMap[m.id]) _imgLibMarkDirty(m.id);
-        });
+        return Promise.all(moves).then(function() {
 
         // ライブラリに無い（＝パターンだけが参照している）画像のファイルを維持する。
         // ライブラリにある画像は上で正しいパスを決めているので、ここで旧パスを
@@ -6269,6 +6429,7 @@ function _exportScreenToFiles() {
                 .catch(function() { return 'file'; });
             });
         });
+      });
       });
       });
     });
@@ -7966,6 +8127,8 @@ function _scrLibRowMenuDo(act) {
     // _imgLibRename は存在しないため、汎用の更新ヘルパーで書き込む
     _imgLibBulkUpdate([{ id: id, fields: { name: nm } }], function() {
       item.name = nm;
+      // ファイル名は画像名にそろえるため、改名するとファイルも移動する
+      _imgLibMarkDirty(id);
       // 使用中の画面名も同期する（画像名を画面名として取り込んでいるため）
       _scrSyncScreenNamesFromLib(id, nm);
       _scrLibRender();

@@ -1,223 +1,223 @@
 // 画面遷移データ — admin.html の「💾 保存して反映」で自動更新されます。
 // 画像は screen-images/ フォルダに実ファイルとして保存されています。
 // library は画像ライブラリの復元用です（別PCでも一覧が再現されます）。
-// 生成日時: 2026-08-13T14:24:01.502Z
+// 生成日時: 2026-08-16T11:50:05.435Z
 window.APP_SCREEN_DATA = {
-  "savedAt": "2026-08-13T14:24:01.502Z",
+  "savedAt": "2026-08-16T11:50:05.435Z",
   "images": {
-    "lib00mgrcfnd": "screen-images/Sアカウント/lib00mgrcfnd.jpg",
-    "lib05670wknj": "screen-images/lib05670wknj.png",
-    "lib062vsithr": "screen-images/Tv/lib062vsithr.jpg",
-    "lib0hur66912": "screen-images/世帯/lib0hur66912.jpg",
-    "lib0iangby6p": "screen-images/Oasis/lib0iangby6p.jpg",
-    "lib0oause94n": "screen-images/Sアカウント/lib0oause94n.jpg",
-    "lib0p4rw24ue": "screen-images/Tv/lib0p4rw24ue.png",
-    "lib0qiwvjtwe": "screen-images/Sアカウント/lib0qiwvjtwe.jpg",
-    "lib16ol6nbgm": "screen-images/世帯/lib16ol6nbgm.jpg",
-    "lib17ay5hl9h": "screen-images/世帯/lib17ay5hl9h.png",
-    "lib17h921m7g": "screen-images/世帯/lib17h921m7g.png",
-    "lib1ao8tsbki": "screen-images/Sアカウント/lib1ao8tsbki.jpg",
-    "lib1e6gduvan": "screen-images/世帯/lib1e6gduvan.jpg",
-    "lib1q8f71v58": "screen-images/lib1q8f71v58.jpg",
-    "lib1v0838i5h": "screen-images/lib1v0838i5h.png",
-    "lib23s00ydki": "screen-images/lib23s00ydki.jpg",
-    "lib2cyvm50ai": "screen-images/Sアカウント/lib2cyvm50ai.jpg",
-    "lib2ljfi3umx": "screen-images/lib2ljfi3umx.png",
-    "lib2sx5xcj8f": "screen-images/世帯/lib2sx5xcj8f.png",
-    "lib3e75xplc8": "screen-images/世帯/lib3e75xplc8.jpg",
-    "lib3et8sf846": "screen-images/lib3et8sf846.png",
-    "lib3tc0jmnvo": "screen-images/Sアカウント/lib3tc0jmnvo.jpg",
-    "lib3to5sf8nj": "screen-images/世帯/lib3to5sf8nj.jpg",
-    "lib3xoni3ap7": "screen-images/Tv/lib3xoni3ap7.jpg",
-    "lib3yo08jmor": "screen-images/世帯/lib3yo08jmor.png",
-    "lib40tkv6zkd": "screen-images/世帯/lib40tkv6zkd.jpg",
-    "lib4kchcfpct": "screen-images/世帯/lib4kchcfpct.jpg",
-    "lib4nbb4gqr0": "screen-images/Sアカウント/lib4nbb4gqr0.jpg",
-    "lib4s0qekt1k": "screen-images/Tv/lib4s0qekt1k.png",
-    "lib4tge6a2wn": "screen-images/世帯/lib4tge6a2wn.jpg",
-    "lib4uy0gwgx5": "screen-images/lib4uy0gwgx5.jpg",
-    "lib4yvgxe8qi": "screen-images/Tv/lib4yvgxe8qi.jpg",
-    "lib57n2g34ky": "screen-images/Other/lib57n2g34ky.jpg",
-    "lib5c2w20v55": "screen-images/lib5c2w20v55.jpg",
-    "lib5isdf7o3z": "screen-images/世帯/lib5isdf7o3z.png",
-    "lib5jhji9e7m": "screen-images/世帯/lib5jhji9e7m.jpg",
-    "lib5k97gnafk": "screen-images/lib5k97gnafk.png",
-    "lib5nid2ktsf": "screen-images/Sアカウント/lib5nid2ktsf.jpg",
-    "lib5znm6ut74": "screen-images/App/lib5znm6ut74.jpg",
-    "lib6egd8m69h": "screen-images/lib6egd8m69h.jpg",
-    "lib6h9mi36pl": "screen-images/Sアカウント/lib6h9mi36pl.jpg",
-    "lib6k2vr6f8u": "screen-images/Sアカウント/lib6k2vr6f8u.jpg",
-    "lib6oqzovg4g": "screen-images/世帯/lib6oqzovg4g.png",
-    "lib6xyl3hxyw": "screen-images/lib6xyl3hxyw.png",
-    "lib73wqhphnn": "screen-images/世帯/lib73wqhphnn.jpg",
-    "lib7cndrqn74": "screen-images/lib7cndrqn74.jpg",
-    "lib7gxdxc60c": "screen-images/lib7gxdxc60c.jpg",
-    "lib7gy9g0ap5": "screen-images/世帯/lib7gy9g0ap5.png",
-    "lib7rpyqpxjb": "screen-images/lib7rpyqpxjb.jpg",
-    "lib7vat03uas": "screen-images/Sアカウント/lib7vat03uas.jpg",
-    "lib80mmh0jcp": "screen-images/lib80mmh0jcp.jpg",
-    "lib885tggz17": "screen-images/世帯/lib885tggz17.png",
-    "lib88rby7amf": "screen-images/世帯/lib88rby7amf.jpg",
-    "lib8brxeiucf": "screen-images/世帯/lib8brxeiucf.jpg",
-    "lib8hdvtbq9m": "screen-images/Sアカウント/lib8hdvtbq9m.jpg",
-    "lib8hzurebyh": "screen-images/Oasis/lib8hzurebyh.jpg",
-    "lib8o79wuyx1": "screen-images/世帯/lib8o79wuyx1.jpg",
-    "lib8s0j8ppbo": "screen-images/lib8s0j8ppbo.jpg",
-    "lib8vei4zhgl": "screen-images/lib8vei4zhgl.png",
-    "lib912s60g24": "screen-images/Sアカウント/lib912s60g24.jpg",
-    "lib97relr6ux": "screen-images/Tv/lib97relr6ux.jpg",
-    "lib9e48p5aeb": "screen-images/Sアカウント/lib9e48p5aeb.jpg",
-    "lib9pqhjopqq": "screen-images/App/lib9pqhjopqq.jpg",
-    "lib9uwt2qmur": "screen-images/lib9uwt2qmur.png",
-    "lib9xs2bwn4a": "screen-images/lib9xs2bwn4a.jpg",
-    "liba177m2szv": "screen-images/Sアカウント/liba177m2szv.jpg",
-    "liba2zd06ljg": "screen-images/liba2zd06ljg.png",
-    "liba6hlh7xbu": "screen-images/liba6hlh7xbu.jpg",
-    "liba6msl9qpu": "screen-images/liba6msl9qpu.png",
-    "libaums394si": "screen-images/世帯/libaums394si.png",
-    "libauojb7ha6": "screen-images/Oasis/libauojb7ha6.jpg",
-    "libazfy1m4zp": "screen-images/世帯/libazfy1m4zp.jpg",
-    "libb8asvqlfq": "screen-images/世帯/libb8asvqlfq.jpg",
-    "libbapdu37nt": "screen-images/世帯/libbapdu37nt.png",
-    "libbpp8jv4n2": "screen-images/libbpp8jv4n2.png",
-    "libbr2zniesh": "screen-images/Tv/libbr2zniesh.png",
-    "libbw9ik46rs": "screen-images/Sアカウント/libbw9ik46rs.jpg",
-    "libbz2x7s5p0": "screen-images/libbz2x7s5p0.jpg",
-    "libc72bgfbi5": "screen-images/Tv/libc72bgfbi5.jpg",
-    "libccixs7mic": "screen-images/Sアカウント/libccixs7mic.jpg",
-    "libcf12kr3s1": "screen-images/世帯/libcf12kr3s1.png",
-    "libcfz29yt6j": "screen-images/libcfz29yt6j.jpg",
-    "libcg95wpvwc": "screen-images/世帯/libcg95wpvwc.jpg",
-    "libcuh77d86g": "screen-images/Tv/libcuh77d86g.jpg",
-    "libcvfzri0x1": "screen-images/Oasis/libcvfzri0x1.jpg",
-    "libdd1xuc6ud": "screen-images/Sアカウント/libdd1xuc6ud.jpg",
-    "libdgvu1eknd": "screen-images/Sアカウント/libdgvu1eknd.jpg",
-    "libdwqhlwv9r": "screen-images/世帯/libdwqhlwv9r.png",
-    "libe3nz2bh8l": "screen-images/Sアカウント/libe3nz2bh8l.jpg",
-    "libelt7z0ley": "screen-images/libelt7z0ley.png",
-    "liben8fgv7mr": "screen-images/世帯/liben8fgv7mr.jpg",
-    "libeorew8dhd": "screen-images/世帯/libeorew8dhd.jpg",
-    "libetc8w0551": "screen-images/libetc8w0551.jpg",
-    "libeyi66id4t": "screen-images/Sアカウント/libeyi66id4t.jpg",
-    "libeyppwpozw": "screen-images/libeyppwpozw.png",
-    "libf741f02w3": "screen-images/libf741f02w3.jpg",
-    "libf7j8ya7m9": "screen-images/世帯/libf7j8ya7m9.png",
-    "libfhm654yuu": "screen-images/Sアカウント/libfhm654yuu.jpg",
-    "libfkbs8apxb": "screen-images/世帯/libfkbs8apxb.png",
-    "libfna7guaed": "screen-images/Sアカウント/libfna7guaed.jpg",
-    "libfye5q7g0x": "screen-images/世帯/libfye5q7g0x.jpg",
-    "libg275r51rg": "screen-images/世帯/libg275r51rg.jpg",
-    "libg3yfn2qlc": "screen-images/libg3yfn2qlc.png",
-    "libgbfdclidv": "screen-images/libgbfdclidv.png",
-    "libgru261gdr": "screen-images/Tv/libgru261gdr.png",
-    "libh6uyp95d0": "screen-images/App/libh6uyp95d0.jpg",
-    "libh7lqfp6m0": "screen-images/Other/libh7lqfp6m0.jpg",
-    "libh8ld2i82h": "screen-images/libh8ld2i82h.jpg",
-    "libhfuuatxf4": "screen-images/Sアカウント/libhfuuatxf4.jpg",
-    "libho1drrob5": "screen-images/Sアカウント/libho1drrob5.jpg",
-    "libhvv790gm6": "screen-images/Info/libhvv790gm6.jpg",
-    "libhyasqq1o7": "screen-images/Tv/libhyasqq1o7.jpg",
-    "libi42s3k6rq": "screen-images/世帯/libi42s3k6rq.png",
-    "libi43hjldtl": "screen-images/Sアカウント/libi43hjldtl.jpg",
-    "libi5sju1m94": "screen-images/libi5sju1m94.png",
-    "libiefktcq59": "screen-images/App/libiefktcq59.jpg",
-    "libj2v7exv8f": "screen-images/Tv/libj2v7exv8f.jpg",
-    "libj3ojd588m": "screen-images/Sアカウント/libj3ojd588m.jpg",
-    "libjczpx4s16": "screen-images/App/libjczpx4s16.jpg",
-    "libk7r1rn1w9": "screen-images/Sアカウント/libk7r1rn1w9.jpg",
-    "libkw8uibasb": "screen-images/Other/libkw8uibasb.jpg",
-    "libl0wvvmrft": "screen-images/libl0wvvmrft.png",
-    "libl3ylir5j4": "screen-images/libl3ylir5j4.jpg",
-    "libl75ius8lm": "screen-images/App/libl75ius8lm.jpg",
-    "libl8kydc5ct": "screen-images/世帯/libl8kydc5ct.png",
-    "liblh8buqkgq": "screen-images/liblh8buqkgq.jpg",
-    "liblmnhxjfxy": "screen-images/Sアカウント/liblmnhxjfxy.jpg",
-    "liblucz1fx1y": "screen-images/Tv/liblucz1fx1y.png",
-    "liblur830fgj": "screen-images/Sアカウント/liblur830fgj.jpg",
-    "libm0qp0uf44": "screen-images/Info/libm0qp0uf44.jpg",
-    "libmlujmw6em": "screen-images/世帯/libmlujmw6em.jpg",
-    "libmp02vpkud": "screen-images/Sアカウント/libmp02vpkud.jpg",
-    "libmuyb10hjw": "screen-images/Tv/libmuyb10hjw.jpg",
-    "libmwdsum2pk": "screen-images/世帯/libmwdsum2pk.png",
-    "libmy33qxkdj": "screen-images/世帯/libmy33qxkdj.png",
-    "libn2izpsiln": "screen-images/Sアカウント/libn2izpsiln.jpg",
-    "libn45hw3fuc": "screen-images/Tv/libn45hw3fuc.jpg",
-    "libn4at7c77l": "screen-images/libn4at7c77l.png",
-    "libnb3pw63g6": "screen-images/App/libnb3pw63g6.jpg",
-    "libnufosid84": "screen-images/App/libnufosid84.jpg",
-    "libnwrn6q0i1": "screen-images/Web/libnwrn6q0i1.jpg",
-    "libo1189r59l": "screen-images/世帯/libo1189r59l.png",
-    "libo183b1qkk": "screen-images/libo183b1qkk.jpg",
-    "libo1rtgmzrf": "screen-images/Sアカウント/libo1rtgmzrf.jpg",
-    "libo4b89nuqq": "screen-images/libo4b89nuqq.jpg",
-    "libo4kiqc052": "screen-images/世帯/libo4kiqc052.jpg",
-    "libo7zmz6txn": "screen-images/App/libo7zmz6txn.jpg",
-    "libo9t4bwvnt": "screen-images/Sアカウント/libo9t4bwvnt.jpg",
-    "libofww22xwz": "screen-images/Tv/libofww22xwz.png",
-    "libog0tdudlj": "screen-images/Sアカウント/libog0tdudlj.jpg",
-    "libog2g9mf8a": "screen-images/libog2g9mf8a.jpg",
-    "libokocjg65d": "screen-images/Tv/libokocjg65d.jpg",
-    "libp17x46sjb": "screen-images/libp17x46sjb.jpg",
-    "libp4v8g48sw": "screen-images/Sアカウント/libp4v8g48sw.jpg",
-    "libp6e33ed0y": "screen-images/Oasis/libp6e33ed0y.jpg",
-    "libp84m1b7xp": "screen-images/世帯/libp84m1b7xp.jpg",
-    "libph9b6heqb": "screen-images/世帯/libph9b6heqb.png",
-    "libpji6ezmhx": "screen-images/世帯/libpji6ezmhx.png",
-    "libpnuc42uhi": "screen-images/世帯/libpnuc42uhi.jpg",
-    "libpokcntvqf": "screen-images/libpokcntvqf.jpg",
-    "libpvazbp6iy": "screen-images/Sアカウント/libpvazbp6iy.jpg",
-    "libq2pzl4q2y": "screen-images/世帯/libq2pzl4q2y.jpg",
-    "libqxao4liry": "screen-images/Tv/libqxao4liry.jpg",
-    "libr5qietvry": "screen-images/libr5qietvry.png",
-    "libreg13gn92": "screen-images/Tv/libreg13gn92.png",
-    "librsp92wn5v": "screen-images/librsp92wn5v.jpg",
-    "librw5pr7liz": "screen-images/世帯/librw5pr7liz.png",
-    "librxc9kxcuo": "screen-images/librxc9kxcuo.png",
     "libs7wb383lx": "screen-images/新しいフォルダー/libywgca6wpa.jpg",
-    "libt0cnr6kwa": "screen-images/Sアカウント/libt0cnr6kwa.jpg",
-    "libtebm3odvl": "screen-images/世帯/libtebm3odvl.png",
-    "libtkovt5rb3": "screen-images/世帯/libtkovt5rb3.png",
-    "libtl82c45z4": "screen-images/libtl82c45z4.png",
-    "libtlfwnf9zz": "screen-images/Oasis/libtlfwnf9zz.jpg",
-    "libtn32hdc1a": "screen-images/libtn32hdc1a.jpg",
-    "libtujcrp4w4": "screen-images/世帯/libtujcrp4w4.png",
-    "libtvihlf8b0": "screen-images/Info/libtvihlf8b0.jpg",
-    "libtzlq94uiv": "screen-images/App/libtzlq94uiv.jpg",
-    "libu3komt3qx": "screen-images/Sアカウント/libu3komt3qx.jpg",
-    "libu4ct517js": "screen-images/世帯/libu4ct517js.jpg",
-    "libuoqhmmscm": "screen-images/Sアカウント/libuoqhmmscm.jpg",
-    "libuyttha99f": "screen-images/Tv/libuyttha99f.png",
-    "libuzg5akghl": "screen-images/libuzg5akghl.jpg",
-    "libveiya9sth": "screen-images/世帯/libveiya9sth.png",
-    "libvf2zn889h": "screen-images/Sアカウント/libvf2zn889h.jpg",
-    "libvh89r0dk6": "screen-images/Tv/libvh89r0dk6.jpg",
-    "libvulzxzdnx": "screen-images/libvulzxzdnx.jpg",
-    "libwairy4j3z": "screen-images/Sアカウント/libwairy4j3z.jpg",
-    "libwe91ucgsi": "screen-images/Tv/libwe91ucgsi.jpg",
-    "libwwg1x4ixe": "screen-images/libwwg1x4ixe.png",
-    "libx81rlr00l": "screen-images/libx81rlr00l.png",
-    "libxawjtl374": "screen-images/libxawjtl374.png",
-    "libxsphddbyo": "screen-images/libxsphddbyo.png",
-    "libxt6lsu7sg": "screen-images/Sアカウント/libxt6lsu7sg.jpg",
-    "libxv5i7q6gu": "screen-images/世帯/libxv5i7q6gu.png",
-    "liby2ciamv38": "screen-images/世帯/liby2ciamv38.png",
-    "liby6omghw11": "screen-images/Sアカウント/liby6omghw11.jpg",
-    "liby9wm6dq7z": "screen-images/Sアカウント/liby9wm6dq7z.jpg",
-    "libymzhgt48i": "screen-images/世帯/libymzhgt48i.png",
-    "libywgca6wpa": "screen-images/libywgca6wpa.jpg",
-    "libz1lha7rux": "screen-images/世帯/libz1lha7rux.jpg",
-    "libz8evexv7k": "screen-images/Sアカウント/libz8evexv7k.jpg",
-    "libzdq41eym1": "screen-images/世帯/libzdq41eym1.jpg",
-    "libzjzso80ww": "screen-images/世帯/libzjzso80ww.png",
-    "libzqi5vs72s": "screen-images/Sアカウント/libzqi5vs72s.jpg",
-    "libzwqbemqyn": "screen-images/App/libzwqbemqyn.jpg"
+    "libtn32hdc1a": "screen-images/連携解除失敗.jpg",
+    "libcfz29yt6j": "screen-images/画像42.jpg",
+    "libbz2x7s5p0": "screen-images/画像40.jpg",
+    "lib80mmh0jcp": "screen-images/02.PW忘れ(2).jpg",
+    "lib6egd8m69h": "screen-images/画像43.jpg",
+    "liba6hlh7xbu": "screen-images/02.PW忘れ(7).jpg",
+    "libo183b1qkk": "screen-images/画像38.jpg",
+    "lib8s0j8ppbo": "screen-images/02.PW忘れ(5).jpg",
+    "liba6msl9qpu": "screen-images/01.メアド忘れ(8).png",
+    "lib23s00ydki": "screen-images/画像39.jpg",
+    "lib5k97gnafk": "screen-images/01.メアド忘れ(9).png",
+    "librsp92wn5v": "screen-images/02.PW忘れ(8).jpg",
+    "libtl82c45z4": "screen-images/01.メアド忘れ(2).png",
+    "libog2g9mf8a": "screen-images/02.PW忘れ(1).jpg",
+    "libuzg5akghl": "screen-images/画像45.jpg",
+    "lib062vsithr": "screen-images/Tv/［TV］06.②事業_ｺｰﾄﾞ入力.jpg",
+    "libelt7z0ley": "screen-images/02.PW忘れ(6).png",
+    "lib5isdf7o3z": "screen-images/世帯/lib5isdf7o3z.png",
+    "libpokcntvqf": "screen-images/01.メアド忘れ(1).jpg",
+    "lib7cndrqn74": "screen-images/00.ログイン.jpg",
+    "lib9xs2bwn4a": "screen-images/02.PW忘れ(4).jpg",
+    "lib4uy0gwgx5": "screen-images/画像44.jpg",
+    "librxc9kxcuo": "screen-images/01.メアド忘れ(6).png",
+    "lib7gxdxc60c": "screen-images/画像41.jpg",
+    "libc72bgfbi5": "screen-images/Tv/［TV］05.②事業_入力内容の確認.jpg",
+    "libl0wvvmrft": "screen-images/01.メアド忘れ(5).png",
+    "libbpp8jv4n2": "screen-images/01.メアド忘れ(7).png",
+    "libf741f02w3": "screen-images/ご利用情報の初期化_エラー.jpg",
+    "liba2zd06ljg": "screen-images/portal.web.nhk_profile-management(SS) (1).png",
+    "libx81rlr00l": "screen-images/01.ＪPW設定.png",
+    "libxawjtl374": "screen-images/portal.web.nhk_profile-management(SS) (3).png",
+    "lib3xoni3ap7": "screen-images/Tv/TVプロファイル選択.jpg",
+    "lib1v0838i5h": "screen-images/01.メアド忘れ(3).png",
+    "libn4at7c77l": "screen-images/portal.web.nhk_profile-management(SS) (2).png",
+    "lib8vei4zhgl": "screen-images/01.メアド忘れ(4).png",
+    "lib05670wknj": "screen-images/03.Ｊ tel設定.png",
+    "libeorew8dhd": "screen-images/世帯/０６．利用規約.jpg",
+    "libeyppwpozw": "screen-images/Jアカとの連携解除(2).png",
+    "libl3ylir5j4": "screen-images/③学校_ご利用情報の初期化（2）.jpg",
+    "libo4b89nuqq": "screen-images/ご利用情報の初期化_完了.jpg",
+    "libgbfdclidv": "screen-images/02.ＪPW設定(2).png",
+    "libokocjg65d": "screen-images/Tv/［TV］03.用途の選択.jpg",
+    "libhyasqq1o7": "screen-images/Tv/［TV］04.地域の選択.jpg",
+    "libywgca6wpa": "screen-images/①世帯_ご利用情報の初期化（2）.jpg",
+    "libwwg1x4ixe": "screen-images/portal.web.nhk_profile-management(SS) (7).png",
+    "libqxao4liry": "screen-images/Tv/［TV］09.Webへの誘導.jpg",
+    "libp4v8g48sw": "screen-images/Sアカウント/［S］13.②事業_登録完了.jpg",
+    "lib2cyvm50ai": "screen-images/Sアカウント/［S］①世帯_管理_地域.jpg",
+    "libo4kiqc052": "screen-images/世帯/０８．メールアドレス設定 ⑴.jpg",
+    "libwe91ucgsi": "screen-images/Tv/［TV］05.入力内容の確認.jpg",
+    "libn45hw3fuc": "screen-images/Tv/［TV］02.ご利用にあたって.jpg",
+    "lib0p4rw24ue": "screen-images/Tv/TV連携 ⑷.png",
+    "libofww22xwz": "screen-images/Tv/TV連携 ⑸.png",
+    "libvh89r0dk6": "screen-images/Tv/［TV］08.②事業_登録完了.jpg",
+    "libj2v7exv8f": "screen-images/Tv/TVトップ.jpg",
+    "lib2ljfi3umx": "screen-images/portal.web.nhk_(SS).png",
+    "lib9uwt2qmur": "screen-images/04.Ｊ確認コード(SMS)※入力後.png",
+    "libg3yfn2qlc": "screen-images/auth.nhk-cs.jp_idcs_contents_login_AUTH_TYPE=AUTH_THREEKEY&SITE_ID=co&AUTHENTICA.png",
+    "lib3et8sf846": "screen-images/04.Ｊ確認コード(SMS).png",
+    "lib4nbb4gqr0": "screen-images/Sアカウント/［S］①世帯_情報_ID.jpg",
+    "lib8hdvtbq9m": "screen-images/Sアカウント/［S］09.認証ｺｰﾄﾞ入力(2).jpg",
+    "lib3tc0jmnvo": "screen-images/Sアカウント/［S］ﾒﾆｭｰ(2).jpg",
+    "libymzhgt48i": "screen-images/世帯/２９．Ｊ認証通知設定.png",
+    "libm0qp0uf44": "screen-images/Info/０１．Infoメニュー.jpg",
+    "lib4s0qekt1k": "screen-images/Tv/TVメニュー.png",
+    "libnufosid84": "screen-images/App/［App］06.AppStoreﾓｰﾀﾞﾙ.jpg",
+    "libhvv790gm6": "screen-images/Info/０２．Infoメニュー＞ご利用方法.jpg",
+    "lib1ao8tsbki": "screen-images/Sアカウント/［S］08.ﾒｱﾄﾞ入力(2).jpg",
+    "libp17x46sjb": "screen-images/①世帯_ご利用情報の初期化（1）.jpg",
+    "libo1rtgmzrf": "screen-images/Sアカウント/０３．入力勧奨 ②事業.jpg",
+    "libdd1xuc6ud": "screen-images/Sアカウント/［S］③学校_コード入力（1）.jpg",
+    "lib4yvgxe8qi": "screen-images/Tv/［TV］03.②事業_用途の選択.jpg",
+    "lib8brxeiucf": "screen-images/世帯/１３．登録完了 ①世帯.jpg",
+    "liby9wm6dq7z": "screen-images/Sアカウント/16.［S］アカウント情報_②事業.jpg",
+    "libh8ld2i82h": "screen-images/ｱｶｳﾝﾄ関連の操作.jpg",
+    "libfna7guaed": "screen-images/Sアカウント/［S］コード入力_エラー.jpg",
+    "lib2sx5xcj8f": "screen-images/世帯/３２．Ｊログイン ⑵.png",
+    "libvulzxzdnx": "screen-images/②事業_ご利用情報の初期化（2）.jpg",
+    "lib97relr6ux": "screen-images/Tv/［TV］01.ﾌﾟﾗｲﾊﾞｼｰﾉｰﾃｨｽ.jpg",
+    "libh7lqfp6m0": "screen-images/Other/Web,App,TV.jpg",
+    "lib6xyl3hxyw": "screen-images/プロファイルの編集(1).png",
+    "lib6k2vr6f8u": "screen-images/Sアカウント/［S］15.②事業_アカウント管理.jpg",
+    "libcuh77d86g": "screen-images/Tv/［TV］07.②事業_ｷｰ入力.jpg",
+    "libmuyb10hjw": "screen-images/Tv/［TV］00.利用規約.jpg",
+    "lib57n2g34ky": "screen-images/Other/App,TV.jpg",
+    "lib5jhji9e7m": "screen-images/世帯/１１．ログインID設定.jpg",
+    "libccixs7mic": "screen-images/Sアカウント/［S］12.②事業_内容確認.jpg",
+    "libr5qietvry": "screen-images/portal.web.nhk_profile-management(SS).png",
+    "lib1e6gduvan": "screen-images/世帯/３３．連携完了.jpg",
+    "libo9t4bwvnt": "screen-images/Sアカウント/［S］①世帯_管理_情報_削除(3).jpg",
+    "lib3e75xplc8": "screen-images/世帯/１７．アカウント設定 ※未連携.jpg",
+    "libwairy4j3z": "screen-images/Sアカウント/［S］①世帯_管理_情報.jpg",
+    "libuoqhmmscm": "screen-images/Sアカウント/［S］①世帯_設定_管理.jpg",
+    "libbr2zniesh": "screen-images/Tv/［TV］スマホ操作画面.png",
+    "libog0tdudlj": "screen-images/Sアカウント/18.［S］ID変更_②事業.jpg",
+    "lib8o79wuyx1": "screen-images/世帯/１８．受信契約の確認.jpg",
+    "liblmnhxjfxy": "screen-images/Sアカウント/25.［S］事業所コード・確認キーの管理 ※キー発行後.jpg",
+    "libuyttha99f": "screen-images/Tv/TV連携 ⑶.png",
+    "lib0oause94n": "screen-images/Sアカウント/18.［S］復旧用メアド変更_②事業.jpg",
+    "libxt6lsu7sg": "screen-images/Sアカウント/18.［S］アカウント削除_②事業 (3).jpg",
+    "libmy33qxkdj": "screen-images/世帯/２５．Ｊログイン ⑵.png",
+    "lib5nid2ktsf": "screen-images/Sアカウント/０５．用途と地域の選択 ③学校.jpg",
+    "libo7zmz6txn": "screen-images/App/［App］05.ｱﾌﾟﾘ出口.jpg",
+    "libj3ojd588m": "screen-images/Sアカウント/17.［S］アカウント情報_②事業.jpg",
+    "libazfy1m4zp": "screen-images/世帯/１６． ①世帯.jpg",
+    "libp84m1b7xp": "screen-images/世帯/２１．Ｊ確認コード ※メール ⑵.jpg",
+    "lib88rby7amf": "screen-images/世帯/２１．Ｊ確認コード ※メール ⑴.jpg",
+    "libbw9ik46rs": "screen-images/Sアカウント/18.［S］アカウント削除_②事業 (1).jpg",
+    "libtlfwnf9zz": "screen-images/Oasis/24.［オアシス］ (6).jpg",
+    "libn2izpsiln": "screen-images/Sアカウント/［S］15.①世帯_ﾌﾟﾛﾌｧｲﾙ管理.jpg",
+    "libq2pzl4q2y": "screen-images/世帯/２４．Ｊ申請完了.jpg",
+    "libfye5q7g0x": "screen-images/世帯/１５． ①世帯 ⑴.jpg",
+    "lib6h9mi36pl": "screen-images/Sアカウント/18.［S］TEL変更_②事業.jpg",
+    "libt0cnr6kwa": "screen-images/Sアカウント/16.［S］お住まいの地域_②事業.jpg",
+    "liby6omghw11": "screen-images/Sアカウント/18.［S］PW変更_②事業.jpg",
+    "libe3nz2bh8l": "screen-images/Sアカウント/18.［S］メアド変更_②事業.jpg",
+    "libmp02vpkud": "screen-images/Sアカウント/［S］①世帯_情報_TEL.jpg",
+    "lib73wqhphnn": "screen-images/世帯/１４． ①世帯.jpg",
+    "lib7rpyqpxjb": "screen-images/アカウント登録の前に.jpg",
+    "libvf2zn889h": "screen-images/Sアカウント/［S］①世帯_情報_ﾒｱﾄﾞ.jpg",
+    "libcf12kr3s1": "screen-images/世帯/０９．認証コード ⑴.png",
+    "libo1189r59l": "screen-images/世帯/２６．Ｊパスワード設定 ⑴.png",
+    "libreg13gn92": "screen-images/Tv/TV連携 ⑴.png",
+    "lib9e48p5aeb": "screen-images/Sアカウント/［S］15.①世帯_ﾌﾟﾛﾌｧｲﾙの追加(2).jpg",
+    "libeyi66id4t": "screen-images/Sアカウント/［S］①世帯_情報_PW.jpg",
+    "libkw8uibasb": "screen-images/Other/ホワイトリスト.jpg",
+    "lib3yo08jmor": "screen-images/世帯/１０．パスワード設定 ⑵.png",
+    "libfhm654yuu": "screen-images/Sアカウント/［S］14.②事業_ｱｶｳﾝﾄ設定.jpg",
+    "libhfuuatxf4": "screen-images/Sアカウント/16.［S］アカウントプライバシーノーティス_②事業.jpg",
+    "libzjzso80ww": "screen-images/世帯/２６．Ｊパスワード設定 ⑵.png",
+    "lib7gy9g0ap5": "screen-images/世帯/０６．パスワード設定 ⑸.png",
+    "libb8asvqlfq": "screen-images/世帯/３４．アカウント設定 ※連携済.jpg",
+    "lib40tkv6zkd": "screen-images/世帯/２０．Ｊ利用規約 ⑴.jpg",
+    "libdgvu1eknd": "screen-images/Sアカウント/18.［S］事業所コード・確認キーの管理 ※キー発行前.jpg",
+    "lib4kchcfpct": "screen-images/世帯/０７．プラポリ ①世帯 ⑴.jpg",
+    "libxv5i7q6gu": "screen-images/世帯/０６．パスワード設定 ⑵.png",
+    "lib885tggz17": "screen-images/世帯/２８．Ｊ確認コード ※SMS ⑴.png",
+    "libzqi5vs72s": "screen-images/Sアカウント/［S］①世帯_管理_情報_削除(1).jpg",
+    "libph9b6heqb": "screen-images/世帯/１０．パスワード設定 ⑴.png",
+    "librw5pr7liz": "screen-images/世帯/０６．パスワード設定 ⑴.png",
+    "libp6e33ed0y": "screen-images/Oasis/21.［オアシス］ (3).jpg",
+    "libpnuc42uhi": "screen-images/世帯/０７．プラポリ ①世帯 ⑶.jpg",
+    "libnwrn6q0i1": "screen-images/Web/［Web］一時的な地域の変更.jpg",
+    "lib8hzurebyh": "screen-images/Oasis/19.［オアシス］.jpg",
+    "libu4ct517js": "screen-images/世帯/０５．用途と地域の選択 ①世帯.jpg",
+    "libi42s3k6rq": "screen-images/世帯/１２．内容確認 ①世帯 ⑴.png",
+    "liba177m2szv": "screen-images/Sアカウント/［S］①世帯_管理_ﾌﾟﾗｲﾊﾞｼｰﾉｰﾃｨｽ.jpg",
+    "libtebm3odvl": "screen-images/世帯/１５． ①世帯 ⑵.png",
+    "libbapdu37nt": "screen-images/世帯/０６．パスワード設定 ⑷.png",
+    "libu3komt3qx": "screen-images/Sアカウント/０５．用途と地域の選択 ②事業.jpg",
+    "libcvfzri0x1": "screen-images/Oasis/20.［オアシス］ (2).jpg",
+    "lib0qiwvjtwe": "screen-images/Sアカウント/［S］17.①世帯_ｱｶｳﾝﾄ設定 ※ﾌﾟﾛﾌｧｲﾙ未作成_SJ未連携.jpg",
+    "lib1q8f71v58": "screen-images/③学校_ご利用情報の初期化（1）.jpg",
+    "libz1lha7rux": "screen-images/世帯/０７．プラポリ ①世帯 ⑷.jpg",
+    "lib16ol6nbgm": "screen-images/世帯/２０．Ｊ利用規約 ⑵.jpg",
+    "lib7vat03uas": "screen-images/Sアカウント/［S］②事業_コード入力（1）.jpg",
+    "libauojb7ha6": "screen-images/Oasis/23.［オアシス］ (5).jpg",
+    "libtvihlf8b0": "screen-images/Info/００．Infoトップ.jpg",
+    "liblur830fgj": "screen-images/Sアカウント/［S］①世帯_管理_情報_削除(2).jpg",
+    "libtkovt5rb3": "screen-images/世帯/２５．Ｊログイン ⑴.png",
+    "libl8kydc5ct": "screen-images/世帯/２３．Ｊ申請情報確認.png",
+    "libmwdsum2pk": "screen-images/世帯/１５． ①世帯 ⑶.png",
+    "libho1drrob5": "screen-images/Sアカウント/［S］①世帯_情報_復旧用ﾒｱﾄﾞ.jpg",
+    "libaums394si": "screen-images/世帯/２２．Ｊ申請情報入力 ⑵.png",
+    "libf7j8ya7m9": "screen-images/世帯/２０．Ｊ利用規約 ⑶.png",
+    "libetc8w0551": "screen-images/②事業_ご利用情報の初期化（1）.jpg",
+    "libdwqhlwv9r": "screen-images/世帯/２７．Ｊ認証用携帯電話番号設定 ⑴.png",
+    "liby2ciamv38": "screen-images/世帯/３０．Ｊマイページ.png",
+    "libiefktcq59": "screen-images/App/［App］02.②事業_ご利用にあたって.jpg",
+    "libnb3pw63g6": "screen-images/App/［App］01.ご利用にあたって(1).jpg",
+    "libpvazbp6iy": "screen-images/Sアカウント/０２．誤受信防止措置 ③学校.jpg",
+    "lib4tge6a2wn": "screen-images/世帯/０２．誤受信防止措置 ①世帯.jpg",
+    "liblh8buqkgq": "screen-images/02.PW忘れ(3).jpg",
+    "libl75ius8lm": "screen-images/App/［App］02.①世帯_ご利用にあたって.jpg",
+    "libzwqbemqyn": "screen-images/App/［App］01.ご利用にあたって(2).jpg",
+    "lib3to5sf8nj": "screen-images/世帯/０１．誤受信防止措置 ⑴.jpg",
+    "libxsphddbyo": "screen-images/［SJ］30.①世帯_ﾏｲﾍﾟｰｼﾞ.png",
+    "libgru261gdr": "screen-images/Tv/TV連携 ⑵.png",
+    "lib9pqhjopqq": "screen-images/App/［App］02.③学校_ご利用にあたって.jpg",
+    "libh6uyp95d0": "screen-images/App/［App］一時的な地域の変更.jpg",
+    "libtzlq94uiv": "screen-images/App/［App］00.ご利用にあたって.jpg",
+    "lib5znm6ut74": "screen-images/App/［App］03.ﾄｯﾌﾟ.jpg",
+    "lib912s60g24": "screen-images/Sアカウント/０３．入力勧奨 ③学校.jpg",
+    "libjczpx4s16": "screen-images/App/［App］04.設定.jpg",
+    "libmlujmw6em": "screen-images/世帯/０７．プラポリ ①世帯 ⑵.jpg",
+    "lib17ay5hl9h": "screen-images/世帯/２８．Ｊ確認コード ※SMS ⑵.png",
+    "liben8fgv7mr": "screen-images/世帯/０１．誤受信防止措置 ⑵.jpg",
+    "libi5sju1m94": "screen-images/05.認証通知設定.png",
+    "lib5c2w20v55": "screen-images/利用しない.jpg",
+    "libk7r1rn1w9": "screen-images/Sアカウント/［S］ﾒﾆｭｰ.jpg",
+    "lib6oqzovg4g": "screen-images/世帯/０５．移行手続きをされる方へ ⑶.png",
+    "lib0iangby6p": "screen-images/Oasis/22.［オアシス］ (4).jpg",
+    "libveiya9sth": "screen-images/世帯/０５．移行手続きをされる方へ ⑵.png",
+    "lib17h921m7g": "screen-images/世帯/０６．パスワード設定 ⑶.png",
+    "lib0hur66912": "screen-images/世帯/０４．アカウントの登録にあたって.jpg",
+    "libcg95wpvwc": "screen-images/世帯/０３．アカウントレス.jpg",
+    "libfkbs8apxb": "screen-images/世帯/２２．Ｊ申請情報入力 ⑴.png",
+    "libg275r51rg": "screen-images/世帯/１９．Ｊトップ.jpg",
+    "liblucz1fx1y": "screen-images/Tv/TVログイン.png",
+    "libtujcrp4w4": "screen-images/世帯/０５．移行手続きをされる方へ ⑴.png",
+    "libzdq41eym1": "screen-images/世帯/３２．Ｊログイン ⑴.jpg",
+    "lib00mgrcfnd": "screen-images/Sアカウント/０２．誤受信防止措置 ②事業.jpg",
+    "libi43hjldtl": "screen-images/Sアカウント/［S］07.②事業_③学校_ﾌﾟﾗｲﾊﾞｼｰﾉｰﾃｨｽ.jpg",
+    "libpji6ezmhx": "screen-images/世帯/１２．内容確認 ①世帯 ⑵.png",
+    "libz8evexv7k": "screen-images/Sアカウント/18.［S］アカウント削除_②事業 (2).jpg"
   },
   "library": [
     {
       "id": "lib00mgrcfnd",
       "name": "０２．誤受信防止措置 ②事業",
       "folder": "Sアカウント",
-      "file": "screen-images/Sアカウント/lib00mgrcfnd.jpg",
+      "file": "screen-images/Sアカウント/０２．誤受信防止措置 ②事業.jpg",
       "note": "",
       "hotspots": [
         {
@@ -309,7 +309,7 @@ window.APP_SCREEN_DATA = {
       "id": "lib05670wknj",
       "name": "03.Ｊ tel設定",
       "folder": "",
-      "file": "screen-images/lib05670wknj.png",
+      "file": "screen-images/03.Ｊ tel設定.png",
       "note": "",
       "hotspots": [],
       "hsLinkFrom": null
@@ -318,7 +318,7 @@ window.APP_SCREEN_DATA = {
       "id": "lib062vsithr",
       "name": "［TV］06.②事業_ｺｰﾄﾞ入力",
       "folder": "Tv",
-      "file": "screen-images/Tv/lib062vsithr.jpg",
+      "file": "screen-images/Tv/［TV］06.②事業_ｺｰﾄﾞ入力.jpg",
       "note": "",
       "hotspots": [
         {
@@ -340,7 +340,7 @@ window.APP_SCREEN_DATA = {
       "id": "lib0hur66912",
       "name": "０４．アカウントの登録にあたって",
       "folder": "世帯",
-      "file": "screen-images/世帯/lib0hur66912.jpg",
+      "file": "screen-images/世帯/０４．アカウントの登録にあたって.jpg",
       "note": "",
       "hotspots": [
         {
@@ -373,7 +373,7 @@ window.APP_SCREEN_DATA = {
       "id": "lib0iangby6p",
       "name": "22.［オアシス］ (4)",
       "folder": "Oasis",
-      "file": "screen-images/Oasis/lib0iangby6p.jpg",
+      "file": "screen-images/Oasis/22.［オアシス］ (4).jpg",
       "note": "",
       "hotspots": [],
       "hsLinkFrom": null
@@ -382,7 +382,7 @@ window.APP_SCREEN_DATA = {
       "id": "lib0oause94n",
       "name": "18.［S］復旧用メアド変更_②事業",
       "folder": "Sアカウント",
-      "file": "screen-images/Sアカウント/lib0oause94n.jpg",
+      "file": "screen-images/Sアカウント/18.［S］復旧用メアド変更_②事業.jpg",
       "note": "",
       "hotspots": [],
       "hsLinkFrom": null
@@ -391,7 +391,7 @@ window.APP_SCREEN_DATA = {
       "id": "lib0p4rw24ue",
       "name": "TV連携 ⑷",
       "folder": "Tv",
-      "file": "screen-images/Tv/lib0p4rw24ue.png",
+      "file": "screen-images/Tv/TV連携 ⑷.png",
       "note": "",
       "hotspots": [],
       "hsLinkFrom": null
@@ -400,7 +400,7 @@ window.APP_SCREEN_DATA = {
       "id": "lib0qiwvjtwe",
       "name": "［S］17.①世帯_ｱｶｳﾝﾄ設定 ※ﾌﾟﾛﾌｧｲﾙ未作成/SJ未連携",
       "folder": "Sアカウント",
-      "file": "screen-images/Sアカウント/lib0qiwvjtwe.jpg",
+      "file": "screen-images/Sアカウント/［S］17.①世帯_ｱｶｳﾝﾄ設定 ※ﾌﾟﾛﾌｧｲﾙ未作成_SJ未連携.jpg",
       "note": "",
       "hotspots": [],
       "hsLinkFrom": null
@@ -409,7 +409,7 @@ window.APP_SCREEN_DATA = {
       "id": "lib16ol6nbgm",
       "name": "２０．Ｊ利用規約 ⑵",
       "folder": "世帯",
-      "file": "screen-images/世帯/lib16ol6nbgm.jpg",
+      "file": "screen-images/世帯/２０．Ｊ利用規約 ⑵.jpg",
       "note": "",
       "hotspots": [
         {
@@ -431,7 +431,7 @@ window.APP_SCREEN_DATA = {
       "id": "lib17ay5hl9h",
       "name": "２８．Ｊ確認コード ※SMS ⑵",
       "folder": "世帯",
-      "file": "screen-images/世帯/lib17ay5hl9h.png",
+      "file": "screen-images/世帯/２８．Ｊ確認コード ※SMS ⑵.png",
       "note": "",
       "hotspots": [],
       "hsLinkFrom": null
@@ -440,7 +440,7 @@ window.APP_SCREEN_DATA = {
       "id": "lib17h921m7g",
       "name": "０６．パスワード設定 ⑶",
       "folder": "世帯",
-      "file": "screen-images/世帯/lib17h921m7g.png",
+      "file": "screen-images/世帯/０６．パスワード設定 ⑶.png",
       "note": "",
       "hotspots": [],
       "hsLinkFrom": null
@@ -449,7 +449,7 @@ window.APP_SCREEN_DATA = {
       "id": "lib1ao8tsbki",
       "name": "［S］08.ﾒｱﾄﾞ入力(2)",
       "folder": "Sアカウント",
-      "file": "screen-images/Sアカウント/lib1ao8tsbki.jpg",
+      "file": "screen-images/Sアカウント/［S］08.ﾒｱﾄﾞ入力(2).jpg",
       "note": "",
       "hotspots": [
         {
@@ -471,7 +471,7 @@ window.APP_SCREEN_DATA = {
       "id": "lib1e6gduvan",
       "name": "３３．連携完了",
       "folder": "世帯",
-      "file": "screen-images/世帯/lib1e6gduvan.jpg",
+      "file": "screen-images/世帯/３３．連携完了.jpg",
       "note": "",
       "hotspots": [
         {
@@ -493,7 +493,7 @@ window.APP_SCREEN_DATA = {
       "id": "lib1q8f71v58",
       "name": "③学校_ご利用情報の初期化（1）",
       "folder": "",
-      "file": "screen-images/lib1q8f71v58.jpg",
+      "file": "screen-images/③学校_ご利用情報の初期化（1）.jpg",
       "note": "",
       "hotspots": [],
       "hsLinkFrom": null
@@ -502,7 +502,7 @@ window.APP_SCREEN_DATA = {
       "id": "lib1v0838i5h",
       "name": "01.メアド忘れ(3)",
       "folder": "",
-      "file": "screen-images/lib1v0838i5h.png",
+      "file": "screen-images/01.メアド忘れ(3).png",
       "note": "",
       "hotspots": [
         {
@@ -524,7 +524,7 @@ window.APP_SCREEN_DATA = {
       "id": "lib23s00ydki",
       "name": "画像39",
       "folder": "",
-      "file": "screen-images/lib23s00ydki.jpg",
+      "file": "screen-images/画像39.jpg",
       "note": "",
       "hotspots": [],
       "hsLinkFrom": null
@@ -533,7 +533,7 @@ window.APP_SCREEN_DATA = {
       "id": "lib2cyvm50ai",
       "name": "［S］①世帯_管理>地域",
       "folder": "Sアカウント",
-      "file": "screen-images/Sアカウント/lib2cyvm50ai.jpg",
+      "file": "screen-images/Sアカウント/［S］①世帯_管理_地域.jpg",
       "note": "",
       "hotspots": [
         {
@@ -565,7 +565,7 @@ window.APP_SCREEN_DATA = {
       "id": "lib2ljfi3umx",
       "name": "portal.web.nhk_(SS)",
       "folder": "",
-      "file": "screen-images/lib2ljfi3umx.png",
+      "file": "screen-images/portal.web.nhk_(SS).png",
       "note": "",
       "hotspots": [],
       "hsLinkFrom": null
@@ -574,7 +574,7 @@ window.APP_SCREEN_DATA = {
       "id": "lib2sx5xcj8f",
       "name": "３２．Ｊログイン ⑵",
       "folder": "世帯",
-      "file": "screen-images/世帯/lib2sx5xcj8f.png",
+      "file": "screen-images/世帯/３２．Ｊログイン ⑵.png",
       "note": "",
       "hotspots": [
         {
@@ -596,7 +596,7 @@ window.APP_SCREEN_DATA = {
       "id": "lib3e75xplc8",
       "name": "１７．アカウント設定 ※未連携",
       "folder": "世帯",
-      "file": "screen-images/世帯/lib3e75xplc8.jpg",
+      "file": "screen-images/世帯/１７．アカウント設定 ※未連携.jpg",
       "note": "",
       "hotspots": [
         {
@@ -618,7 +618,7 @@ window.APP_SCREEN_DATA = {
       "id": "lib3et8sf846",
       "name": "04.Ｊ確認コード(SMS)",
       "folder": "",
-      "file": "screen-images/lib3et8sf846.png",
+      "file": "screen-images/04.Ｊ確認コード(SMS).png",
       "note": "",
       "hotspots": [],
       "hsLinkFrom": null
@@ -627,7 +627,7 @@ window.APP_SCREEN_DATA = {
       "id": "lib3tc0jmnvo",
       "name": "［S］ﾒﾆｭｰ(2)",
       "folder": "Sアカウント",
-      "file": "screen-images/Sアカウント/lib3tc0jmnvo.jpg",
+      "file": "screen-images/Sアカウント/［S］ﾒﾆｭｰ(2).jpg",
       "note": "",
       "hotspots": [
         {
@@ -647,7 +647,7 @@ window.APP_SCREEN_DATA = {
       "id": "lib3to5sf8nj",
       "name": "０１．誤受信防止措置 ⑴",
       "folder": "世帯",
-      "file": "screen-images/世帯/lib3to5sf8nj.jpg",
+      "file": "screen-images/世帯/０１．誤受信防止措置 ⑴.jpg",
       "note": "",
       "hotspots": [
         {
@@ -715,7 +715,7 @@ window.APP_SCREEN_DATA = {
       "id": "lib3xoni3ap7",
       "name": "TVプロファイル選択",
       "folder": "Tv",
-      "file": "screen-images/Tv/lib3xoni3ap7.jpg",
+      "file": "screen-images/Tv/TVプロファイル選択.jpg",
       "note": "",
       "hotspots": [
         {
@@ -737,7 +737,7 @@ window.APP_SCREEN_DATA = {
       "id": "lib3yo08jmor",
       "name": "１０．パスワード設定 ⑵",
       "folder": "世帯",
-      "file": "screen-images/世帯/lib3yo08jmor.png",
+      "file": "screen-images/世帯/１０．パスワード設定 ⑵.png",
       "note": "",
       "hotspots": [
         {
@@ -759,7 +759,7 @@ window.APP_SCREEN_DATA = {
       "id": "lib40tkv6zkd",
       "name": "２０．Ｊ利用規約 ⑴",
       "folder": "世帯",
-      "file": "screen-images/世帯/lib40tkv6zkd.jpg",
+      "file": "screen-images/世帯/２０．Ｊ利用規約 ⑴.jpg",
       "note": "",
       "hotspots": [
         {
@@ -781,7 +781,7 @@ window.APP_SCREEN_DATA = {
       "id": "lib4kchcfpct",
       "name": "０７．プラポリ ①世帯 ⑴",
       "folder": "世帯",
-      "file": "screen-images/世帯/lib4kchcfpct.jpg",
+      "file": "screen-images/世帯/０７．プラポリ ①世帯 ⑴.jpg",
       "note": "",
       "hotspots": [
         {
@@ -847,7 +847,7 @@ window.APP_SCREEN_DATA = {
       "id": "lib4nbb4gqr0",
       "name": "［S］①世帯_情報>ID",
       "folder": "Sアカウント",
-      "file": "screen-images/Sアカウント/lib4nbb4gqr0.jpg",
+      "file": "screen-images/Sアカウント/［S］①世帯_情報_ID.jpg",
       "note": "",
       "hotspots": [
         {
@@ -889,7 +889,7 @@ window.APP_SCREEN_DATA = {
       "id": "lib4s0qekt1k",
       "name": "TVメニュー",
       "folder": "Tv",
-      "file": "screen-images/Tv/lib4s0qekt1k.png",
+      "file": "screen-images/Tv/TVメニュー.png",
       "note": "",
       "hotspots": [
         {
@@ -923,7 +923,7 @@ window.APP_SCREEN_DATA = {
       "id": "lib4tge6a2wn",
       "name": "０２．誤受信防止措置 ①世帯",
       "folder": "世帯",
-      "file": "screen-images/世帯/lib4tge6a2wn.jpg",
+      "file": "screen-images/世帯/０２．誤受信防止措置 ①世帯.jpg",
       "note": "",
       "hotspots": [
         {
@@ -1015,7 +1015,7 @@ window.APP_SCREEN_DATA = {
       "id": "lib4uy0gwgx5",
       "name": "画像44",
       "folder": "",
-      "file": "screen-images/lib4uy0gwgx5.jpg",
+      "file": "screen-images/画像44.jpg",
       "note": "",
       "hotspots": [],
       "hsLinkFrom": null
@@ -1024,7 +1024,7 @@ window.APP_SCREEN_DATA = {
       "id": "lib4yvgxe8qi",
       "name": "［TV］03.②事業_用途の選択",
       "folder": "Tv",
-      "file": "screen-images/Tv/lib4yvgxe8qi.jpg",
+      "file": "screen-images/Tv/［TV］03.②事業_用途の選択.jpg",
       "note": "",
       "hotspots": [
         {
@@ -1046,7 +1046,7 @@ window.APP_SCREEN_DATA = {
       "id": "lib57n2g34ky",
       "name": "App,TV",
       "folder": "Other",
-      "file": "screen-images/Other/lib57n2g34ky.jpg",
+      "file": "screen-images/Other/App,TV.jpg",
       "note": "",
       "hotspots": [
         {
@@ -1080,7 +1080,7 @@ window.APP_SCREEN_DATA = {
       "id": "lib5c2w20v55",
       "name": "利用しない",
       "folder": "",
-      "file": "screen-images/lib5c2w20v55.jpg",
+      "file": "screen-images/利用しない.jpg",
       "note": "",
       "hotspots": [],
       "hsLinkFrom": null
@@ -1098,7 +1098,7 @@ window.APP_SCREEN_DATA = {
       "id": "lib5jhji9e7m",
       "name": "１１．ログインID設定",
       "folder": "世帯",
-      "file": "screen-images/世帯/lib5jhji9e7m.jpg",
+      "file": "screen-images/世帯/１１．ログインID設定.jpg",
       "note": "",
       "hotspots": [
         {
@@ -1132,7 +1132,7 @@ window.APP_SCREEN_DATA = {
       "id": "lib5k97gnafk",
       "name": "01.メアド忘れ(9)",
       "folder": "",
-      "file": "screen-images/lib5k97gnafk.png",
+      "file": "screen-images/01.メアド忘れ(9).png",
       "note": "",
       "hotspots": [
         {
@@ -1154,7 +1154,7 @@ window.APP_SCREEN_DATA = {
       "id": "lib5nid2ktsf",
       "name": "０５．用途と地域の選択 ③学校",
       "folder": "Sアカウント",
-      "file": "screen-images/Sアカウント/lib5nid2ktsf.jpg",
+      "file": "screen-images/Sアカウント/０５．用途と地域の選択 ③学校.jpg",
       "note": "",
       "hotspots": [
         {
@@ -1200,7 +1200,7 @@ window.APP_SCREEN_DATA = {
       "id": "lib5znm6ut74",
       "name": "［App］03.ﾄｯﾌﾟ",
       "folder": "App",
-      "file": "screen-images/App/lib5znm6ut74.jpg",
+      "file": "screen-images/App/［App］03.ﾄｯﾌﾟ.jpg",
       "note": "",
       "hotspots": [
         {
@@ -1234,7 +1234,7 @@ window.APP_SCREEN_DATA = {
       "id": "lib6egd8m69h",
       "name": "画像43",
       "folder": "",
-      "file": "screen-images/lib6egd8m69h.jpg",
+      "file": "screen-images/画像43.jpg",
       "note": "",
       "hotspots": [],
       "hsLinkFrom": null
@@ -1243,7 +1243,7 @@ window.APP_SCREEN_DATA = {
       "id": "lib6h9mi36pl",
       "name": "18.［S］TEL変更_②事業",
       "folder": "Sアカウント",
-      "file": "screen-images/Sアカウント/lib6h9mi36pl.jpg",
+      "file": "screen-images/Sアカウント/18.［S］TEL変更_②事業.jpg",
       "note": "",
       "hotspots": [],
       "hsLinkFrom": null
@@ -1252,7 +1252,7 @@ window.APP_SCREEN_DATA = {
       "id": "lib6k2vr6f8u",
       "name": "［S］15.②事業_アカウント管理",
       "folder": "Sアカウント",
-      "file": "screen-images/Sアカウント/lib6k2vr6f8u.jpg",
+      "file": "screen-images/Sアカウント/［S］15.②事業_アカウント管理.jpg",
       "note": "",
       "hotspots": [],
       "hsLinkFrom": null
@@ -1261,7 +1261,7 @@ window.APP_SCREEN_DATA = {
       "id": "lib6oqzovg4g",
       "name": "０５．移行手続きをされる方へ ⑶",
       "folder": "世帯",
-      "file": "screen-images/世帯/lib6oqzovg4g.png",
+      "file": "screen-images/世帯/０５．移行手続きをされる方へ ⑶.png",
       "note": "",
       "hotspots": [],
       "hsLinkFrom": null
@@ -1270,7 +1270,7 @@ window.APP_SCREEN_DATA = {
       "id": "lib6xyl3hxyw",
       "name": "プロファイルの編集(1)",
       "folder": "",
-      "file": "screen-images/lib6xyl3hxyw.png",
+      "file": "screen-images/プロファイルの編集(1).png",
       "note": "あ",
       "hotspots": [],
       "hsLinkFrom": null
@@ -1279,7 +1279,7 @@ window.APP_SCREEN_DATA = {
       "id": "lib73wqhphnn",
       "name": "１４． ①世帯",
       "folder": "世帯",
-      "file": "screen-images/世帯/lib73wqhphnn.jpg",
+      "file": "screen-images/世帯/１４． ①世帯.jpg",
       "note": "",
       "hotspots": [
         {
@@ -1337,7 +1337,7 @@ window.APP_SCREEN_DATA = {
       "id": "lib7cndrqn74",
       "name": "00.ログイン",
       "folder": "",
-      "file": "screen-images/lib7cndrqn74.jpg",
+      "file": "screen-images/00.ログイン.jpg",
       "note": "",
       "hotspots": [
         {
@@ -1391,7 +1391,7 @@ window.APP_SCREEN_DATA = {
       "id": "lib7gxdxc60c",
       "name": "画像41",
       "folder": "",
-      "file": "screen-images/lib7gxdxc60c.jpg",
+      "file": "screen-images/画像41.jpg",
       "note": "",
       "hotspots": [],
       "hsLinkFrom": null
@@ -1400,7 +1400,7 @@ window.APP_SCREEN_DATA = {
       "id": "lib7gy9g0ap5",
       "name": "０６．パスワード設定 ⑸",
       "folder": "世帯",
-      "file": "screen-images/世帯/lib7gy9g0ap5.png",
+      "file": "screen-images/世帯/０６．パスワード設定 ⑸.png",
       "note": "",
       "hotspots": [],
       "hsLinkFrom": null
@@ -1409,7 +1409,7 @@ window.APP_SCREEN_DATA = {
       "id": "lib7rpyqpxjb",
       "name": "アカウント登録の前に",
       "folder": "",
-      "file": "screen-images/lib7rpyqpxjb.jpg",
+      "file": "screen-images/アカウント登録の前に.jpg",
       "note": "",
       "hotspots": [
         {
@@ -1431,7 +1431,7 @@ window.APP_SCREEN_DATA = {
       "id": "lib7vat03uas",
       "name": "［S］②事業_コード入力（1）",
       "folder": "Sアカウント",
-      "file": "screen-images/Sアカウント/lib7vat03uas.jpg",
+      "file": "screen-images/Sアカウント/［S］②事業_コード入力（1）.jpg",
       "note": "",
       "hotspots": [],
       "hsLinkFrom": null
@@ -1440,7 +1440,7 @@ window.APP_SCREEN_DATA = {
       "id": "lib80mmh0jcp",
       "name": "02.PW忘れ(2)",
       "folder": "",
-      "file": "screen-images/lib80mmh0jcp.jpg",
+      "file": "screen-images/02.PW忘れ(2).jpg",
       "note": "",
       "hotspots": [
         {
@@ -1462,7 +1462,7 @@ window.APP_SCREEN_DATA = {
       "id": "lib885tggz17",
       "name": "２８．Ｊ確認コード ※SMS ⑴",
       "folder": "世帯",
-      "file": "screen-images/世帯/lib885tggz17.png",
+      "file": "screen-images/世帯/２８．Ｊ確認コード ※SMS ⑴.png",
       "note": "",
       "hotspots": [
         {
@@ -1484,7 +1484,7 @@ window.APP_SCREEN_DATA = {
       "id": "lib88rby7amf",
       "name": "２１．Ｊ確認コード ※メール ⑴",
       "folder": "世帯",
-      "file": "screen-images/世帯/lib88rby7amf.jpg",
+      "file": "screen-images/世帯/２１．Ｊ確認コード ※メール ⑴.jpg",
       "note": "",
       "hotspots": [
         {
@@ -1506,7 +1506,7 @@ window.APP_SCREEN_DATA = {
       "id": "lib8brxeiucf",
       "name": "１３．登録完了 ①世帯",
       "folder": "世帯",
-      "file": "screen-images/世帯/lib8brxeiucf.jpg",
+      "file": "screen-images/世帯/１３．登録完了 ①世帯.jpg",
       "note": "",
       "hotspots": [
         {
@@ -1528,7 +1528,7 @@ window.APP_SCREEN_DATA = {
       "id": "lib8hdvtbq9m",
       "name": "［S］09.認証ｺｰﾄﾞ入力(2)",
       "folder": "Sアカウント",
-      "file": "screen-images/Sアカウント/lib8hdvtbq9m.jpg",
+      "file": "screen-images/Sアカウント/［S］09.認証ｺｰﾄﾞ入力(2).jpg",
       "note": "",
       "hotspots": [
         {
@@ -1550,7 +1550,7 @@ window.APP_SCREEN_DATA = {
       "id": "lib8hzurebyh",
       "name": "19.［オアシス］",
       "folder": "Oasis",
-      "file": "screen-images/Oasis/lib8hzurebyh.jpg",
+      "file": "screen-images/Oasis/19.［オアシス］.jpg",
       "note": "",
       "hotspots": [],
       "hsLinkFrom": null
@@ -1559,7 +1559,7 @@ window.APP_SCREEN_DATA = {
       "id": "lib8o79wuyx1",
       "name": "１８．受信契約の確認",
       "folder": "世帯",
-      "file": "screen-images/世帯/lib8o79wuyx1.jpg",
+      "file": "screen-images/世帯/１８．受信契約の確認.jpg",
       "note": "",
       "hotspots": [
         {
@@ -1605,7 +1605,7 @@ window.APP_SCREEN_DATA = {
       "id": "lib8s0j8ppbo",
       "name": "02.PW忘れ(5)",
       "folder": "",
-      "file": "screen-images/lib8s0j8ppbo.jpg",
+      "file": "screen-images/02.PW忘れ(5).jpg",
       "note": "",
       "hotspots": [
         {
@@ -1627,7 +1627,7 @@ window.APP_SCREEN_DATA = {
       "id": "lib8vei4zhgl",
       "name": "01.メアド忘れ(4)",
       "folder": "",
-      "file": "screen-images/lib8vei4zhgl.png",
+      "file": "screen-images/01.メアド忘れ(4).png",
       "note": "",
       "hotspots": [
         {
@@ -1649,7 +1649,7 @@ window.APP_SCREEN_DATA = {
       "id": "lib912s60g24",
       "name": "０３．入力勧奨 ③学校",
       "folder": "Sアカウント",
-      "file": "screen-images/Sアカウント/lib912s60g24.jpg",
+      "file": "screen-images/Sアカウント/０３．入力勧奨 ③学校.jpg",
       "note": "",
       "hotspots": [
         {
@@ -1695,7 +1695,7 @@ window.APP_SCREEN_DATA = {
       "id": "lib97relr6ux",
       "name": "［TV］01.ﾌﾟﾗｲﾊﾞｼｰﾉｰﾃｨｽ",
       "folder": "Tv",
-      "file": "screen-images/Tv/lib97relr6ux.jpg",
+      "file": "screen-images/Tv/［TV］01.ﾌﾟﾗｲﾊﾞｼｰﾉｰﾃｨｽ.jpg",
       "note": "",
       "hotspots": [
         {
@@ -1717,7 +1717,7 @@ window.APP_SCREEN_DATA = {
       "id": "lib9e48p5aeb",
       "name": "［S］15.①世帯_ﾌﾟﾛﾌｧｲﾙの追加(2)",
       "folder": "Sアカウント",
-      "file": "screen-images/Sアカウント/lib9e48p5aeb.jpg",
+      "file": "screen-images/Sアカウント/［S］15.①世帯_ﾌﾟﾛﾌｧｲﾙの追加(2).jpg",
       "note": "",
       "hotspots": [
         {
@@ -1739,7 +1739,7 @@ window.APP_SCREEN_DATA = {
       "id": "lib9pqhjopqq",
       "name": "［App］02.③学校_ご利用にあたって",
       "folder": "App",
-      "file": "screen-images/App/lib9pqhjopqq.jpg",
+      "file": "screen-images/App/［App］02.③学校_ご利用にあたって.jpg",
       "note": "",
       "hotspots": [
         {
@@ -1785,7 +1785,7 @@ window.APP_SCREEN_DATA = {
       "id": "lib9uwt2qmur",
       "name": "04.Ｊ確認コード(SMS)※入力後",
       "folder": "",
-      "file": "screen-images/lib9uwt2qmur.png",
+      "file": "screen-images/04.Ｊ確認コード(SMS)※入力後.png",
       "note": "",
       "hotspots": [],
       "hsLinkFrom": null
@@ -1794,7 +1794,7 @@ window.APP_SCREEN_DATA = {
       "id": "lib9xs2bwn4a",
       "name": "02.PW忘れ(4)",
       "folder": "",
-      "file": "screen-images/lib9xs2bwn4a.jpg",
+      "file": "screen-images/02.PW忘れ(4).jpg",
       "note": "",
       "hotspots": [
         {
@@ -1816,7 +1816,7 @@ window.APP_SCREEN_DATA = {
       "id": "liba177m2szv",
       "name": "［S］①世帯_管理>ﾌﾟﾗｲﾊﾞｼｰﾉｰﾃｨｽ",
       "folder": "Sアカウント",
-      "file": "screen-images/Sアカウント/liba177m2szv.jpg",
+      "file": "screen-images/Sアカウント/［S］①世帯_管理_ﾌﾟﾗｲﾊﾞｼｰﾉｰﾃｨｽ.jpg",
       "note": "",
       "hotspots": [
         {
@@ -1848,7 +1848,7 @@ window.APP_SCREEN_DATA = {
       "id": "liba2zd06ljg",
       "name": "portal.web.nhk_profile-management(SS) (1)",
       "folder": "",
-      "file": "screen-images/liba2zd06ljg.png",
+      "file": "screen-images/portal.web.nhk_profile-management(SS) (1).png",
       "note": "",
       "hotspots": [],
       "hsLinkFrom": null
@@ -1857,7 +1857,7 @@ window.APP_SCREEN_DATA = {
       "id": "liba6hlh7xbu",
       "name": "02.PW忘れ(7)",
       "folder": "",
-      "file": "screen-images/liba6hlh7xbu.jpg",
+      "file": "screen-images/02.PW忘れ(7).jpg",
       "note": "",
       "hotspots": [
         {
@@ -1879,7 +1879,7 @@ window.APP_SCREEN_DATA = {
       "id": "liba6msl9qpu",
       "name": "01.メアド忘れ(8)",
       "folder": "",
-      "file": "screen-images/liba6msl9qpu.png",
+      "file": "screen-images/01.メアド忘れ(8).png",
       "note": "",
       "hotspots": [
         {
@@ -1901,7 +1901,7 @@ window.APP_SCREEN_DATA = {
       "id": "libaums394si",
       "name": "２２．Ｊ申請情報入力 ⑵",
       "folder": "世帯",
-      "file": "screen-images/世帯/libaums394si.png",
+      "file": "screen-images/世帯/２２．Ｊ申請情報入力 ⑵.png",
       "note": "",
       "hotspots": [
         {
@@ -1923,7 +1923,7 @@ window.APP_SCREEN_DATA = {
       "id": "libauojb7ha6",
       "name": "23.［オアシス］ (5)",
       "folder": "Oasis",
-      "file": "screen-images/Oasis/libauojb7ha6.jpg",
+      "file": "screen-images/Oasis/23.［オアシス］ (5).jpg",
       "note": "",
       "hotspots": [],
       "hsLinkFrom": null
@@ -1932,7 +1932,7 @@ window.APP_SCREEN_DATA = {
       "id": "libazfy1m4zp",
       "name": "１６． ①世帯",
       "folder": "世帯",
-      "file": "screen-images/世帯/libazfy1m4zp.jpg",
+      "file": "screen-images/世帯/１６． ①世帯.jpg",
       "note": "",
       "hotspots": [
         {
@@ -1954,7 +1954,7 @@ window.APP_SCREEN_DATA = {
       "id": "libb8asvqlfq",
       "name": "３４．アカウント設定 ※連携済",
       "folder": "世帯",
-      "file": "screen-images/世帯/libb8asvqlfq.jpg",
+      "file": "screen-images/世帯/３４．アカウント設定 ※連携済.jpg",
       "note": "",
       "hotspots": [
         {
@@ -2036,7 +2036,7 @@ window.APP_SCREEN_DATA = {
       "id": "libbapdu37nt",
       "name": "０６．パスワード設定 ⑷",
       "folder": "世帯",
-      "file": "screen-images/世帯/libbapdu37nt.png",
+      "file": "screen-images/世帯/０６．パスワード設定 ⑷.png",
       "note": "",
       "hotspots": [],
       "hsLinkFrom": null
@@ -2045,7 +2045,7 @@ window.APP_SCREEN_DATA = {
       "id": "libbpp8jv4n2",
       "name": "01.メアド忘れ(7)",
       "folder": "",
-      "file": "screen-images/libbpp8jv4n2.png",
+      "file": "screen-images/01.メアド忘れ(7).png",
       "note": "",
       "hotspots": [
         {
@@ -2067,7 +2067,7 @@ window.APP_SCREEN_DATA = {
       "id": "libbr2zniesh",
       "name": "［TV］スマホ操作画面",
       "folder": "Tv",
-      "file": "screen-images/Tv/libbr2zniesh.png",
+      "file": "screen-images/Tv/［TV］スマホ操作画面.png",
       "note": "",
       "hotspots": [
         {
@@ -2089,7 +2089,7 @@ window.APP_SCREEN_DATA = {
       "id": "libbw9ik46rs",
       "name": "18.［S］アカウント削除_②事業 (1)",
       "folder": "Sアカウント",
-      "file": "screen-images/Sアカウント/libbw9ik46rs.jpg",
+      "file": "screen-images/Sアカウント/18.［S］アカウント削除_②事業 (1).jpg",
       "note": "",
       "hotspots": [],
       "hsLinkFrom": null
@@ -2098,7 +2098,7 @@ window.APP_SCREEN_DATA = {
       "id": "libbz2x7s5p0",
       "name": "画像40",
       "folder": "",
-      "file": "screen-images/libbz2x7s5p0.jpg",
+      "file": "screen-images/画像40.jpg",
       "note": "",
       "hotspots": [],
       "hsLinkFrom": null
@@ -2107,7 +2107,7 @@ window.APP_SCREEN_DATA = {
       "id": "libc72bgfbi5",
       "name": "［TV］05.②事業_入力内容の確認",
       "folder": "Tv",
-      "file": "screen-images/Tv/libc72bgfbi5.jpg",
+      "file": "screen-images/Tv/［TV］05.②事業_入力内容の確認.jpg",
       "note": "",
       "hotspots": [
         {
@@ -2129,7 +2129,7 @@ window.APP_SCREEN_DATA = {
       "id": "libccixs7mic",
       "name": "［S］12.②事業_内容確認",
       "folder": "Sアカウント",
-      "file": "screen-images/Sアカウント/libccixs7mic.jpg",
+      "file": "screen-images/Sアカウント/［S］12.②事業_内容確認.jpg",
       "note": "",
       "hotspots": [
         {
@@ -2163,7 +2163,7 @@ window.APP_SCREEN_DATA = {
       "id": "libcf12kr3s1",
       "name": "０９．認証コード ⑴",
       "folder": "世帯",
-      "file": "screen-images/世帯/libcf12kr3s1.png",
+      "file": "screen-images/世帯/０９．認証コード ⑴.png",
       "note": "",
       "hotspots": [
         {
@@ -2185,7 +2185,7 @@ window.APP_SCREEN_DATA = {
       "id": "libcfz29yt6j",
       "name": "画像42",
       "folder": "",
-      "file": "screen-images/libcfz29yt6j.jpg",
+      "file": "screen-images/画像42.jpg",
       "note": "",
       "hotspots": [],
       "hsLinkFrom": null
@@ -2194,7 +2194,7 @@ window.APP_SCREEN_DATA = {
       "id": "libcg95wpvwc",
       "name": "０３．アカウントレス",
       "folder": "世帯",
-      "file": "screen-images/世帯/libcg95wpvwc.jpg",
+      "file": "screen-images/世帯/０３．アカウントレス.jpg",
       "note": "",
       "hotspots": [
         {
@@ -2240,7 +2240,7 @@ window.APP_SCREEN_DATA = {
       "id": "libcuh77d86g",
       "name": "［TV］07.②事業_ｷｰ入力",
       "folder": "Tv",
-      "file": "screen-images/Tv/libcuh77d86g.jpg",
+      "file": "screen-images/Tv/［TV］07.②事業_ｷｰ入力.jpg",
       "note": "",
       "hotspots": [
         {
@@ -2262,7 +2262,7 @@ window.APP_SCREEN_DATA = {
       "id": "libcvfzri0x1",
       "name": "20.［オアシス］ (2)",
       "folder": "Oasis",
-      "file": "screen-images/Oasis/libcvfzri0x1.jpg",
+      "file": "screen-images/Oasis/20.［オアシス］ (2).jpg",
       "note": "",
       "hotspots": [],
       "hsLinkFrom": null
@@ -2271,7 +2271,7 @@ window.APP_SCREEN_DATA = {
       "id": "libdd1xuc6ud",
       "name": "［S］③学校_コード入力（1）",
       "folder": "Sアカウント",
-      "file": "screen-images/Sアカウント/libdd1xuc6ud.jpg",
+      "file": "screen-images/Sアカウント/［S］③学校_コード入力（1）.jpg",
       "note": "",
       "hotspots": [],
       "hsLinkFrom": null
@@ -2280,7 +2280,7 @@ window.APP_SCREEN_DATA = {
       "id": "libdgvu1eknd",
       "name": "18.［S］事業所コード・確認キーの管理 ※キー発行前",
       "folder": "Sアカウント",
-      "file": "screen-images/Sアカウント/libdgvu1eknd.jpg",
+      "file": "screen-images/Sアカウント/18.［S］事業所コード・確認キーの管理 ※キー発行前.jpg",
       "note": "",
       "hotspots": [],
       "hsLinkFrom": null
@@ -2289,7 +2289,7 @@ window.APP_SCREEN_DATA = {
       "id": "libdwqhlwv9r",
       "name": "２７．Ｊ認証用携帯電話番号設定 ⑴",
       "folder": "世帯",
-      "file": "screen-images/世帯/libdwqhlwv9r.png",
+      "file": "screen-images/世帯/２７．Ｊ認証用携帯電話番号設定 ⑴.png",
       "note": "",
       "hotspots": [
         {
@@ -2311,7 +2311,7 @@ window.APP_SCREEN_DATA = {
       "id": "libe3nz2bh8l",
       "name": "18.［S］メアド変更_②事業",
       "folder": "Sアカウント",
-      "file": "screen-images/Sアカウント/libe3nz2bh8l.jpg",
+      "file": "screen-images/Sアカウント/18.［S］メアド変更_②事業.jpg",
       "note": "",
       "hotspots": [],
       "hsLinkFrom": null
@@ -2320,7 +2320,7 @@ window.APP_SCREEN_DATA = {
       "id": "libelt7z0ley",
       "name": "02.PW忘れ(6)",
       "folder": "",
-      "file": "screen-images/libelt7z0ley.png",
+      "file": "screen-images/02.PW忘れ(6).png",
       "note": "",
       "hotspots": [
         {
@@ -2342,7 +2342,7 @@ window.APP_SCREEN_DATA = {
       "id": "liben8fgv7mr",
       "name": "０１．誤受信防止措置 ⑵",
       "folder": "世帯",
-      "file": "screen-images/世帯/liben8fgv7mr.jpg",
+      "file": "screen-images/世帯/０１．誤受信防止措置 ⑵.jpg",
       "note": "",
       "hotspots": [
         {
@@ -2410,7 +2410,7 @@ window.APP_SCREEN_DATA = {
       "id": "libeorew8dhd",
       "name": "０６．利用規約",
       "folder": "世帯",
-      "file": "screen-images/世帯/libeorew8dhd.jpg",
+      "file": "screen-images/世帯/０６．利用規約.jpg",
       "note": "",
       "hotspots": [
         {
@@ -2432,7 +2432,7 @@ window.APP_SCREEN_DATA = {
       "id": "libetc8w0551",
       "name": "②事業_ご利用情報の初期化（1）",
       "folder": "",
-      "file": "screen-images/libetc8w0551.jpg",
+      "file": "screen-images/②事業_ご利用情報の初期化（1）.jpg",
       "note": "",
       "hotspots": [],
       "hsLinkFrom": null
@@ -2441,7 +2441,7 @@ window.APP_SCREEN_DATA = {
       "id": "libeyi66id4t",
       "name": "［S］①世帯_情報>PW",
       "folder": "Sアカウント",
-      "file": "screen-images/Sアカウント/libeyi66id4t.jpg",
+      "file": "screen-images/Sアカウント/［S］①世帯_情報_PW.jpg",
       "note": "",
       "hotspots": [
         {
@@ -2473,7 +2473,7 @@ window.APP_SCREEN_DATA = {
       "id": "libeyppwpozw",
       "name": "Jアカとの連携解除(2)",
       "folder": "",
-      "file": "screen-images/libeyppwpozw.png",
+      "file": "screen-images/Jアカとの連携解除(2).png",
       "note": "",
       "hotspots": [],
       "hsLinkFrom": null
@@ -2482,7 +2482,7 @@ window.APP_SCREEN_DATA = {
       "id": "libf741f02w3",
       "name": "ご利用情報の初期化_エラー",
       "folder": "",
-      "file": "screen-images/libf741f02w3.jpg",
+      "file": "screen-images/ご利用情報の初期化_エラー.jpg",
       "note": "",
       "hotspots": [],
       "hsLinkFrom": null
@@ -2491,7 +2491,7 @@ window.APP_SCREEN_DATA = {
       "id": "libf7j8ya7m9",
       "name": "２０．Ｊ利用規約 ⑶",
       "folder": "世帯",
-      "file": "screen-images/世帯/libf7j8ya7m9.png",
+      "file": "screen-images/世帯/２０．Ｊ利用規約 ⑶.png",
       "note": "",
       "hotspots": [
         {
@@ -2513,7 +2513,7 @@ window.APP_SCREEN_DATA = {
       "id": "libfhm654yuu",
       "name": "［S］14.②事業_ｱｶｳﾝﾄ設定",
       "folder": "Sアカウント",
-      "file": "screen-images/Sアカウント/libfhm654yuu.jpg",
+      "file": "screen-images/Sアカウント/［S］14.②事業_ｱｶｳﾝﾄ設定.jpg",
       "note": "",
       "hotspots": [],
       "hsLinkFrom": null
@@ -2522,7 +2522,7 @@ window.APP_SCREEN_DATA = {
       "id": "libfkbs8apxb",
       "name": "２２．Ｊ申請情報入力 ⑴",
       "folder": "世帯",
-      "file": "screen-images/世帯/libfkbs8apxb.png",
+      "file": "screen-images/世帯/２２．Ｊ申請情報入力 ⑴.png",
       "note": "",
       "hotspots": [
         {
@@ -2544,7 +2544,7 @@ window.APP_SCREEN_DATA = {
       "id": "libfna7guaed",
       "name": "［S］コード入力_エラー",
       "folder": "Sアカウント",
-      "file": "screen-images/Sアカウント/libfna7guaed.jpg",
+      "file": "screen-images/Sアカウント/［S］コード入力_エラー.jpg",
       "note": "",
       "hotspots": [],
       "hsLinkFrom": null
@@ -2553,7 +2553,7 @@ window.APP_SCREEN_DATA = {
       "id": "libfye5q7g0x",
       "name": "１５． ①世帯 ⑴",
       "folder": "世帯",
-      "file": "screen-images/世帯/libfye5q7g0x.jpg",
+      "file": "screen-images/世帯/１５． ①世帯 ⑴.jpg",
       "note": "",
       "hotspots": [
         {
@@ -2575,7 +2575,7 @@ window.APP_SCREEN_DATA = {
       "id": "libg275r51rg",
       "name": "１９．Ｊトップ",
       "folder": "世帯",
-      "file": "screen-images/世帯/libg275r51rg.jpg",
+      "file": "screen-images/世帯/１９．Ｊトップ.jpg",
       "note": "",
       "hotspots": [
         {
@@ -2609,7 +2609,7 @@ window.APP_SCREEN_DATA = {
       "id": "libg3yfn2qlc",
       "name": "auth.nhk-cs.jp_idcs_contents_login_AUTH_TYPE=AUTH_THREEKEY&SITE_ID=co&AUTHENTICATED=http%3A%2F%2Ffo-alb.pri.nsc-idcs.net%2Fsso%2FInternalAuthoriEndpoint%3Facr_values%3Daddauth%26redirect_uri%3Dhttps%253A%252F%252Fo",
       "folder": "",
-      "file": "screen-images/libg3yfn2qlc.png",
+      "file": "screen-images/auth.nhk-cs.jp_idcs_contents_login_AUTH_TYPE=AUTH_THREEKEY&SITE_ID=co&AUTHENTICA.png",
       "note": "",
       "hotspots": [],
       "hsLinkFrom": null
@@ -2618,7 +2618,7 @@ window.APP_SCREEN_DATA = {
       "id": "libgbfdclidv",
       "name": "02.ＪPW設定(2)",
       "folder": "",
-      "file": "screen-images/libgbfdclidv.png",
+      "file": "screen-images/02.ＪPW設定(2).png",
       "note": "",
       "hotspots": [],
       "hsLinkFrom": null
@@ -2627,7 +2627,7 @@ window.APP_SCREEN_DATA = {
       "id": "libgru261gdr",
       "name": "TV連携 ⑵",
       "folder": "Tv",
-      "file": "screen-images/Tv/libgru261gdr.png",
+      "file": "screen-images/Tv/TV連携 ⑵.png",
       "note": "",
       "hotspots": [],
       "hsLinkFrom": null
@@ -2636,7 +2636,7 @@ window.APP_SCREEN_DATA = {
       "id": "libh6uyp95d0",
       "name": "［App］一時的な地域の変更",
       "folder": "App",
-      "file": "screen-images/App/libh6uyp95d0.jpg",
+      "file": "screen-images/App/［App］一時的な地域の変更.jpg",
       "note": "",
       "hotspots": [],
       "hsLinkFrom": null
@@ -2645,7 +2645,7 @@ window.APP_SCREEN_DATA = {
       "id": "libh7lqfp6m0",
       "name": "Web,App,TV",
       "folder": "Other",
-      "file": "screen-images/Other/libh7lqfp6m0.jpg",
+      "file": "screen-images/Other/Web,App,TV.jpg",
       "note": "",
       "hotspots": [
         {
@@ -2691,7 +2691,7 @@ window.APP_SCREEN_DATA = {
       "id": "libh8ld2i82h",
       "name": "ｱｶｳﾝﾄ関連の操作",
       "folder": "",
-      "file": "screen-images/libh8ld2i82h.jpg",
+      "file": "screen-images/ｱｶｳﾝﾄ関連の操作.jpg",
       "note": "",
       "hotspots": [
         {
@@ -2733,7 +2733,7 @@ window.APP_SCREEN_DATA = {
       "id": "libhfuuatxf4",
       "name": "16.［S］アカウントプライバシーノーティス_②事業",
       "folder": "Sアカウント",
-      "file": "screen-images/Sアカウント/libhfuuatxf4.jpg",
+      "file": "screen-images/Sアカウント/16.［S］アカウントプライバシーノーティス_②事業.jpg",
       "note": "",
       "hotspots": [],
       "hsLinkFrom": null
@@ -2742,7 +2742,7 @@ window.APP_SCREEN_DATA = {
       "id": "libho1drrob5",
       "name": "［S］①世帯_情報>復旧用ﾒｱﾄﾞ",
       "folder": "Sアカウント",
-      "file": "screen-images/Sアカウント/libho1drrob5.jpg",
+      "file": "screen-images/Sアカウント/［S］①世帯_情報_復旧用ﾒｱﾄﾞ.jpg",
       "note": "",
       "hotspots": [
         {
@@ -2784,7 +2784,7 @@ window.APP_SCREEN_DATA = {
       "id": "libhvv790gm6",
       "name": "０２．Infoメニュー＞ご利用方法",
       "folder": "Info",
-      "file": "screen-images/Info/libhvv790gm6.jpg",
+      "file": "screen-images/Info/０２．Infoメニュー＞ご利用方法.jpg",
       "note": "",
       "hotspots": [
         {
@@ -2882,7 +2882,7 @@ window.APP_SCREEN_DATA = {
       "id": "libhyasqq1o7",
       "name": "［TV］04.地域の選択",
       "folder": "Tv",
-      "file": "screen-images/Tv/libhyasqq1o7.jpg",
+      "file": "screen-images/Tv/［TV］04.地域の選択.jpg",
       "note": "",
       "hotspots": [
         {
@@ -2904,7 +2904,7 @@ window.APP_SCREEN_DATA = {
       "id": "libi42s3k6rq",
       "name": "１２．内容確認 ①世帯 ⑴",
       "folder": "世帯",
-      "file": "screen-images/世帯/libi42s3k6rq.png",
+      "file": "screen-images/世帯/１２．内容確認 ①世帯 ⑴.png",
       "note": "",
       "hotspots": [
         {
@@ -2938,7 +2938,7 @@ window.APP_SCREEN_DATA = {
       "id": "libi43hjldtl",
       "name": "［S］07.②事業/③学校_ﾌﾟﾗｲﾊﾞｼｰﾉｰﾃｨｽ",
       "folder": "Sアカウント",
-      "file": "screen-images/Sアカウント/libi43hjldtl.jpg",
+      "file": "screen-images/Sアカウント/［S］07.②事業_③学校_ﾌﾟﾗｲﾊﾞｼｰﾉｰﾃｨｽ.jpg",
       "note": "",
       "hotspots": [
         {
@@ -2960,7 +2960,7 @@ window.APP_SCREEN_DATA = {
       "id": "libi5sju1m94",
       "name": "05.認証通知設定",
       "folder": "",
-      "file": "screen-images/libi5sju1m94.png",
+      "file": "screen-images/05.認証通知設定.png",
       "note": "",
       "hotspots": [],
       "hsLinkFrom": null
@@ -2969,7 +2969,7 @@ window.APP_SCREEN_DATA = {
       "id": "libiefktcq59",
       "name": "［App］02.②事業_ご利用にあたって",
       "folder": "App",
-      "file": "screen-images/App/libiefktcq59.jpg",
+      "file": "screen-images/App/［App］02.②事業_ご利用にあたって.jpg",
       "note": "",
       "hotspots": [
         {
@@ -3015,7 +3015,7 @@ window.APP_SCREEN_DATA = {
       "id": "libj2v7exv8f",
       "name": "TVトップ",
       "folder": "Tv",
-      "file": "screen-images/Tv/libj2v7exv8f.jpg",
+      "file": "screen-images/Tv/TVトップ.jpg",
       "note": "",
       "hotspots": [
         {
@@ -3037,7 +3037,7 @@ window.APP_SCREEN_DATA = {
       "id": "libj3ojd588m",
       "name": "17.［S］アカウント情報_②事業",
       "folder": "Sアカウント",
-      "file": "screen-images/Sアカウント/libj3ojd588m.jpg",
+      "file": "screen-images/Sアカウント/17.［S］アカウント情報_②事業.jpg",
       "note": "",
       "hotspots": [],
       "hsLinkFrom": null
@@ -3046,7 +3046,7 @@ window.APP_SCREEN_DATA = {
       "id": "libjczpx4s16",
       "name": "［App］04.設定",
       "folder": "App",
-      "file": "screen-images/App/libjczpx4s16.jpg",
+      "file": "screen-images/App/［App］04.設定.jpg",
       "note": "",
       "hotspots": [
         {
@@ -3090,7 +3090,7 @@ window.APP_SCREEN_DATA = {
       "id": "libk7r1rn1w9",
       "name": "［S］ﾒﾆｭｰ",
       "folder": "Sアカウント",
-      "file": "screen-images/Sアカウント/libk7r1rn1w9.jpg",
+      "file": "screen-images/Sアカウント/［S］ﾒﾆｭｰ.jpg",
       "note": "",
       "hotspots": [
         {
@@ -3146,7 +3146,7 @@ window.APP_SCREEN_DATA = {
       "id": "libkw8uibasb",
       "name": "ホワイトリスト",
       "folder": "Other",
-      "file": "screen-images/Other/libkw8uibasb.jpg",
+      "file": "screen-images/Other/ホワイトリスト.jpg",
       "note": "",
       "hotspots": [],
       "hsLinkFrom": null
@@ -3155,7 +3155,7 @@ window.APP_SCREEN_DATA = {
       "id": "libl0wvvmrft",
       "name": "01.メアド忘れ(5)",
       "folder": "",
-      "file": "screen-images/libl0wvvmrft.png",
+      "file": "screen-images/01.メアド忘れ(5).png",
       "note": "",
       "hotspots": [
         {
@@ -3177,7 +3177,7 @@ window.APP_SCREEN_DATA = {
       "id": "libl3ylir5j4",
       "name": "③学校_ご利用情報の初期化（2）",
       "folder": "",
-      "file": "screen-images/libl3ylir5j4.jpg",
+      "file": "screen-images/③学校_ご利用情報の初期化（2）.jpg",
       "note": "",
       "hotspots": [],
       "hsLinkFrom": null
@@ -3186,7 +3186,7 @@ window.APP_SCREEN_DATA = {
       "id": "libl75ius8lm",
       "name": "［App］02.①世帯_ご利用にあたって",
       "folder": "App",
-      "file": "screen-images/App/libl75ius8lm.jpg",
+      "file": "screen-images/App/［App］02.①世帯_ご利用にあたって.jpg",
       "note": "",
       "hotspots": [
         {
@@ -3232,7 +3232,7 @@ window.APP_SCREEN_DATA = {
       "id": "libl8kydc5ct",
       "name": "２３．Ｊ申請情報確認",
       "folder": "世帯",
-      "file": "screen-images/世帯/libl8kydc5ct.png",
+      "file": "screen-images/世帯/２３．Ｊ申請情報確認.png",
       "note": "",
       "hotspots": [
         {
@@ -3266,7 +3266,7 @@ window.APP_SCREEN_DATA = {
       "id": "liblh8buqkgq",
       "name": "02.PW忘れ(3)",
       "folder": "",
-      "file": "screen-images/liblh8buqkgq.jpg",
+      "file": "screen-images/02.PW忘れ(3).jpg",
       "note": "",
       "hotspots": [
         {
@@ -3324,7 +3324,7 @@ window.APP_SCREEN_DATA = {
       "id": "liblmnhxjfxy",
       "name": "25.［S］事業所コード・確認キーの管理 ※キー発行後",
       "folder": "Sアカウント",
-      "file": "screen-images/Sアカウント/liblmnhxjfxy.jpg",
+      "file": "screen-images/Sアカウント/25.［S］事業所コード・確認キーの管理 ※キー発行後.jpg",
       "note": "",
       "hotspots": [],
       "hsLinkFrom": null
@@ -3333,7 +3333,7 @@ window.APP_SCREEN_DATA = {
       "id": "liblucz1fx1y",
       "name": "TVログイン",
       "folder": "Tv",
-      "file": "screen-images/Tv/liblucz1fx1y.png",
+      "file": "screen-images/Tv/TVログイン.png",
       "note": "",
       "hotspots": [
         {
@@ -3365,7 +3365,7 @@ window.APP_SCREEN_DATA = {
       "id": "liblur830fgj",
       "name": "［S］①世帯_管理>情報>削除(2)",
       "folder": "Sアカウント",
-      "file": "screen-images/Sアカウント/liblur830fgj.jpg",
+      "file": "screen-images/Sアカウント/［S］①世帯_管理_情報_削除(2).jpg",
       "note": "",
       "hotspots": [
         {
@@ -3397,7 +3397,7 @@ window.APP_SCREEN_DATA = {
       "id": "libm0qp0uf44",
       "name": "０１．Infoメニュー",
       "folder": "Info",
-      "file": "screen-images/Info/libm0qp0uf44.jpg",
+      "file": "screen-images/Info/０１．Infoメニュー.jpg",
       "note": "",
       "hotspots": [
         {
@@ -3485,7 +3485,7 @@ window.APP_SCREEN_DATA = {
       "id": "libmlujmw6em",
       "name": "０７．プラポリ ①世帯 ⑵",
       "folder": "世帯",
-      "file": "screen-images/世帯/libmlujmw6em.jpg",
+      "file": "screen-images/世帯/０７．プラポリ ①世帯 ⑵.jpg",
       "note": "",
       "hotspots": [
         {
@@ -3553,7 +3553,7 @@ window.APP_SCREEN_DATA = {
       "id": "libmp02vpkud",
       "name": "［S］①世帯_情報>TEL",
       "folder": "Sアカウント",
-      "file": "screen-images/Sアカウント/libmp02vpkud.jpg",
+      "file": "screen-images/Sアカウント/［S］①世帯_情報_TEL.jpg",
       "note": "",
       "hotspots": [
         {
@@ -3595,7 +3595,7 @@ window.APP_SCREEN_DATA = {
       "id": "libmuyb10hjw",
       "name": "［TV］00.利用規約",
       "folder": "Tv",
-      "file": "screen-images/Tv/libmuyb10hjw.jpg",
+      "file": "screen-images/Tv/［TV］00.利用規約.jpg",
       "note": "",
       "hotspots": [
         {
@@ -3617,7 +3617,7 @@ window.APP_SCREEN_DATA = {
       "id": "libmwdsum2pk",
       "name": "１５． ①世帯 ⑶",
       "folder": "世帯",
-      "file": "screen-images/世帯/libmwdsum2pk.png",
+      "file": "screen-images/世帯/１５． ①世帯 ⑶.png",
       "note": "",
       "hotspots": [],
       "hsLinkFrom": null
@@ -3626,7 +3626,7 @@ window.APP_SCREEN_DATA = {
       "id": "libmy33qxkdj",
       "name": "２５．Ｊログイン ⑵",
       "folder": "世帯",
-      "file": "screen-images/世帯/libmy33qxkdj.png",
+      "file": "screen-images/世帯/２５．Ｊログイン ⑵.png",
       "note": "",
       "hotspots": [],
       "hsLinkFrom": null
@@ -3635,7 +3635,7 @@ window.APP_SCREEN_DATA = {
       "id": "libn2izpsiln",
       "name": "［S］15.①世帯_ﾌﾟﾛﾌｧｲﾙ管理",
       "folder": "Sアカウント",
-      "file": "screen-images/Sアカウント/libn2izpsiln.jpg",
+      "file": "screen-images/Sアカウント/［S］15.①世帯_ﾌﾟﾛﾌｧｲﾙ管理.jpg",
       "note": "",
       "hotspots": [
         {
@@ -3667,7 +3667,7 @@ window.APP_SCREEN_DATA = {
       "id": "libn45hw3fuc",
       "name": "［TV］02.ご利用にあたって",
       "folder": "Tv",
-      "file": "screen-images/Tv/libn45hw3fuc.jpg",
+      "file": "screen-images/Tv/［TV］02.ご利用にあたって.jpg",
       "note": "",
       "hotspots": [
         {
@@ -3689,7 +3689,7 @@ window.APP_SCREEN_DATA = {
       "id": "libn4at7c77l",
       "name": "portal.web.nhk_profile-management(SS) (2)",
       "folder": "",
-      "file": "screen-images/libn4at7c77l.png",
+      "file": "screen-images/portal.web.nhk_profile-management(SS) (2).png",
       "note": "",
       "hotspots": [],
       "hsLinkFrom": null
@@ -3698,7 +3698,7 @@ window.APP_SCREEN_DATA = {
       "id": "libnb3pw63g6",
       "name": "［App］01.ご利用にあたって(1)",
       "folder": "App",
-      "file": "screen-images/App/libnb3pw63g6.jpg",
+      "file": "screen-images/App/［App］01.ご利用にあたって(1).jpg",
       "note": "",
       "hotspots": [
         {
@@ -3720,7 +3720,7 @@ window.APP_SCREEN_DATA = {
       "id": "libnufosid84",
       "name": "［App］06.AppStoreﾓｰﾀﾞﾙ",
       "folder": "App",
-      "file": "screen-images/App/libnufosid84.jpg",
+      "file": "screen-images/App/［App］06.AppStoreﾓｰﾀﾞﾙ.jpg",
       "note": "",
       "hotspots": [
         {
@@ -3742,7 +3742,7 @@ window.APP_SCREEN_DATA = {
       "id": "libnwrn6q0i1",
       "name": "［Web］一時的な地域の変更",
       "folder": "Web",
-      "file": "screen-images/Web/libnwrn6q0i1.jpg",
+      "file": "screen-images/Web/［Web］一時的な地域の変更.jpg",
       "note": "",
       "hotspots": [],
       "hsLinkFrom": null
@@ -3751,7 +3751,7 @@ window.APP_SCREEN_DATA = {
       "id": "libo1189r59l",
       "name": "２６．Ｊパスワード設定 ⑴",
       "folder": "世帯",
-      "file": "screen-images/世帯/libo1189r59l.png",
+      "file": "screen-images/世帯/２６．Ｊパスワード設定 ⑴.png",
       "note": "",
       "hotspots": [
         {
@@ -3773,7 +3773,7 @@ window.APP_SCREEN_DATA = {
       "id": "libo183b1qkk",
       "name": "画像38",
       "folder": "",
-      "file": "screen-images/libo183b1qkk.jpg",
+      "file": "screen-images/画像38.jpg",
       "note": "",
       "hotspots": [],
       "hsLinkFrom": null
@@ -3782,7 +3782,7 @@ window.APP_SCREEN_DATA = {
       "id": "libo1rtgmzrf",
       "name": "０３．入力勧奨 ②事業",
       "folder": "Sアカウント",
-      "file": "screen-images/Sアカウント/libo1rtgmzrf.jpg",
+      "file": "screen-images/Sアカウント/０３．入力勧奨 ②事業.jpg",
       "note": "",
       "hotspots": [
         {
@@ -3828,7 +3828,7 @@ window.APP_SCREEN_DATA = {
       "id": "libo4b89nuqq",
       "name": "ご利用情報の初期化_完了",
       "folder": "",
-      "file": "screen-images/libo4b89nuqq.jpg",
+      "file": "screen-images/ご利用情報の初期化_完了.jpg",
       "note": "",
       "hotspots": [],
       "hsLinkFrom": null
@@ -3837,7 +3837,7 @@ window.APP_SCREEN_DATA = {
       "id": "libo4kiqc052",
       "name": "０８．メールアドレス設定 ⑴",
       "folder": "世帯",
-      "file": "screen-images/世帯/libo4kiqc052.jpg",
+      "file": "screen-images/世帯/０８．メールアドレス設定 ⑴.jpg",
       "note": "",
       "hotspots": [
         {
@@ -3859,7 +3859,7 @@ window.APP_SCREEN_DATA = {
       "id": "libo7zmz6txn",
       "name": "［App］05.ｱﾌﾟﾘ出口",
       "folder": "App",
-      "file": "screen-images/App/libo7zmz6txn.jpg",
+      "file": "screen-images/App/［App］05.ｱﾌﾟﾘ出口.jpg",
       "note": "",
       "hotspots": [
         {
@@ -3881,7 +3881,7 @@ window.APP_SCREEN_DATA = {
       "id": "libo9t4bwvnt",
       "name": "［S］①世帯_管理>情報>削除(3)",
       "folder": "Sアカウント",
-      "file": "screen-images/Sアカウント/libo9t4bwvnt.jpg",
+      "file": "screen-images/Sアカウント/［S］①世帯_管理_情報_削除(3).jpg",
       "note": "",
       "hotspots": [
         {
@@ -3911,7 +3911,7 @@ window.APP_SCREEN_DATA = {
       "id": "libofww22xwz",
       "name": "TV連携 ⑸",
       "folder": "Tv",
-      "file": "screen-images/Tv/libofww22xwz.png",
+      "file": "screen-images/Tv/TV連携 ⑸.png",
       "note": "",
       "hotspots": [],
       "hsLinkFrom": null
@@ -3920,7 +3920,7 @@ window.APP_SCREEN_DATA = {
       "id": "libog0tdudlj",
       "name": "18.［S］ID変更_②事業",
       "folder": "Sアカウント",
-      "file": "screen-images/Sアカウント/libog0tdudlj.jpg",
+      "file": "screen-images/Sアカウント/18.［S］ID変更_②事業.jpg",
       "note": "",
       "hotspots": [],
       "hsLinkFrom": null
@@ -3929,7 +3929,7 @@ window.APP_SCREEN_DATA = {
       "id": "libog2g9mf8a",
       "name": "02.PW忘れ(1)",
       "folder": "",
-      "file": "screen-images/libog2g9mf8a.jpg",
+      "file": "screen-images/02.PW忘れ(1).jpg",
       "note": "",
       "hotspots": [
         {
@@ -3951,7 +3951,7 @@ window.APP_SCREEN_DATA = {
       "id": "libokocjg65d",
       "name": "［TV］03.用途の選択",
       "folder": "Tv",
-      "file": "screen-images/Tv/libokocjg65d.jpg",
+      "file": "screen-images/Tv/［TV］03.用途の選択.jpg",
       "note": "",
       "hotspots": [
         {
@@ -3973,7 +3973,7 @@ window.APP_SCREEN_DATA = {
       "id": "libp17x46sjb",
       "name": "①世帯_ご利用情報の初期化（1）",
       "folder": "",
-      "file": "screen-images/libp17x46sjb.jpg",
+      "file": "screen-images/①世帯_ご利用情報の初期化（1）.jpg",
       "note": "",
       "hotspots": [],
       "hsLinkFrom": null
@@ -3982,7 +3982,7 @@ window.APP_SCREEN_DATA = {
       "id": "libp4v8g48sw",
       "name": "［S］13.②事業_登録完了",
       "folder": "Sアカウント",
-      "file": "screen-images/Sアカウント/libp4v8g48sw.jpg",
+      "file": "screen-images/Sアカウント/［S］13.②事業_登録完了.jpg",
       "note": "",
       "hotspots": [
         {
@@ -4004,7 +4004,7 @@ window.APP_SCREEN_DATA = {
       "id": "libp6e33ed0y",
       "name": "21.［オアシス］ (3)",
       "folder": "Oasis",
-      "file": "screen-images/Oasis/libp6e33ed0y.jpg",
+      "file": "screen-images/Oasis/21.［オアシス］ (3).jpg",
       "note": "",
       "hotspots": [],
       "hsLinkFrom": null
@@ -4013,7 +4013,7 @@ window.APP_SCREEN_DATA = {
       "id": "libp84m1b7xp",
       "name": "２１．Ｊ確認コード ※メール ⑵",
       "folder": "世帯",
-      "file": "screen-images/世帯/libp84m1b7xp.jpg",
+      "file": "screen-images/世帯/２１．Ｊ確認コード ※メール ⑵.jpg",
       "note": "",
       "hotspots": [
         {
@@ -4035,7 +4035,7 @@ window.APP_SCREEN_DATA = {
       "id": "libph9b6heqb",
       "name": "１０．パスワード設定 ⑴",
       "folder": "世帯",
-      "file": "screen-images/世帯/libph9b6heqb.png",
+      "file": "screen-images/世帯/１０．パスワード設定 ⑴.png",
       "note": "",
       "hotspots": [
         {
@@ -4057,7 +4057,7 @@ window.APP_SCREEN_DATA = {
       "id": "libpji6ezmhx",
       "name": "１２．内容確認 ①世帯 ⑵",
       "folder": "世帯",
-      "file": "screen-images/世帯/libpji6ezmhx.png",
+      "file": "screen-images/世帯/１２．内容確認 ①世帯 ⑵.png",
       "note": "",
       "hotspots": [],
       "hsLinkFrom": null
@@ -4066,7 +4066,7 @@ window.APP_SCREEN_DATA = {
       "id": "libpnuc42uhi",
       "name": "０７．プラポリ ①世帯 ⑶",
       "folder": "世帯",
-      "file": "screen-images/世帯/libpnuc42uhi.jpg",
+      "file": "screen-images/世帯/０７．プラポリ ①世帯 ⑶.jpg",
       "note": "",
       "hotspots": [
         {
@@ -4134,7 +4134,7 @@ window.APP_SCREEN_DATA = {
       "id": "libpokcntvqf",
       "name": "01.メアド忘れ(1)",
       "folder": "",
-      "file": "screen-images/libpokcntvqf.jpg",
+      "file": "screen-images/01.メアド忘れ(1).jpg",
       "note": "",
       "hotspots": [
         {
@@ -4156,7 +4156,7 @@ window.APP_SCREEN_DATA = {
       "id": "libpvazbp6iy",
       "name": "０２．誤受信防止措置 ③学校",
       "folder": "Sアカウント",
-      "file": "screen-images/Sアカウント/libpvazbp6iy.jpg",
+      "file": "screen-images/Sアカウント/０２．誤受信防止措置 ③学校.jpg",
       "note": "",
       "hotspots": [
         {
@@ -4248,7 +4248,7 @@ window.APP_SCREEN_DATA = {
       "id": "libq2pzl4q2y",
       "name": "２４．Ｊ申請完了",
       "folder": "世帯",
-      "file": "screen-images/世帯/libq2pzl4q2y.jpg",
+      "file": "screen-images/世帯/２４．Ｊ申請完了.jpg",
       "note": "",
       "hotspots": [],
       "hsLinkFrom": null
@@ -4257,7 +4257,7 @@ window.APP_SCREEN_DATA = {
       "id": "libqxao4liry",
       "name": "［TV］09.Webへの誘導",
       "folder": "Tv",
-      "file": "screen-images/Tv/libqxao4liry.jpg",
+      "file": "screen-images/Tv/［TV］09.Webへの誘導.jpg",
       "note": "",
       "hotspots": [
         {
@@ -4277,7 +4277,7 @@ window.APP_SCREEN_DATA = {
       "id": "libr5qietvry",
       "name": "portal.web.nhk_profile-management(SS)",
       "folder": "",
-      "file": "screen-images/libr5qietvry.png",
+      "file": "screen-images/portal.web.nhk_profile-management(SS).png",
       "note": "",
       "hotspots": [],
       "hsLinkFrom": null
@@ -4286,7 +4286,7 @@ window.APP_SCREEN_DATA = {
       "id": "libreg13gn92",
       "name": "TV連携 ⑴",
       "folder": "Tv",
-      "file": "screen-images/Tv/libreg13gn92.png",
+      "file": "screen-images/Tv/TV連携 ⑴.png",
       "note": "",
       "hotspots": [],
       "hsLinkFrom": null
@@ -4295,7 +4295,7 @@ window.APP_SCREEN_DATA = {
       "id": "librsp92wn5v",
       "name": "02.PW忘れ(8)",
       "folder": "",
-      "file": "screen-images/librsp92wn5v.jpg",
+      "file": "screen-images/02.PW忘れ(8).jpg",
       "note": "",
       "hotspots": [
         {
@@ -4317,7 +4317,7 @@ window.APP_SCREEN_DATA = {
       "id": "librw5pr7liz",
       "name": "０６．パスワード設定 ⑴",
       "folder": "世帯",
-      "file": "screen-images/世帯/librw5pr7liz.png",
+      "file": "screen-images/世帯/０６．パスワード設定 ⑴.png",
       "note": "",
       "hotspots": [],
       "hsLinkFrom": null
@@ -4326,7 +4326,7 @@ window.APP_SCREEN_DATA = {
       "id": "librxc9kxcuo",
       "name": "01.メアド忘れ(6)",
       "folder": "",
-      "file": "screen-images/librxc9kxcuo.png",
+      "file": "screen-images/01.メアド忘れ(6).png",
       "note": "",
       "hotspots": [
         {
@@ -4357,7 +4357,7 @@ window.APP_SCREEN_DATA = {
       "id": "libt0cnr6kwa",
       "name": "16.［S］お住まいの地域_②事業",
       "folder": "Sアカウント",
-      "file": "screen-images/Sアカウント/libt0cnr6kwa.jpg",
+      "file": "screen-images/Sアカウント/16.［S］お住まいの地域_②事業.jpg",
       "note": "",
       "hotspots": [],
       "hsLinkFrom": null
@@ -4366,7 +4366,7 @@ window.APP_SCREEN_DATA = {
       "id": "libtebm3odvl",
       "name": "１５． ①世帯 ⑵",
       "folder": "世帯",
-      "file": "screen-images/世帯/libtebm3odvl.png",
+      "file": "screen-images/世帯/１５． ①世帯 ⑵.png",
       "note": "",
       "hotspots": [],
       "hsLinkFrom": null
@@ -4375,7 +4375,7 @@ window.APP_SCREEN_DATA = {
       "id": "libtkovt5rb3",
       "name": "２５．Ｊログイン ⑴",
       "folder": "世帯",
-      "file": "screen-images/世帯/libtkovt5rb3.png",
+      "file": "screen-images/世帯/２５．Ｊログイン ⑴.png",
       "note": "",
       "hotspots": [],
       "hsLinkFrom": null
@@ -4384,7 +4384,7 @@ window.APP_SCREEN_DATA = {
       "id": "libtl82c45z4",
       "name": "01.メアド忘れ(2)",
       "folder": "",
-      "file": "screen-images/libtl82c45z4.png",
+      "file": "screen-images/01.メアド忘れ(2).png",
       "note": "",
       "hotspots": [
         {
@@ -4406,7 +4406,7 @@ window.APP_SCREEN_DATA = {
       "id": "libtlfwnf9zz",
       "name": "24.［オアシス］ (6)",
       "folder": "Oasis",
-      "file": "screen-images/Oasis/libtlfwnf9zz.jpg",
+      "file": "screen-images/Oasis/24.［オアシス］ (6).jpg",
       "note": "",
       "hotspots": [],
       "hsLinkFrom": null
@@ -4415,7 +4415,7 @@ window.APP_SCREEN_DATA = {
       "id": "libtn32hdc1a",
       "name": "連携解除失敗",
       "folder": "",
-      "file": "screen-images/libtn32hdc1a.jpg",
+      "file": "screen-images/連携解除失敗.jpg",
       "note": "",
       "hotspots": [],
       "hsLinkFrom": null
@@ -4424,7 +4424,7 @@ window.APP_SCREEN_DATA = {
       "id": "libtujcrp4w4",
       "name": "０５．移行手続きをされる方へ ⑴",
       "folder": "世帯",
-      "file": "screen-images/世帯/libtujcrp4w4.png",
+      "file": "screen-images/世帯/０５．移行手続きをされる方へ ⑴.png",
       "note": "",
       "hotspots": [],
       "hsLinkFrom": null
@@ -4433,7 +4433,7 @@ window.APP_SCREEN_DATA = {
       "id": "libtvihlf8b0",
       "name": "００．Infoトップ",
       "folder": "Info",
-      "file": "screen-images/Info/libtvihlf8b0.jpg",
+      "file": "screen-images/Info/００．Infoトップ.jpg",
       "note": "",
       "hotspots": [
         {
@@ -4487,7 +4487,7 @@ window.APP_SCREEN_DATA = {
       "id": "libtzlq94uiv",
       "name": "［App］00.ご利用にあたって",
       "folder": "App",
-      "file": "screen-images/App/libtzlq94uiv.jpg",
+      "file": "screen-images/App/［App］00.ご利用にあたって.jpg",
       "note": "",
       "hotspots": [
         {
@@ -4509,7 +4509,7 @@ window.APP_SCREEN_DATA = {
       "id": "libu3komt3qx",
       "name": "０５．用途と地域の選択 ②事業",
       "folder": "Sアカウント",
-      "file": "screen-images/Sアカウント/libu3komt3qx.jpg",
+      "file": "screen-images/Sアカウント/０５．用途と地域の選択 ②事業.jpg",
       "note": "",
       "hotspots": [
         {
@@ -4555,7 +4555,7 @@ window.APP_SCREEN_DATA = {
       "id": "libu4ct517js",
       "name": "０５．用途と地域の選択 ①世帯",
       "folder": "世帯",
-      "file": "screen-images/世帯/libu4ct517js.jpg",
+      "file": "screen-images/世帯/０５．用途と地域の選択 ①世帯.jpg",
       "note": "",
       "hotspots": [
         {
@@ -4601,7 +4601,7 @@ window.APP_SCREEN_DATA = {
       "id": "libuoqhmmscm",
       "name": "［S］①世帯_設定>管理",
       "folder": "Sアカウント",
-      "file": "screen-images/Sアカウント/libuoqhmmscm.jpg",
+      "file": "screen-images/Sアカウント/［S］①世帯_設定_管理.jpg",
       "note": "",
       "hotspots": [
         {
@@ -4659,7 +4659,7 @@ window.APP_SCREEN_DATA = {
       "id": "libuyttha99f",
       "name": "TV連携 ⑶",
       "folder": "Tv",
-      "file": "screen-images/Tv/libuyttha99f.png",
+      "file": "screen-images/Tv/TV連携 ⑶.png",
       "note": "",
       "hotspots": [],
       "hsLinkFrom": null
@@ -4668,7 +4668,7 @@ window.APP_SCREEN_DATA = {
       "id": "libuzg5akghl",
       "name": "画像45",
       "folder": "",
-      "file": "screen-images/libuzg5akghl.jpg",
+      "file": "screen-images/画像45.jpg",
       "note": "",
       "hotspots": [],
       "hsLinkFrom": null
@@ -4677,7 +4677,7 @@ window.APP_SCREEN_DATA = {
       "id": "libveiya9sth",
       "name": "０５．移行手続きをされる方へ ⑵",
       "folder": "世帯",
-      "file": "screen-images/世帯/libveiya9sth.png",
+      "file": "screen-images/世帯/０５．移行手続きをされる方へ ⑵.png",
       "note": "",
       "hotspots": [],
       "hsLinkFrom": null
@@ -4686,7 +4686,7 @@ window.APP_SCREEN_DATA = {
       "id": "libvf2zn889h",
       "name": "［S］①世帯_情報>ﾒｱﾄﾞ",
       "folder": "Sアカウント",
-      "file": "screen-images/Sアカウント/libvf2zn889h.jpg",
+      "file": "screen-images/Sアカウント/［S］①世帯_情報_ﾒｱﾄﾞ.jpg",
       "note": "",
       "hotspots": [
         {
@@ -4718,7 +4718,7 @@ window.APP_SCREEN_DATA = {
       "id": "libvh89r0dk6",
       "name": "［TV］08.②事業_登録完了",
       "folder": "Tv",
-      "file": "screen-images/Tv/libvh89r0dk6.jpg",
+      "file": "screen-images/Tv/［TV］08.②事業_登録完了.jpg",
       "note": "",
       "hotspots": [],
       "hsLinkFrom": null
@@ -4727,7 +4727,7 @@ window.APP_SCREEN_DATA = {
       "id": "libvulzxzdnx",
       "name": "②事業_ご利用情報の初期化（2）",
       "folder": "",
-      "file": "screen-images/libvulzxzdnx.jpg",
+      "file": "screen-images/②事業_ご利用情報の初期化（2）.jpg",
       "note": "",
       "hotspots": [],
       "hsLinkFrom": null
@@ -4736,7 +4736,7 @@ window.APP_SCREEN_DATA = {
       "id": "libwairy4j3z",
       "name": "［S］①世帯_管理>情報",
       "folder": "Sアカウント",
-      "file": "screen-images/Sアカウント/libwairy4j3z.jpg",
+      "file": "screen-images/Sアカウント/［S］①世帯_管理_情報.jpg",
       "note": "",
       "hotspots": [
         {
@@ -4830,7 +4830,7 @@ window.APP_SCREEN_DATA = {
       "id": "libwe91ucgsi",
       "name": "［TV］05.入力内容の確認",
       "folder": "Tv",
-      "file": "screen-images/Tv/libwe91ucgsi.jpg",
+      "file": "screen-images/Tv/［TV］05.入力内容の確認.jpg",
       "note": "",
       "hotspots": [
         {
@@ -4852,7 +4852,7 @@ window.APP_SCREEN_DATA = {
       "id": "libwwg1x4ixe",
       "name": "portal.web.nhk_profile-management(SS) (7)",
       "folder": "",
-      "file": "screen-images/libwwg1x4ixe.png",
+      "file": "screen-images/portal.web.nhk_profile-management(SS) (7).png",
       "note": "",
       "hotspots": [],
       "hsLinkFrom": null
@@ -4861,7 +4861,7 @@ window.APP_SCREEN_DATA = {
       "id": "libx81rlr00l",
       "name": "01.ＪPW設定",
       "folder": "",
-      "file": "screen-images/libx81rlr00l.png",
+      "file": "screen-images/01.ＪPW設定.png",
       "note": "",
       "hotspots": [],
       "hsLinkFrom": null
@@ -4870,7 +4870,7 @@ window.APP_SCREEN_DATA = {
       "id": "libxawjtl374",
       "name": "portal.web.nhk_profile-management(SS) (3)",
       "folder": "",
-      "file": "screen-images/libxawjtl374.png",
+      "file": "screen-images/portal.web.nhk_profile-management(SS) (3).png",
       "note": "",
       "hotspots": [],
       "hsLinkFrom": null
@@ -4879,7 +4879,7 @@ window.APP_SCREEN_DATA = {
       "id": "libxsphddbyo",
       "name": "［SJ］30.①世帯_ﾏｲﾍﾟｰｼﾞ",
       "folder": "",
-      "file": "screen-images/libxsphddbyo.png",
+      "file": "screen-images/［SJ］30.①世帯_ﾏｲﾍﾟｰｼﾞ.png",
       "note": "",
       "hotspots": [
         {
@@ -4901,7 +4901,7 @@ window.APP_SCREEN_DATA = {
       "id": "libxt6lsu7sg",
       "name": "18.［S］アカウント削除_②事業 (3)",
       "folder": "Sアカウント",
-      "file": "screen-images/Sアカウント/libxt6lsu7sg.jpg",
+      "file": "screen-images/Sアカウント/18.［S］アカウント削除_②事業 (3).jpg",
       "note": "",
       "hotspots": [],
       "hsLinkFrom": null
@@ -4910,7 +4910,7 @@ window.APP_SCREEN_DATA = {
       "id": "libxv5i7q6gu",
       "name": "０６．パスワード設定 ⑵",
       "folder": "世帯",
-      "file": "screen-images/世帯/libxv5i7q6gu.png",
+      "file": "screen-images/世帯/０６．パスワード設定 ⑵.png",
       "note": "",
       "hotspots": [],
       "hsLinkFrom": null
@@ -4919,7 +4919,7 @@ window.APP_SCREEN_DATA = {
       "id": "liby2ciamv38",
       "name": "３０．Ｊマイページ",
       "folder": "世帯",
-      "file": "screen-images/世帯/liby2ciamv38.png",
+      "file": "screen-images/世帯/３０．Ｊマイページ.png",
       "note": "",
       "hotspots": [],
       "hsLinkFrom": null
@@ -4928,7 +4928,7 @@ window.APP_SCREEN_DATA = {
       "id": "liby6omghw11",
       "name": "18.［S］PW変更_②事業",
       "folder": "Sアカウント",
-      "file": "screen-images/Sアカウント/liby6omghw11.jpg",
+      "file": "screen-images/Sアカウント/18.［S］PW変更_②事業.jpg",
       "note": "",
       "hotspots": [],
       "hsLinkFrom": null
@@ -4937,7 +4937,7 @@ window.APP_SCREEN_DATA = {
       "id": "liby9wm6dq7z",
       "name": "16.［S］アカウント情報_②事業",
       "folder": "Sアカウント",
-      "file": "screen-images/Sアカウント/liby9wm6dq7z.jpg",
+      "file": "screen-images/Sアカウント/16.［S］アカウント情報_②事業.jpg",
       "note": "",
       "hotspots": [],
       "hsLinkFrom": null
@@ -4946,7 +4946,7 @@ window.APP_SCREEN_DATA = {
       "id": "libymzhgt48i",
       "name": "２９．Ｊ認証通知設定",
       "folder": "世帯",
-      "file": "screen-images/世帯/libymzhgt48i.png",
+      "file": "screen-images/世帯/２９．Ｊ認証通知設定.png",
       "note": "",
       "hotspots": [
         {
@@ -4968,7 +4968,7 @@ window.APP_SCREEN_DATA = {
       "id": "libywgca6wpa",
       "name": "①世帯_ご利用情報の初期化（2）",
       "folder": "",
-      "file": "screen-images/libywgca6wpa.jpg",
+      "file": "screen-images/①世帯_ご利用情報の初期化（2）.jpg",
       "note": "",
       "hotspots": [],
       "hsLinkFrom": null
@@ -4977,7 +4977,7 @@ window.APP_SCREEN_DATA = {
       "id": "libz1lha7rux",
       "name": "０７．プラポリ ①世帯 ⑷",
       "folder": "世帯",
-      "file": "screen-images/世帯/libz1lha7rux.jpg",
+      "file": "screen-images/世帯/０７．プラポリ ①世帯 ⑷.jpg",
       "note": "",
       "hotspots": [
         {
@@ -5047,7 +5047,7 @@ window.APP_SCREEN_DATA = {
       "id": "libz8evexv7k",
       "name": "18.［S］アカウント削除_②事業 (2)",
       "folder": "Sアカウント",
-      "file": "screen-images/Sアカウント/libz8evexv7k.jpg",
+      "file": "screen-images/Sアカウント/18.［S］アカウント削除_②事業 (2).jpg",
       "note": "",
       "hotspots": [],
       "hsLinkFrom": null
@@ -5056,7 +5056,7 @@ window.APP_SCREEN_DATA = {
       "id": "libzdq41eym1",
       "name": "３２．Ｊログイン ⑴",
       "folder": "世帯",
-      "file": "screen-images/世帯/libzdq41eym1.jpg",
+      "file": "screen-images/世帯/３２．Ｊログイン ⑴.jpg",
       "note": "",
       "hotspots": [
         {
@@ -5078,7 +5078,7 @@ window.APP_SCREEN_DATA = {
       "id": "libzjzso80ww",
       "name": "２６．Ｊパスワード設定 ⑵",
       "folder": "世帯",
-      "file": "screen-images/世帯/libzjzso80ww.png",
+      "file": "screen-images/世帯/２６．Ｊパスワード設定 ⑵.png",
       "note": "",
       "hotspots": [],
       "hsLinkFrom": null
@@ -5087,7 +5087,7 @@ window.APP_SCREEN_DATA = {
       "id": "libzqi5vs72s",
       "name": "［S］①世帯_管理>情報>削除(1)",
       "folder": "Sアカウント",
-      "file": "screen-images/Sアカウント/libzqi5vs72s.jpg",
+      "file": "screen-images/Sアカウント/［S］①世帯_管理_情報_削除(1).jpg",
       "note": "",
       "hotspots": [
         {
@@ -5109,7 +5109,7 @@ window.APP_SCREEN_DATA = {
       "id": "libzwqbemqyn",
       "name": "［App］01.ご利用にあたって(2)",
       "folder": "App",
-      "file": "screen-images/App/libzwqbemqyn.jpg",
+      "file": "screen-images/App/［App］01.ご利用にあたって(2).jpg",
       "note": "",
       "hotspots": [
         {

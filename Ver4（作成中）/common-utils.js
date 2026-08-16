@@ -83,7 +83,17 @@ window.AppFS = (function() {
   var _dir    = null;   // メモリ上のディレクトリハンドル
   var _loaded = false;  // IDB からの読み出し済みフラグ
 
+  /**
+   * ネットワークパス（file://host/...）で開かれた場合、ブラウザは
+   * 安全なコンテキストとみなさず showDirectoryPicker を提供しない。
+   * 非対応として扱い、ダウンロードへフォールバックさせる。
+   */
+  function _isUnc() {
+    try { return location.protocol === 'file:' && !!location.host; } catch (e) { return false; }
+  }
+
   function isSupported() {
+    if (_isUnc()) return false;
     return typeof window.showDirectoryPicker === 'function';
   }
 
@@ -223,6 +233,22 @@ window.AppFS = (function() {
     });
   }
 
+  /** ファイルを Blob として読む（存在しなければ null） */
+  function readBinary(path) {
+    return ensure(false).then(function(dir) {
+      if (!dir) return null;
+      var parts = String(path || '').split('/').filter(Boolean);
+      var name  = parts.pop();
+      var cur   = Promise.resolve(dir);
+      parts.forEach(function(seg) {
+        cur = cur.then(function(d){ return d.getDirectoryHandle(seg, { create: false }); });
+      });
+      return cur.then(function(d){ return d.getFileHandle(name, { create: false }); })
+                .then(function(fh){ return fh.getFile(); })
+                .catch(function(){ return null; });
+    }).catch(function(){ return null; });
+  }
+
   /** サブフォルダ名の一覧を返す */
   function listDirs(subdir) {
     return ensure(false).then(function(dir) {
@@ -272,7 +298,7 @@ window.AppFS = (function() {
 
   return {
     isSupported: isSupported, status: status, pick: pick, ensure: ensure,
-    readText: readText, writeText: writeText, writeBinary: writeBinary,
+    readText: readText, writeText: writeText, writeBinary: writeBinary, readBinary: readBinary,
     listFiles: listFiles, listDirs: listDirs, removeFile: removeFile, removeDir: removeDir,
     forget: forget, dirName: dirName
   };
