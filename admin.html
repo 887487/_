@@ -1810,6 +1810,7 @@ html[data-theme="dark"] .nav-arrow-btn { background: rgba(40,42,54,.9); }
         <div id="imgLibHsListActions" style="display:none;flex-wrap:wrap;gap:6px;padding:8px 12px;border-bottom:1px solid var(--border);flex-shrink:0;">
           <button class="btn btn-primary" style="font-size:10px;height:26px;padding:0 10px;flex:1;min-width:70px;" onclick="_imgLibHsSave()">💾 保存</button>
           <button class="btn btn-secondary" style="font-size:10px;height:26px;padding:0 8px;flex:1;min-width:70px;" onclick="_imgLibHsOpenApply()" title="このホットスポットと遷移先を、他の画像にも適用します">🔁 使い回す</button>
+          <button class="btn btn-secondary" id="imgLibHsPasteBtn" style="display:none;font-size:10px;height:26px;padding:0 8px;flex:1;min-width:70px;" onclick="_imgLibHsPaste()">📥 貼り付け</button>
           <button class="btn btn-secondary" style="font-size:10px;height:26px;padding:0 8px;flex:1;min-width:70px;" onclick="_imgLibHsClearAll()">🗑 全削除</button>
         </div>
         <div id="imgLibHsList" style="flex:1;overflow-y:auto;padding:4px 0;"></div>
@@ -9015,9 +9016,13 @@ function _imgLibHsRenderList() {
   if (!listEl) return;
   var cntEl = document.getElementById('imgLibHsListCount');
   if (cntEl) cntEl.textContent = _imgLibHsList.length ? _imgLibHsList.length + ' 件' : '';
+  _imgLibHsUpdatePasteBtn();
   if (!_imgLibHsList.length) {
-    listEl.innerHTML = '<div style="padding:12px 14px;font-size:11px;color:var(--text3);">ホットスポットがありません。画像上をドラッグして追加してください。</div>';
-    return;
+    listEl.innerHTML = '<div style="padding:12px 14px;font-size:11px;color:var(--text3);">'
+      + 'ホットスポットがありません。画像上をドラッグして追加してください。'
+      + (_imgLibHsClipLoad() ? '<br>コピー済みのものは「📥 貼り付け」で追加できます。' : '')
+      + '</div>';
+    return;   // 貼り付けボタンの状態は上で更新済み
   }
   var escFn = function(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); };
 
@@ -9066,6 +9071,8 @@ function _imgLibHsRenderList() {
         '<input type="text" value="' + escFn(hs.note || '') + '" placeholder="メモ（任意）" ' +
           'style="flex:1;min-width:0;height:24px;padding:0 7px;border:1px solid var(--border);border-radius:4px;font-size:11px;font-family:inherit;background:var(--surface);color:var(--text);" ' +
           'oninput="_imgLibHsList[' + idx + '].note=this.value">' +
+        '<button onclick="_imgLibHsCopy(' + idx + ')" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:12px;padding:0 2px;" title="このホットスポットをコピー（他の画像に貼り付けられます）">📋</button>' +
+        '<button onclick="_imgLibHsDuplicate(' + idx + ')" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:12px;padding:0 2px;" title="この画像内に複製">⧉</button>' +
         '<button onclick="_imgLibHsDelete(' + idx + ')" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:13px;padding:0 2px;" title="削除">🗑</button>' +
       '</div>' +
 
@@ -9125,6 +9132,25 @@ function _imgLibHsSelectRow(idx) {
  *   Shift+矢印    10px 移動
  *   Alt+矢印      サイズを 1px 変更（Shift併用で10px）
  */
+// Ctrl+C / Ctrl+V でホットスポットをコピー・貼り付け
+document.addEventListener('keydown', function(e) {
+  if (!(e.ctrlKey || e.metaKey)) return;
+  var k = (e.key || '').toLowerCase();
+  if (k !== 'c' && k !== 'v') return;
+  var ed = document.getElementById('imgLibHsEditor');
+  if (!ed || ed.style.display === 'none') return;
+  var t = e.target;
+  if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable)) return;
+
+  if (k === 'c') {
+    if (_imgLibHsSelIdx == null || !_imgLibHsList[_imgLibHsSelIdx]) return;
+    e.preventDefault(); _imgLibHsCopy(_imgLibHsSelIdx);
+  } else {
+    if (!_imgLibHsClipLoad()) return;
+    e.preventDefault(); _imgLibHsPaste();
+  }
+});
+
 document.addEventListener('keydown', function(e) {
   if (!/^Arrow/.test(e.key)) return;
   var editor = document.getElementById('imgLibHsEditor');
@@ -9158,6 +9184,94 @@ document.addEventListener('keydown', function(e) {
   _imgLibHsRenderList();
   _imgLibHsSelectRow(_imgLibHsSelIdx);
 });
+
+// ── ホットスポットのコピー / 複製 / 貼り付け ──
+// クリップボードは画像をまたいで保持したいので、
+// セッションをまたげるよう sessionStorage に置く。
+var _imgLibHsClip = null;
+
+function _imgLibHsClipLoad() {
+  if (_imgLibHsClip) return _imgLibHsClip;
+  try {
+    var raw = sessionStorage.getItem('imgLibHsClip');
+    if (raw) _imgLibHsClip = JSON.parse(raw);
+  } catch (e) { _imgLibHsClip = null; }
+  return _imgLibHsClip;
+}
+
+function _imgLibHsClipSave(v) {
+  _imgLibHsClip = v;
+  try { sessionStorage.setItem('imgLibHsClip', JSON.stringify(v)); } catch (e) {}
+  _imgLibHsUpdatePasteBtn();
+}
+
+/** 貼り付けボタンの表示を更新する */
+function _imgLibHsUpdatePasteBtn() {
+  var b = document.getElementById('imgLibHsPasteBtn');
+  if (!b) return;
+  var c = _imgLibHsClipLoad();
+  if (c && c.hs) {
+    b.style.display = '';
+    b.textContent = '📥 貼り付け';
+    b.title = 'コピーしたホットスポット「' + (c.hs.note || '（メモなし）') + '」を貼り付けます'
+            + (c.fromName ? '\n（コピー元：' + c.fromName + '）' : '');
+  } else {
+    b.style.display = 'none';
+  }
+}
+
+/** ホットスポットをコピーする（他の画像へ貼り付けられる） */
+function _imgLibHsCopy(idx) {
+  var hs = _imgLibHsList[idx];
+  if (!hs) return;
+  _imgLibHsClipSave({
+    hs: JSON.parse(JSON.stringify(hs)),
+    fromId:   _imgLibHsItem ? _imgLibHsItem.id : null,
+    fromName: _imgLibHsItem ? (_imgLibHsItem.name || '') : ''
+  });
+  toast('📋 コピーしました（別の画像を開いて「📥 貼り付け」）');
+}
+
+/** 同じ画像内に複製する（少しずらして重ならないようにする） */
+function _imgLibHsDuplicate(idx) {
+  var hs = _imgLibHsList[idx];
+  if (!hs) return;
+  var n = JSON.parse(JSON.stringify(hs));
+  n.id = 'lhs' + Math.random().toString(36).substr(2, 9);
+  n.x = Math.min(0.98 - n.w, n.x + 0.02);
+  n.y = Math.min(0.98 - n.h, n.y + 0.02);
+  _imgLibHsList.push(n);
+  _imgLibHsSelIdx = _imgLibHsList.length - 1;
+  _imgLibHsRedrawOverlays();
+  _imgLibHsRenderList();
+  toast('⧉ 複製しました');
+}
+
+/** コピーしたホットスポットを、いま開いている画像に貼り付ける */
+function _imgLibHsPaste() {
+  var c = _imgLibHsClipLoad();
+  if (!c || !c.hs) { toast('⚠️ コピーされたホットスポットがありません'); return; }
+  if (!_imgLibHsItem) { toast('⚠️ 先に画像を選択してください'); return; }
+
+  var n = JSON.parse(JSON.stringify(c.hs));
+  n.id = 'lhs' + Math.random().toString(36).substr(2, 9);
+
+  // 同じ画像に貼るときは重ならないよう少しずらす
+  if (c.fromId === _imgLibHsItem.id) {
+    n.x = Math.min(0.98 - n.w, n.x + 0.02);
+    n.y = Math.min(0.98 - n.h, n.y + 0.02);
+  }
+  // 自分自身への遷移になってしまう場合は遷移先を外す
+  if (n.targetType === 'lib' && n.targetLibId === _imgLibHsItem.id) {
+    n.targetType = 'none'; n.targetLibId = '';
+  }
+
+  _imgLibHsList.push(n);
+  _imgLibHsSelIdx = _imgLibHsList.length - 1;
+  _imgLibHsRedrawOverlays();
+  _imgLibHsRenderList();
+  toast('📥 貼り付けました（💾 保存で確定）');
+}
 
 function _imgLibHsDelete(idx) {
   _imgLibHsList.splice(idx, 1);
