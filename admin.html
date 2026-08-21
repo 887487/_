@@ -1791,6 +1791,7 @@ html[data-theme="dark"] .nav-arrow-btn { background: rgba(40,42,54,.9); }
           <div style="display:flex;flex-wrap:wrap;gap:4px;">
             <button class="btn btn-secondary scr-lib-selbtn" style="font-size:10px;height:24px;padding:0 7px;flex:1 1 auto;white-space:nowrap;" onclick="_imgLibMoveToFolder()">📁 フォルダへ</button>
             <button class="btn btn-secondary scr-lib-selbtn" style="font-size:10px;height:24px;padding:0 7px;flex:1 1 auto;white-space:nowrap;" onclick="_imgLibAddSelectedToPattern()">➕ 画面追加</button>
+            <button class="btn btn-secondary scr-lib-selbtn" style="font-size:10px;height:24px;padding:0 7px;flex:1 1 auto;white-space:nowrap;" onclick="_imgLibMakeGif()" title="選択した画像をつないで GIF アニメを作ります">🎞 GIF化</button>
             <button class="btn btn-secondary scr-lib-selbtn" style="font-size:10px;height:24px;padding:0 7px;flex:1 1 auto;white-space:nowrap;" onclick="_imgLibClearSelection()">☐ 解除</button>
             <button class="btn scr-lib-selbtn" style="font-size:10px;height:24px;padding:0 7px;flex:1 1 auto;white-space:nowrap;background:var(--red);color:#fff;border:none;" onclick="_imgLibDeleteSelected()">🗑 削除</button>
           </div>
@@ -1822,6 +1823,54 @@ html[data-theme="dark"] .nav-arrow-btn { background: rgba(40,42,54,.9); }
         クリック：HS登録／ダブルクリック：画面として追加／右クリック：操作メニュー
       </div>
     </aside>
+
+    <!-- GIF 作成モーダル -->
+    <div id="gifModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:8900;align-items:center;justify-content:center;"
+         onclick="if(event.target===this)_imgLibCloseGifModal()">
+      <div style="background:var(--surface);border-radius:14px;width:min(94vw,470px);max-height:88vh;display:flex;flex-direction:column;box-shadow:0 24px 64px rgba(0,0,0,.3);overflow:hidden;">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:13px 18px;border-bottom:1px solid var(--border);">
+          <span style="font-size:14px;font-weight:700;">🎞 GIF アニメを作成</span>
+          <button onclick="_imgLibCloseGifModal()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text3);">✕</button>
+        </div>
+        <div style="flex:1;overflow-y:auto;padding:16px 18px;display:flex;flex-direction:column;gap:12px;">
+          <div style="font-size:12px;color:var(--text2);">
+            選択中の <strong id="gifModalCount"></strong> を、下の順番でつないだ GIF を作ります。
+          </div>
+          <div id="gifModalList" style="max-height:150px;overflow-y:auto;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:7px 10px;"></div>
+          <div>
+            <div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:5px;">ファイル名（.gif は自動）</div>
+            <input type="text" id="gifModalName" style="width:100%;box-sizing:border-box;height:30px;padding:0 9px;font-size:12px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);">
+          </div>
+          <div>
+            <div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:5px;">保存先フォルダ（空欄＝未分類）</div>
+            <input type="text" id="gifModalFolder" style="width:100%;box-sizing:border-box;height:30px;padding:0 9px;font-size:12px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);">
+          </div>
+          <div style="display:flex;gap:10px;">
+            <div style="flex:1;">
+              <div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:5px;">共通の秒数</div>
+              <div style="display:flex;gap:5px;">
+                <input type="number" id="gifModalDelay" value="1" min="0.05" step="0.05" style="flex:1;min-width:0;box-sizing:border-box;height:30px;padding:0 9px;font-size:12px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);">
+                <button class="btn btn-secondary" style="font-size:10px;height:30px;padding:0 8px;flex-shrink:0;" onclick="_gifClearPerFrame()" title="個別に入力した秒数をすべて消して共通値に戻します">個別を解除</button>
+              </div>
+            </div>
+            <div style="flex:1;">
+              <div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:5px;">横幅の上限 px（0＝原寸）</div>
+              <input type="number" id="gifModalWidth" value="1000" min="0" step="100" style="width:100%;box-sizing:border-box;height:30px;padding:0 9px;font-size:12px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);">
+            </div>
+          </div>
+          <div style="font-size:10px;color:var(--text3);line-height:1.7;">
+            ・右の欄に入力すると、その画像だけ別の秒数にできます（空欄は共通値）<br>
+            ・全フレームは1枚目の大きさに合わせます（縦横比は保たれます）<br>
+            ・GIF は 256 色までのため、写真より画面キャプチャに向いています<br>
+            ・枚数や解像度が大きいと作成に時間がかかります
+          </div>
+        </div>
+        <div style="padding:11px 18px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;">
+          <button class="btn btn-secondary" onclick="_imgLibCloseGifModal()" style="font-size:12px;">キャンセル</button>
+          <button class="btn btn-primary" onclick="_imgLibRunGif()" style="font-size:12px;">🎞 作成する</button>
+        </div>
+      </div>
+    </div>
 
     <!-- フォルダ移動モーダル -->
     <div id="scrFolderModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:8900;align-items:center;justify-content:center;"
@@ -5796,6 +5845,365 @@ function _scrLibScanFolderInner(silent) {
  * 画像ライブラリの「保存状況」を調べる。
  * base64 が残っている件数と、library に載っていない件数を返す。
  */
+// ===================================================================
+// GIF 作成（依存ライブラリなし）
+// ===================================================================
+// GIF89a エンコーダ（依存ライブラリなし・ブラウザ内で完結）
+// 画面キャプチャは色数が少ないため、メディアンカットで 256 色に量子化すれば
+// 十分な品質が得られる。
+
+/** RGBA 配列から出現色を集める（8bit → 5bit に丸めて集約） */
+function _gifBuildPalette(frames) {
+  var hist = new Map();
+  frames.forEach(function (f) {
+    var d = f.data;
+    for (var i = 0; i < d.length; i += 4) {
+      // 完全透過は後で背景色に寄せるため無視
+      if (d[i + 3] < 128) continue;
+      var key = (d[i] >> 3 << 10) | (d[i + 1] >> 3 << 5) | (d[i + 2] >> 3);
+      hist.set(key, (hist.get(key) || 0) + 1);
+    }
+  });
+
+  var boxes = [{ colors: Array.from(hist.keys()), }];
+  // メディアンカット：分散の大きい軸で分割していく
+  while (boxes.length < 256) {
+    var target = -1, best = -1;
+    for (var b = 0; b < boxes.length; b++) {
+      if (boxes[b].colors.length < 2) continue;
+      if (boxes[b].colors.length > best) { best = boxes[b].colors.length; target = b; }
+    }
+    if (target < 0) break;
+
+    var cs = boxes[target].colors;
+    var mn = [31, 31, 31], mx = [0, 0, 0];
+    cs.forEach(function (k) {
+      var c = [(k >> 10) & 31, (k >> 5) & 31, k & 31];
+      for (var j = 0; j < 3; j++) {
+        if (c[j] < mn[j]) mn[j] = c[j];
+        if (c[j] > mx[j]) mx[j] = c[j];
+      }
+    });
+    var axis = 0, span = mx[0] - mn[0];
+    if (mx[1] - mn[1] > span) { axis = 1; span = mx[1] - mn[1]; }
+    if (mx[2] - mn[2] > span) { axis = 2; }
+    var sh = axis === 0 ? 10 : axis === 1 ? 5 : 0;
+    cs.sort(function (a, b2) { return ((a >> sh) & 31) - ((b2 >> sh) & 31); });
+    var half = cs.length >> 1;
+    boxes.splice(target, 1,
+      { colors: cs.slice(0, half) },
+      { colors: cs.slice(half) });
+  }
+
+  // 各ボックスの代表色（出現数で重み付けした平均）
+  var pal = boxes.map(function (bx) {
+    var r = 0, g = 0, b2 = 0, n = 0;
+    bx.colors.forEach(function (k) {
+      var w = hist.get(k) || 1;
+      r += (((k >> 10) & 31) << 3) * w;
+      g += (((k >> 5) & 31) << 3) * w;
+      b2 += ((k & 31) << 3) * w;
+      n += w;
+    });
+    if (!n) return [0, 0, 0];
+    return [Math.round(r / n), Math.round(g / n), Math.round(b2 / n)];
+  });
+  while (pal.length < 2) pal.push([0, 0, 0]);
+  return pal;
+}
+
+/** 最も近いパレット色の番号を返す */
+function _gifNearest(pal, r, g, b, cache) {
+  var key = (r >> 2 << 12) | (g >> 2 << 6) | (b >> 2);
+  var hit = cache.get(key);
+  if (hit !== undefined) return hit;
+  var best = 0, bd = Infinity;
+  for (var i = 0; i < pal.length; i++) {
+    var dr = pal[i][0] - r, dg = pal[i][1] - g, db = pal[i][2] - b;
+    var d = dr * dr + dg * dg + db * db;
+    if (d < bd) { bd = d; best = i; if (!d) break; }
+  }
+  cache.set(key, best);
+  return best;
+}
+
+/** LZW 圧縮（GIF 仕様） */
+function _gifLZW(indices, minCode) {
+  var out = [], cur = 0, curBits = 0, block = [];
+  var clear = 1 << minCode, eoi = clear + 1;
+  var size = minCode + 1, next = eoi + 1;
+  var dict = new Map();
+
+  function emit(code) {
+    cur |= code << curBits;
+    curBits += size;
+    while (curBits >= 8) {
+      block.push(cur & 255);
+      cur >>= 8; curBits -= 8;
+      if (block.length === 255) { out.push(255); out = out.concat(block); block = []; }
+    }
+  }
+  function reset() {
+    dict = new Map(); size = minCode + 1; next = eoi + 1;
+  }
+
+  emit(clear); reset();
+  var prev = indices[0];
+  for (var i = 1; i < indices.length; i++) {
+    var k = indices[i];
+    var key = prev * 4096 + k;
+    if (dict.has(key)) { prev = dict.get(key); continue; }
+    emit(prev);
+    dict.set(key, next++);
+    if (next - 1 === (1 << size) && size < 12) size++;
+    if (next > 4095) { emit(clear); reset(); }
+    prev = k;
+  }
+  emit(prev);
+  emit(eoi);
+  if (curBits > 0) block.push(cur & 255);
+  if (block.length) { out.push(block.length); out = out.concat(block); }
+  out.push(0);   // ブロック終端
+  return out;
+}
+
+/**
+ * フレーム配列から GIF のバイト列を作る。
+ * @param frames [{data: Uint8ClampedArray(RGBA), width, height}]
+ * @param opts   {delay: 1/100秒, loop: 0=無限}
+ */
+function gifEncode(frames, opts) {
+  opts = opts || {};
+  // delay は共通値（数値）でも、フレームごとの配列でも受け取れる
+  var delays = Array.isArray(opts.delay) ? opts.delay : null;
+  var defDelay = Math.max(2, Math.round(delays ? 100 : (opts.delay == null ? 100 : opts.delay)));
+  var delayAt = function(i) {
+    if (!delays) return defDelay;
+    var v = delays[i];
+    return Math.max(2, Math.round(v == null ? defDelay : v));
+  };
+  var W = frames[0].width, H = frames[0].height;
+
+  var pal = _gifBuildPalette(frames);
+  var bits = 1;
+  while ((1 << bits) < pal.length) bits++;
+  if (bits > 8) bits = 8;
+  var palSize = 1 << bits;
+
+  var bytes = [];
+  var push = function (a) { for (var i = 0; i < a.length; i++) bytes.push(a[i]); };
+  var str = function (s) { for (var i = 0; i < s.length; i++) bytes.push(s.charCodeAt(i)); };
+  var u16 = function (v) { bytes.push(v & 255, (v >> 8) & 255); };
+
+  str('GIF89a');
+  u16(W); u16(H);
+  bytes.push(0x80 | ((bits - 1) & 7));   // グローバルカラーテーブルあり
+  bytes.push(0);                          // 背景色
+  bytes.push(0);                          // アスペクト比
+  for (var i = 0; i < palSize; i++) {
+    var c = pal[i] || [0, 0, 0];
+    bytes.push(c[0], c[1], c[2]);
+  }
+
+  // ループ指定（Netscape 拡張）
+  str('\x21\xFF\x0BNETSCAPE2.0');
+  bytes.push(3, 1);
+  u16(opts.loop == null ? 0 : opts.loop);
+  bytes.push(0);
+
+  var cache = new Map();
+  frames.forEach(function (f, fi) {
+    // フレーム制御（表示時間）
+    bytes.push(0x21, 0xF9, 4, 0x04);
+    u16(delayAt(fi));
+    bytes.push(0, 0);
+
+    bytes.push(0x2C);
+    u16(0); u16(0); u16(W); u16(H);
+    bytes.push(0);                        // ローカルカラーテーブルなし
+
+    var d = f.data, idx = new Uint8Array(W * H);
+    for (var p = 0, q = 0; p < d.length; p += 4, q++) {
+      idx[q] = _gifNearest(pal, d[p], d[p + 1], d[p + 2], cache);
+    }
+    var minCode = Math.max(2, bits);
+    bytes.push(minCode);
+    push(_gifLZW(idx, minCode));
+  });
+
+  bytes.push(0x3B);   // 終端
+  return new Uint8Array(bytes);
+}
+
+
+/**
+ * 選択中の画像から GIF を作り、screen-images に保存してライブラリに登録する。
+ * 並び順は一覧の表示順（＝名前順）に従う。
+ */
+var _gifItems = [];
+
+function _imgLibMakeGif() {
+  var ids = Array.from(_imgLibSelectedIds);
+  if (ids.length < 2) { toast('⚠️ 2枚以上を選択してください'); return; }
+  if (!window.AppFS || !window.AppFS.isSupported()) {
+    toast('⚠️ フォルダ書き込みに非対応のため保存できません'); return;
+  }
+  var items = (_imgLibAllItems || []).filter(function(it){ return ids.indexOf(it.id) >= 0; })
+                                     .sort(_imgLibCompare);
+  document.getElementById('gifModalCount').textContent = items.length + ' 枚';
+  // 各フレームに秒数を持たせる（既定は共通値。個別に上書きできる）
+  _gifItems = items;
+  document.getElementById('gifModalList').innerHTML = items.map(function(it, i) {
+    return '<div style="display:flex;align-items:center;gap:6px;padding:3px 0;">'
+      + '<span style="font-size:11px;color:var(--text3);min-width:16px;">' + (i + 1) + '.</span>'
+      + '<span style="flex:1;min-width:0;font-size:11px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'
+      +   (it.folder ? '📁' + esc(it.folder) + ' / ' : '') + esc(it.name || it.id) + '</span>'
+      + '<input type="number" class="gif-frame-sec" data-idx="' + i + '" min="0.05" step="0.05" placeholder="共通"'
+      +   ' title="この画像だけの表示秒数（空欄なら共通の秒数）"'
+      +   ' style="width:62px;flex-shrink:0;height:22px;padding:0 5px;font-size:11px;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text);">'
+      + '<span style="font-size:10px;color:var(--text3);flex-shrink:0;">秒</span>'
+      + '</div>';
+  }).join('');
+  document.getElementById('gifModalName').value =
+    String(items[0].name || 'animation').replace(/[_\-]?\d+$/, '') + '_アニメ';
+  var fs2 = document.getElementById('gifModalFolder');
+  if (fs2) fs2.value = items[0].folder || '';
+  document.getElementById('gifModal').style.display = 'flex';
+}
+
+/** 個別に入力した秒数をすべて空にする */
+function _gifClearPerFrame() {
+  document.querySelectorAll('#gifModalList .gif-frame-sec').forEach(function(i){ i.value = ''; });
+  toast('個別の秒数を解除しました');
+}
+
+function _imgLibCloseGifModal() {
+  document.getElementById('gifModal').style.display = 'none';
+}
+
+/** GIF を生成して保存する */
+function _imgLibRunGif() {
+  var ids = Array.from(_imgLibSelectedIds);
+  var items = (_imgLibAllItems || []).filter(function(it){ return ids.indexOf(it.id) >= 0; })
+                                     .sort(_imgLibCompare);
+  if (items.length < 2) return;
+
+  var name   = _imgLibSafeName(document.getElementById('gifModalName').value, 'animation');
+  var folder = _imgLibSafeFolder((document.getElementById('gifModalFolder') || {}).value || '');
+  var common = Math.max(2, Math.round((parseFloat(document.getElementById('gifModalDelay').value) || 1) * 100));
+
+  // 個別入力があればそれを、無ければ共通値を使う（単位は 1/100 秒）
+  var delay = items.map(function(){ return common; });
+  document.querySelectorAll('#gifModalList .gif-frame-sec').forEach(function(inp) {
+    var i = parseInt(inp.dataset.idx, 10);
+    var v = parseFloat(inp.value);
+    if (!isNaN(i) && v > 0) delay[i] = Math.max(2, Math.round(v * 100));
+  });
+  var maxW   = parseInt(document.getElementById('gifModalWidth').value, 10) || 0;
+
+  _importProgressShow('GIF を作成しています…', '画像を読み込み中…', 0);
+
+  // 読み込めた画像だけを使う。秒数の対応がずれないよう一緒に積む。
+  var frames = [], used = [], W = 0, H = 0;
+  var step = function(i) {
+    if (i >= items.length) {
+      console.info('[gif] ' + frames.length + ' / ' + items.length + ' 枚を読み込みました');
+      return _gifFinish(frames, name, folder, used);
+    }
+    _importProgressUpdate('GIF を作成しています…',
+      (i + 1) + ' / ' + items.length + ' 枚読み込み中…',
+      Math.round((i + 1) / items.length * 60));
+
+    // ファイル参照の画像をそのまま canvas に描くと、file:// では
+    // キャンバスが汚染されて getImageData が使えない。
+    // 一度 base64 に変換してから描く（同一オリジン扱いになる）。
+    resolveImg('lib:' + items[i].id).then(function(src) {
+      if (src && src.indexOf('data:') !== 0) {
+        return _fileToDataUrl(src).catch(function(){ return src; });
+      }
+      return src;
+    }).then(function(src) {
+      var img = new Image();
+      img.onload = function() {
+        // GIF は全フレーム同じ寸法。1枚目に合わせる
+        if (!W) {
+          W = img.naturalWidth; H = img.naturalHeight;
+          if (maxW && W > maxW) { H = Math.round(H * maxW / W); W = maxW; }
+        }
+        var cv = document.createElement('canvas');
+        cv.width = W; cv.height = H;
+        var ctx = cv.getContext('2d');
+        ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, W, H);   // 透過は白で埋める
+        ctx.drawImage(img, 0, 0, W, H);
+        try { frames.push(ctx.getImageData(0, 0, W, H)); used.push(delay[i]); }
+        catch (e) {
+          // ここに来るのは変換にも失敗した場合。1枚飛ばして続行する。
+          console.warn('[gif] 読み取れませんでした:', items[i] && items[i].name, e && e.message);
+        }
+        step(i + 1);
+      };
+      img.onerror = function() { step(i + 1); };   // 読めない画像は飛ばす
+      img.src = src;
+    }).catch(function() { step(i + 1); });
+  };
+  step(0);
+}
+
+function _gifFinish(frames, name, folder, delay) {
+  if (frames.length < 2) {
+    _importProgressHide();
+    toast('❌ 読み込めた画像が ' + frames.length + ' 枚でした。'
+        + 'フォルダ接続と画像ファイルの有無をご確認ください');
+    return;
+  }
+  _importProgressUpdate('GIF を作成しています…', '圧縮中…（枚数が多いと時間がかかります）', 70);
+
+  // 圧縮は同期処理なので、進捗を描画させてから実行する
+  setTimeout(function() {
+    var bytes;
+    try { bytes = gifEncode(frames, { delay: delay, loop: 0 }); }
+    catch (e) {
+      _importProgressHide();
+      toast('❌ GIF の作成に失敗: ' + (e && e.message || e));
+      return;
+    }
+
+    var path = SCREEN_IMG_DIR + '/' + (folder ? folder + '/' : '') + name + '.gif';
+    var blob = new Blob([bytes], { type: 'image/gif' });
+
+    _importProgressUpdate('GIF を作成しています…', '保存中…', 90);
+    window.AppFS.writeBinary(path, blob, false).then(function(ok) {
+      _importProgressHide();
+      if (!ok) { toast('❌ 保存に失敗しました'); return; }
+
+      var rec = {
+        id: 'lib' + Math.random().toString(36).substr(2, 9),
+        name: name, folder: folder, note: '',
+        dataUrl: path, fileSize: blob.size,
+        hotspots: [], createdAt: Date.now()
+      };
+      _imgLibPutMany([rec]).then(function() {
+        window._SCREEN_IMG_MAP[rec.id] = path;
+        _imgLibMarkDirty(rec.id);
+        var sd = window.APP_SCREEN_DATA;
+        if (sd && Array.isArray(sd.library)) {
+          sd.library.push({ id: rec.id, name: name, folder: folder, file: path,
+                            note: '', hotspots: [], hsLinkFrom: null });
+        }
+        _imgLibInvalidateMeta();
+        _imgLibAllItems = []; _imgLibLoaded = false;
+        _imgLibClearSelection();
+        _imgLibCloseGifModal();
+        _scrLibRender();
+        toast('🎞 「' + name + '.gif」を作成しました（' + Math.round(blob.size / 1024) + ' KB）');
+      });
+    }).catch(function(e) {
+      _importProgressHide();
+      toast('❌ 保存に失敗: ' + (e && e.message || e));
+    });
+  }, 50);
+}
+
 function _imgLibInspect() {
   return Promise.all([imgLibGetAllKeys(), imgLibGetAllPaths()]).then(function(res) {
     var ids = Array.from(res[0]);
