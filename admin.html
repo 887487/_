@@ -1855,10 +1855,11 @@ html[data-theme="dark"] .nav-arrow-btn { background: rgba(40,42,54,.9); }
             </div>
             <div style="flex:1;">
               <div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:5px;">横幅の上限 px（0＝原寸）</div>
-              <input type="number" id="gifModalWidth" value="1000" min="0" step="100" style="width:100%;box-sizing:border-box;height:30px;padding:0 9px;font-size:12px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);">
+              <input type="number" id="gifModalWidth" value="0" min="0" step="100" style="width:100%;box-sizing:border-box;height:30px;padding:0 9px;font-size:12px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);">
             </div>
           </div>
           <div style="font-size:10px;color:var(--text3);line-height:1.7;">
+            ・▲▼ で順番を入れ替え、✕ で除外できます<br>
             ・右の欄に入力すると、その画像だけ別の秒数にできます（空欄は共通値）<br>
             ・全フレームは1枚目の大きさに合わせます（縦横比は保たれます）<br>
             ・GIF は 256 色までのため、写真より画面キャプチャに向いています<br>
@@ -6041,6 +6042,53 @@ function gifEncode(frames, opts) {
  * 並び順は一覧の表示順（＝名前順）に従う。
  */
 var _gifItems = [];
+var _gifSecs  = [];
+
+/** GIF作成モーダルの一覧を描画する（並べ替え可能） */
+function _gifRenderList() {
+  var el = document.getElementById('gifModalList');
+  if (!el) return;
+  el.innerHTML = _gifItems.map(function(it, i) {
+    var last = (i === _gifItems.length - 1);
+    return '<div style="display:flex;align-items:center;gap:5px;padding:3px 0;">'
+      + '<span style="font-size:11px;color:var(--text3);min-width:16px;">' + (i + 1) + '.</span>'
+      + '<button onclick="_gifMove(' + i + ',-1)"' + (i === 0 ? ' disabled' : '')
+      +   ' title="上へ" style="width:20px;height:20px;flex-shrink:0;font-size:10px;padding:0;border:1px solid var(--border);border-radius:4px;background:var(--surface);cursor:'
+      +   (i === 0 ? 'not-allowed' : 'pointer') + ';color:var(--text' + (i === 0 ? '3' : '') + ');font-family:inherit;">▲</button>'
+      + '<button onclick="_gifMove(' + i + ',1)"' + (last ? ' disabled' : '')
+      +   ' title="下へ" style="width:20px;height:20px;flex-shrink:0;font-size:10px;padding:0;border:1px solid var(--border);border-radius:4px;background:var(--surface);cursor:'
+      +   (last ? 'not-allowed' : 'pointer') + ';color:var(--text' + (last ? '3' : '') + ');font-family:inherit;">▼</button>'
+      + '<span style="flex:1;min-width:0;font-size:11px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'
+      +   (it.folder ? '📁' + esc(it.folder) + ' / ' : '') + esc(it.name || it.id) + '</span>'
+      + '<input type="number" class="gif-frame-sec" data-idx="' + i + '" min="0.05" step="0.05" placeholder="共通"'
+      +   ' value="' + esc(_gifSecs[i] || '') + '" oninput="_gifSecs[' + i + ']=this.value"'
+      +   ' title="この画像だけの表示秒数（空欄なら共通の秒数）"'
+      +   ' style="width:58px;flex-shrink:0;height:22px;padding:0 5px;font-size:11px;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text);">'
+      + '<span style="font-size:10px;color:var(--text3);flex-shrink:0;">秒</span>'
+      + '<button onclick="_gifRemove(' + i + ')" title="この画像を外す"'
+      +   ' style="width:20px;height:20px;flex-shrink:0;font-size:11px;padding:0;border:none;background:none;cursor:pointer;color:var(--text3);">✕</button>'
+      + '</div>';
+  }).join('');
+  var c = document.getElementById('gifModalCount');
+  if (c) c.textContent = _gifItems.length + ' 枚';
+}
+
+/** 並び順を1つ入れ替える（秒数も一緒に動かす） */
+function _gifMove(i, dir) {
+  var j = i + dir;
+  if (j < 0 || j >= _gifItems.length) return;
+  var t = _gifItems[i]; _gifItems[i] = _gifItems[j]; _gifItems[j] = t;
+  var s2 = _gifSecs[i];  _gifSecs[i]  = _gifSecs[j];  _gifSecs[j]  = s2;
+  _gifRenderList();
+}
+
+/** 一覧から外す */
+function _gifRemove(i) {
+  _gifItems.splice(i, 1);
+  _gifSecs.splice(i, 1);
+  _gifRenderList();
+}
+
 
 function _imgLibMakeGif() {
   var ids = Array.from(_imgLibSelectedIds);
@@ -6052,18 +6100,9 @@ function _imgLibMakeGif() {
                                      .sort(_imgLibCompare);
   document.getElementById('gifModalCount').textContent = items.length + ' 枚';
   // 各フレームに秒数を持たせる（既定は共通値。個別に上書きできる）
-  _gifItems = items;
-  document.getElementById('gifModalList').innerHTML = items.map(function(it, i) {
-    return '<div style="display:flex;align-items:center;gap:6px;padding:3px 0;">'
-      + '<span style="font-size:11px;color:var(--text3);min-width:16px;">' + (i + 1) + '.</span>'
-      + '<span style="flex:1;min-width:0;font-size:11px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'
-      +   (it.folder ? '📁' + esc(it.folder) + ' / ' : '') + esc(it.name || it.id) + '</span>'
-      + '<input type="number" class="gif-frame-sec" data-idx="' + i + '" min="0.05" step="0.05" placeholder="共通"'
-      +   ' title="この画像だけの表示秒数（空欄なら共通の秒数）"'
-      +   ' style="width:62px;flex-shrink:0;height:22px;padding:0 5px;font-size:11px;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text);">'
-      + '<span style="font-size:10px;color:var(--text3);flex-shrink:0;">秒</span>'
-      + '</div>';
-  }).join('');
+  _gifItems = items.slice();
+  _gifSecs  = items.map(function(){ return ''; });   // 個別秒数（空＝共通）
+  _gifRenderList();
   document.getElementById('gifModalName').value =
     String(items[0].name || 'animation').replace(/[_\-]?\d+$/, '') + '_アニメ';
   var fs2 = document.getElementById('gifModalFolder');
@@ -6073,7 +6112,8 @@ function _imgLibMakeGif() {
 
 /** 個別に入力した秒数をすべて空にする */
 function _gifClearPerFrame() {
-  document.querySelectorAll('#gifModalList .gif-frame-sec').forEach(function(i){ i.value = ''; });
+  _gifSecs = _gifItems.map(function(){ return ''; });
+  _gifRenderList();
   toast('個別の秒数を解除しました');
 }
 
@@ -6083,21 +6123,18 @@ function _imgLibCloseGifModal() {
 
 /** GIF を生成して保存する */
 function _imgLibRunGif() {
-  var ids = Array.from(_imgLibSelectedIds);
-  var items = (_imgLibAllItems || []).filter(function(it){ return ids.indexOf(it.id) >= 0; })
-                                     .sort(_imgLibCompare);
-  if (items.length < 2) return;
+  // モーダルで並べ替え・除外した結果をそのまま使う
+  var items = _gifItems.slice();
+  if (items.length < 2) { toast('⚠️ 2枚以上必要です'); return; }
 
   var name   = _imgLibSafeName(document.getElementById('gifModalName').value, 'animation');
   var folder = _imgLibSafeFolder((document.getElementById('gifModalFolder') || {}).value || '');
   var common = Math.max(2, Math.round((parseFloat(document.getElementById('gifModalDelay').value) || 1) * 100));
 
   // 個別入力があればそれを、無ければ共通値を使う（単位は 1/100 秒）
-  var delay = items.map(function(){ return common; });
-  document.querySelectorAll('#gifModalList .gif-frame-sec').forEach(function(inp) {
-    var i = parseInt(inp.dataset.idx, 10);
-    var v = parseFloat(inp.value);
-    if (!isNaN(i) && v > 0) delay[i] = Math.max(2, Math.round(v * 100));
+  var delay = items.map(function(_, i) {
+    var v = parseFloat(_gifSecs[i]);
+    return (v > 0) ? Math.max(2, Math.round(v * 100)) : common;
   });
   var maxW   = parseInt(document.getElementById('gifModalWidth').value, 10) || 0;
 
@@ -7467,6 +7504,9 @@ function scrTogglePat(id){
   _scrUpdateRightSidebar();
 }
 function scrSelectScreen(scrId){
+  // 別の画面を選んだら全体表示（Fit＝100%）に戻す。
+  // 解像度が違う画像に前の倍率を引き継ぐと見切れることがあるため。
+  if (_scrSelScrId !== scrId) _scrZoom = 1;
   _scrSelScrId=scrId;_scrCropSel=null;
   scrRenderUnifiedSidebar();
   _scrUpdateCenterCanvas();
@@ -7673,8 +7713,7 @@ function _scrUpdateCenterCanvas(){
   if(!scr||!scr.imageSrc){empty.style.display='flex';canvas.style.display='none';if(zoomBar)zoomBar.style.display='none';return;}
   empty.style.display='none';canvas.style.display='flex';
   if(zoomBar)zoomBar.style.display='flex';
-  // 倍率は「全体表示＝1.0」の相対値なので、画面を切り替えても
-  // 解像度の違う画像に自動で追従する（初期値 1.0 ＝ 常に全体表示）
+  // 倍率は「全体表示＝1.0」の相対値。初期値 1.0 のまま Fit 表示になる。
   setTimeout(_scrApplyZoom, 0);
   if(typeof _scrBarSetMode==='function') _scrBarSetMode('pattern');
   var img=document.getElementById('scrCenterImg');
@@ -9187,9 +9226,9 @@ function _imgLibHsActivate(item) {
     _imgLibHsFitZoom = _imgLibHsCalcFit();
     // パターン編集と倍率を共有する。センターで開いている間は現在の倍率を引き継ぎ、
     // 単独で開いた場合のみ収まるサイズにする。
-    var useShared = (typeof _scrHsEditOn !== 'undefined' && _scrHsEditOn && typeof _scrZoom === 'number');
-    // 共有倍率は「全体表示＝1.0」の相対値なので、Fit倍率を掛けて実倍率にする
-    _imgLibHsApplyZoom(useShared ? (_imgLibHsFitZoom * _scrZoom) : _imgLibHsFitZoom);
+    // 画像を開いたときは常に全体表示（Fit）から始める
+    _scrZoom = 1;
+    _imgLibHsApplyZoom(_imgLibHsFitZoom);
   };
   // 一覧は dataUrl を持たないメタ情報なので、ここで初めて画像本体を読む
   if (item.dataUrl) {
