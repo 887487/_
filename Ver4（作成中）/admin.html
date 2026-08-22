@@ -1791,6 +1791,7 @@ html[data-theme="dark"] .nav-arrow-btn { background: rgba(40,42,54,.9); }
           <div style="display:flex;flex-wrap:wrap;gap:4px;">
             <button class="btn btn-secondary scr-lib-selbtn" style="font-size:10px;height:24px;padding:0 7px;flex:1 1 auto;white-space:nowrap;" onclick="_imgLibMoveToFolder()">📁 フォルダへ</button>
             <button class="btn btn-secondary scr-lib-selbtn" style="font-size:10px;height:24px;padding:0 7px;flex:1 1 auto;white-space:nowrap;" onclick="_imgLibAddSelectedToPattern()">➕ 画面追加</button>
+            <button class="btn btn-secondary scr-lib-selbtn" style="font-size:10px;height:24px;padding:0 7px;flex:1 1 auto;white-space:nowrap;" onclick="_imgLibMakeGif()" title="選択した画像をつないで GIF アニメを作ります">🎞 GIF化</button>
             <button class="btn btn-secondary scr-lib-selbtn" style="font-size:10px;height:24px;padding:0 7px;flex:1 1 auto;white-space:nowrap;" onclick="_imgLibClearSelection()">☐ 解除</button>
             <button class="btn scr-lib-selbtn" style="font-size:10px;height:24px;padding:0 7px;flex:1 1 auto;white-space:nowrap;background:var(--red);color:#fff;border:none;" onclick="_imgLibDeleteSelected()">🗑 削除</button>
           </div>
@@ -1810,6 +1811,7 @@ html[data-theme="dark"] .nav-arrow-btn { background: rgba(40,42,54,.9); }
         <div id="imgLibHsListActions" style="display:none;flex-wrap:wrap;gap:6px;padding:8px 12px;border-bottom:1px solid var(--border);flex-shrink:0;">
           <button class="btn btn-primary" style="font-size:10px;height:26px;padding:0 10px;flex:1;min-width:70px;" onclick="_imgLibHsSave()">💾 保存</button>
           <button class="btn btn-secondary" style="font-size:10px;height:26px;padding:0 8px;flex:1;min-width:70px;" onclick="_imgLibHsOpenApply()" title="このホットスポットと遷移先を、他の画像にも適用します">🔁 使い回す</button>
+          <button class="btn btn-secondary" id="imgLibHsPasteBtn" style="display:none;font-size:10px;height:26px;padding:0 8px;flex:1;min-width:70px;" onclick="_imgLibHsPaste()">📥 貼り付け</button>
           <button class="btn btn-secondary" style="font-size:10px;height:26px;padding:0 8px;flex:1;min-width:70px;" onclick="_imgLibHsClearAll()">🗑 全削除</button>
         </div>
         <div id="imgLibHsList" style="flex:1;overflow-y:auto;padding:4px 0;"></div>
@@ -1821,6 +1823,55 @@ html[data-theme="dark"] .nav-arrow-btn { background: rgba(40,42,54,.9); }
         クリック：HS登録／ダブルクリック：画面として追加／右クリック：操作メニュー
       </div>
     </aside>
+
+    <!-- GIF 作成モーダル -->
+    <div id="gifModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:8900;align-items:center;justify-content:center;"
+         onclick="if(event.target===this)_imgLibCloseGifModal()">
+      <div style="background:var(--surface);border-radius:14px;width:min(94vw,470px);max-height:88vh;display:flex;flex-direction:column;box-shadow:0 24px 64px rgba(0,0,0,.3);overflow:hidden;">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:13px 18px;border-bottom:1px solid var(--border);">
+          <span style="font-size:14px;font-weight:700;">🎞 GIF アニメを作成</span>
+          <button onclick="_imgLibCloseGifModal()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text3);">✕</button>
+        </div>
+        <div style="flex:1;overflow-y:auto;padding:16px 18px;display:flex;flex-direction:column;gap:12px;">
+          <div style="font-size:12px;color:var(--text2);">
+            選択中の <strong id="gifModalCount"></strong> を、下の順番でつないだ GIF を作ります。
+          </div>
+          <div id="gifModalList" style="max-height:150px;overflow-y:auto;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:7px 10px;"></div>
+          <div>
+            <div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:5px;">ファイル名（.gif は自動）</div>
+            <input type="text" id="gifModalName" style="width:100%;box-sizing:border-box;height:30px;padding:0 9px;font-size:12px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);">
+          </div>
+          <div>
+            <div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:5px;">保存先フォルダ（空欄＝未分類）</div>
+            <input type="text" id="gifModalFolder" style="width:100%;box-sizing:border-box;height:30px;padding:0 9px;font-size:12px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);">
+          </div>
+          <div style="display:flex;gap:10px;">
+            <div style="flex:1;">
+              <div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:5px;">共通の秒数</div>
+              <div style="display:flex;gap:5px;">
+                <input type="number" id="gifModalDelay" value="1" min="0.05" step="0.05" style="flex:1;min-width:0;box-sizing:border-box;height:30px;padding:0 9px;font-size:12px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);">
+                <button class="btn btn-secondary" style="font-size:10px;height:30px;padding:0 8px;flex-shrink:0;" onclick="_gifClearPerFrame()" title="個別に入力した秒数をすべて消して共通値に戻します">個別を解除</button>
+              </div>
+            </div>
+            <div style="flex:1;">
+              <div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:5px;">横幅の上限 px（0＝原寸）</div>
+              <input type="number" id="gifModalWidth" value="0" min="0" step="100" style="width:100%;box-sizing:border-box;height:30px;padding:0 9px;font-size:12px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);">
+            </div>
+          </div>
+          <div style="font-size:10px;color:var(--text3);line-height:1.7;">
+            ・▲▼ で順番を入れ替え、✕ で除外できます<br>
+            ・右の欄に入力すると、その画像だけ別の秒数にできます（空欄は共通値）<br>
+            ・全フレームは1枚目の大きさに合わせます（縦横比は保たれます）<br>
+            ・GIF は 256 色までのため、写真より画面キャプチャに向いています<br>
+            ・枚数や解像度が大きいと作成に時間がかかります
+          </div>
+        </div>
+        <div style="padding:11px 18px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;">
+          <button class="btn btn-secondary" onclick="_imgLibCloseGifModal()" style="font-size:12px;">キャンセル</button>
+          <button class="btn btn-primary" onclick="_imgLibRunGif()" style="font-size:12px;">🎞 作成する</button>
+        </div>
+      </div>
+    </div>
 
     <!-- フォルダ移動モーダル -->
     <div id="scrFolderModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:8900;align-items:center;justify-content:center;"
@@ -3637,6 +3688,21 @@ window._processImportText = function(text, noReload) {
 };
 
 /** 相対パスのファイルを読み、base64 の dataURL に変換する */
+/**
+ * JPEG へ再圧縮すると壊れる画像かを判定する。
+ *   GIF … アニメーションが1コマ目の静止画になる
+ *   PNG … 透過が黒く潰れる
+ *   SVG … ベクターがラスタ化される
+ * これらは圧縮せず、元データのまま扱う。
+ */
+function _isLossyUnsafe(src) {
+  var v = String(src || '').toLowerCase();
+  if (v.indexOf('data:image/gif') === 0) return true;
+  if (v.indexOf('data:image/png') === 0) return true;
+  if (v.indexOf('data:image/svg') === 0) return true;
+  return /\.(gif|png|svg)$/.test(v.split('?')[0]);
+}
+
 function _fileToDataUrl(url) {
   // まず接続フォルダから読む（file:// でも確実に読める）
   var p = null;
@@ -3733,6 +3799,10 @@ function exportJSON(){
             }).catch(function() { _tick(); resolve(_meta(item, src)); });
             return;
           }
+
+          // GIF はアニメーションが1コマ目に潰れ、SVG は画質が落ちるため
+          // canvas を通さずそのまま埋め込む。PNG も透過が失われるので温存する。
+          if (_isLossyUnsafe(src)) { _tick(); resolve(_meta(item, src)); return; }
 
           var img = new Image();
           img.onload = function() {
@@ -4874,6 +4944,8 @@ function exportIndividual(type) {
                              .catch(function(){ resolve(_m(item, src)); });
             return;
           }
+          if (_isLossyUnsafe(src)) { resolve(_m(item, src)); return; }
+
           var img = new Image();
           img.onload = function() {
             var out = src;
@@ -5774,6 +5846,466 @@ function _scrLibScanFolderInner(silent) {
  * 画像ライブラリの「保存状況」を調べる。
  * base64 が残っている件数と、library に載っていない件数を返す。
  */
+// ===================================================================
+// GIF 作成（依存ライブラリなし）
+// ===================================================================
+// GIF89a エンコーダ（依存ライブラリなし・ブラウザ内で完結）
+// 画面キャプチャは色数が少ないため、メディアンカットで 256 色に量子化すれば
+// 十分な品質が得られる。
+
+/** RGBA 配列から出現色を集める（8bit → 5bit に丸めて集約） */
+function _gifBuildPalette(frames) {
+  // 8bit のまま集計する。ここで丸めると色数が少ない画像でも色が変わってしまう。
+  var hist = new Map();   // key = r<<16 | g<<8 | b
+  frames.forEach(function (f) {
+    var d = f.data;
+    for (var i = 0; i < d.length; i += 4) {
+      if (d[i + 3] < 128) continue;   // 完全透過（背景で塗り潰し済み）
+      var key = (d[i] << 16) | (d[i + 1] << 8) | d[i + 2];
+      hist.set(key, (hist.get(key) || 0) + 1);
+    }
+  });
+
+  var keys = Array.from(hist.keys());
+
+  // ── 256色以下ならそのまま使う（劣化ゼロ）──
+  if (keys.length <= 256) {
+    var exact = keys.map(function (k) { return [(k >> 16) & 255, (k >> 8) & 255, k & 255]; });
+    while (exact.length < 2) exact.push([0, 0, 0]);
+    return exact;
+  }
+
+  // ── 257色以上：8bit のままメディアンカットで減色 ──
+  var boxes = [{ colors: keys }];
+  while (boxes.length < 256) {
+    var target = -1, bestScore = -1;
+    for (var b = 0; b < boxes.length; b++) {
+      var bx = boxes[b];
+      if (bx.colors.length < 2) continue;
+      if (bx.score === undefined) bx.score = _gifBoxScore(bx.colors, hist);
+      if (bx.score > bestScore) { bestScore = bx.score; target = b; }
+    }
+    if (target < 0) break;
+
+    var cs = boxes[target].colors;
+    var mn = [255, 255, 255], mx = [0, 0, 0];
+    cs.forEach(function (k) {
+      var c = [(k >> 16) & 255, (k >> 8) & 255, k & 255];
+      for (var j = 0; j < 3; j++) {
+        if (c[j] < mn[j]) mn[j] = c[j];
+        if (c[j] > mx[j]) mx[j] = c[j];
+      }
+    });
+    // 人の目の感度に合わせて緑を重く見る
+    var w = [0.30, 0.59, 0.11], axis = 0, span = -1;
+    for (var a = 0; a < 3; a++) {
+      var v = (mx[a] - mn[a]) * w[a];
+      if (v > span) { span = v; axis = a; }
+    }
+    var sh = axis === 0 ? 16 : axis === 1 ? 8 : 0;
+    cs.sort(function (x, y) { return ((x >> sh) & 255) - ((y >> sh) & 255); });
+
+    // 色数の中央で分割する。分割対象は誤差（分散×画素数）で選んでいるため、
+    // ここで画素数に寄せると広い単色領域に引きずられて色域の端が潰れる。
+    var cut = cs.length >> 1;
+    if (cut < 1) cut = 1;
+    if (cut > cs.length - 1) cut = cs.length - 1;
+    boxes.splice(target, 1, { colors: cs.slice(0, cut) }, { colors: cs.slice(cut) });
+  }
+
+  // 代表色＝画素数で重み付けした平均
+  var pal = boxes.map(function (bx) {
+    var r = 0, g = 0, b2 = 0, n = 0;
+    bx.colors.forEach(function (k) {
+      var cnt = hist.get(k) || 1;
+      r += ((k >> 16) & 255) * cnt;
+      g += ((k >> 8) & 255) * cnt;
+      b2 += (k & 255) * cnt;
+      n += cnt;
+    });
+    if (!n) return [0, 0, 0];
+    return [Math.round(r / n), Math.round(g / n), Math.round(b2 / n)];
+  });
+  while (pal.length < 2) pal.push([0, 0, 0]);
+  return pal;
+}
+
+/**
+ * ボックスの「分割すべき度合い」。
+ * 代表色に置き換えたときに生じる誤差の総量（分散 × 画素数）で測る。
+ * 見た目の劣化に直結する指標なので、色域の広さだけで測るより結果が安定する。
+ */
+function _gifBoxScore(colors, hist) {
+  var sum = [0, 0, 0], sq = [0, 0, 0], n = 0;
+  colors.forEach(function (k) {
+    var cnt = hist.get(k) || 1;
+    var c = [(k >> 16) & 255, (k >> 8) & 255, k & 255];
+    for (var j = 0; j < 3; j++) {
+      sum[j] += c[j] * cnt;
+      sq[j]  += c[j] * c[j] * cnt;
+    }
+    n += cnt;
+  });
+  if (!n) return 0;
+  var w = [0.30, 0.59, 0.11], err = 0;
+  for (var a = 0; a < 3; a++) {
+    var mean = sum[a] / n;
+    err += w[a] * (sq[a] / n - mean * mean);   // 重み付き分散
+  }
+  return err * n;
+}
+
+/**
+ * 最も近いパレット色の番号を返す。
+ * キャッシュのキーを丸めるとそこでも色ずれが起きるため 8bit のまま使う。
+ */
+function _gifNearest(pal, r, g, b, cache) {
+  var key = (r << 16) | (g << 8) | b;
+  var hit = cache.get(key);
+  if (hit !== undefined) return hit;
+  var best = 0, bd = Infinity;
+  for (var i = 0; i < pal.length; i++) {
+    var dr = pal[i][0] - r, dg = pal[i][1] - g, db = pal[i][2] - b;
+    var d = dr * dr + dg * dg + db * db;
+    if (d < bd) { bd = d; best = i; if (!d) break; }
+  }
+  cache.set(key, best);
+  return best;
+}
+
+/** LZW 圧縮（GIF 仕様） */
+function _gifLZW(indices, minCode) {
+  var out = [], cur = 0, curBits = 0, block = [];
+  var clear = 1 << minCode, eoi = clear + 1;
+  var size = minCode + 1, next = eoi + 1;
+  var dict = new Map();
+
+  function emit(code) {
+    cur |= code << curBits;
+    curBits += size;
+    while (curBits >= 8) {
+      block.push(cur & 255);
+      cur >>= 8; curBits -= 8;
+      if (block.length === 255) { out.push(255); out = out.concat(block); block = []; }
+    }
+  }
+  function reset() {
+    dict = new Map(); size = minCode + 1; next = eoi + 1;
+  }
+
+  emit(clear); reset();
+  var prev = indices[0];
+  for (var i = 1; i < indices.length; i++) {
+    var k = indices[i];
+    var key = prev * 4096 + k;
+    if (dict.has(key)) { prev = dict.get(key); continue; }
+    emit(prev);
+    dict.set(key, next++);
+    if (next - 1 === (1 << size) && size < 12) size++;
+    if (next > 4095) { emit(clear); reset(); }
+    prev = k;
+  }
+  emit(prev);
+  emit(eoi);
+  if (curBits > 0) block.push(cur & 255);
+  if (block.length) { out.push(block.length); out = out.concat(block); }
+  out.push(0);   // ブロック終端
+  return out;
+}
+
+/**
+ * フレーム配列から GIF のバイト列を作る。
+ * @param frames [{data: Uint8ClampedArray(RGBA), width, height}]
+ * @param opts   {delay: 1/100秒, loop: 0=無限}
+ */
+function gifEncode(frames, opts) {
+  opts = opts || {};
+  // delay は共通値（数値）でも、フレームごとの配列でも受け取れる
+  var delays = Array.isArray(opts.delay) ? opts.delay : null;
+  var defDelay = Math.max(2, Math.round(delays ? 100 : (opts.delay == null ? 100 : opts.delay)));
+  var delayAt = function(i) {
+    if (!delays) return defDelay;
+    var v = delays[i];
+    return Math.max(2, Math.round(v == null ? defDelay : v));
+  };
+  var W = frames[0].width, H = frames[0].height;
+
+  var pal = _gifBuildPalette(frames);
+  var bits = 1;
+  while ((1 << bits) < pal.length) bits++;
+  if (bits > 8) bits = 8;
+  var palSize = 1 << bits;
+
+  var bytes = [];
+  var push = function (a) { for (var i = 0; i < a.length; i++) bytes.push(a[i]); };
+  var str = function (s) { for (var i = 0; i < s.length; i++) bytes.push(s.charCodeAt(i)); };
+  var u16 = function (v) { bytes.push(v & 255, (v >> 8) & 255); };
+
+  str('GIF89a');
+  u16(W); u16(H);
+  bytes.push(0x80 | ((bits - 1) & 7));   // グローバルカラーテーブルあり
+  bytes.push(0);                          // 背景色
+  bytes.push(0);                          // アスペクト比
+  for (var i = 0; i < palSize; i++) {
+    var c = pal[i] || [0, 0, 0];
+    bytes.push(c[0], c[1], c[2]);
+  }
+
+  // ループ指定（Netscape 拡張）
+  str('\x21\xFF\x0BNETSCAPE2.0');
+  bytes.push(3, 1);
+  u16(opts.loop == null ? 0 : opts.loop);
+  bytes.push(0);
+
+  var cache = new Map();
+  frames.forEach(function (f, fi) {
+    // フレーム制御（表示時間）
+    bytes.push(0x21, 0xF9, 4, 0x04);
+    u16(delayAt(fi));
+    bytes.push(0, 0);
+
+    bytes.push(0x2C);
+    u16(0); u16(0); u16(W); u16(H);
+    bytes.push(0);                        // ローカルカラーテーブルなし
+
+    var d = f.data, idx = new Uint8Array(W * H);
+    for (var p = 0, q = 0; p < d.length; p += 4, q++) {
+      idx[q] = _gifNearest(pal, d[p], d[p + 1], d[p + 2], cache);
+    }
+    var minCode = Math.max(2, bits);
+    bytes.push(minCode);
+    push(_gifLZW(idx, minCode));
+  });
+
+  bytes.push(0x3B);   // 終端
+  return new Uint8Array(bytes);
+}
+
+
+/**
+ * 選択中の画像から GIF を作り、screen-images に保存してライブラリに登録する。
+ * 並び順は一覧の表示順（＝名前順）に従う。
+ */
+var _gifItems = [];
+var _gifSecs  = [];
+
+/** GIF作成モーダルの一覧を描画する（並べ替え可能） */
+function _gifRenderList() {
+  var el = document.getElementById('gifModalList');
+  if (!el) return;
+  el.innerHTML = _gifItems.map(function(it, i) {
+    var last = (i === _gifItems.length - 1);
+    return '<div style="display:flex;align-items:center;gap:5px;padding:3px 0;">'
+      + '<span style="font-size:11px;color:var(--text3);min-width:16px;">' + (i + 1) + '.</span>'
+      + '<button onclick="_gifMove(' + i + ',-1)"' + (i === 0 ? ' disabled' : '')
+      +   ' title="上へ" style="width:20px;height:20px;flex-shrink:0;font-size:10px;padding:0;border:1px solid var(--border);border-radius:4px;background:var(--surface);cursor:'
+      +   (i === 0 ? 'not-allowed' : 'pointer') + ';color:var(--text' + (i === 0 ? '3' : '') + ');font-family:inherit;">▲</button>'
+      + '<button onclick="_gifMove(' + i + ',1)"' + (last ? ' disabled' : '')
+      +   ' title="下へ" style="width:20px;height:20px;flex-shrink:0;font-size:10px;padding:0;border:1px solid var(--border);border-radius:4px;background:var(--surface);cursor:'
+      +   (last ? 'not-allowed' : 'pointer') + ';color:var(--text' + (last ? '3' : '') + ');font-family:inherit;">▼</button>'
+      + '<span style="flex:1;min-width:0;font-size:11px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'
+      +   (it.folder ? '📁' + esc(it.folder) + ' / ' : '') + esc(it.name || it.id) + '</span>'
+      + '<input type="number" class="gif-frame-sec" data-idx="' + i + '" min="0.05" step="0.05" placeholder="共通"'
+      +   ' value="' + esc(_gifSecs[i] || '') + '" oninput="_gifSecs[' + i + ']=this.value"'
+      +   ' title="この画像だけの表示秒数（空欄なら共通の秒数）"'
+      +   ' style="width:58px;flex-shrink:0;height:22px;padding:0 5px;font-size:11px;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text);">'
+      + '<span style="font-size:10px;color:var(--text3);flex-shrink:0;">秒</span>'
+      + '<button onclick="_gifRemove(' + i + ')" title="この画像を外す"'
+      +   ' style="width:20px;height:20px;flex-shrink:0;font-size:11px;padding:0;border:none;background:none;cursor:pointer;color:var(--text3);">✕</button>'
+      + '</div>';
+  }).join('');
+  var c = document.getElementById('gifModalCount');
+  if (c) c.textContent = _gifItems.length + ' 枚';
+}
+
+/** 並び順を1つ入れ替える（秒数も一緒に動かす） */
+function _gifMove(i, dir) {
+  var j = i + dir;
+  if (j < 0 || j >= _gifItems.length) return;
+  var t = _gifItems[i]; _gifItems[i] = _gifItems[j]; _gifItems[j] = t;
+  var s2 = _gifSecs[i];  _gifSecs[i]  = _gifSecs[j];  _gifSecs[j]  = s2;
+  _gifRenderList();
+}
+
+/** 一覧から外す */
+function _gifRemove(i) {
+  _gifItems.splice(i, 1);
+  _gifSecs.splice(i, 1);
+  _gifRenderList();
+}
+
+
+function _imgLibMakeGif() {
+  var ids = Array.from(_imgLibSelectedIds);
+  if (ids.length < 2) { toast('⚠️ 2枚以上を選択してください'); return; }
+  if (!window.AppFS || !window.AppFS.isSupported()) {
+    toast('⚠️ フォルダ書き込みに非対応のため保存できません'); return;
+  }
+  var items = (_imgLibAllItems || []).filter(function(it){ return ids.indexOf(it.id) >= 0; })
+                                     .sort(_imgLibCompare);
+  document.getElementById('gifModalCount').textContent = items.length + ' 枚';
+  // 各フレームに秒数を持たせる（既定は共通値。個別に上書きできる）
+  _gifItems = items.slice();
+  _gifSecs  = items.map(function(){ return ''; });   // 個別秒数（空＝共通）
+  _gifRenderList();
+  document.getElementById('gifModalName').value =
+    String(items[0].name || 'animation').replace(/[_\-]?\d+$/, '') + '_アニメ';
+  var fs2 = document.getElementById('gifModalFolder');
+  if (fs2) fs2.value = items[0].folder || '';
+  document.getElementById('gifModal').style.display = 'flex';
+}
+
+/** 個別に入力した秒数をすべて空にする */
+function _gifClearPerFrame() {
+  _gifSecs = _gifItems.map(function(){ return ''; });
+  _gifRenderList();
+  toast('個別の秒数を解除しました');
+}
+
+function _imgLibCloseGifModal() {
+  document.getElementById('gifModal').style.display = 'none';
+}
+
+/** GIF を生成して保存する */
+function _imgLibRunGif() {
+  // モーダルで並べ替え・除外した結果をそのまま使う
+  var items = _gifItems.slice();
+  if (items.length < 2) { toast('⚠️ 2枚以上必要です'); return; }
+
+  // 書き込み権限はユーザー操作の起点でしか要求できない。
+  // ここ（ボタン押下）で確保しておかないと、保存時に黙って失敗する。
+  if (!window.AppFS || !window.AppFS.isSupported()) {
+    toast('⚠️ フォルダ書き込みに非対応のため保存できません'); return;
+  }
+  window.AppFS.ensure(true).then(function(dir) {
+    if (!dir) { toast('⚠️ 保存先フォルダへの書き込みが許可されませんでした'); return; }
+    _imgLibRunGifInner(items);
+  }).catch(function() {
+    toast('⚠️ 保存先フォルダにアクセスできませんでした');
+  });
+}
+
+function _imgLibRunGifInner(items) {
+
+  var name   = _imgLibSafeName(document.getElementById('gifModalName').value, 'animation');
+  var folder = _imgLibSafeFolder((document.getElementById('gifModalFolder') || {}).value || '');
+  var common = Math.max(2, Math.round((parseFloat(document.getElementById('gifModalDelay').value) || 1) * 100));
+
+  // 個別入力があればそれを、無ければ共通値を使う（単位は 1/100 秒）
+  var delay = items.map(function(_, i) {
+    var v = parseFloat(_gifSecs[i]);
+    return (v > 0) ? Math.max(2, Math.round(v * 100)) : common;
+  });
+  var maxW   = parseInt(document.getElementById('gifModalWidth').value, 10) || 0;
+
+  _importProgressShow('GIF を作成しています…', '画像を読み込み中…', 0);
+
+  // 読み込めた画像だけを使う。秒数の対応がずれないよう一緒に積む。
+  var frames = [], used = [], W = 0, H = 0;
+  var step = function(i) {
+    if (i >= items.length) {
+      console.info('[gif] ' + frames.length + ' / ' + items.length + ' 枚を読み込みました');
+      return _gifFinish(frames, name, folder, used);
+    }
+    _importProgressUpdate('GIF を作成しています…',
+      (i + 1) + ' / ' + items.length + ' 枚読み込み中…',
+      Math.round((i + 1) / items.length * 60));
+
+    // ファイル参照の画像をそのまま canvas に描くと、file:// では
+    // キャンバスが汚染されて getImageData が使えない。
+    // 一度 base64 に変換してから描く（同一オリジン扱いになる）。
+    resolveImg('lib:' + items[i].id).then(function(src) {
+      if (src && src.indexOf('data:') !== 0) {
+        return _fileToDataUrl(src).catch(function(){ return src; });
+      }
+      return src;
+    }).then(function(src) {
+      var img = new Image();
+      img.onload = function() {
+        // GIF は全フレーム同じ寸法。1枚目に合わせる
+        if (!W) {
+          W = img.naturalWidth; H = img.naturalHeight;
+          if (maxW && W > maxW) { H = Math.round(H * maxW / W); W = maxW; }
+        }
+        var cv = document.createElement('canvas');
+        cv.width = W; cv.height = H;
+        var ctx = cv.getContext('2d');
+        ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, W, H);   // 透過は白で埋める
+        ctx.drawImage(img, 0, 0, W, H);
+        try { frames.push(ctx.getImageData(0, 0, W, H)); used.push(delay[i]); }
+        catch (e) {
+          // ここに来るのは変換にも失敗した場合。1枚飛ばして続行する。
+          console.warn('[gif] 読み取れませんでした:', items[i] && items[i].name, e && e.message);
+        }
+        step(i + 1);
+      };
+      img.onerror = function() { step(i + 1); };   // 読めない画像は飛ばす
+      img.src = src;
+    }).catch(function() { step(i + 1); });
+  };
+  step(0);
+}
+
+function _gifFinish(frames, name, folder, delay) {
+  if (frames.length < 2) {
+    _importProgressHide();
+    toast('❌ 読み込めた画像が ' + frames.length + ' 枚でした。'
+        + 'フォルダ接続と画像ファイルの有無をご確認ください');
+    return;
+  }
+  _importProgressUpdate('GIF を作成しています…', '圧縮中…（枚数が多いと時間がかかります）', 70);
+
+  // 圧縮は同期処理なので、進捗を描画させてから実行する
+  setTimeout(function() {
+    var bytes;
+    try { bytes = gifEncode(frames, { delay: delay, loop: 0 }); }
+    catch (e) {
+      _importProgressHide();
+      toast('❌ GIF の作成に失敗: ' + (e && e.message || e));
+      return;
+    }
+
+    var path = SCREEN_IMG_DIR + '/' + (folder ? folder + '/' : '') + name + '.gif';
+    var blob = new Blob([bytes], { type: 'image/gif' });
+
+    _importProgressUpdate('GIF を作成しています…', '保存中…', 90);
+    console.info('[gif] 保存先:', path, '/', blob.size, 'bytes');
+    window.AppFS.writeBinary(path, blob).then(function(ok) {
+      _importProgressHide();
+      if (!ok) {
+        toast('❌ 保存に失敗しました（' + path + '）');
+        console.warn('[gif] writeBinary が false を返しました:', path);
+        return;
+      }
+
+      var rec = {
+        id: 'lib' + Math.random().toString(36).substr(2, 9),
+        name: name, folder: folder, note: '',
+        dataUrl: path, fileSize: blob.size,
+        hotspots: [], createdAt: Date.now()
+      };
+      _imgLibPutMany([rec]).then(function() {
+        window._SCREEN_IMG_MAP[rec.id] = path;
+        _imgLibMarkDirty(rec.id);
+        var sd = window.APP_SCREEN_DATA;
+        if (sd && Array.isArray(sd.library)) {
+          sd.library.push({ id: rec.id, name: name, folder: folder, file: path,
+                            note: '', hotspots: [], hsLinkFrom: null });
+        }
+        _imgLibInvalidateMeta();
+        _imgLibAllItems = []; _imgLibLoaded = false;
+        _imgLibClearSelection();
+        _imgLibCloseGifModal();
+        _scrLibRender();
+        toast('🎞 「' + name + '.gif」を作成しました（' + Math.round(blob.size / 1024) + ' KB）');
+      });
+    }).catch(function(e) {
+      _importProgressHide();
+      toast('❌ 保存に失敗: ' + (e && e.message || e));
+    });
+  }, 50);
+}
+
 function _imgLibInspect() {
   return Promise.all([imgLibGetAllKeys(), imgLibGetAllPaths()]).then(function(res) {
     var ids = Array.from(res[0]);
@@ -7037,6 +7569,9 @@ function scrTogglePat(id){
   _scrUpdateRightSidebar();
 }
 function scrSelectScreen(scrId){
+  // 別の画面を選んだら全体表示（Fit＝100%）に戻す。
+  // 解像度が違う画像に前の倍率を引き継ぐと見切れることがあるため。
+  if (_scrSelScrId !== scrId) _scrZoom = 1;
   _scrSelScrId=scrId;_scrCropSel=null;
   scrRenderUnifiedSidebar();
   _scrUpdateCenterCanvas();
@@ -7243,8 +7778,7 @@ function _scrUpdateCenterCanvas(){
   if(!scr||!scr.imageSrc){empty.style.display='flex';canvas.style.display='none';if(zoomBar)zoomBar.style.display='none';return;}
   empty.style.display='none';canvas.style.display='flex';
   if(zoomBar)zoomBar.style.display='flex';
-  // 倍率は「全体表示＝1.0」の相対値なので、画面を切り替えても
-  // 解像度の違う画像に自動で追従する（初期値 1.0 ＝ 常に全体表示）
+  // 倍率は「全体表示＝1.0」の相対値。初期値 1.0 のまま Fit 表示になる。
   setTimeout(_scrApplyZoom, 0);
   if(typeof _scrBarSetMode==='function') _scrBarSetMode('pattern');
   var img=document.getElementById('scrCenterImg');
@@ -8757,9 +9291,9 @@ function _imgLibHsActivate(item) {
     _imgLibHsFitZoom = _imgLibHsCalcFit();
     // パターン編集と倍率を共有する。センターで開いている間は現在の倍率を引き継ぎ、
     // 単独で開いた場合のみ収まるサイズにする。
-    var useShared = (typeof _scrHsEditOn !== 'undefined' && _scrHsEditOn && typeof _scrZoom === 'number');
-    // 共有倍率は「全体表示＝1.0」の相対値なので、Fit倍率を掛けて実倍率にする
-    _imgLibHsApplyZoom(useShared ? (_imgLibHsFitZoom * _scrZoom) : _imgLibHsFitZoom);
+    // 画像を開いたときは常に全体表示（Fit）から始める
+    _scrZoom = 1;
+    _imgLibHsApplyZoom(_imgLibHsFitZoom);
   };
   // 一覧は dataUrl を持たないメタ情報なので、ここで初めて画像本体を読む
   if (item.dataUrl) {
@@ -8994,9 +9528,13 @@ function _imgLibHsRenderList() {
   if (!listEl) return;
   var cntEl = document.getElementById('imgLibHsListCount');
   if (cntEl) cntEl.textContent = _imgLibHsList.length ? _imgLibHsList.length + ' 件' : '';
+  _imgLibHsUpdatePasteBtn();
   if (!_imgLibHsList.length) {
-    listEl.innerHTML = '<div style="padding:12px 14px;font-size:11px;color:var(--text3);">ホットスポットがありません。画像上をドラッグして追加してください。</div>';
-    return;
+    listEl.innerHTML = '<div style="padding:12px 14px;font-size:11px;color:var(--text3);">'
+      + 'ホットスポットがありません。画像上をドラッグして追加してください。'
+      + (_imgLibHsClipLoad() ? '<br>コピー済みのものは「📥 貼り付け」で追加できます。' : '')
+      + '</div>';
+    return;   // 貼り付けボタンの状態は上で更新済み
   }
   var escFn = function(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); };
 
@@ -9045,6 +9583,8 @@ function _imgLibHsRenderList() {
         '<input type="text" value="' + escFn(hs.note || '') + '" placeholder="メモ（任意）" ' +
           'style="flex:1;min-width:0;height:24px;padding:0 7px;border:1px solid var(--border);border-radius:4px;font-size:11px;font-family:inherit;background:var(--surface);color:var(--text);" ' +
           'oninput="_imgLibHsList[' + idx + '].note=this.value">' +
+        '<button onclick="_imgLibHsCopy(' + idx + ')" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:12px;padding:0 2px;" title="このホットスポットをコピー（他の画像に貼り付けられます）">📋</button>' +
+        '<button onclick="_imgLibHsDuplicate(' + idx + ')" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:12px;padding:0 2px;" title="この画像内に複製">⧉</button>' +
         '<button onclick="_imgLibHsDelete(' + idx + ')" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:13px;padding:0 2px;" title="削除">🗑</button>' +
       '</div>' +
 
@@ -9104,6 +9644,25 @@ function _imgLibHsSelectRow(idx) {
  *   Shift+矢印    10px 移動
  *   Alt+矢印      サイズを 1px 変更（Shift併用で10px）
  */
+// Ctrl+C / Ctrl+V でホットスポットをコピー・貼り付け
+document.addEventListener('keydown', function(e) {
+  if (!(e.ctrlKey || e.metaKey)) return;
+  var k = (e.key || '').toLowerCase();
+  if (k !== 'c' && k !== 'v') return;
+  var ed = document.getElementById('imgLibHsEditor');
+  if (!ed || ed.style.display === 'none') return;
+  var t = e.target;
+  if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable)) return;
+
+  if (k === 'c') {
+    if (_imgLibHsSelIdx == null || !_imgLibHsList[_imgLibHsSelIdx]) return;
+    e.preventDefault(); _imgLibHsCopy(_imgLibHsSelIdx);
+  } else {
+    if (!_imgLibHsClipLoad()) return;
+    e.preventDefault(); _imgLibHsPaste();
+  }
+});
+
 document.addEventListener('keydown', function(e) {
   if (!/^Arrow/.test(e.key)) return;
   var editor = document.getElementById('imgLibHsEditor');
@@ -9137,6 +9696,94 @@ document.addEventListener('keydown', function(e) {
   _imgLibHsRenderList();
   _imgLibHsSelectRow(_imgLibHsSelIdx);
 });
+
+// ── ホットスポットのコピー / 複製 / 貼り付け ──
+// クリップボードは画像をまたいで保持したいので、
+// セッションをまたげるよう sessionStorage に置く。
+var _imgLibHsClip = null;
+
+function _imgLibHsClipLoad() {
+  if (_imgLibHsClip) return _imgLibHsClip;
+  try {
+    var raw = sessionStorage.getItem('imgLibHsClip');
+    if (raw) _imgLibHsClip = JSON.parse(raw);
+  } catch (e) { _imgLibHsClip = null; }
+  return _imgLibHsClip;
+}
+
+function _imgLibHsClipSave(v) {
+  _imgLibHsClip = v;
+  try { sessionStorage.setItem('imgLibHsClip', JSON.stringify(v)); } catch (e) {}
+  _imgLibHsUpdatePasteBtn();
+}
+
+/** 貼り付けボタンの表示を更新する */
+function _imgLibHsUpdatePasteBtn() {
+  var b = document.getElementById('imgLibHsPasteBtn');
+  if (!b) return;
+  var c = _imgLibHsClipLoad();
+  if (c && c.hs) {
+    b.style.display = '';
+    b.textContent = '📥 貼り付け';
+    b.title = 'コピーしたホットスポット「' + (c.hs.note || '（メモなし）') + '」を貼り付けます'
+            + (c.fromName ? '\n（コピー元：' + c.fromName + '）' : '');
+  } else {
+    b.style.display = 'none';
+  }
+}
+
+/** ホットスポットをコピーする（他の画像へ貼り付けられる） */
+function _imgLibHsCopy(idx) {
+  var hs = _imgLibHsList[idx];
+  if (!hs) return;
+  _imgLibHsClipSave({
+    hs: JSON.parse(JSON.stringify(hs)),
+    fromId:   _imgLibHsItem ? _imgLibHsItem.id : null,
+    fromName: _imgLibHsItem ? (_imgLibHsItem.name || '') : ''
+  });
+  toast('📋 コピーしました（別の画像を開いて「📥 貼り付け」）');
+}
+
+/** 同じ画像内に複製する（少しずらして重ならないようにする） */
+function _imgLibHsDuplicate(idx) {
+  var hs = _imgLibHsList[idx];
+  if (!hs) return;
+  var n = JSON.parse(JSON.stringify(hs));
+  n.id = 'lhs' + Math.random().toString(36).substr(2, 9);
+  n.x = Math.min(0.98 - n.w, n.x + 0.02);
+  n.y = Math.min(0.98 - n.h, n.y + 0.02);
+  _imgLibHsList.push(n);
+  _imgLibHsSelIdx = _imgLibHsList.length - 1;
+  _imgLibHsRedrawOverlays();
+  _imgLibHsRenderList();
+  toast('⧉ 複製しました');
+}
+
+/** コピーしたホットスポットを、いま開いている画像に貼り付ける */
+function _imgLibHsPaste() {
+  var c = _imgLibHsClipLoad();
+  if (!c || !c.hs) { toast('⚠️ コピーされたホットスポットがありません'); return; }
+  if (!_imgLibHsItem) { toast('⚠️ 先に画像を選択してください'); return; }
+
+  var n = JSON.parse(JSON.stringify(c.hs));
+  n.id = 'lhs' + Math.random().toString(36).substr(2, 9);
+
+  // 同じ画像に貼るときは重ならないよう少しずらす
+  if (c.fromId === _imgLibHsItem.id) {
+    n.x = Math.min(0.98 - n.w, n.x + 0.02);
+    n.y = Math.min(0.98 - n.h, n.y + 0.02);
+  }
+  // 自分自身への遷移になってしまう場合は遷移先を外す
+  if (n.targetType === 'lib' && n.targetLibId === _imgLibHsItem.id) {
+    n.targetType = 'none'; n.targetLibId = '';
+  }
+
+  _imgLibHsList.push(n);
+  _imgLibHsSelIdx = _imgLibHsList.length - 1;
+  _imgLibHsRedrawOverlays();
+  _imgLibHsRenderList();
+  toast('📥 貼り付けました（💾 保存で確定）');
+}
 
 function _imgLibHsDelete(idx) {
   _imgLibHsList.splice(idx, 1);

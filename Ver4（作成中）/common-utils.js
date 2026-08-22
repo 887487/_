@@ -192,14 +192,19 @@ window.AppFS = (function() {
   /** バイナリ（Blob）を書き込む。サブフォルダは自動作成する */
   function writeBinary(path, blob, allowPrompt) {
     return ensure(allowPrompt !== false).then(function(dir) {
-      if (!dir) return false;
+      if (!dir) { console.warn('[AppFS] 書き込み不可（未接続または権限なし）:', path); return false; }
       return _resolvePath(dir, path, true).then(function(loc) {
         return loc.dir.getFileHandle(loc.name, { create: true }).then(function(fh) {
           return fh.createWritable().then(function(w) {
             return Promise.resolve(w.write(blob)).then(function() { return w.close(); });
           });
         });
-      }).then(function() { return true; });
+      }).then(function() { return true; })
+        .catch(function(e) {
+          // 例外を握りつぶすと「成功したのにファイルが無い」ように見えるので記録する
+          console.warn('[AppFS] 書き込み失敗:', path, e && e.message);
+          return false;
+        });
     });
   }
 
