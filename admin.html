@@ -6127,6 +6127,21 @@ function _imgLibRunGif() {
   var items = _gifItems.slice();
   if (items.length < 2) { toast('⚠️ 2枚以上必要です'); return; }
 
+  // 書き込み権限はユーザー操作の起点でしか要求できない。
+  // ここ（ボタン押下）で確保しておかないと、保存時に黙って失敗する。
+  if (!window.AppFS || !window.AppFS.isSupported()) {
+    toast('⚠️ フォルダ書き込みに非対応のため保存できません'); return;
+  }
+  window.AppFS.ensure(true).then(function(dir) {
+    if (!dir) { toast('⚠️ 保存先フォルダへの書き込みが許可されませんでした'); return; }
+    _imgLibRunGifInner(items);
+  }).catch(function() {
+    toast('⚠️ 保存先フォルダにアクセスできませんでした');
+  });
+}
+
+function _imgLibRunGifInner(items) {
+
   var name   = _imgLibSafeName(document.getElementById('gifModalName').value, 'animation');
   var folder = _imgLibSafeFolder((document.getElementById('gifModalFolder') || {}).value || '');
   var common = Math.max(2, Math.round((parseFloat(document.getElementById('gifModalDelay').value) || 1) * 100));
@@ -6209,9 +6224,14 @@ function _gifFinish(frames, name, folder, delay) {
     var blob = new Blob([bytes], { type: 'image/gif' });
 
     _importProgressUpdate('GIF を作成しています…', '保存中…', 90);
-    window.AppFS.writeBinary(path, blob, false).then(function(ok) {
+    console.info('[gif] 保存先:', path, '/', blob.size, 'bytes');
+    window.AppFS.writeBinary(path, blob).then(function(ok) {
       _importProgressHide();
-      if (!ok) { toast('❌ 保存に失敗しました'); return; }
+      if (!ok) {
+        toast('❌ 保存に失敗しました（' + path + '）');
+        console.warn('[gif] writeBinary が false を返しました:', path);
+        return;
+      }
 
       var rec = {
         id: 'lib' + Math.random().toString(36).substr(2, 9),
