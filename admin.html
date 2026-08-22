@@ -5855,56 +5855,73 @@ function _scrLibScanFolderInner(silent) {
 
 /** RGBA 配列から出現色を集める（8bit → 5bit に丸めて集約） */
 function _gifBuildPalette(frames) {
-  var hist = new Map();
+  // 8bit のまま集計する。ここで丸めると色数が少ない画像でも色が変わってしまう。
+  var hist = new Map();   // key = r<<16 | g<<8 | b
   frames.forEach(function (f) {
     var d = f.data;
     for (var i = 0; i < d.length; i += 4) {
-      // 完全透過は後で背景色に寄せるため無視
-      if (d[i + 3] < 128) continue;
-      var key = (d[i] >> 3 << 10) | (d[i + 1] >> 3 << 5) | (d[i + 2] >> 3);
+      if (d[i + 3] < 128) continue;   // 完全透過（背景で塗り潰し済み）
+      var key = (d[i] << 16) | (d[i + 1] << 8) | d[i + 2];
       hist.set(key, (hist.get(key) || 0) + 1);
     }
   });
 
-  var boxes = [{ colors: Array.from(hist.keys()), }];
-  // メディアンカット：分散の大きい軸で分割していく
+  var keys = Array.from(hist.keys());
+
+  // ── 256色以下ならそのまま使う（劣化ゼロ）──
+  if (keys.length <= 256) {
+    var exact = keys.map(function (k) { return [(k >> 16) & 255, (k >> 8) & 255, k & 255]; });
+    while (exact.length < 2) exact.push([0, 0, 0]);
+    return exact;
+  }
+
+  // ── 257色以上：8bit のままメディアンカットで減色 ──
+  var boxes = [{ colors: keys }];
   while (boxes.length < 256) {
-    var target = -1, best = -1;
+    var target = -1, bestScore = -1;
     for (var b = 0; b < boxes.length; b++) {
-      if (boxes[b].colors.length < 2) continue;
-      if (boxes[b].colors.length > best) { best = boxes[b].colors.length; target = b; }
+      var bx = boxes[b];
+      if (bx.colors.length < 2) continue;
+      if (bx.score === undefined) bx.score = _gifBoxScore(bx.colors, hist);
+      if (bx.score > bestScore) { bestScore = bx.score; target = b; }
     }
     if (target < 0) break;
 
     var cs = boxes[target].colors;
-    var mn = [31, 31, 31], mx = [0, 0, 0];
+    var mn = [255, 255, 255], mx = [0, 0, 0];
     cs.forEach(function (k) {
-      var c = [(k >> 10) & 31, (k >> 5) & 31, k & 31];
+      var c = [(k >> 16) & 255, (k >> 8) & 255, k & 255];
       for (var j = 0; j < 3; j++) {
         if (c[j] < mn[j]) mn[j] = c[j];
         if (c[j] > mx[j]) mx[j] = c[j];
       }
     });
-    var axis = 0, span = mx[0] - mn[0];
-    if (mx[1] - mn[1] > span) { axis = 1; span = mx[1] - mn[1]; }
-    if (mx[2] - mn[2] > span) { axis = 2; }
-    var sh = axis === 0 ? 10 : axis === 1 ? 5 : 0;
-    cs.sort(function (a, b2) { return ((a >> sh) & 31) - ((b2 >> sh) & 31); });
-    var half = cs.length >> 1;
-    boxes.splice(target, 1,
-      { colors: cs.slice(0, half) },
-      { colors: cs.slice(half) });
+    // 人の目の感度に合わせて緑を重く見る
+    var w = [0.30, 0.59, 0.11], axis = 0, span = -1;
+    for (var a = 0; a < 3; a++) {
+      var v = (mx[a] - mn[a]) * w[a];
+      if (v > span) { span = v; axis = a; }
+    }
+    var sh = axis === 0 ? 16 : axis === 1 ? 8 : 0;
+    cs.sort(function (x, y) { return ((x >> sh) & 255) - ((y >> sh) & 255); });
+
+    // 色数の中央で分割する。分割対象は誤差（分散×画素数）で選んでいるため、
+    // ここで画素数に寄せると広い単色領域に引きずられて色域の端が潰れる。
+    var cut = cs.length >> 1;
+    if (cut < 1) cut = 1;
+    if (cut > cs.length - 1) cut = cs.length - 1;
+    boxes.splice(target, 1, { colors: cs.slice(0, cut) }, { colors: cs.slice(cut) });
   }
 
-  // 各ボックスの代表色（出現数で重み付けした平均）
+  // 代表色＝画素数で重み付けした平均
   var pal = boxes.map(function (bx) {
     var r = 0, g = 0, b2 = 0, n = 0;
     bx.colors.forEach(function (k) {
-      var w = hist.get(k) || 1;
-      r += (((k >> 10) & 31) << 3) * w;
-      g += (((k >> 5) & 31) << 3) * w;
-      b2 += ((k & 31) << 3) * w;
-      n += w;
+      var cnt = hist.get(k) || 1;
+      r += ((k >> 16) & 255) * cnt;
+      g += ((k >> 8) & 255) * cnt;
+      b2 += (k & 255) * cnt;
+      n += cnt;
     });
     if (!n) return [0, 0, 0];
     return [Math.round(r / n), Math.round(g / n), Math.round(b2 / n)];
@@ -5913,9 +5930,37 @@ function _gifBuildPalette(frames) {
   return pal;
 }
 
-/** 最も近いパレット色の番号を返す */
+/**
+ * ボックスの「分割すべき度合い」。
+ * 代表色に置き換えたときに生じる誤差の総量（分散 × 画素数）で測る。
+ * 見た目の劣化に直結する指標なので、色域の広さだけで測るより結果が安定する。
+ */
+function _gifBoxScore(colors, hist) {
+  var sum = [0, 0, 0], sq = [0, 0, 0], n = 0;
+  colors.forEach(function (k) {
+    var cnt = hist.get(k) || 1;
+    var c = [(k >> 16) & 255, (k >> 8) & 255, k & 255];
+    for (var j = 0; j < 3; j++) {
+      sum[j] += c[j] * cnt;
+      sq[j]  += c[j] * c[j] * cnt;
+    }
+    n += cnt;
+  });
+  if (!n) return 0;
+  var w = [0.30, 0.59, 0.11], err = 0;
+  for (var a = 0; a < 3; a++) {
+    var mean = sum[a] / n;
+    err += w[a] * (sq[a] / n - mean * mean);   // 重み付き分散
+  }
+  return err * n;
+}
+
+/**
+ * 最も近いパレット色の番号を返す。
+ * キャッシュのキーを丸めるとそこでも色ずれが起きるため 8bit のまま使う。
+ */
 function _gifNearest(pal, r, g, b, cache) {
-  var key = (r >> 2 << 12) | (g >> 2 << 6) | (b >> 2);
+  var key = (r << 16) | (g << 8) | b;
   var hit = cache.get(key);
   if (hit !== undefined) return hit;
   var best = 0, bd = Infinity;
