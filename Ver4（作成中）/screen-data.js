@@ -1,1049 +1,129 @@
 // 画面遷移データ — admin.html の「💾 保存して反映」で自動更新されます。
 // 画像は screen-images/ フォルダに実ファイルとして保存されています。
 // library は画像ライブラリの復元用です（別PCでも一覧が再現されます）。
-// 生成日時: 2026-08-22T05:10:22.475Z
+// 生成日時: 2026-08-23T07:50:40.824Z
 window.APP_SCREEN_DATA = {
-  "savedAt": "2026-08-22T05:10:22.475Z",
+  "savedAt": "2026-08-23T07:50:40.824Z",
   "images": {
-    "lib051mfhiyt": "screen-images/S／移行①　移行手続きをされる方へ.gif",
-    "lib0mvso2zu3": "screen-images/S／コード入力(事業).png",
-    "lib0pxgnqw6e": "screen-images/［TV］５.コード入力 ②事業.png",
-    "lib0zovn338z": "screen-images/［Web］事業　アカウント管理.jpg",
-    "lib1hi2uk4j1": "screen-images/［Web］ご利用情報の初期化（完了）.png",
-    "lib1kvwo1aek": "screen-images/S／世帯／Jアカとの連携解除 ⑴.png",
-    "lib201ptqfy4": "screen-images/J／新規④　申請情報確認.png",
-    "lib24hungl0x": "screen-images/J／新規①　利用規約.gif",
-    "lib26mm7q7s4": "screen-images/［App］登録３.誤受信防止措置 ①世帯.png",
-    "lib2k5s42h1q": "screen-images/S／プロファイル選択 ※初回.png",
-    "lib2vx2feweq": "screen-images/［Web］世帯(新規)　連携結果 ⑶.png",
-    "lib404e99dnd": "screen-images/［TV］（どこで表示されるか不明）利用規約.png",
-    "lib4km1plpc6": "screen-images/［TV］８.プロファイル選択.png",
-    "lib4xo73d35p": "screen-images/［TV］７.スマホ連携.png",
-    "lib4z63s86wu": "screen-images/オアシス②　情報入力.png",
-    "lib5ap9ic9x3": "screen-images/S／新規⑧　登録完了(事業).png",
-    "lib63wdjgu4j": "screen-images/オアシス④　登録完了.jpg",
-    "lib64v5god71": "screen-images/携帯電話番号の変更.png",
-    "lib66nuuppm2": "screen-images/プロファイル管理.png",
-    "lib6mmgrhl36": "screen-images/J／新規⑥　初回ログイン.png",
-    "lib6vcf2nmnz": "screen-images/S／アカウントの登録にあたって.png",
-    "lib7u5hovf1p": "screen-images/［Web］NHKONEトップ ※ログイン中.png",
-    "lib83s3j2rmg": "screen-images/ログインIDの変更.png",
-    "lib8q6shq26k": "screen-images/S／誤受信防止措置２(事業).png",
-    "lib8sr7kbghi": "screen-images/S／移行③　認証コード送信先選択.png",
-    "lib8wa284lam": "screen-images/S／移行⑥　登録完了.png",
-    "lib99y6ypyk9": "screen-images/オアシス③　内容確認.png",
-    "lib9a5asse9m": "screen-images/S／アカウント設定 ※未連携.png",
-    "lib9bqnfkq1r": "screen-images/S／プロファイル管理 ※初回作成完了.gif",
-    "lib9e97wgxvw": "screen-images/Info／トップ.png",
-    "liba2jw5nvae": "screen-images/［App］登録３.誤受信防止措置 ②事業.png",
-    "libad60q9gdg": "screen-images/App,TV.png",
-    "libady526q4m": "screen-images/S／ログイン.png",
-    "libaomhiaj6x": "screen-images/アカウント情報.png",
-    "libarjnojlqu": "screen-images/［Web］世帯　アカウントの削除 ⑶.png",
-    "libayz3n8qsq": "screen-images/S／新規⑦　内容確認(学校).gif",
-    "libb2ksu83ov": "screen-images/［Web］世帯(新規)　連携結果 ⑵.png",
-    "libb2zrg4xly": "screen-images/［TV］７.登録完了 ②事業.png",
-    "libb5qwmxnv8": "screen-images/①世帯_ご利用情報の初期化（1）.png",
-    "libbb9cdr9em": "screen-images/お住まいの地域.png",
-    "libbcx6nvwwq": "screen-images/［TV］３.地域の選択.png",
-    "libbgc949hxr": "screen-images/［Web］事業　アカウント削除🟥.png",
-    "libcm7wo75ki": "screen-images/①世帯_ご利用情報の初期化（2）.png",
-    "libcp97ui6h3": "screen-images/J／新規⑧　認証用携帯電話番号設定.png",
-    "libcwrkyvkbf": "screen-images/S／プロファイル追加.gif",
-    "libd5zv911ca": "screen-images/J／新規③　申請情報入力.png",
-    "libddbt2y4ga": "screen-images/［Web］世帯　アカウントの削除 ⑵.png",
-    "libdm33h1tha": "screen-images/アカウント登録の前に.png",
-    "libdml2a13ja": "screen-images/J／トップ.png",
-    "libea64v5yc6": "screen-images/［Web］事業　復旧用メールアドレスの変更.jpg",
-    "libf1i5cr5fd": "screen-images/J／新規②　確認コード ※メール.png",
-    "libf6vrvqh1z": "screen-images/［Web］事業　アカウント情報 ⑴.png",
-    "libfhhsfl1ye": "screen-images/［Web］世帯(新規)　連携結果 ⑴.png",
-    "libfnyedipzl": "screen-images/コード入力（入力のための条件を満たしていません）.png",
-    "libgarzzdx3b": "screen-images/［App］登録４.アカウントレス.png",
-    "libgd3xuf0al": "screen-images/S／誤受信防止措置２(世帯).png",
-    "libggsc0425o": "screen-images/［Web］NHKONE メニュー ⑵.png",
-    "libgnfkit2r2": "screen-images/オアシス①　利用規約.jpg",
-    "libgs5q22kqs": "screen-images/S／移行②　メアド入力.png",
-    "libhh2yxcdm7": "screen-images/連携ログイン.png",
-    "libhz2kljo4x": "screen-images/S／世帯／Jアカとの連携解除 ⑵.png",
-    "libj2cltf01j": "screen-images/学校.png",
-    "libjrcw658uh": "screen-images/［TV］５.メニュー.png",
-    "libjrsqgpxre": "screen-images/S／移行⑤　パスワード設定.png",
-    "libjx704hirz": "screen-images/S／コード入力(学校).jpg",
-    "libjz0gp556x": "screen-images/S／新規③　プラポリ(世帯).gif",
-    "libk1hnz9elx": "screen-images/S／移行④　認証コード入力.png",
-    "libk4rt596dn": "screen-images/S／トップ ※アカウントレス.png",
-    "libkbwnanuk2": "screen-images/［TV］７.アカウントについて.png",
-    "libkdg6p1i4z": "screen-images/［Web］事業　アカウント情報 ⑵.png",
-    "libkov3bjouz": "screen-images/S／トップ ※コード入力勧奨(学校).jpg",
-    "libktht1m2gh": "screen-images/［App］登録７.AppStoreモーダル.png",
-    "libkyhn5z69x": "screen-images/J／新規⑪　マイページ.png",
-    "libl0o105eq8": "screen-images/［TV］６.キー入力 ②事業.png",
-    "libl7qhk6xcx": "screen-images/アカウントプライバシーノーティス.png",
-    "liblmpljwb64": "screen-images/［TV］４.入力内容の確認 ①世帯.png",
-    "libm1n8wocc7": "screen-images/S／誤受信防止措置２(学校).png",
-    "libmvtwpi14x": "screen-images/［Web］ご利用情報の初期化（目的のページにはアクセスできません）.png",
-    "libmzaxcuyip": "screen-images/S／トップ ※コード入力勧奨(事業).jpg",
-    "libn2nhmc2fk": "screen-images/J／新規⑨　確認コード ※SMS.png",
-    "libnvznxje61": "screen-images/S／誤受信防止措置１.gif",
-    "libo05l6pisk": "screen-images/アカウント設定 ※プロファイル未作成,未連携.png",
-    "libo4gnszn8r": "screen-images/連携解除失敗.png",
-    "libo5csh872s": "screen-images/［TV］（どこで表示されるか不明）プラポリ.png",
-    "libo9ncwoe3k": "screen-images/J／新規⑤　申請完了.png",
-    "libogpfxg07h": "screen-images/メールアドレスをお忘れの方 ⑴.png",
-    "libopbfe00qs": "screen-images/S／新規⑤　パスワード設定.png",
-    "libpvbi12jeg": "screen-images/S／プロファイル／編集　2秒ループ.gif",
-    "libqh67q9tns": "screen-images/S／事業所コード・確認キーの管理 ※発行後.png",
-    "libqhzfk26db": "screen-images/パスワードの変更.png",
-    "libqwd7ulo7s": "screen-images/S／新規④　認証コード入力.png",
-    "libr2io2gomb": "screen-images/［App］登録３.誤受信防止措置 ③学校.png",
-    "librhc2ekt15": "screen-images/［Web］世帯　アカウント情報 ⑴.png",
-    "librhvkvo2k2": "screen-images/S／新規⑥　ログインID設定.png",
-    "librod8pbtwm": "screen-images/［Web］インフォメーション メニュー ⑵.png",
-    "librq8i0dhv4": "screen-images/［TV］２.用途の選択.png",
-    "librr0evkt56": "screen-images/S／新規①　用途と地域の選択(事業).png",
-    "librxolo2zn7": "screen-images/［TV］１.誤受信防止措置.png",
-    "libs4nxf9uco": "screen-images/ホワイトリスト.png",
-    "libs4qrkhj4l": "screen-images/S／新規③　プラポリ(事業,学校).jpg",
-    "libsb0pztn70": "screen-images/S／新規①　用途と地域の選択(世帯).png",
-    "libshjz0b3mc": "screen-images/J／新規⑩　認証通知設定.png",
-    "libssidw02jt": "screen-images/J／新規⑦　パスワード設定.png",
-    "libstvfxtucy": "screen-images/S／新規⑦　内容確認(事業).gif",
-    "libsz88j0wln": "screen-images/［App］登録６.アプリ出口.png",
-    "libt5ukywp6f": "screen-images/利用しない.png",
-    "libt5z4fei96": "screen-images/アカウント関連の操作.png",
-    "libtmaealtyt": "screen-images/［Web］事業　パスワードの変更.jpg",
-    "libu1l7u3r2m": "screen-images/アカウント設定 ※再連携が必要です.png",
-    "libu3gjefkch": "screen-images/［Web］インフォメーション メニュー ⑴.png",
-    "libuk7o5plbo": "screen-images/S／新規④　メアド入力.png",
-    "libuwi4x5tev": "screen-images/S／事業所コード・確認キーの管理 ※未取得.png",
-    "libuywd0zx62": "screen-images/［App］登録５.設定 ※未ログイン.png",
-    "libvd26b1woe": "screen-images/S／新規①　用途と地域の選択(学校).png",
-    "libvmllecf29": "screen-images/Web,App,TV.png",
-    "libvo7nixbmh": "screen-images/S／世帯／アカウントの削除 ⑴.png",
-    "libw6d7i4s52": "screen-images/S／新規⑧　登録完了(世帯).png",
-    "libwgx74bmqm": "screen-images/［Web］事業　ログインIDの変更.jpg",
-    "libwygz84grk": "screen-images/［Web］事業　携帯電話番号の変更.jpg",
-    "libx2ghln4fj": "screen-images/［Web］復旧用メールアドレスの変更.png",
-    "libxfcz16ay0": "screen-images/アカウント管理.png",
-    "libxffiuyi2w": "screen-images/［App］登録２.誤受信防止措置_アニメ.gif",
-    "libxgcsfqlnd": "screen-images/［TV］９.トップ.png",
-    "libxjpe5e5uo": "screen-images/［App］登録１.誤受信防止措置.png",
-    "libxrv6yna1o": "screen-images/S／アカウント設定 ※連携済.png",
-    "libxt91sx21q": "screen-images/S／新規⑧　登録完了(学校).png",
-    "libxxye275ig": "screen-images/［TV］４.入力内容の確認 ②事業.png",
-    "liby25b2pqsa": "screen-images/S／受信契約の確認.png",
-    "liby3w759npo": "screen-images/メールアドレスの変更.png",
-    "libyhy0nknlr": "screen-images/［TV］６.ログイン.png",
-    "libyw8255o5v": "screen-images/S／アカウント設定(事業).jpg",
-    "libzfox5wm84": "screen-images/S／新規②　利用規約.png",
-    "libzojz3sqju": "screen-images/S／新規⑦　内容確認(世帯).gif",
-    "libzyfyg64bb": "screen-images/［Web］NHKONE メニュー ⑴.png",
-    "libt9xq1mpym": "screen-images/S／アカウント削除 ⑴_アニメ.gif"
+    "lib00qc5ch7b": "screen-images/S／新規①　用途と地域の選択(世帯).png",
+    "lib02tgo52l3": "screen-images/J／新規⑪　マイページ.png",
+    "lib0zd0yybrc": "screen-images/オアシス／情報入力.png",
+    "lib2cpd0e4ag": "screen-images/S／新規②　利用規約.png",
+    "lib2xvwdwvdg": "screen-images/J／新規⑤　申請完了.png",
+    "lib2yhnnuw5a": "screen-images/エラー　※不正な画面遷移を検知しました。.png",
+    "lib35chjius9": "screen-images/S／新規⑦　内容確認(事業).gif",
+    "lib3ggu7vz8s": "screen-images/S／新規④　認証コード入力.png",
+    "lib449o6k1h9": "screen-images/S／メアド忘れ①.png",
+    "lib4ansa8uon": "screen-images/J／新規②　確認コード　※メール.png",
+    "lib4ibpqx5i4": "screen-images/TV／トップ　※ログイン済.png",
+    "lib4pvj0ozj5": "screen-images/S／移行⑤　パスワード設定.png",
+    "lib4qexnqyzn": "screen-images/S／移行④　認証コード入力.png",
+    "lib53n0n78bu": "screen-images/TV／アカウントについて.png",
+    "lib5alhqcjry": "screen-images/S／新規⑤　パスワード設定.png",
+    "lib5nvf5nv9n": "screen-images/TV／スマホ連携.png",
+    "lib6ck3i9qws": "screen-images/TV／用途の選択(世帯).png",
+    "lib6hbmbmjlm": "screen-images/TV／トップ.png",
+    "lib6yzuqzrcp": "screen-images/J／新規⑩　認証通知設定.png",
+    "lib7tf5gz0m9": "screen-images/S／事業所コード・確認キーの管理　※未取得.png",
+    "lib8cfvphoei": "screen-images/S／アカウント設定　※未連携.png",
+    "lib8nkwlgvqa": "screen-images/TV／誤受信防止措置.png",
+    "lib9dkiqpndp": "screen-images/TV／地域の選択.png",
+    "lib9r1s2pgkt": "screen-images/ご利用情報の初期化　完了.png",
+    "lib9xtif9dia": "screen-images/S／移行②　メアド入力.png",
+    "lib9zolb7jk3": "screen-images/S／アカウント設定　※連携済.png",
+    "libacf1lih9y": "screen-images/S／新規⑥　ログインID設定.png",
+    "libajk48e96x": "screen-images/エラー　※入力のための条件を満たしていません.png",
+    "libaq203r7op": "screen-images/TV／入力内容の確認(世帯).png",
+    "libax11pewax": "screen-images/ご利用情報の初期化(世帯) ①.png",
+    "libbndq5zvrw": "screen-images/App／誤受信防止措置①.png",
+    "libbwuj7ssf7": "screen-images/TV／プロファイル選択.png",
+    "libc1s0bnivl": "screen-images/S／事業所コード・確認キーの管理　※発行後.png",
+    "libc4jtcldbr": "screen-images/TV／ログイン.png",
+    "libc8i93ho0t": "screen-images/ご利用情報の初期化(事業) ②.png",
+    "libca2vyynbj": "screen-images/J／新規③　申請情報入力.png",
+    "libcibgb98tk": "screen-images/S／移行①　移行手続きをされる方へ.gif",
+    "libcjl2r500d": "screen-images/S／アカウント情報①(事業).png",
+    "libcnweok4by": "screen-images/NHKONE　メニュー①.png",
+    "libcpah4s9ts": "screen-images/App／AppStoreモーダル.png",
+    "libcqy87dq90": "screen-images/アカウント関連の操作.png",
+    "libddif2rj7g": "screen-images/S／誤受信防止措置②(事業).png",
+    "libdpzu2ers4": "screen-images/TV／ログイン②.png",
+    "libe1dfadlf2": "screen-images/TV／（どこで表示されるか不明）プラポリ.png",
+    "libfmgt6my5y": "screen-images/TV／登録完了(事業).png",
+    "libfv40o6zr1": "screen-images/S／新規⑧　登録完了(学校).png",
+    "libg0o64gfbu": "screen-images/S／アカウント管理(事業).jpg",
+    "libg2x93fk1b": "screen-images/App,TV.png",
+    "libgbsnj2l1e": "screen-images/App／トップ　※未ログイン.png",
+    "libh1vqe57ef": "screen-images/S／アカウントの登録にあたって.png",
+    "libhydqwef7m": "screen-images/利用しない.png",
+    "libi337pzlpr": "screen-images/Info／トップ.png",
+    "libi57h22lh9": "screen-images/S／アカウント設定(事業).jpg",
+    "libiknmopjzo": "screen-images/S／受信契約の確認.png",
+    "libiwofpnub5": "screen-images/インフォメーション　メニュー②.png",
+    "libjhrsbcr3u": "screen-images/S／新規⑧　登録完了(事業).png",
+    "libjzb2vmcso": "screen-images/App／設定　※未ログイン.png",
+    "libkfu9i998r": "screen-images/J／新規⑨　確認コード　※SMS.png",
+    "libkmc89bcpx": "screen-images/連携ログイン.png",
+    "libknrv3dvvi": "screen-images/S／コード入力(学校).jpg",
+    "libkywq9i4ga": "screen-images/S／新規①　用途と地域の選択(事業).png",
+    "libl106gmhug": "screen-images/ホワイトリスト.png",
+    "libl1121880h": "screen-images/Web,App,TV.png",
+    "liblas5b3uq1": "screen-images/App／アプリ出口.png",
+    "libli8akk8qo": "screen-images/ご利用情報の初期化(学校) ①.png",
+    "liblj48pkhic": "screen-images/S／アカウント登録の前に.png",
+    "libmog9rcfk1": "screen-images/TV／コード入力(事業).png",
+    "libmr0m0bu1k": "screen-images/S／コード入力勧奨(学校).jpg",
+    "libmtzwc8uhp": "screen-images/S／連携結果①.png",
+    "libna76ie8xb": "screen-images/S／新規⑧　登録完了(世帯).png",
+    "libnmm26dn1t": "screen-images/S／新規⑦　内容確認(学校).gif",
+    "libo4xw6jlh0": "screen-images/学校.png",
+    "libpt2gapnyr": "screen-images/S／PW忘れ①.png",
+    "libq3cgaswf2": "screen-images/ご利用情報の初期化(学校) ②.png",
+    "libqdtnl03rx": "screen-images/S／移行⑥　登録完了.png",
+    "libqgx9aqj1q": "screen-images/S／誤受信防止措置②(学校).png",
+    "libqrf7mmud0": "screen-images/🟥.png",
+    "libqyyxhmssi": "screen-images/S／新規④　メアド入力.png",
+    "libqzefhg1fb": "screen-images/S／誤受信防止措置②(世帯).png",
+    "librkaamnkll": "screen-images/S／アカウント情報②(事業).png",
+    "librprbk2k52": "screen-images/事業　コード入力エラー①.png",
+    "librtg0hpzm1": "screen-images/オアシス／登録完了.jpg",
+    "librypp06q4z": "screen-images/S／誤受信防止措置①.gif",
+    "libs8kzjs6sk": "screen-images/S／新規①　用途と地域の選択(学校).png",
+    "libscp3wgb89": "screen-images/オアシス／利用規約.jpg",
+    "libsqt5nop2u": "screen-images/S／新規③　プラポリ(事業,学校).jpg",
+    "libt3t11k284": "screen-images/S／新規③　プラポリ(世帯).gif",
+    "libtegvof5wa": "screen-images/TV／キー入力(事業).png",
+    "libtk6sdtyyd": "screen-images/App／誤受信防止措置③(世帯).png",
+    "libtqj664ivo": "screen-images/J／新規⑥　初回ログイン.png",
+    "libtw6r663ke": "screen-images/S／プロファイル選択　※初回.png",
+    "libu6hf0xerw": "screen-images/J／新規⑧　認証用携帯電話番号設定.png",
+    "libu7mbtp5uq": "screen-images/エラー　※目的のページにはアクセスできません.png",
+    "libue5au9f6r": "screen-images/インフォメーション　メニュー①.png",
+    "libumzy1rwje": "screen-images/TV／入力内容の確認(事業).png",
+    "libus6m4xz2r": "screen-images/App／誤受信防止措置②_アニメ.gif",
+    "libv5cs8783c": "screen-images/J／新規①　利用規約.gif",
+    "libvhz1z16mg": "screen-images/S／コード入力(事業).png",
+    "libvi254w795": "screen-images/S／ログイン.png",
+    "libvldnalfwf": "screen-images/J／トップ.png",
+    "libvouj0dn8o": "screen-images/S／プロファイル管理　※初回作成完了.gif",
+    "libvzzisub62": "screen-images/S／移行③　認証コード送信先選択.png",
+    "libws5gu4dxq": "screen-images/ご利用情報の初期化(事業) ①.png",
+    "libwsfbzpns8": "screen-images/NHKONE　メニュー②.png",
+    "libx2qn53wrv": "screen-images/S／プロファイル追加.gif",
+    "libxgrif8ioy": "screen-images/S／コード入力勧奨(事業).jpg",
+    "libybt7q3s81": "screen-images/TV／（どこで表示されるか不明）利用規約.png",
+    "libyijn5wob5": "screen-images/オアシス／内容確認.png",
+    "libyjhpj6ogj": "screen-images/S／トップ　※ログイン済.png",
+    "libyu09oaa38": "screen-images/S／新規⑦　内容確認(世帯).gif",
+    "libyujxrgcm9": "screen-images/S／トップ　※アカウントレス.png",
+    "libyyk62vjp5": "screen-images/ご利用情報の初期化(世帯) ②.png",
+    "libzhha8nzpc": "screen-images/J／新規④　申請情報確認.png",
+    "libzz3km2sg1": "screen-images/J／新規⑦　パスワード設定.png",
+    "lib6g1exfunl": "screen-images/S／アカウント設定(事業).jpg"
   },
   "library": [
     {
-      "id": "lib051mfhiyt",
-      "name": "S／移行①　移行手続きをされる方へ",
-      "folder": "",
-      "file": "screen-images/S／移行①　移行手続きをされる方へ.gif",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "lib0mvso2zu3",
-      "name": "S／コード入力(事業)",
-      "folder": "",
-      "file": "screen-images/S／コード入力(事業).png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "lib0pxgnqw6e",
-      "name": "［TV］５.コード入力 ②事業",
-      "folder": "",
-      "file": "screen-images/［TV］５.コード入力 ②事業.png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "lib0zovn338z",
-      "name": "［Web］事業　アカウント管理",
-      "folder": "",
-      "file": "screen-images/［Web］事業　アカウント管理.jpg",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "lib1hi2uk4j1",
-      "name": "［Web］ご利用情報の初期化（完了）",
-      "folder": "",
-      "file": "screen-images/［Web］ご利用情報の初期化（完了）.png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "lib1kvwo1aek",
-      "name": "S／世帯／Jアカとの連携解除 ⑴",
-      "folder": "",
-      "file": "screen-images/S／世帯／Jアカとの連携解除 ⑴.png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "lib201ptqfy4",
-      "name": "J／新規④　申請情報確認",
-      "folder": "",
-      "file": "screen-images/J／新規④　申請情報確認.png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "lib24hungl0x",
-      "name": "J／新規①　利用規約",
-      "folder": "",
-      "file": "screen-images/J／新規①　利用規約.gif",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "lib26mm7q7s4",
-      "name": "［App］登録３.誤受信防止措置 ①世帯",
-      "folder": "",
-      "file": "screen-images/［App］登録３.誤受信防止措置 ①世帯.png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "lib2k5s42h1q",
-      "name": "S／プロファイル選択 ※初回",
-      "folder": "",
-      "file": "screen-images/S／プロファイル選択 ※初回.png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "lib2vx2feweq",
-      "name": "［Web］世帯(新規)　連携結果 ⑶",
-      "folder": "",
-      "file": "screen-images/［Web］世帯(新規)　連携結果 ⑶.png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "lib404e99dnd",
-      "name": "［TV］（どこで表示されるか不明）利用規約",
-      "folder": "",
-      "file": "screen-images/［TV］（どこで表示されるか不明）利用規約.png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "lib4km1plpc6",
-      "name": "［TV］８.プロファイル選択",
-      "folder": "",
-      "file": "screen-images/［TV］８.プロファイル選択.png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "lib4xo73d35p",
-      "name": "［TV］７.スマホ連携",
-      "folder": "",
-      "file": "screen-images/［TV］７.スマホ連携.png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "lib4z63s86wu",
-      "name": "オアシス②　情報入力",
-      "folder": "",
-      "file": "screen-images/オアシス②　情報入力.png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "lib5ap9ic9x3",
-      "name": "S／新規⑧　登録完了(事業)",
-      "folder": "",
-      "file": "screen-images/S／新規⑧　登録完了(事業).png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "lib63wdjgu4j",
-      "name": "オアシス④　登録完了",
-      "folder": "",
-      "file": "screen-images/オアシス④　登録完了.jpg",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "lib64v5god71",
-      "name": "携帯電話番号の変更",
-      "folder": "",
-      "file": "screen-images/携帯電話番号の変更.png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "lib66nuuppm2",
-      "name": "プロファイル管理",
-      "folder": "",
-      "file": "screen-images/プロファイル管理.png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "lib6mmgrhl36",
-      "name": "J／新規⑥　初回ログイン",
-      "folder": "",
-      "file": "screen-images/J／新規⑥　初回ログイン.png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "lib6vcf2nmnz",
-      "name": "S／アカウントの登録にあたって",
-      "folder": "",
-      "file": "screen-images/S／アカウントの登録にあたって.png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "lib7u5hovf1p",
-      "name": "［Web］NHKONEトップ ※ログイン中",
-      "folder": "",
-      "file": "screen-images/［Web］NHKONEトップ ※ログイン中.png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "lib83s3j2rmg",
-      "name": "ログインIDの変更",
-      "folder": "",
-      "file": "screen-images/ログインIDの変更.png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "lib8q6shq26k",
-      "name": "S／誤受信防止措置２(事業)",
-      "folder": "",
-      "file": "screen-images/S／誤受信防止措置２(事業).png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "lib8sr7kbghi",
-      "name": "S／移行③　認証コード送信先選択",
-      "folder": "",
-      "file": "screen-images/S／移行③　認証コード送信先選択.png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "lib8wa284lam",
-      "name": "S／移行⑥　登録完了",
-      "folder": "",
-      "file": "screen-images/S／移行⑥　登録完了.png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "lib99y6ypyk9",
-      "name": "オアシス③　内容確認",
-      "folder": "",
-      "file": "screen-images/オアシス③　内容確認.png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "lib9a5asse9m",
-      "name": "S／アカウント設定 ※未連携",
-      "folder": "",
-      "file": "screen-images/S／アカウント設定 ※未連携.png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "lib9bqnfkq1r",
-      "name": "S／プロファイル管理 ※初回作成完了",
-      "folder": "",
-      "file": "screen-images/S／プロファイル管理 ※初回作成完了.gif",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "lib9e97wgxvw",
-      "name": "Info／トップ",
-      "folder": "",
-      "file": "screen-images/Info／トップ.png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "liba2jw5nvae",
-      "name": "［App］登録３.誤受信防止措置 ②事業",
-      "folder": "",
-      "file": "screen-images/［App］登録３.誤受信防止措置 ②事業.png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "libad60q9gdg",
-      "name": "App,TV",
-      "folder": "",
-      "file": "screen-images/App,TV.png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "libady526q4m",
-      "name": "S／ログイン",
-      "folder": "",
-      "file": "screen-images/S／ログイン.png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "libaomhiaj6x",
-      "name": "アカウント情報",
-      "folder": "",
-      "file": "screen-images/アカウント情報.png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "libarjnojlqu",
-      "name": "［Web］世帯　アカウントの削除 ⑶",
-      "folder": "",
-      "file": "screen-images/［Web］世帯　アカウントの削除 ⑶.png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "libayz3n8qsq",
-      "name": "S／新規⑦　内容確認(学校)",
-      "folder": "",
-      "file": "screen-images/S／新規⑦　内容確認(学校).gif",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "libb2ksu83ov",
-      "name": "［Web］世帯(新規)　連携結果 ⑵",
-      "folder": "",
-      "file": "screen-images/［Web］世帯(新規)　連携結果 ⑵.png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "libb2zrg4xly",
-      "name": "［TV］７.登録完了 ②事業",
-      "folder": "",
-      "file": "screen-images/［TV］７.登録完了 ②事業.png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "libb5qwmxnv8",
-      "name": "①世帯_ご利用情報の初期化（1）",
-      "folder": "",
-      "file": "screen-images/①世帯_ご利用情報の初期化（1）.png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "libbb9cdr9em",
-      "name": "お住まいの地域",
-      "folder": "",
-      "file": "screen-images/お住まいの地域.png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "libbcx6nvwwq",
-      "name": "［TV］３.地域の選択",
-      "folder": "",
-      "file": "screen-images/［TV］３.地域の選択.png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "libbgc949hxr",
-      "name": "［Web］事業　アカウント削除🟥",
-      "folder": "",
-      "file": "screen-images/［Web］事業　アカウント削除🟥.png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "libcm7wo75ki",
-      "name": "①世帯_ご利用情報の初期化（2）",
-      "folder": "",
-      "file": "screen-images/①世帯_ご利用情報の初期化（2）.png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "libcp97ui6h3",
-      "name": "J／新規⑧　認証用携帯電話番号設定",
-      "folder": "",
-      "file": "screen-images/J／新規⑧　認証用携帯電話番号設定.png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "libcwrkyvkbf",
-      "name": "S／プロファイル追加",
-      "folder": "",
-      "file": "screen-images/S／プロファイル追加.gif",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "libd5zv911ca",
-      "name": "J／新規③　申請情報入力",
-      "folder": "",
-      "file": "screen-images/J／新規③　申請情報入力.png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "libddbt2y4ga",
-      "name": "［Web］世帯　アカウントの削除 ⑵",
-      "folder": "",
-      "file": "screen-images/［Web］世帯　アカウントの削除 ⑵.png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "libdm33h1tha",
-      "name": "アカウント登録の前に",
-      "folder": "",
-      "file": "screen-images/アカウント登録の前に.png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "libdml2a13ja",
-      "name": "J／トップ",
-      "folder": "",
-      "file": "screen-images/J／トップ.png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "libea64v5yc6",
-      "name": "［Web］事業　復旧用メールアドレスの変更",
-      "folder": "",
-      "file": "screen-images/［Web］事業　復旧用メールアドレスの変更.jpg",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "libf1i5cr5fd",
-      "name": "J／新規②　確認コード ※メール",
-      "folder": "",
-      "file": "screen-images/J／新規②　確認コード ※メール.png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "libf6vrvqh1z",
-      "name": "［Web］事業　アカウント情報 ⑴",
-      "folder": "",
-      "file": "screen-images/［Web］事業　アカウント情報 ⑴.png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "libfhhsfl1ye",
-      "name": "［Web］世帯(新規)　連携結果 ⑴",
-      "folder": "",
-      "file": "screen-images/［Web］世帯(新規)　連携結果 ⑴.png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "libfnyedipzl",
-      "name": "コード入力（入力のための条件を満たしていません）",
-      "folder": "",
-      "file": "screen-images/コード入力（入力のための条件を満たしていません）.png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "libgarzzdx3b",
-      "name": "［App］登録４.アカウントレス",
-      "folder": "",
-      "file": "screen-images/［App］登録４.アカウントレス.png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "libgd3xuf0al",
-      "name": "S／誤受信防止措置２(世帯)",
-      "folder": "",
-      "file": "screen-images/S／誤受信防止措置２(世帯).png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "libggsc0425o",
-      "name": "［Web］NHKONE メニュー ⑵",
-      "folder": "",
-      "file": "screen-images/［Web］NHKONE メニュー ⑵.png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "libgnfkit2r2",
-      "name": "オアシス①　利用規約",
-      "folder": "",
-      "file": "screen-images/オアシス①　利用規約.jpg",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "libgs5q22kqs",
-      "name": "S／移行②　メアド入力",
-      "folder": "",
-      "file": "screen-images/S／移行②　メアド入力.png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "libhh2yxcdm7",
-      "name": "連携ログイン",
-      "folder": "",
-      "file": "screen-images/連携ログイン.png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "libhz2kljo4x",
-      "name": "S／世帯／Jアカとの連携解除 ⑵",
-      "folder": "",
-      "file": "screen-images/S／世帯／Jアカとの連携解除 ⑵.png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "libj2cltf01j",
-      "name": "学校",
-      "folder": "",
-      "file": "screen-images/学校.png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "libjrcw658uh",
-      "name": "［TV］５.メニュー",
-      "folder": "",
-      "file": "screen-images/［TV］５.メニュー.png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "libjrsqgpxre",
-      "name": "S／移行⑤　パスワード設定",
-      "folder": "",
-      "file": "screen-images/S／移行⑤　パスワード設定.png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "libjx704hirz",
-      "name": "S／コード入力(学校)",
-      "folder": "",
-      "file": "screen-images/S／コード入力(学校).jpg",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "libjz0gp556x",
-      "name": "S／新規③　プラポリ(世帯)",
-      "folder": "",
-      "file": "screen-images/S／新規③　プラポリ(世帯).gif",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "libk1hnz9elx",
-      "name": "S／移行④　認証コード入力",
-      "folder": "",
-      "file": "screen-images/S／移行④　認証コード入力.png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "libk4rt596dn",
-      "name": "S／トップ ※アカウントレス",
-      "folder": "",
-      "file": "screen-images/S／トップ ※アカウントレス.png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "libkbwnanuk2",
-      "name": "［TV］７.アカウントについて",
-      "folder": "",
-      "file": "screen-images/［TV］７.アカウントについて.png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "libkdg6p1i4z",
-      "name": "［Web］事業　アカウント情報 ⑵",
-      "folder": "",
-      "file": "screen-images/［Web］事業　アカウント情報 ⑵.png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "libkov3bjouz",
-      "name": "S／トップ ※コード入力勧奨(学校)",
-      "folder": "",
-      "file": "screen-images/S／トップ ※コード入力勧奨(学校).jpg",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "libktht1m2gh",
-      "name": "［App］登録７.AppStoreモーダル",
-      "folder": "",
-      "file": "screen-images/［App］登録７.AppStoreモーダル.png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "libkyhn5z69x",
-      "name": "J／新規⑪　マイページ",
-      "folder": "",
-      "file": "screen-images/J／新規⑪　マイページ.png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "libl0o105eq8",
-      "name": "［TV］６.キー入力 ②事業",
-      "folder": "",
-      "file": "screen-images/［TV］６.キー入力 ②事業.png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "libl7qhk6xcx",
-      "name": "アカウントプライバシーノーティス",
-      "folder": "",
-      "file": "screen-images/アカウントプライバシーノーティス.png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "liblmpljwb64",
-      "name": "［TV］４.入力内容の確認 ①世帯",
-      "folder": "",
-      "file": "screen-images/［TV］４.入力内容の確認 ①世帯.png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "libm1n8wocc7",
-      "name": "S／誤受信防止措置２(学校)",
-      "folder": "",
-      "file": "screen-images/S／誤受信防止措置２(学校).png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "libmvtwpi14x",
-      "name": "［Web］ご利用情報の初期化（目的のページにはアクセスできません）",
-      "folder": "",
-      "file": "screen-images/［Web］ご利用情報の初期化（目的のページにはアクセスできません）.png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "libmzaxcuyip",
-      "name": "S／トップ ※コード入力勧奨(事業)",
-      "folder": "",
-      "file": "screen-images/S／トップ ※コード入力勧奨(事業).jpg",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "libn2nhmc2fk",
-      "name": "J／新規⑨　確認コード ※SMS",
-      "folder": "",
-      "file": "screen-images/J／新規⑨　確認コード ※SMS.png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "libnvznxje61",
-      "name": "S／誤受信防止措置１",
-      "folder": "",
-      "file": "screen-images/S／誤受信防止措置１.gif",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "libo05l6pisk",
-      "name": "アカウント設定 ※プロファイル未作成,未連携",
-      "folder": "",
-      "file": "screen-images/アカウント設定 ※プロファイル未作成,未連携.png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "libo4gnszn8r",
-      "name": "連携解除失敗",
-      "folder": "",
-      "file": "screen-images/連携解除失敗.png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "libo5csh872s",
-      "name": "［TV］（どこで表示されるか不明）プラポリ",
-      "folder": "",
-      "file": "screen-images/［TV］（どこで表示されるか不明）プラポリ.png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "libo9ncwoe3k",
-      "name": "J／新規⑤　申請完了",
-      "folder": "",
-      "file": "screen-images/J／新規⑤　申請完了.png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "libogpfxg07h",
-      "name": "メールアドレスをお忘れの方 ⑴",
-      "folder": "",
-      "file": "screen-images/メールアドレスをお忘れの方 ⑴.png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "libopbfe00qs",
-      "name": "S／新規⑤　パスワード設定",
-      "folder": "",
-      "file": "screen-images/S／新規⑤　パスワード設定.png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "libpvbi12jeg",
-      "name": "S／プロファイル／編集　2秒ループ",
-      "folder": "",
-      "file": "screen-images/S／プロファイル／編集　2秒ループ.gif",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "libqh67q9tns",
-      "name": "S／事業所コード・確認キーの管理 ※発行後",
-      "folder": "",
-      "file": "screen-images/S／事業所コード・確認キーの管理 ※発行後.png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "libqhzfk26db",
-      "name": "パスワードの変更",
-      "folder": "",
-      "file": "screen-images/パスワードの変更.png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "libqwd7ulo7s",
-      "name": "S／新規④　認証コード入力",
-      "folder": "",
-      "file": "screen-images/S／新規④　認証コード入力.png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "libr2io2gomb",
-      "name": "［App］登録３.誤受信防止措置 ③学校",
-      "folder": "",
-      "file": "screen-images/［App］登録３.誤受信防止措置 ③学校.png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "librhc2ekt15",
-      "name": "［Web］世帯　アカウント情報 ⑴",
-      "folder": "",
-      "file": "screen-images/［Web］世帯　アカウント情報 ⑴.png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "librhvkvo2k2",
-      "name": "S／新規⑥　ログインID設定",
-      "folder": "",
-      "file": "screen-images/S／新規⑥　ログインID設定.png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "librod8pbtwm",
-      "name": "［Web］インフォメーション メニュー ⑵",
-      "folder": "",
-      "file": "screen-images/［Web］インフォメーション メニュー ⑵.png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "librq8i0dhv4",
-      "name": "［TV］２.用途の選択",
-      "folder": "",
-      "file": "screen-images/［TV］２.用途の選択.png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "librr0evkt56",
-      "name": "S／新規①　用途と地域の選択(事業)",
-      "folder": "",
-      "file": "screen-images/S／新規①　用途と地域の選択(事業).png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "librxolo2zn7",
-      "name": "［TV］１.誤受信防止措置",
-      "folder": "",
-      "file": "screen-images/［TV］１.誤受信防止措置.png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "libs4nxf9uco",
-      "name": "ホワイトリスト",
-      "folder": "",
-      "file": "screen-images/ホワイトリスト.png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "libs4qrkhj4l",
-      "name": "S／新規③　プラポリ(事業,学校)",
-      "folder": "",
-      "file": "screen-images/S／新規③　プラポリ(事業,学校).jpg",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "libsb0pztn70",
+      "id": "lib00qc5ch7b",
       "name": "S／新規①　用途と地域の選択(世帯)",
       "folder": "",
       "file": "screen-images/S／新規①　用途と地域の選択(世帯).png",
@@ -1052,286 +132,25 @@ window.APP_SCREEN_DATA = {
       "hsLinkFrom": null
     },
     {
-      "id": "libshjz0b3mc",
-      "name": "J／新規⑩　認証通知設定",
+      "id": "lib02tgo52l3",
+      "name": "J／新規⑪　マイページ",
       "folder": "",
-      "file": "screen-images/J／新規⑩　認証通知設定.png",
+      "file": "screen-images/J／新規⑪　マイページ.png",
       "note": "",
       "hotspots": [],
       "hsLinkFrom": null
     },
     {
-      "id": "libssidw02jt",
-      "name": "J／新規⑦　パスワード設定",
+      "id": "lib0zd0yybrc",
+      "name": "オアシス／情報入力",
       "folder": "",
-      "file": "screen-images/J／新規⑦　パスワード設定.png",
+      "file": "screen-images/オアシス／情報入力.png",
       "note": "",
       "hotspots": [],
       "hsLinkFrom": null
     },
     {
-      "id": "libstvfxtucy",
-      "name": "S／新規⑦　内容確認(事業)",
-      "folder": "",
-      "file": "screen-images/S／新規⑦　内容確認(事業).gif",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "libsz88j0wln",
-      "name": "［App］登録６.アプリ出口",
-      "folder": "",
-      "file": "screen-images/［App］登録６.アプリ出口.png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "libt5ukywp6f",
-      "name": "利用しない",
-      "folder": "",
-      "file": "screen-images/利用しない.png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "libt5z4fei96",
-      "name": "アカウント関連の操作",
-      "folder": "",
-      "file": "screen-images/アカウント関連の操作.png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "libt9xq1mpym",
-      "name": "S／アカウント削除 ⑴_アニメ",
-      "folder": "",
-      "file": "screen-images/S／アカウント削除 ⑴_アニメ.gif",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "libtmaealtyt",
-      "name": "［Web］事業　パスワードの変更",
-      "folder": "",
-      "file": "screen-images/［Web］事業　パスワードの変更.jpg",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "libu1l7u3r2m",
-      "name": "アカウント設定 ※再連携が必要です",
-      "folder": "",
-      "file": "screen-images/アカウント設定 ※再連携が必要です.png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "libu3gjefkch",
-      "name": "［Web］インフォメーション メニュー ⑴",
-      "folder": "",
-      "file": "screen-images/［Web］インフォメーション メニュー ⑴.png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "libuk7o5plbo",
-      "name": "S／新規④　メアド入力",
-      "folder": "",
-      "file": "screen-images/S／新規④　メアド入力.png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "libuwi4x5tev",
-      "name": "S／事業所コード・確認キーの管理 ※未取得",
-      "folder": "",
-      "file": "screen-images/S／事業所コード・確認キーの管理 ※未取得.png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "libuywd0zx62",
-      "name": "［App］登録５.設定 ※未ログイン",
-      "folder": "",
-      "file": "screen-images/［App］登録５.設定 ※未ログイン.png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "libvd26b1woe",
-      "name": "S／新規①　用途と地域の選択(学校)",
-      "folder": "",
-      "file": "screen-images/S／新規①　用途と地域の選択(学校).png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "libvmllecf29",
-      "name": "Web,App,TV",
-      "folder": "",
-      "file": "screen-images/Web,App,TV.png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "libvo7nixbmh",
-      "name": "S／世帯／アカウントの削除 ⑴",
-      "folder": "",
-      "file": "screen-images/S／世帯／アカウントの削除 ⑴.png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "libw6d7i4s52",
-      "name": "S／新規⑧　登録完了(世帯)",
-      "folder": "",
-      "file": "screen-images/S／新規⑧　登録完了(世帯).png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "libwgx74bmqm",
-      "name": "［Web］事業　ログインIDの変更",
-      "folder": "",
-      "file": "screen-images/［Web］事業　ログインIDの変更.jpg",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "libwygz84grk",
-      "name": "［Web］事業　携帯電話番号の変更",
-      "folder": "",
-      "file": "screen-images/［Web］事業　携帯電話番号の変更.jpg",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "libx2ghln4fj",
-      "name": "［Web］復旧用メールアドレスの変更",
-      "folder": "",
-      "file": "screen-images/［Web］復旧用メールアドレスの変更.png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "libxfcz16ay0",
-      "name": "アカウント管理",
-      "folder": "",
-      "file": "screen-images/アカウント管理.png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "libxffiuyi2w",
-      "name": "［App］登録２.誤受信防止措置_アニメ",
-      "folder": "",
-      "file": "screen-images/［App］登録２.誤受信防止措置_アニメ.gif",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "libxgcsfqlnd",
-      "name": "［TV］９.トップ",
-      "folder": "",
-      "file": "screen-images/［TV］９.トップ.png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "libxjpe5e5uo",
-      "name": "［App］登録１.誤受信防止措置",
-      "folder": "",
-      "file": "screen-images/［App］登録１.誤受信防止措置.png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "libxrv6yna1o",
-      "name": "S／アカウント設定 ※連携済",
-      "folder": "",
-      "file": "screen-images/S／アカウント設定 ※連携済.png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "libxt91sx21q",
-      "name": "S／新規⑧　登録完了(学校)",
-      "folder": "",
-      "file": "screen-images/S／新規⑧　登録完了(学校).png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "libxxye275ig",
-      "name": "［TV］４.入力内容の確認 ②事業",
-      "folder": "",
-      "file": "screen-images/［TV］４.入力内容の確認 ②事業.png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "liby25b2pqsa",
-      "name": "S／受信契約の確認",
-      "folder": "",
-      "file": "screen-images/S／受信契約の確認.png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "liby3w759npo",
-      "name": "メールアドレスの変更",
-      "folder": "",
-      "file": "screen-images/メールアドレスの変更.png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "libyhy0nknlr",
-      "name": "［TV］６.ログイン",
-      "folder": "",
-      "file": "screen-images/［TV］６.ログイン.png",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "libyw8255o5v",
-      "name": "S／アカウント設定(事業)",
-      "folder": "",
-      "file": "screen-images/S／アカウント設定(事業).jpg",
-      "note": "",
-      "hotspots": [],
-      "hsLinkFrom": null
-    },
-    {
-      "id": "libzfox5wm84",
+      "id": "lib2cpd0e4ag",
       "name": "S／新規②　利用規約",
       "folder": "",
       "file": "screen-images/S／新規②　利用規約.png",
@@ -1340,7 +159,961 @@ window.APP_SCREEN_DATA = {
       "hsLinkFrom": null
     },
     {
-      "id": "libzojz3sqju",
+      "id": "lib2xvwdwvdg",
+      "name": "J／新規⑤　申請完了",
+      "folder": "",
+      "file": "screen-images/J／新規⑤　申請完了.png",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "lib2yhnnuw5a",
+      "name": "エラー　※不正な画面遷移を検知しました。",
+      "folder": "",
+      "file": "screen-images/エラー　※不正な画面遷移を検知しました。.png",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "lib35chjius9",
+      "name": "S／新規⑦　内容確認(事業)",
+      "folder": "",
+      "file": "screen-images/S／新規⑦　内容確認(事業).gif",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "lib3ggu7vz8s",
+      "name": "S／新規④　認証コード入力",
+      "folder": "",
+      "file": "screen-images/S／新規④　認証コード入力.png",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "lib449o6k1h9",
+      "name": "S／メアド忘れ①",
+      "folder": "",
+      "file": "screen-images/S／メアド忘れ①.png",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "lib4ansa8uon",
+      "name": "J／新規②　確認コード　※メール",
+      "folder": "",
+      "file": "screen-images/J／新規②　確認コード　※メール.png",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "lib4ibpqx5i4",
+      "name": "TV／トップ　※ログイン済",
+      "folder": "",
+      "file": "screen-images/TV／トップ　※ログイン済.png",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "lib4pvj0ozj5",
+      "name": "S／移行⑤　パスワード設定",
+      "folder": "",
+      "file": "screen-images/S／移行⑤　パスワード設定.png",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "lib4qexnqyzn",
+      "name": "S／移行④　認証コード入力",
+      "folder": "",
+      "file": "screen-images/S／移行④　認証コード入力.png",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "lib53n0n78bu",
+      "name": "TV／アカウントについて",
+      "folder": "",
+      "file": "screen-images/TV／アカウントについて.png",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "lib5alhqcjry",
+      "name": "S／新規⑤　パスワード設定",
+      "folder": "",
+      "file": "screen-images/S／新規⑤　パスワード設定.png",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "lib5nvf5nv9n",
+      "name": "TV／スマホ連携",
+      "folder": "",
+      "file": "screen-images/TV／スマホ連携.png",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "lib6ck3i9qws",
+      "name": "TV／用途の選択(世帯)",
+      "folder": "",
+      "file": "screen-images/TV／用途の選択(世帯).png",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "lib6g1exfunl",
+      "name": "S／アカウント設定(事業)",
+      "folder": "",
+      "file": "screen-images/S／アカウント設定(事業).jpg",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "lib6hbmbmjlm",
+      "name": "TV／トップ",
+      "folder": "",
+      "file": "screen-images/TV／トップ.png",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "lib6yzuqzrcp",
+      "name": "J／新規⑩　認証通知設定",
+      "folder": "",
+      "file": "screen-images/J／新規⑩　認証通知設定.png",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "lib7tf5gz0m9",
+      "name": "S／事業所コード・確認キーの管理　※未取得",
+      "folder": "",
+      "file": "screen-images/S／事業所コード・確認キーの管理　※未取得.png",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "lib8cfvphoei",
+      "name": "S／アカウント設定　※未連携",
+      "folder": "",
+      "file": "screen-images/S／アカウント設定　※未連携.png",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "lib8nkwlgvqa",
+      "name": "TV／誤受信防止措置",
+      "folder": "",
+      "file": "screen-images/TV／誤受信防止措置.png",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "lib9dkiqpndp",
+      "name": "TV／地域の選択",
+      "folder": "",
+      "file": "screen-images/TV／地域の選択.png",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "lib9r1s2pgkt",
+      "name": "ご利用情報の初期化　完了",
+      "folder": "",
+      "file": "screen-images/ご利用情報の初期化　完了.png",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "lib9xtif9dia",
+      "name": "S／移行②　メアド入力",
+      "folder": "",
+      "file": "screen-images/S／移行②　メアド入力.png",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "lib9zolb7jk3",
+      "name": "S／アカウント設定　※連携済",
+      "folder": "",
+      "file": "screen-images/S／アカウント設定　※連携済.png",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "libacf1lih9y",
+      "name": "S／新規⑥　ログインID設定",
+      "folder": "",
+      "file": "screen-images/S／新規⑥　ログインID設定.png",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "libajk48e96x",
+      "name": "エラー　※入力のための条件を満たしていません",
+      "folder": "",
+      "file": "screen-images/エラー　※入力のための条件を満たしていません.png",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "libaq203r7op",
+      "name": "TV／入力内容の確認(世帯)",
+      "folder": "",
+      "file": "screen-images/TV／入力内容の確認(世帯).png",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "libax11pewax",
+      "name": "ご利用情報の初期化(世帯) ①",
+      "folder": "",
+      "file": "screen-images/ご利用情報の初期化(世帯) ①.png",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "libbndq5zvrw",
+      "name": "App／誤受信防止措置①",
+      "folder": "",
+      "file": "screen-images/App／誤受信防止措置①.png",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "libbwuj7ssf7",
+      "name": "TV／プロファイル選択",
+      "folder": "",
+      "file": "screen-images/TV／プロファイル選択.png",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "libc1s0bnivl",
+      "name": "S／事業所コード・確認キーの管理　※発行後",
+      "folder": "",
+      "file": "screen-images/S／事業所コード・確認キーの管理　※発行後.png",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "libc4jtcldbr",
+      "name": "TV／ログイン",
+      "folder": "",
+      "file": "screen-images/TV／ログイン.png",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "libc8i93ho0t",
+      "name": "ご利用情報の初期化(事業) ②",
+      "folder": "",
+      "file": "screen-images/ご利用情報の初期化(事業) ②.png",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "libca2vyynbj",
+      "name": "J／新規③　申請情報入力",
+      "folder": "",
+      "file": "screen-images/J／新規③　申請情報入力.png",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "libcibgb98tk",
+      "name": "S／移行①　移行手続きをされる方へ",
+      "folder": "",
+      "file": "screen-images/S／移行①　移行手続きをされる方へ.gif",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "libcjl2r500d",
+      "name": "S／アカウント情報①(事業)",
+      "folder": "",
+      "file": "screen-images/S／アカウント情報①(事業).png",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "libcnweok4by",
+      "name": "NHKONE　メニュー①",
+      "folder": "",
+      "file": "screen-images/NHKONE　メニュー①.png",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "libcpah4s9ts",
+      "name": "App／AppStoreモーダル",
+      "folder": "",
+      "file": "screen-images/App／AppStoreモーダル.png",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "libcqy87dq90",
+      "name": "アカウント関連の操作",
+      "folder": "",
+      "file": "screen-images/アカウント関連の操作.png",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "libddif2rj7g",
+      "name": "S／誤受信防止措置②(事業)",
+      "folder": "",
+      "file": "screen-images/S／誤受信防止措置②(事業).png",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "libdpzu2ers4",
+      "name": "TV／ログイン②",
+      "folder": "",
+      "file": "screen-images/TV／ログイン②.png",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "libe1dfadlf2",
+      "name": "TV／（どこで表示されるか不明）プラポリ",
+      "folder": "",
+      "file": "screen-images/TV／（どこで表示されるか不明）プラポリ.png",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "libfmgt6my5y",
+      "name": "TV／登録完了(事業)",
+      "folder": "",
+      "file": "screen-images/TV／登録完了(事業).png",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "libfv40o6zr1",
+      "name": "S／新規⑧　登録完了(学校)",
+      "folder": "",
+      "file": "screen-images/S／新規⑧　登録完了(学校).png",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "libg0o64gfbu",
+      "name": "S／アカウント管理(事業)",
+      "folder": "",
+      "file": "screen-images/S／アカウント管理(事業).jpg",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "libg2x93fk1b",
+      "name": "App,TV",
+      "folder": "",
+      "file": "screen-images/App,TV.png",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "libgbsnj2l1e",
+      "name": "App／トップ　※未ログイン",
+      "folder": "",
+      "file": "screen-images/App／トップ　※未ログイン.png",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "libh1vqe57ef",
+      "name": "S／アカウントの登録にあたって",
+      "folder": "",
+      "file": "screen-images/S／アカウントの登録にあたって.png",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "libhydqwef7m",
+      "name": "利用しない",
+      "folder": "",
+      "file": "screen-images/利用しない.png",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "libi337pzlpr",
+      "name": "Info／トップ",
+      "folder": "",
+      "file": "screen-images/Info／トップ.png",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "libi57h22lh9",
+      "name": "S／アカウント設定(事業)",
+      "folder": "",
+      "file": "screen-images/S／アカウント設定(事業).jpg",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "libiknmopjzo",
+      "name": "S／受信契約の確認",
+      "folder": "",
+      "file": "screen-images/S／受信契約の確認.png",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "libiwofpnub5",
+      "name": "インフォメーション　メニュー②",
+      "folder": "",
+      "file": "screen-images/インフォメーション　メニュー②.png",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "libjhrsbcr3u",
+      "name": "S／新規⑧　登録完了(事業)",
+      "folder": "",
+      "file": "screen-images/S／新規⑧　登録完了(事業).png",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "libjzb2vmcso",
+      "name": "App／設定　※未ログイン",
+      "folder": "",
+      "file": "screen-images/App／設定　※未ログイン.png",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "libkfu9i998r",
+      "name": "J／新規⑨　確認コード　※SMS",
+      "folder": "",
+      "file": "screen-images/J／新規⑨　確認コード　※SMS.png",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "libkmc89bcpx",
+      "name": "連携ログイン",
+      "folder": "",
+      "file": "screen-images/連携ログイン.png",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "libknrv3dvvi",
+      "name": "S／コード入力(学校)",
+      "folder": "",
+      "file": "screen-images/S／コード入力(学校).jpg",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "libkywq9i4ga",
+      "name": "S／新規①　用途と地域の選択(事業)",
+      "folder": "",
+      "file": "screen-images/S／新規①　用途と地域の選択(事業).png",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "libl106gmhug",
+      "name": "ホワイトリスト",
+      "folder": "",
+      "file": "screen-images/ホワイトリスト.png",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "libl1121880h",
+      "name": "Web,App,TV",
+      "folder": "",
+      "file": "screen-images/Web,App,TV.png",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "liblas5b3uq1",
+      "name": "App／アプリ出口",
+      "folder": "",
+      "file": "screen-images/App／アプリ出口.png",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "libli8akk8qo",
+      "name": "ご利用情報の初期化(学校) ①",
+      "folder": "",
+      "file": "screen-images/ご利用情報の初期化(学校) ①.png",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "liblj48pkhic",
+      "name": "S／アカウント登録の前に",
+      "folder": "",
+      "file": "screen-images/S／アカウント登録の前に.png",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "libmog9rcfk1",
+      "name": "TV／コード入力(事業)",
+      "folder": "",
+      "file": "screen-images/TV／コード入力(事業).png",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "libmr0m0bu1k",
+      "name": "S／コード入力勧奨(学校)",
+      "folder": "",
+      "file": "screen-images/S／コード入力勧奨(学校).jpg",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "libmtzwc8uhp",
+      "name": "S／連携結果①",
+      "folder": "",
+      "file": "screen-images/S／連携結果①.png",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "libna76ie8xb",
+      "name": "S／新規⑧　登録完了(世帯)",
+      "folder": "",
+      "file": "screen-images/S／新規⑧　登録完了(世帯).png",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "libnmm26dn1t",
+      "name": "S／新規⑦　内容確認(学校)",
+      "folder": "",
+      "file": "screen-images/S／新規⑦　内容確認(学校).gif",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "libo4xw6jlh0",
+      "name": "学校",
+      "folder": "",
+      "file": "screen-images/学校.png",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "libpt2gapnyr",
+      "name": "S／PW忘れ①",
+      "folder": "",
+      "file": "screen-images/S／PW忘れ①.png",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "libq3cgaswf2",
+      "name": "ご利用情報の初期化(学校) ②",
+      "folder": "",
+      "file": "screen-images/ご利用情報の初期化(学校) ②.png",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "libqdtnl03rx",
+      "name": "S／移行⑥　登録完了",
+      "folder": "",
+      "file": "screen-images/S／移行⑥　登録完了.png",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "libqgx9aqj1q",
+      "name": "S／誤受信防止措置②(学校)",
+      "folder": "",
+      "file": "screen-images/S／誤受信防止措置②(学校).png",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "libqrf7mmud0",
+      "name": "🟥",
+      "folder": "",
+      "file": "screen-images/🟥.png",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "libqyyxhmssi",
+      "name": "S／新規④　メアド入力",
+      "folder": "",
+      "file": "screen-images/S／新規④　メアド入力.png",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "libqzefhg1fb",
+      "name": "S／誤受信防止措置②(世帯)",
+      "folder": "",
+      "file": "screen-images/S／誤受信防止措置②(世帯).png",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "librkaamnkll",
+      "name": "S／アカウント情報②(事業)",
+      "folder": "",
+      "file": "screen-images/S／アカウント情報②(事業).png",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "librprbk2k52",
+      "name": "事業　コード入力エラー①",
+      "folder": "",
+      "file": "screen-images/事業　コード入力エラー①.png",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "librtg0hpzm1",
+      "name": "オアシス／登録完了",
+      "folder": "",
+      "file": "screen-images/オアシス／登録完了.jpg",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "librypp06q4z",
+      "name": "S／誤受信防止措置①",
+      "folder": "",
+      "file": "screen-images/S／誤受信防止措置①.gif",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "libs8kzjs6sk",
+      "name": "S／新規①　用途と地域の選択(学校)",
+      "folder": "",
+      "file": "screen-images/S／新規①　用途と地域の選択(学校).png",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "libscp3wgb89",
+      "name": "オアシス／利用規約",
+      "folder": "",
+      "file": "screen-images/オアシス／利用規約.jpg",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "libsqt5nop2u",
+      "name": "S／新規③　プラポリ(事業,学校)",
+      "folder": "",
+      "file": "screen-images/S／新規③　プラポリ(事業,学校).jpg",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "libt3t11k284",
+      "name": "S／新規③　プラポリ(世帯)",
+      "folder": "",
+      "file": "screen-images/S／新規③　プラポリ(世帯).gif",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "libtegvof5wa",
+      "name": "TV／キー入力(事業)",
+      "folder": "",
+      "file": "screen-images/TV／キー入力(事業).png",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "libtk6sdtyyd",
+      "name": "App／誤受信防止措置③(世帯)",
+      "folder": "",
+      "file": "screen-images/App／誤受信防止措置③(世帯).png",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "libtqj664ivo",
+      "name": "J／新規⑥　初回ログイン",
+      "folder": "",
+      "file": "screen-images/J／新規⑥　初回ログイン.png",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "libtw6r663ke",
+      "name": "S／プロファイル選択　※初回",
+      "folder": "",
+      "file": "screen-images/S／プロファイル選択　※初回.png",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "libu6hf0xerw",
+      "name": "J／新規⑧　認証用携帯電話番号設定",
+      "folder": "",
+      "file": "screen-images/J／新規⑧　認証用携帯電話番号設定.png",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "libu7mbtp5uq",
+      "name": "エラー　※目的のページにはアクセスできません",
+      "folder": "",
+      "file": "screen-images/エラー　※目的のページにはアクセスできません.png",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "libue5au9f6r",
+      "name": "インフォメーション　メニュー①",
+      "folder": "",
+      "file": "screen-images/インフォメーション　メニュー①.png",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "libumzy1rwje",
+      "name": "TV／入力内容の確認(事業)",
+      "folder": "",
+      "file": "screen-images/TV／入力内容の確認(事業).png",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "libus6m4xz2r",
+      "name": "App／誤受信防止措置②_アニメ",
+      "folder": "",
+      "file": "screen-images/App／誤受信防止措置②_アニメ.gif",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "libv5cs8783c",
+      "name": "J／新規①　利用規約",
+      "folder": "",
+      "file": "screen-images/J／新規①　利用規約.gif",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "libvhz1z16mg",
+      "name": "S／コード入力(事業)",
+      "folder": "",
+      "file": "screen-images/S／コード入力(事業).png",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "libvi254w795",
+      "name": "S／ログイン",
+      "folder": "",
+      "file": "screen-images/S／ログイン.png",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "libvldnalfwf",
+      "name": "J／トップ",
+      "folder": "",
+      "file": "screen-images/J／トップ.png",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "libvouj0dn8o",
+      "name": "S／プロファイル管理　※初回作成完了",
+      "folder": "",
+      "file": "screen-images/S／プロファイル管理　※初回作成完了.gif",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "libvzzisub62",
+      "name": "S／移行③　認証コード送信先選択",
+      "folder": "",
+      "file": "screen-images/S／移行③　認証コード送信先選択.png",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "libws5gu4dxq",
+      "name": "ご利用情報の初期化(事業) ①",
+      "folder": "",
+      "file": "screen-images/ご利用情報の初期化(事業) ①.png",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "libwsfbzpns8",
+      "name": "NHKONE　メニュー②",
+      "folder": "",
+      "file": "screen-images/NHKONE　メニュー②.png",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "libx2qn53wrv",
+      "name": "S／プロファイル追加",
+      "folder": "",
+      "file": "screen-images/S／プロファイル追加.gif",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "libxgrif8ioy",
+      "name": "S／コード入力勧奨(事業)",
+      "folder": "",
+      "file": "screen-images/S／コード入力勧奨(事業).jpg",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "libybt7q3s81",
+      "name": "TV／（どこで表示されるか不明）利用規約",
+      "folder": "",
+      "file": "screen-images/TV／（どこで表示されるか不明）利用規約.png",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "libyijn5wob5",
+      "name": "オアシス／内容確認",
+      "folder": "",
+      "file": "screen-images/オアシス／内容確認.png",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "libyjhpj6ogj",
+      "name": "S／トップ　※ログイン済",
+      "folder": "",
+      "file": "screen-images/S／トップ　※ログイン済.png",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "libyu09oaa38",
       "name": "S／新規⑦　内容確認(世帯)",
       "folder": "",
       "file": "screen-images/S／新規⑦　内容確認(世帯).gif",
@@ -1349,10 +1122,37 @@ window.APP_SCREEN_DATA = {
       "hsLinkFrom": null
     },
     {
-      "id": "libzyfyg64bb",
-      "name": "［Web］NHKONE メニュー ⑴",
+      "id": "libyujxrgcm9",
+      "name": "S／トップ　※アカウントレス",
       "folder": "",
-      "file": "screen-images/［Web］NHKONE メニュー ⑴.png",
+      "file": "screen-images/S／トップ　※アカウントレス.png",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "libyyk62vjp5",
+      "name": "ご利用情報の初期化(世帯) ②",
+      "folder": "",
+      "file": "screen-images/ご利用情報の初期化(世帯) ②.png",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "libzhha8nzpc",
+      "name": "J／新規④　申請情報確認",
+      "folder": "",
+      "file": "screen-images/J／新規④　申請情報確認.png",
+      "note": "",
+      "hotspots": [],
+      "hsLinkFrom": null
+    },
+    {
+      "id": "libzz3km2sg1",
+      "name": "J／新規⑦　パスワード設定",
+      "folder": "",
+      "file": "screen-images/J／新規⑦　パスワード設定.png",
       "note": "",
       "hotspots": [],
       "hsLinkFrom": null
@@ -1360,948 +1160,1403 @@ window.APP_SCREEN_DATA = {
   ],
   "patterns": [
     {
-      "id": "scse36dmvu",
-      "name": "パターン1",
+      "id": "sc34yfpxtz",
+      "name": "スマホアプリ経由のアカウント登録導線",
       "screens": [
         {
-          "id": "scyp2u9tus",
-          "name": "［App］登録１.誤受信防止措置",
+          "id": "scyw2y5vn3",
+          "name": "App／誤受信防止措置①",
           "note": "",
-          "imageSrc": "lib:libxjpe5e5uo",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:libbndq5zvrw"
         },
         {
-          "id": "sc8cy39z9i",
-          "name": "［App］登録２.誤受信防止措置_アニメ",
+          "id": "scbvyck1v2",
+          "name": "App／誤受信防止措置②_アニメ",
           "note": "",
-          "imageSrc": "lib:libxffiuyi2w",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:libus6m4xz2r"
         },
         {
-          "id": "sc3ed6zl0a",
-          "name": "［App］登録３.誤受信防止措置 ①世帯",
+          "id": "scn37xqq1z",
+          "name": "App／誤受信防止措置③(世帯)",
           "note": "",
-          "imageSrc": "lib:lib26mm7q7s4",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:libtk6sdtyyd"
         },
         {
-          "id": "sczq51jy9o",
-          "name": "［App］登録３.誤受信防止措置 ②事業",
+          "id": "sc5t2tio8z",
+          "name": "App／トップ　※未ログイン",
           "note": "",
-          "imageSrc": "lib:liba2jw5nvae",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:libgbsnj2l1e"
         },
         {
-          "id": "scaew7upmw",
-          "name": "［App］登録３.誤受信防止措置 ③学校",
+          "id": "scvmbhs03t",
+          "name": "App／設定　※未ログイン",
           "note": "",
-          "imageSrc": "lib:libr2io2gomb",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:libjzb2vmcso"
         },
         {
-          "id": "sc4bgobai0",
-          "name": "［App］登録４.アカウントレス",
+          "id": "scabbt7hug",
+          "name": "App／アプリ出口",
           "note": "",
-          "imageSrc": "lib:libgarzzdx3b",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:liblas5b3uq1"
         },
         {
-          "id": "scjhetp0gl",
-          "name": "［App］登録５.設定 ※未ログイン",
+          "id": "sc7lk55kiy",
+          "name": "App／AppStoreモーダル",
           "note": "",
-          "imageSrc": "lib:libuywd0zx62",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:libcpah4s9ts"
         },
         {
-          "id": "sc0fhk60sg",
-          "name": "［App］登録６.アプリ出口",
-          "note": "",
-          "imageSrc": "lib:libsz88j0wln",
-          "hotspots": []
-        },
-        {
-          "id": "scdzeamlt3",
-          "name": "［App］登録７.AppStoreモーダル",
-          "note": "",
-          "imageSrc": "lib:libktht1m2gh",
-          "hotspots": []
-        },
-        {
-          "id": "sc05jqvp98",
+          "id": "sc048qwcmi",
           "name": "アカウント関連の操作",
           "note": "",
-          "imageSrc": "lib:libt5z4fei96",
-          "hotspots": []
-        },
+          "hotspots": [],
+          "imageSrc": "lib:libcqy87dq90"
+        }
+      ]
+    },
+    {
+      "id": "scxwq7xkw1",
+      "name": "TVアプリ経由のアカウント登録導線",
+      "screens": [
         {
-          "id": "sco3kqrz95",
-          "name": "［TV］（どこで表示されるか不明）プラポリ",
+          "id": "scu0532a7s",
+          "name": "TV／（どこで表示されるか不明）利用規約",
           "note": "",
-          "imageSrc": "lib:libo5csh872s",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:libybt7q3s81"
         },
         {
-          "id": "sci11kwwa4",
-          "name": "［TV］（どこで表示されるか不明）利用規約",
+          "id": "scdsbpaxzw",
+          "name": "TV／（どこで表示されるか不明）プラポリ",
           "note": "",
-          "imageSrc": "lib:lib404e99dnd",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:libe1dfadlf2"
         },
         {
-          "id": "scqp2clcbh",
-          "name": "［TV］１.誤受信防止措置",
+          "id": "scnzvyt65q",
+          "name": "TV／誤受信防止措置",
           "note": "",
-          "imageSrc": "lib:librxolo2zn7",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:lib8nkwlgvqa"
         },
         {
-          "id": "scaszlgt9l",
-          "name": "［TV］２.用途の選択",
+          "id": "scgokf1cx2",
+          "name": "TV／用途の選択(世帯)",
           "note": "",
-          "imageSrc": "lib:librq8i0dhv4",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:lib6ck3i9qws"
         },
         {
-          "id": "scnqrhsunc",
-          "name": "［TV］３.地域の選択",
+          "id": "scwlha18bh",
+          "name": "TV／地域の選択",
           "note": "",
-          "imageSrc": "lib:libbcx6nvwwq",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:lib9dkiqpndp"
         },
         {
-          "id": "scs0kva0mu",
-          "name": "［TV］４.入力内容の確認 ①世帯",
+          "id": "sc9dref72w",
+          "name": "TV／入力内容の確認(世帯)",
           "note": "",
-          "imageSrc": "lib:liblmpljwb64",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:libaq203r7op"
         },
         {
-          "id": "sc7mc5dmbh",
-          "name": "［TV］４.入力内容の確認 ②事業",
+          "id": "scdu76v97z",
+          "name": "TV／トップ",
           "note": "",
-          "imageSrc": "lib:libxxye275ig",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:lib6hbmbmjlm"
         },
         {
-          "id": "scgvy4awz3",
-          "name": "［TV］５.コード入力 ②事業",
+          "id": "scdx3php6n",
+          "name": "TV／ログイン",
           "note": "",
-          "imageSrc": "lib:lib0pxgnqw6e",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:libc4jtcldbr"
         },
         {
-          "id": "sceer5dyak",
-          "name": "［TV］５.メニュー",
+          "id": "scv2l8abas",
+          "name": "TV／アカウントについて",
           "note": "",
-          "imageSrc": "lib:libjrcw658uh",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:lib53n0n78bu"
         },
         {
-          "id": "scovxk0axa",
-          "name": "［TV］６.キー入力 ②事業",
+          "id": "scvpt49o0y",
+          "name": "アカウント関連の操作",
           "note": "",
-          "imageSrc": "lib:libl0o105eq8",
-          "hotspots": []
-        },
+          "hotspots": [],
+          "imageSrc": "lib:libcqy87dq90"
+        }
+      ]
+    },
+    {
+      "id": "scwnqafkz4",
+      "name": "【世帯】アカウント登録導線（移行）",
+      "screens": [
         {
-          "id": "scucfmjzab",
-          "name": "［TV］６.ログイン",
-          "note": "",
-          "imageSrc": "lib:libyhy0nknlr",
-          "hotspots": []
-        },
-        {
-          "id": "sc5a74zvzg",
-          "name": "［TV］７.アカウントについて",
-          "note": "",
-          "imageSrc": "lib:libkbwnanuk2",
-          "hotspots": []
-        },
-        {
-          "id": "schuw4fic6",
-          "name": "［TV］７.スマホ連携",
-          "note": "",
-          "imageSrc": "lib:lib4xo73d35p",
-          "hotspots": []
-        },
-        {
-          "id": "scg4vb2432",
-          "name": "［TV］７.登録完了 ②事業",
-          "note": "",
-          "imageSrc": "lib:libb2zrg4xly",
-          "hotspots": []
-        },
-        {
-          "id": "scfpq5eqkz",
-          "name": "［TV］８.プロファイル選択",
-          "note": "",
-          "imageSrc": "lib:lib4km1plpc6",
-          "hotspots": []
-        },
-        {
-          "id": "scxp5vynfq",
-          "name": "［TV］９.トップ",
-          "note": "",
-          "imageSrc": "lib:libxgcsfqlnd",
-          "hotspots": []
-        },
-        {
-          "id": "scw6v8co8o",
+          "id": "sc3qlqurut",
           "name": "Info／トップ",
           "note": "",
-          "imageSrc": "lib:lib9e97wgxvw",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:libi337pzlpr"
         },
         {
-          "id": "scnrenuklc",
-          "name": "J／トップ",
+          "id": "sc7nk87xyu",
+          "name": "S／誤受信防止措置①",
           "note": "",
-          "imageSrc": "lib:libdml2a13ja",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:librypp06q4z"
         },
         {
-          "id": "scrxxig193",
-          "name": "J／新規①　利用規約",
+          "id": "scx1nf7axo",
+          "name": "S／誤受信防止措置②(世帯)",
           "note": "",
-          "imageSrc": "lib:lib24hungl0x",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:libqzefhg1fb"
         },
         {
-          "id": "schbpyre21",
-          "name": "J／新規⑩　認証通知設定",
+          "id": "scpdsj5d4w",
+          "name": "S／トップ　※アカウントレス",
           "note": "",
-          "imageSrc": "lib:libshjz0b3mc",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:libyujxrgcm9"
         },
         {
-          "id": "scfed769rg",
-          "name": "J／新規⑪　マイページ",
-          "note": "",
-          "imageSrc": "lib:libkyhn5z69x",
-          "hotspots": []
-        },
-        {
-          "id": "scp43tbf24",
-          "name": "J／新規②　確認コード ※メール",
-          "note": "",
-          "imageSrc": "lib:libf1i5cr5fd",
-          "hotspots": []
-        },
-        {
-          "id": "sch4dg3qi5",
-          "name": "J／新規③　申請情報入力",
-          "note": "",
-          "imageSrc": "lib:libd5zv911ca",
-          "hotspots": []
-        },
-        {
-          "id": "sc1mijzu4t",
-          "name": "J／新規④　申請情報確認",
-          "note": "",
-          "imageSrc": "lib:lib201ptqfy4",
-          "hotspots": []
-        },
-        {
-          "id": "scybmlquww",
-          "name": "J／新規⑤　申請完了",
-          "note": "",
-          "imageSrc": "lib:libo9ncwoe3k",
-          "hotspots": []
-        },
-        {
-          "id": "scq31udgye",
-          "name": "J／新規⑥　初回ログイン",
-          "note": "",
-          "imageSrc": "lib:lib6mmgrhl36",
-          "hotspots": []
-        },
-        {
-          "id": "scsw868s6e",
-          "name": "J／新規⑦　パスワード設定",
-          "note": "",
-          "imageSrc": "lib:libssidw02jt",
-          "hotspots": []
-        },
-        {
-          "id": "scr2q154b6",
-          "name": "J／新規⑧　認証用携帯電話番号設定",
-          "note": "",
-          "imageSrc": "lib:libcp97ui6h3",
-          "hotspots": []
-        },
-        {
-          "id": "scu0lanhgh",
-          "name": "J／新規⑨　確認コード ※SMS",
-          "note": "",
-          "imageSrc": "lib:libn2nhmc2fk",
-          "hotspots": []
-        },
-        {
-          "id": "sc09xk4jxe",
+          "id": "scj001lf03",
           "name": "S／アカウントの登録にあたって",
           "note": "",
-          "imageSrc": "lib:lib6vcf2nmnz",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:libh1vqe57ef"
         },
         {
-          "id": "scisi2zogp",
-          "name": "S／アカウント設定 ※未連携",
-          "note": "",
-          "imageSrc": "lib:lib9a5asse9m",
-          "hotspots": []
-        },
-        {
-          "id": "scix63ueai",
-          "name": "S／アカウント設定 ※連携済",
-          "note": "",
-          "imageSrc": "lib:libxrv6yna1o",
-          "hotspots": []
-        },
-        {
-          "id": "scd4mkqhv0",
-          "name": "S／アカウント設定(事業)",
-          "note": "",
-          "imageSrc": "lib:libyw8255o5v",
-          "hotspots": []
-        },
-        {
-          "id": "sc2n3i9kyz",
-          "name": "S／コード入力(学校)",
-          "note": "",
-          "imageSrc": "lib:libjx704hirz",
-          "hotspots": []
-        },
-        {
-          "id": "sc16zt8l9p",
-          "name": "S／コード入力(事業)",
-          "note": "",
-          "imageSrc": "lib:lib0mvso2zu3",
-          "hotspots": []
-        },
-        {
-          "id": "sc82y3mems",
-          "name": "S／トップ ※アカウントレス",
-          "note": "",
-          "imageSrc": "lib:libk4rt596dn",
-          "hotspots": []
-        },
-        {
-          "id": "scrvv13975",
-          "name": "S／トップ ※コード入力勧奨(学校)",
-          "note": "",
-          "imageSrc": "lib:libkov3bjouz",
-          "hotspots": []
-        },
-        {
-          "id": "sct8i2m2n1",
-          "name": "S／トップ ※コード入力勧奨(事業)",
-          "note": "",
-          "imageSrc": "lib:libmzaxcuyip",
-          "hotspots": []
-        },
-        {
-          "id": "sckp5s7u8p",
-          "name": "S／プロファイル／編集　2秒ループ",
-          "note": "",
-          "imageSrc": "lib:libpvbi12jeg",
-          "hotspots": []
-        },
-        {
-          "id": "scccqyqxj2",
-          "name": "S／プロファイル管理 ※初回作成完了",
-          "note": "",
-          "imageSrc": "lib:lib9bqnfkq1r",
-          "hotspots": []
-        },
-        {
-          "id": "scqao7ir5w",
-          "name": "S／プロファイル選択 ※初回",
-          "note": "",
-          "imageSrc": "lib:lib2k5s42h1q",
-          "hotspots": []
-        },
-        {
-          "id": "sclq9n79m3",
-          "name": "S／プロファイル追加",
-          "note": "",
-          "imageSrc": "lib:libcwrkyvkbf",
-          "hotspots": []
-        },
-        {
-          "id": "scydx1b625",
-          "name": "S／ログイン",
-          "note": "",
-          "imageSrc": "lib:libady526q4m",
-          "hotspots": []
-        },
-        {
-          "id": "scsc91md6x",
+          "id": "sczl5v4sr4",
           "name": "S／移行①　移行手続きをされる方へ",
           "note": "",
-          "imageSrc": "lib:lib051mfhiyt",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:libcibgb98tk"
         },
         {
-          "id": "scrgcb7mwn",
+          "id": "sccqqlraep",
           "name": "S／移行②　メアド入力",
           "note": "",
-          "imageSrc": "lib:libgs5q22kqs",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:lib9xtif9dia"
         },
         {
-          "id": "sc2pgyqg7t",
+          "id": "scfwnb7cmv",
           "name": "S／移行③　認証コード送信先選択",
           "note": "",
-          "imageSrc": "lib:lib8sr7kbghi",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:libvzzisub62"
         },
         {
-          "id": "scxtwv5pvu",
+          "id": "scgpeny7ht",
           "name": "S／移行④　認証コード入力",
           "note": "",
-          "imageSrc": "lib:libk1hnz9elx",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:lib4qexnqyzn"
         },
         {
-          "id": "scg0l9c0mq",
+          "id": "sc4t32lvdm",
           "name": "S／移行⑤　パスワード設定",
           "note": "",
-          "imageSrc": "lib:libjrsqgpxre",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:lib4pvj0ozj5"
         },
         {
-          "id": "sc01sqbb4y",
+          "id": "scm1yio5tt",
           "name": "S／移行⑥　登録完了",
           "note": "",
-          "imageSrc": "lib:lib8wa284lam",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:libqdtnl03rx"
         },
         {
-          "id": "sc08td8vek",
-          "name": "S／誤受信防止措置１",
+          "id": "scx1gxzi1e",
+          "name": "S／ログイン",
           "note": "",
-          "imageSrc": "lib:libnvznxje61",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:libvi254w795"
         },
         {
-          "id": "sck6l2tn0j",
-          "name": "S／誤受信防止措置２(学校)",
+          "id": "sce69rfc44",
+          "name": "S／プロファイル選択　※初回",
           "note": "",
-          "imageSrc": "lib:libm1n8wocc7",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:libtw6r663ke"
         },
         {
-          "id": "sccr61dy56",
-          "name": "S／誤受信防止措置２(事業)",
+          "id": "sctal2clg0",
+          "name": "S／プロファイル追加",
           "note": "",
-          "imageSrc": "lib:lib8q6shq26k",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:libx2qn53wrv"
         },
         {
-          "id": "sc2ajuuci5",
-          "name": "S／誤受信防止措置２(世帯)",
+          "id": "sc5hqauuhr",
+          "name": "S／プロファイル管理　※初回作成完了",
           "note": "",
-          "imageSrc": "lib:libgd3xuf0al",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:libvouj0dn8o"
         },
         {
-          "id": "sco1w80gik",
-          "name": "S／受信契約の確認",
+          "id": "scrjn92u67",
+          "name": "S／アカウント設定　※連携済",
           "note": "",
-          "imageSrc": "lib:liby25b2pqsa",
-          "hotspots": []
-        },
+          "hotspots": [],
+          "imageSrc": "lib:lib9zolb7jk3"
+        }
+      ]
+    },
+    {
+      "id": "sc994w016x",
+      "name": "【世帯】アカウント登録導線（新規）",
+      "screens": [
         {
-          "id": "sch9ev6njk",
-          "name": "S／新規①　用途と地域の選択(学校)",
+          "id": "scosuaccfg",
+          "name": "Info／トップ",
           "note": "",
-          "imageSrc": "lib:libvd26b1woe",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:libi337pzlpr"
         },
         {
-          "id": "sc9gj5v877",
-          "name": "S／新規①　用途と地域の選択(事業)",
+          "id": "scie8uscpz",
+          "name": "S／誤受信防止措置①",
           "note": "",
-          "imageSrc": "lib:librr0evkt56",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:librypp06q4z"
         },
         {
-          "id": "sc1n2xcxc9",
+          "id": "scjoul4si0",
+          "name": "S／誤受信防止措置②(世帯)",
+          "note": "",
+          "hotspots": [],
+          "imageSrc": "lib:libqzefhg1fb"
+        },
+        {
+          "id": "sc4fe80g4w",
+          "name": "S／トップ　※アカウントレス",
+          "note": "",
+          "hotspots": [],
+          "imageSrc": "lib:libyujxrgcm9"
+        },
+        {
+          "id": "sc5jhwp2ar",
+          "name": "S／アカウント登録の前に",
+          "note": "",
+          "hotspots": [],
+          "imageSrc": "lib:liblj48pkhic"
+        },
+        {
+          "id": "scmzz335yb",
+          "name": "S／アカウントの登録にあたって",
+          "note": "",
+          "hotspots": [],
+          "imageSrc": "lib:libh1vqe57ef"
+        },
+        {
+          "id": "scf59vx1rg",
           "name": "S／新規①　用途と地域の選択(世帯)",
           "note": "",
-          "imageSrc": "lib:libsb0pztn70",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:lib00qc5ch7b"
         },
         {
-          "id": "scay00w1ho",
+          "id": "scwexet7w8",
           "name": "S／新規②　利用規約",
           "note": "",
-          "imageSrc": "lib:libzfox5wm84",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:lib2cpd0e4ag"
         },
         {
-          "id": "sc8zh4r9d4",
-          "name": "S／新規③　プラポリ(事業,学校)",
-          "note": "",
-          "imageSrc": "lib:libs4qrkhj4l",
-          "hotspots": []
-        },
-        {
-          "id": "scltjm5p9q",
+          "id": "scrcoqpgbn",
           "name": "S／新規③　プラポリ(世帯)",
           "note": "",
-          "imageSrc": "lib:libjz0gp556x",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:libt3t11k284"
         },
         {
-          "id": "sc12mypc8l",
+          "id": "scoiit3jpj",
           "name": "S／新規④　メアド入力",
           "note": "",
-          "imageSrc": "lib:libuk7o5plbo",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:libqyyxhmssi"
         },
         {
-          "id": "scwi4uqjdg",
+          "id": "scpla9hjf6",
           "name": "S／新規④　認証コード入力",
           "note": "",
-          "imageSrc": "lib:libqwd7ulo7s",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:lib3ggu7vz8s"
         },
         {
-          "id": "sc02gwzd7g",
+          "id": "scs3u0y7db",
           "name": "S／新規⑤　パスワード設定",
           "note": "",
-          "imageSrc": "lib:libopbfe00qs",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:lib5alhqcjry"
         },
         {
-          "id": "scicjk39ak",
+          "id": "sc4h13qgjl",
           "name": "S／新規⑥　ログインID設定",
           "note": "",
-          "imageSrc": "lib:librhvkvo2k2",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:libacf1lih9y"
         },
         {
-          "id": "scnfpomv8x",
-          "name": "S／新規⑦　内容確認(学校)",
-          "note": "",
-          "imageSrc": "lib:libayz3n8qsq",
-          "hotspots": []
-        },
-        {
-          "id": "scatd35d64",
-          "name": "S／新規⑦　内容確認(事業)",
-          "note": "",
-          "imageSrc": "lib:libstvfxtucy",
-          "hotspots": []
-        },
-        {
-          "id": "schqa61v2n",
+          "id": "scn8w0ea2y",
           "name": "S／新規⑦　内容確認(世帯)",
           "note": "",
-          "imageSrc": "lib:libzojz3sqju",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:libyu09oaa38"
         },
         {
-          "id": "sc5z08m8dy",
-          "name": "S／新規⑧　登録完了(学校)",
-          "note": "",
-          "imageSrc": "lib:libxt91sx21q",
-          "hotspots": []
-        },
-        {
-          "id": "scts7v98mp",
-          "name": "S／新規⑧　登録完了(事業)",
-          "note": "",
-          "imageSrc": "lib:lib5ap9ic9x3",
-          "hotspots": []
-        },
-        {
-          "id": "scvzx7xm7z",
+          "id": "scl2mew2tz",
           "name": "S／新規⑧　登録完了(世帯)",
           "note": "",
-          "imageSrc": "lib:libw6d7i4s52",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:libna76ie8xb"
         },
         {
-          "id": "sc8mtwwx85",
-          "name": "オアシス①　利用規約",
+          "id": "sce0w1lyu0",
+          "name": "S／プロファイル選択　※初回",
           "note": "",
-          "imageSrc": "lib:libgnfkit2r2",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:libtw6r663ke"
         },
         {
-          "id": "sconpo0bbp",
-          "name": "オアシス②　情報入力",
+          "id": "scvsfp4dgl",
+          "name": "S／プロファイル追加",
           "note": "",
-          "imageSrc": "lib:lib4z63s86wu",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:libx2qn53wrv"
         },
         {
-          "id": "sc8ztqvjny",
-          "name": "オアシス③　内容確認",
+          "id": "scj97g7idb",
+          "name": "S／プロファイル管理　※初回作成完了",
           "note": "",
-          "imageSrc": "lib:lib99y6ypyk9",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:libvouj0dn8o"
         },
         {
-          "id": "schwuz9zz2",
-          "name": "オアシス④　登録完了",
+          "id": "sc39hrulik",
+          "name": "S／アカウント設定　※未連携",
           "note": "",
-          "imageSrc": "lib:lib63wdjgu4j",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:lib8cfvphoei"
         },
         {
-          "id": "sclnq6q1q9",
-          "name": "［Web］事業　アカウント管理",
+          "id": "scw7k41t4t",
+          "name": "S／受信契約の確認",
           "note": "",
-          "imageSrc": "lib:lib0zovn338z",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:libiknmopjzo"
         },
         {
-          "id": "scfwygpbx3",
-          "name": "［Web］事業　アカウント削除🟥",
+          "id": "scj163d9gz",
+          "name": "J／トップ",
           "note": "",
-          "imageSrc": "lib:libbgc949hxr",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:libvldnalfwf"
         },
         {
-          "id": "scyphbyoog",
-          "name": "［Web］事業　アカウント情報 ⑴",
+          "id": "scevaog0lu",
+          "name": "J／新規①　利用規約",
           "note": "",
-          "imageSrc": "lib:libf6vrvqh1z",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:libv5cs8783c"
         },
         {
-          "id": "sclo75v4dw",
-          "name": "［Web］事業　アカウント情報 ⑵",
+          "id": "sciunbvkby",
+          "name": "J／新規②　確認コード　※メール",
           "note": "",
-          "imageSrc": "lib:libkdg6p1i4z",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:lib4ansa8uon"
         },
         {
-          "id": "scbydx8tqy",
-          "name": "［Web］事業　パスワードの変更",
+          "id": "scohz65e60",
+          "name": "J／新規③　申請情報入力",
           "note": "",
-          "imageSrc": "lib:libtmaealtyt",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:libca2vyynbj"
         },
         {
-          "id": "scceb9ig9t",
-          "name": "［Web］事業　ログインIDの変更",
+          "id": "scmifezu9b",
+          "name": "J／新規④　申請情報確認",
           "note": "",
-          "imageSrc": "lib:libwgx74bmqm",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:libzhha8nzpc"
         },
         {
-          "id": "sc7bdpq297",
-          "name": "［Web］事業　携帯電話番号の変更",
+          "id": "sccx1jrlnl",
+          "name": "J／新規⑤　申請完了",
           "note": "",
-          "imageSrc": "lib:libwygz84grk",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:lib2xvwdwvdg"
         },
         {
-          "id": "sc8jcsi61k",
-          "name": "［Web］事業　復旧用メールアドレスの変更",
+          "id": "scgxtxetj9",
+          "name": "J／新規⑥　初回ログイン",
           "note": "",
-          "imageSrc": "lib:libea64v5yc6",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:libtqj664ivo"
         },
         {
-          "id": "scfc0vyim6",
-          "name": "S／事業所コード・確認キーの管理 ※発行後",
+          "id": "scili6weeg",
+          "name": "J／新規⑦　パスワード設定",
           "note": "",
-          "imageSrc": "lib:libqh67q9tns",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:libzz3km2sg1"
         },
         {
-          "id": "scw5bp8jnb",
-          "name": "S／事業所コード・確認キーの管理 ※未取得",
+          "id": "sci857osvd",
+          "name": "J／新規⑧　認証用携帯電話番号設定",
           "note": "",
-          "imageSrc": "lib:libuwi4x5tev",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:libu6hf0xerw"
         },
         {
-          "id": "sc7ezy7633",
-          "name": "［Web］世帯　アカウントの削除 ⑵",
+          "id": "sccinr0ue7",
+          "name": "J／新規⑨　確認コード　※SMS",
           "note": "",
-          "imageSrc": "lib:libddbt2y4ga",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:libkfu9i998r"
         },
         {
-          "id": "scrqefmf3l",
-          "name": "［Web］世帯　アカウントの削除 ⑶",
+          "id": "sci1zd5zuu",
+          "name": "J／新規⑩　認証通知設定",
           "note": "",
-          "imageSrc": "lib:libarjnojlqu",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:lib6yzuqzrcp"
         },
         {
-          "id": "sc11g0j1ye",
-          "name": "［Web］世帯　アカウント情報 ⑴",
+          "id": "sc5nwwxlf9",
+          "name": "J／新規⑪　マイページ",
           "note": "",
-          "imageSrc": "lib:librhc2ekt15",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:lib02tgo52l3"
         },
         {
-          "id": "sc5qogv8zz",
-          "name": "［Web］世帯(新規)　連携結果 ⑴",
+          "id": "sc373ny1v0",
+          "name": "S／受信契約の確認",
           "note": "",
-          "imageSrc": "lib:libfhhsfl1ye",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:libiknmopjzo"
         },
         {
-          "id": "sc4xyqm2fj",
-          "name": "［Web］世帯(新規)　連携結果 ⑵",
-          "note": "",
-          "imageSrc": "lib:libb2ksu83ov",
-          "hotspots": []
-        },
-        {
-          "id": "sc58chnkpq",
-          "name": "［Web］世帯(新規)　連携結果 ⑶",
-          "note": "",
-          "imageSrc": "lib:lib2vx2feweq",
-          "hotspots": []
-        },
-        {
-          "id": "scn3e4rk3h",
-          "name": "［Web］復旧用メールアドレスの変更",
-          "note": "",
-          "imageSrc": "lib:libx2ghln4fj",
-          "hotspots": []
-        },
-        {
-          "id": "sc6pty6qg8",
-          "name": "S／世帯／Jアカとの連携解除 ⑴",
-          "note": "",
-          "imageSrc": "lib:lib1kvwo1aek",
-          "hotspots": []
-        },
-        {
-          "id": "scxy0xz6tb",
-          "name": "S／世帯／Jアカとの連携解除 ⑵",
-          "note": "",
-          "imageSrc": "lib:libhz2kljo4x",
-          "hotspots": []
-        },
-        {
-          "id": "sc5wraa756",
-          "name": "S／世帯／アカウントの削除 ⑴",
-          "note": "",
-          "imageSrc": "lib:libvo7nixbmh",
-          "hotspots": []
-        },
-        {
-          "id": "scqy9f8qja",
-          "name": "アカウントプライバシーノーティス",
-          "note": "",
-          "imageSrc": "lib:libl7qhk6xcx",
-          "hotspots": []
-        },
-        {
-          "id": "sc4zthomta",
-          "name": "アカウント管理",
-          "note": "",
-          "imageSrc": "lib:libxfcz16ay0",
-          "hotspots": []
-        },
-        {
-          "id": "sc6m8izuq9",
-          "name": "アカウント情報",
-          "note": "",
-          "imageSrc": "lib:libaomhiaj6x",
-          "hotspots": []
-        },
-        {
-          "id": "scheg3sorw",
-          "name": "アカウント設定 ※プロファイル未作成,未連携",
-          "note": "",
-          "imageSrc": "lib:libo05l6pisk",
-          "hotspots": []
-        },
-        {
-          "id": "scknbknzeb",
-          "name": "アカウント設定 ※再連携が必要です",
-          "note": "",
-          "imageSrc": "lib:libu1l7u3r2m",
-          "hotspots": []
-        },
-        {
-          "id": "sclf6lqc91",
-          "name": "アカウント登録の前に",
-          "note": "",
-          "imageSrc": "lib:libdm33h1tha",
-          "hotspots": []
-        },
-        {
-          "id": "scf9hvi5xm",
-          "name": "お住まいの地域",
-          "note": "",
-          "imageSrc": "lib:libbb9cdr9em",
-          "hotspots": []
-        },
-        {
-          "id": "sc955slgrf",
-          "name": "コード入力（入力のための条件を満たしていません）",
-          "note": "",
-          "imageSrc": "lib:libfnyedipzl",
-          "hotspots": []
-        },
-        {
-          "id": "scdf0mk04u",
-          "name": "パスワードの変更",
-          "note": "",
-          "imageSrc": "lib:libqhzfk26db",
-          "hotspots": []
-        },
-        {
-          "id": "scuulwlf0q",
-          "name": "プロファイル管理",
-          "note": "",
-          "imageSrc": "lib:lib66nuuppm2",
-          "hotspots": []
-        },
-        {
-          "id": "scxpqk4eo9",
-          "name": "メールアドレスの変更",
-          "note": "",
-          "imageSrc": "lib:liby3w759npo",
-          "hotspots": []
-        },
-        {
-          "id": "sc551n95nl",
-          "name": "メールアドレスをお忘れの方 ⑴",
-          "note": "",
-          "imageSrc": "lib:libogpfxg07h",
-          "hotspots": []
-        },
-        {
-          "id": "scrayloixn",
-          "name": "ログインIDの変更",
-          "note": "",
-          "imageSrc": "lib:lib83s3j2rmg",
-          "hotspots": []
-        },
-        {
-          "id": "scyd1tn1rr",
-          "name": "携帯電話番号の変更",
-          "note": "",
-          "imageSrc": "lib:lib64v5god71",
-          "hotspots": []
-        },
-        {
-          "id": "scv5vza26d",
-          "name": "利用しない",
-          "note": "",
-          "imageSrc": "lib:libt5ukywp6f",
-          "hotspots": []
-        },
-        {
-          "id": "scvqw3kmaj",
-          "name": "連携解除失敗",
-          "note": "",
-          "imageSrc": "lib:libo4gnszn8r",
-          "hotspots": []
-        },
-        {
-          "id": "scv24wwpa3",
+          "id": "sc05j0x9oq",
           "name": "連携ログイン",
           "note": "",
-          "imageSrc": "lib:libhh2yxcdm7",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:libkmc89bcpx"
         },
         {
-          "id": "scuzklqk4x",
-          "name": "［Web］ご利用情報の初期化（完了）",
+          "id": "scexxgre81",
+          "name": "S／連携結果①",
           "note": "",
-          "imageSrc": "lib:lib1hi2uk4j1",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:libmtzwc8uhp"
         },
         {
-          "id": "sche2bw8xz",
-          "name": "［Web］ご利用情報の初期化（目的のページにはアクセスできません）",
+          "id": "scsqwfaa6q",
+          "name": "S／アカウント設定　※連携済",
           "note": "",
-          "imageSrc": "lib:libmvtwpi14x",
-          "hotspots": []
-        },
+          "hotspots": [],
+          "imageSrc": "lib:lib9zolb7jk3"
+        }
+      ]
+    },
+    {
+      "id": "scn8sa6bbz",
+      "name": "【事業】アカウント登録導線",
+      "screens": [
         {
-          "id": "sc8q31l1yd",
-          "name": "①世帯_ご利用情報の初期化（1）",
+          "id": "sc4707ievs",
+          "name": "Info／トップ",
           "note": "",
-          "imageSrc": "lib:libb5qwmxnv8",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:libi337pzlpr"
         },
         {
-          "id": "scyom212hv",
-          "name": "①世帯_ご利用情報の初期化（2）",
+          "id": "scl2rxlww6",
+          "name": "S／誤受信防止措置①",
           "note": "",
-          "imageSrc": "lib:libcm7wo75ki",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:librypp06q4z"
         },
         {
-          "id": "sc57w0tfyo",
-          "name": "［Web］NHKONEトップ ※ログイン中",
+          "id": "sc442ea7hq",
+          "name": "S／誤受信防止措置②(事業)",
           "note": "",
-          "imageSrc": "lib:lib7u5hovf1p",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:libddif2rj7g"
         },
         {
-          "id": "scnxxyxpbk",
-          "name": "［Web］NHKONE メニュー ⑴",
+          "id": "sck9ualdsf",
+          "name": "S／コード入力勧奨(事業)",
           "note": "",
-          "imageSrc": "lib:libzyfyg64bb",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:libxgrif8ioy"
         },
         {
-          "id": "scnyphpsnm",
-          "name": "［Web］NHKONE メニュー ⑵",
+          "id": "sckz6g0fzs",
+          "name": "S／トップ　※アカウントレス",
           "note": "",
-          "imageSrc": "lib:libggsc0425o",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:libyujxrgcm9"
         },
         {
-          "id": "scab8kx1jo",
-          "name": "［Web］インフォメーション メニュー ⑴",
+          "id": "scyphwnk9e",
+          "name": "S／アカウントの登録にあたって",
           "note": "",
-          "imageSrc": "lib:libu3gjefkch",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:libh1vqe57ef"
         },
         {
-          "id": "scy7g47uh2",
-          "name": "［Web］インフォメーション メニュー ⑵",
+          "id": "scn0d7bu3f",
+          "name": "S／新規①　用途と地域の選択(事業)",
           "note": "",
-          "imageSrc": "lib:librod8pbtwm",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:libkywq9i4ga"
         },
         {
-          "id": "sc95mdnnh4",
-          "name": "App,TV",
+          "id": "sc15ipk2rv",
+          "name": "S／新規②　利用規約",
           "note": "",
-          "imageSrc": "lib:libad60q9gdg",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:lib2cpd0e4ag"
         },
         {
-          "id": "scfn1s9yz3",
-          "name": "Web,App,TV",
+          "id": "sc34e40t85",
+          "name": "S／新規③　プラポリ(事業,学校)",
           "note": "",
-          "imageSrc": "lib:libvmllecf29",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:libsqt5nop2u"
         },
         {
-          "id": "scci1o8wsg",
-          "name": "ホワイトリスト",
+          "id": "sc1xo821aa",
+          "name": "S／新規④　メアド入力",
           "note": "",
-          "imageSrc": "lib:libs4nxf9uco",
-          "hotspots": []
+          "hotspots": [],
+          "imageSrc": "lib:libqyyxhmssi"
         },
         {
-          "id": "sc50dsr2i5",
+          "id": "sc59zis8rq",
+          "name": "S／新規④　認証コード入力",
+          "note": "",
+          "hotspots": [],
+          "imageSrc": "lib:lib3ggu7vz8s"
+        },
+        {
+          "id": "sc9bra243v",
+          "name": "S／新規⑤　パスワード設定",
+          "note": "",
+          "hotspots": [],
+          "imageSrc": "lib:lib5alhqcjry"
+        },
+        {
+          "id": "sc8kmhy1h0",
+          "name": "S／新規⑥　ログインID設定",
+          "note": "",
+          "hotspots": [],
+          "imageSrc": "lib:libacf1lih9y"
+        },
+        {
+          "id": "scyewj5u4g",
+          "name": "S／新規⑦　内容確認(事業)",
+          "note": "",
+          "hotspots": [],
+          "imageSrc": "lib:lib35chjius9"
+        },
+        {
+          "id": "scmf5obu3u",
+          "name": "S／新規⑧　登録完了(事業)",
+          "note": "",
+          "hotspots": [],
+          "imageSrc": "lib:libjhrsbcr3u"
+        },
+        {
+          "id": "scgetq4llf",
+          "name": "S／アカウント設定(事業)",
+          "note": "",
+          "hotspots": [],
+          "imageSrc": "lib:libi57h22lh9"
+        },
+        {
+          "id": "scat61lgul",
+          "name": "S／アカウント管理(事業)",
+          "note": "",
+          "hotspots": [],
+          "imageSrc": "lib:libg0o64gfbu"
+        },
+        {
+          "id": "scdtngzcmm",
+          "name": "S／アカウント情報①(事業)",
+          "note": "",
+          "hotspots": [],
+          "imageSrc": "lib:libcjl2r500d"
+        },
+        {
+          "id": "sc4q285fz8",
+          "name": "S／アカウント情報②(事業)",
+          "note": "",
+          "hotspots": [],
+          "imageSrc": "lib:librkaamnkll"
+        },
+        {
+          "id": "sc6pgg49af",
+          "name": "S／事業所コード・確認キーの管理　※未取得",
+          "note": "",
+          "hotspots": [],
+          "imageSrc": "lib:lib7tf5gz0m9"
+        },
+        {
+          "id": "scgx5szjh6",
+          "name": "オアシス／利用規約",
+          "note": "",
+          "hotspots": [],
+          "imageSrc": "lib:libscp3wgb89"
+        },
+        {
+          "id": "scmydna5cx",
+          "name": "オアシス／情報入力",
+          "note": "",
+          "hotspots": [],
+          "imageSrc": "lib:lib0zd0yybrc"
+        },
+        {
+          "id": "scbck5rdyu",
+          "name": "オアシス／内容確認",
+          "note": "",
+          "hotspots": [],
+          "imageSrc": "lib:libyijn5wob5"
+        },
+        {
+          "id": "scsvowavsb",
+          "name": "オアシス／登録完了",
+          "note": "",
+          "hotspots": [],
+          "imageSrc": "lib:librtg0hpzm1"
+        },
+        {
+          "id": "scb98c00vr",
+          "name": "S／事業所コード・確認キーの管理　※発行後",
+          "note": "",
+          "hotspots": [],
+          "imageSrc": "lib:libc1s0bnivl"
+        }
+      ]
+    },
+    {
+      "id": "scb9512r7r",
+      "name": "【事業】サービス利用開始導線",
+      "screens": [
+        {
+          "id": "scmvtqds3b",
+          "name": "Info／トップ",
+          "note": "",
+          "hotspots": [],
+          "imageSrc": "lib:libi337pzlpr"
+        },
+        {
+          "id": "sc58gol78r",
+          "name": "S／誤受信防止措置①",
+          "note": "",
+          "hotspots": [],
+          "imageSrc": "lib:librypp06q4z"
+        },
+        {
+          "id": "scvs6rtj6v",
+          "name": "S／誤受信防止措置②(事業)",
+          "note": "",
+          "hotspots": [],
+          "imageSrc": "lib:libddif2rj7g"
+        },
+        {
+          "id": "sc9m04ene8",
+          "name": "S／コード入力勧奨(事業)",
+          "note": "",
+          "hotspots": [],
+          "imageSrc": "lib:libxgrif8ioy"
+        },
+        {
+          "id": "sc9v509xd0",
+          "name": "S／トップ　※アカウントレス",
+          "note": "",
+          "hotspots": [],
+          "imageSrc": "lib:libyujxrgcm9"
+        },
+        {
+          "id": "scv3uqm9ro",
+          "name": "NHKONE　メニュー①",
+          "note": "",
+          "hotspots": [],
+          "imageSrc": "lib:libcnweok4by"
+        },
+        {
+          "id": "sck1bq6hwb",
+          "name": "NHKONE　メニュー②",
+          "note": "",
+          "hotspots": [],
+          "imageSrc": "lib:libwsfbzpns8"
+        },
+        {
+          "id": "scbsryug34",
+          "name": "S／コード入力(事業)",
+          "note": "",
+          "hotspots": [],
+          "imageSrc": "lib:libvhz1z16mg"
+        }
+      ]
+    },
+    {
+      "id": "schmmxbsvw",
+      "name": "【学校】アカウント登録導線",
+      "screens": [
+        {
+          "id": "sc77cx68w3",
           "name": "学校",
           "note": "",
-          "imageSrc": "lib:libj2cltf01j",
+          "hotspots": [],
+          "imageSrc": "lib:libo4xw6jlh0"
+        },
+        {
+          "id": "scen5vjau9",
+          "name": "Info／トップ",
+          "note": "",
+          "hotspots": [],
+          "imageSrc": "lib:libi337pzlpr"
+        },
+        {
+          "id": "scwirp6mh1",
+          "name": "S／誤受信防止措置①",
+          "note": "",
+          "hotspots": [],
+          "imageSrc": "lib:librypp06q4z"
+        },
+        {
+          "id": "scrww4vm3i",
+          "name": "S／誤受信防止措置②(学校)",
+          "note": "",
+          "hotspots": [],
+          "imageSrc": "lib:libqgx9aqj1q"
+        },
+        {
+          "id": "scvlpwncat",
+          "name": "S／コード入力勧奨(学校)",
+          "note": "",
+          "hotspots": [],
+          "imageSrc": "lib:libmr0m0bu1k"
+        },
+        {
+          "id": "scuodxr685",
+          "name": "S／トップ　※アカウントレス",
+          "note": "",
+          "hotspots": [],
+          "imageSrc": "lib:libyujxrgcm9"
+        },
+        {
+          "id": "scwgps1b5d",
+          "name": "S／アカウントの登録にあたって",
+          "note": "",
+          "hotspots": [],
+          "imageSrc": "lib:libh1vqe57ef"
+        },
+        {
+          "id": "scd4ja9tcb",
+          "name": "S／新規①　用途と地域の選択(学校)",
+          "note": "",
+          "hotspots": [],
+          "imageSrc": "lib:libs8kzjs6sk"
+        },
+        {
+          "id": "scd0odoz0u",
+          "name": "S／新規②　利用規約",
+          "note": "",
+          "hotspots": [],
+          "imageSrc": "lib:lib2cpd0e4ag"
+        },
+        {
+          "id": "scnkdi4cbv",
+          "name": "S／新規③　プラポリ(事業,学校)",
+          "note": "",
+          "hotspots": [],
+          "imageSrc": "lib:libsqt5nop2u"
+        },
+        {
+          "id": "scd9grg0kc",
+          "name": "S／新規④　メアド入力",
+          "note": "",
+          "hotspots": [],
+          "imageSrc": "lib:libqyyxhmssi"
+        },
+        {
+          "id": "scnea5ucnn",
+          "name": "S／新規④　認証コード入力",
+          "note": "",
+          "hotspots": [],
+          "imageSrc": "lib:lib3ggu7vz8s"
+        },
+        {
+          "id": "scwyuedwmk",
+          "name": "S／新規⑤　パスワード設定",
+          "note": "",
+          "hotspots": [],
+          "imageSrc": "lib:lib5alhqcjry"
+        },
+        {
+          "id": "scjbphxuh1",
+          "name": "S／新規⑥　ログインID設定",
+          "note": "",
+          "hotspots": [],
+          "imageSrc": "lib:libacf1lih9y"
+        },
+        {
+          "id": "scygxxbtny",
+          "name": "S／新規⑦　内容確認(学校)",
+          "note": "",
+          "hotspots": [],
+          "imageSrc": "lib:libnmm26dn1t"
+        },
+        {
+          "id": "scitccknyv",
+          "name": "S／新規⑧　登録完了(学校)",
+          "note": "",
+          "hotspots": [],
+          "imageSrc": "lib:libfv40o6zr1"
+        }
+      ]
+    },
+    {
+      "id": "scub1ker9k",
+      "name": "【学校】サービス利用開始導線",
+      "screens": [
+        {
+          "id": "scr3oo4hdj",
+          "name": "Info／トップ",
+          "note": "",
+          "hotspots": [],
+          "imageSrc": "lib:libi337pzlpr"
+        },
+        {
+          "id": "sc7ouak8d3",
+          "name": "S／誤受信防止措置①",
+          "note": "",
+          "hotspots": [],
+          "imageSrc": "lib:librypp06q4z"
+        },
+        {
+          "id": "sc9v7t6dyv",
+          "name": "S／誤受信防止措置②(学校)",
+          "note": "",
+          "hotspots": [],
+          "imageSrc": "lib:libqgx9aqj1q"
+        },
+        {
+          "id": "scl43xe5jj",
+          "name": "S／コード入力勧奨(学校)",
+          "note": "",
+          "hotspots": [],
+          "imageSrc": "lib:libmr0m0bu1k"
+        },
+        {
+          "id": "schf9uhqd1",
+          "name": "S／トップ　※アカウントレス",
+          "note": "",
+          "hotspots": [],
+          "imageSrc": "lib:libyujxrgcm9"
+        },
+        {
+          "id": "sce2cpjkbg",
+          "name": "NHKONE　メニュー①",
+          "note": "",
+          "hotspots": [],
+          "imageSrc": "lib:libcnweok4by"
+        },
+        {
+          "id": "sczqfo6m08",
+          "name": "NHKONE　メニュー②",
+          "note": "",
+          "hotspots": [],
+          "imageSrc": "lib:libwsfbzpns8"
+        },
+        {
+          "id": "scr18k6w88",
+          "name": "S／コード入力(学校)",
+          "note": "",
+          "hotspots": [],
+          "imageSrc": "lib:libknrv3dvvi"
+        }
+      ]
+    },
+    {
+      "id": "sconkigw98",
+      "name": "【学校】進級に伴うキー更新🟥",
+      "screens": []
+    },
+    {
+      "id": "scqtm72bid",
+      "name": "一時的な地域の変更",
+      "screens": [
+        {
+          "id": "sckob5e4lh",
+          "name": "S／トップ　※ログイン済",
+          "note": "",
+          "hotspots": [],
+          "imageSrc": "lib:libyjhpj6ogj"
+        },
+        {
+          "id": "sc2ut6wcf9",
+          "name": "🟥",
+          "note": "App／トップ ※ログイン済🟥",
+          "hotspots": [],
+          "imageSrc": "lib:libqrf7mmud0"
+        },
+        {
+          "id": "scns8x5q1m",
+          "name": "TV／トップ　※ログイン済",
+          "note": "",
+          "hotspots": [],
+          "imageSrc": "lib:lib4ibpqx5i4"
+        }
+      ]
+    },
+    {
+      "id": "scifuswjfq",
+      "name": "ログイン不可",
+      "screens": [
+        {
+          "id": "sc5npyiw6s",
+          "name": "S／ログイン",
+          "note": "",
+          "hotspots": [],
+          "imageSrc": "lib:libvi254w795"
+        },
+        {
+          "id": "sc5onbuonp",
+          "name": "S／メアド忘れ①",
+          "note": "",
+          "hotspots": [],
+          "imageSrc": "lib:lib449o6k1h9"
+        },
+        {
+          "id": "sc5h0nh9pe",
+          "name": "S／メアド忘れ②　認証コード入力🟥",
+          "note": "S／メアド忘れ②　認証コード入力🟥",
+          "hotspots": [],
+          "imageSrc": "lib:libqrf7mmud0"
+        },
+        {
+          "id": "scs2iiu9qv",
+          "name": "S／メアド忘れ③　新しいメアド入力🟥",
+          "note": "S／メアド忘れ③　新しいメアド入力🟥",
+          "hotspots": [],
+          "imageSrc": "lib:libqrf7mmud0"
+        },
+        {
+          "id": "sc5u39frcp",
+          "name": "S／メアド忘れ④　認証コード入力🟥",
+          "note": "S／メアド忘れ④　認証コード入力🟥",
+          "hotspots": [],
+          "imageSrc": "lib:libqrf7mmud0"
+        },
+        {
+          "id": "scl7api3ra",
+          "name": "S／メアド忘れ⑤　完了🟥",
+          "note": "S／メアド忘れ⑤　完了🟥",
+          "hotspots": [],
+          "imageSrc": "lib:libqrf7mmud0"
+        },
+        {
+          "id": "sc7g68elw6",
+          "name": "S／PW忘れ①",
+          "note": "",
+          "hotspots": [],
+          "imageSrc": "lib:libpt2gapnyr"
+        },
+        {
+          "id": "scnpakbbpn",
+          "name": "S／PW忘れ②　送信先選択,任意情報入力🟥",
+          "note": "S／PW忘れ②　送信先選択,任意情報入力🟥",
+          "hotspots": [],
+          "imageSrc": "lib:libqrf7mmud0"
+        },
+        {
+          "id": "schyj30hwy",
+          "name": "S／PW忘れ③　認証コード入力🟥",
+          "note": "S／PW忘れ③　認証コード入力🟥",
+          "hotspots": [],
+          "imageSrc": "lib:libqrf7mmud0"
+        },
+        {
+          "id": "scolxiay99",
+          "name": "S／PW忘れ④　新しいPW入力🟥",
+          "note": "S／PW忘れ④　新しいPW入力🟥",
+          "hotspots": [],
+          "imageSrc": "lib:libqrf7mmud0"
+        },
+        {
+          "id": "sczwyg3cmt",
+          "name": "S／PW忘れ⑤　完了🟥",
+          "note": "S／PW忘れ⑤　完了🟥",
+          "hotspots": [],
+          "imageSrc": "lib:libqrf7mmud0"
+        }
+      ]
+    },
+    {
+      "id": "scrbv40tjn",
+      "name": "【世帯】TVアプリ利用",
+      "screens": [
+        {
+          "id": "sc7zoswgvs",
+          "name": "TV／（どこで表示されるか不明）利用規約",
+          "note": "",
+          "hotspots": [],
+          "imageSrc": "lib:libybt7q3s81"
+        },
+        {
+          "id": "sca6t5j4i1",
+          "name": "TV／（どこで表示されるか不明）プラポリ",
+          "note": "",
+          "hotspots": [],
+          "imageSrc": "lib:libe1dfadlf2"
+        },
+        {
+          "id": "scq6z46ujv",
+          "name": "TV／誤受信防止措置",
+          "note": "",
+          "hotspots": [],
+          "imageSrc": "lib:lib8nkwlgvqa"
+        },
+        {
+          "id": "scnmnp1gjc",
+          "name": "TV／用途の選択(世帯)",
+          "note": "",
+          "hotspots": [],
+          "imageSrc": "lib:lib6ck3i9qws"
+        },
+        {
+          "id": "scwrqsg5qd",
+          "name": "TV／地域の選択",
+          "note": "",
+          "hotspots": [],
+          "imageSrc": "lib:lib9dkiqpndp"
+        },
+        {
+          "id": "sc7gwhfovz",
+          "name": "TV／入力内容の確認(世帯)",
+          "note": "",
+          "hotspots": [],
+          "imageSrc": "lib:libaq203r7op"
+        },
+        {
+          "id": "scig5jwa0p",
+          "name": "TV／トップ",
+          "note": "",
+          "hotspots": [],
+          "imageSrc": "lib:lib6hbmbmjlm"
+        },
+        {
+          "id": "sc29rrl4hs",
+          "name": "TV／ログイン②",
+          "note": "",
+          "hotspots": [],
+          "imageSrc": "lib:libdpzu2ers4"
+        },
+        {
+          "id": "scqglywz7j",
+          "name": "TV／スマホ連携",
+          "note": "",
+          "hotspots": [],
+          "imageSrc": "lib:lib5nvf5nv9n"
+        },
+        {
+          "id": "scihgofmjs",
+          "name": "TV／プロファイル選択",
+          "note": "",
+          "hotspots": [],
+          "imageSrc": "lib:libbwuj7ssf7"
+        },
+        {
+          "id": "sc8ciscd8g",
+          "name": "TV／トップ　※ログイン済",
+          "note": "",
+          "hotspots": [],
+          "imageSrc": "lib:lib4ibpqx5i4"
+        }
+      ]
+    },
+    {
+      "id": "sc57u84myw",
+      "name": "【事業】TVアプリ利用",
+      "screens": [
+        {
+          "id": "sczrg46qrg",
+          "name": "TV／（どこで表示されるか不明）利用規約",
+          "note": "",
+          "hotspots": [],
+          "imageSrc": "lib:libybt7q3s81"
+        },
+        {
+          "id": "scla6p0nnj",
+          "name": "TV／（どこで表示されるか不明）プラポリ",
+          "note": "",
+          "hotspots": [],
+          "imageSrc": "lib:libe1dfadlf2"
+        },
+        {
+          "id": "scaihbpcea",
+          "name": "TV／誤受信防止措置",
+          "note": "",
+          "hotspots": [],
+          "imageSrc": "lib:lib8nkwlgvqa"
+        },
+        {
+          "id": "sc0h23tcdy",
+          "name": "TV／用途の選択(事業)🟥",
+          "note": "TV／用途の選択(事業)🟥",
+          "hotspots": [],
+          "imageSrc": "lib:libqrf7mmud0"
+        },
+        {
+          "id": "scbm0j4x72",
+          "name": "TV／地域の選択",
+          "note": "",
+          "hotspots": [],
+          "imageSrc": "lib:lib9dkiqpndp"
+        },
+        {
+          "id": "scpteqtlu4",
+          "name": "TV／入力内容の確認(事業)",
+          "note": "",
+          "hotspots": [],
+          "imageSrc": "lib:libumzy1rwje"
+        },
+        {
+          "id": "sc9td202xy",
+          "name": "TV／コード入力(事業)",
+          "note": "",
+          "hotspots": [],
+          "imageSrc": "lib:libmog9rcfk1"
+        },
+        {
+          "id": "scw3qunfwp",
+          "name": "TV／キー入力(事業)",
+          "note": "",
+          "hotspots": [],
+          "imageSrc": "lib:libtegvof5wa"
+        },
+        {
+          "id": "scv5z17nys",
+          "name": "TV／登録完了(事業)",
+          "note": "",
+          "hotspots": [],
+          "imageSrc": "lib:libfmgt6my5y"
+        }
+      ]
+    },
+    {
+      "id": "sc42bbmsp4",
+      "name": "【世帯】移行対象者のJアカ登録導線🟥",
+      "screens": [
+        {
+          "id": "sczusp9n60",
+          "name": "J／新規⑥　初回ログイン",
+          "note": "",
+          "hotspots": [],
+          "imageSrc": "lib:libtqj664ivo"
+        },
+        {
+          "id": "sczomfw3tm",
+          "name": "J／新規⑦　パスワード設定",
+          "note": "",
+          "hotspots": [],
+          "imageSrc": "lib:libzz3km2sg1"
+        },
+        {
+          "id": "scmi5qkc5x",
+          "name": "J／新規⑧　認証用携帯電話番号設定",
+          "note": "",
+          "hotspots": [],
+          "imageSrc": "lib:libu6hf0xerw"
+        },
+        {
+          "id": "scryp2np72",
+          "name": "J／新規⑨　確認コード　※SMS",
+          "note": "",
+          "hotspots": [],
+          "imageSrc": "lib:libkfu9i998r"
+        }
+      ]
+    },
+    {
+      "id": "scxrvb0pqq",
+      "name": "アカウント設定",
+      "screens": [
+        {
+          "id": "sc31ffa35s",
+          "name": "S／アカウント設定(事業)",
+          "note": "",
+          "imageSrc": "lib:lib6g1exfunl",
+          "hotspots": []
+        },
+        {
+          "id": "sctf1u3ox6",
+          "name": "S／アカウント設定　※連携済",
+          "imageSrc": "lib:lib9zolb7jk3",
+          "note": "",
+          "noteOverride": false,
           "hotspots": []
         }
       ]
+    },
+    {
+      "id": "scs3fghxwf",
+      "name": "その他／エラー",
+      "screens": [
+        {
+          "id": "sccuhiam7z",
+          "name": "エラー　※入力のための条件を満たしていません",
+          "note": "",
+          "imageSrc": "lib:libajk48e96x",
+          "hotspots": []
+        },
+        {
+          "id": "scdl9vt4yn",
+          "name": "エラー　※不正な画面遷移を検知しました。",
+          "note": "",
+          "imageSrc": "lib:lib2yhnnuw5a",
+          "hotspots": []
+        },
+        {
+          "id": "scfuelz4hq",
+          "name": "エラー　※目的のページにはアクセスできません",
+          "note": "",
+          "imageSrc": "lib:libu7mbtp5uq",
+          "hotspots": []
+        },
+        {
+          "id": "scyfl7zf4h",
+          "name": "事業　コード入力エラー①",
+          "note": "",
+          "imageSrc": "lib:librprbk2k52",
+          "hotspots": []
+        },
+        {
+          "id": "scc4ece2i9",
+          "name": "利用しない",
+          "note": "",
+          "imageSrc": "lib:libhydqwef7m",
+          "hotspots": []
+        },
+        {
+          "id": "sc3l3hjz80",
+          "name": "App,TV",
+          "note": "",
+          "imageSrc": "lib:libg2x93fk1b",
+          "hotspots": []
+        },
+        {
+          "id": "scgo4bp6gf",
+          "name": "Web,App,TV",
+          "note": "",
+          "imageSrc": "lib:libl1121880h",
+          "hotspots": []
+        },
+        {
+          "id": "sct9i2j12k",
+          "name": "ホワイトリスト",
+          "note": "",
+          "imageSrc": "lib:libl106gmhug",
+          "hotspots": []
+        },
+        {
+          "id": "scot5qygzg",
+          "name": "NHKONE　メニュー①",
+          "note": "",
+          "imageSrc": "lib:lib3kgegeqim",
+          "hotspots": []
+        },
+        {
+          "id": "scosno6fyo",
+          "name": "NHKONE　メニュー②",
+          "note": "",
+          "imageSrc": "lib:libd5otrrv21",
+          "hotspots": []
+        },
+        {
+          "id": "sc03jnow71",
+          "name": "インフォメーション　メニュー①",
+          "note": "",
+          "imageSrc": "lib:libue5au9f6r",
+          "hotspots": []
+        },
+        {
+          "id": "scj2xvqby9",
+          "name": "インフォメーション　メニュー②",
+          "note": "",
+          "imageSrc": "lib:libiwofpnub5",
+          "hotspots": []
+        },
+        {
+          "id": "scxbmeioyn",
+          "name": "ご利用情報の初期化　完了",
+          "note": "",
+          "imageSrc": "lib:lib9r1s2pgkt",
+          "hotspots": []
+        },
+        {
+          "id": "sci5sl2ikf",
+          "name": "ご利用情報の初期化(学校) ①",
+          "note": "",
+          "imageSrc": "lib:libli8akk8qo",
+          "hotspots": []
+        },
+        {
+          "id": "sclbvq4tsk",
+          "name": "ご利用情報の初期化(学校) ②",
+          "note": "",
+          "imageSrc": "lib:libq3cgaswf2",
+          "hotspots": []
+        },
+        {
+          "id": "sc2zvxqbz0",
+          "name": "ご利用情報の初期化(事業) ①",
+          "note": "",
+          "imageSrc": "lib:libws5gu4dxq",
+          "hotspots": []
+        },
+        {
+          "id": "sc02b2zq9i",
+          "name": "ご利用情報の初期化(事業) ②",
+          "note": "",
+          "imageSrc": "lib:libc8i93ho0t",
+          "hotspots": []
+        },
+        {
+          "id": "scrp7smv74",
+          "name": "ご利用情報の初期化(世帯) ①",
+          "note": "",
+          "imageSrc": "lib:libax11pewax",
+          "hotspots": []
+        },
+        {
+          "id": "sc3ymxpn5w",
+          "name": "ご利用情報の初期化(世帯) ②",
+          "note": "",
+          "imageSrc": "lib:libyyk62vjp5",
+          "hotspots": []
+        }
+      ],
+      "color": "#00b894"
     }
   ]
 };
