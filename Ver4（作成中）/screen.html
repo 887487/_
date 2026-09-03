@@ -724,20 +724,6 @@ html[data-theme="dark"] .modal-box { background: var(--surface); border: 1px sol
 
   </main>
 <!-- ヒアリングチェックシート（index.html と sessionStorage 共有） -->
-<div id="hearingPanel" class="hearing-panel">
-  <button id="hearingToggleBtn" class="hearing-toggle-btn" onclick="toggleHearingPanel()" title="ヒアリングチェックシート">＜</button>
-  <div class="hearing-panel-body">
-    <div class="hearing-header">
-      <span class="hearing-title">ヒアリングチェックシート</span>
-      <div class="hearing-header-btns">
-        <button class="hearing-copy-btn" onclick="copyHearingText()" title="ヒアリング内容をコピー">📋 コピー</button>
-        <button class="hearing-reset-btn" onclick="resetHearing()">リセット</button>
-      </div>
-    </div>
-    <div id="hearingCopyToast" class="hearing-copy-toast"></div>
-    <div class="hearing-content" id="hearingContent"></div>
-  </div>
-</div>
 </div><!-- /.body -->
 
 <!-- 右: 遷移履歴サイドバー（.body の直接子 → 左サイドバーと同一の flex ツリーでヘッダーにくっつく） -->

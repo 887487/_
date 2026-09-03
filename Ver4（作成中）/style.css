@@ -374,6 +374,21 @@ th { background:var(--bg); }
 .hearing-panel-body { flex:1;display:flex;flex-direction:column;overflow:hidden;width:100%; }
 .hearing-header { display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--border);flex-shrink:0;background:#f8f9fa; }
 .hearing-title { font-size:12px;font-weight:700;color:var(--text); }
+/* ヘッダーの［🏠 ホーム］ボタン（全ページ共通・common-utils.js が差し込む） */
+.home-nav-btn{
+  height:30px;padding:0 11px;font-size:12px;font-family:inherit;white-space:nowrap;
+  border:1px solid rgba(255,255,255,.35);border-radius:6px;
+  background:rgba(255,255,255,.12);color:var(--header-text,#fff);
+  cursor:pointer;flex-shrink:0;transition:background .15s,border-color .15s;
+}
+.home-nav-btn:hover{background:rgba(255,255,255,.24);border-color:rgba(255,255,255,.6);}
+
+.hearing-open-btn { font-size:11px;padding:3px 9px;border:1px solid var(--border);border-radius:4px;background:var(--surface);cursor:pointer;color:var(--text2);font-family:inherit;white-space:nowrap;transition:border-color .15s,color .15s; }
+.hearing-open-btn:hover { border-color:var(--accent);color:var(--accent-text); }
+.hearing-header-btns { display:flex;align-items:center;gap:6px;flex-shrink:0; }
+/* index.html はヘッダーの高さが .home-header で決まるため、位置を合わせる */
+.home-header ~ .hearing-panel,
+body > .hearing-panel { top:var(--header-h); }
 .hearing-reset-btn { font-size:11px;padding:3px 10px;border:1px solid #f5a5aa;border-radius:4px;background:#fff0f0;cursor:pointer;color:var(--red);font-weight:700;font-family:inherit;transition:background 0.15s,border-color 0.15s; }
 .hearing-reset-btn:hover { background:var(--red);color:white;border-color:var(--red); }
 .hearing-content { flex:1;overflow-y:auto;padding:10px 12px;display:flex;flex-direction:column;gap:10px; }

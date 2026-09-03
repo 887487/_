@@ -154,7 +154,7 @@
     /* 4枚を常に1列（横一列）に並べる */
     .home-grid {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(5, 1fr);
       gap: 14px;
       width: 100%;
       max-width: 1200px;
@@ -223,7 +223,10 @@
     }
 
     /* 横幅が足りない場合は段階的に折り返す */
-    @media (max-width: 1320px) {
+    @media (max-width: 1500px) {
+      .home-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+    @media (max-width: 1100px) {
       .home-grid { grid-template-columns: repeat(2, 1fr); }
     }
     @media (max-width: 700px) {
@@ -293,6 +296,15 @@
       <span class="home-card-icon">🖥️</span>
       <span class="home-card-title">画面遷移</span>
       <span class="home-card-desc">システム画面の遷移フローを視覚的に確認できます。操作手順の確認・説明に活用できます。
+      </span>
+      <span class="home-card-arrow">開く →</span>
+    </a>
+
+    <!-- ヒアリングチェックシート -->
+    <a class="home-card" onclick="openNamedTab('hearing.html','hearingTab')" href="javascript:void(0)">
+      <span class="home-card-icon">🩺</span>
+      <span class="home-card-title">ヒアリングシート</span>
+      <span class="home-card-desc">聞き取り内容を記録し、対応方針の確認とコピーができます。各ページの右端からも開けます。
       </span>
       <span class="home-card-arrow">開く →</span>
     </a>

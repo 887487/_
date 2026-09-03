@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🩺 ヒアリングチェックシート</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="data.js" onerror="void(0)"></script>
+  <script src="common-utils.js"></script>
+  <style>
+    html, body { height: 100%; overflow: hidden; }
+    body {
+      margin: 0;
+      font-family: 'Noto Sans JP', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* このページはスライドインではなく1枚ページとして表示する
+       （body.page-hearing により共通パネルは注入されない） */
+
+    .hr-page-body {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      overflow: hidden;
+      padding: 20px 16px 28px;
+      box-sizing: border-box;
+    }
+    .hr-page-card {
+      width: 100%;
+      max-width: 760px;
+      display: flex;
+      flex-direction: column;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .hr-page-head {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 11px 16px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface2);
+      flex-shrink: 0;
+    }
+    .hr-page-title { font-size: 14px; font-weight: 700; flex: 1; }
+    .hr-page-scroll {
+      flex: 1;
+      overflow-y: auto;
+      padding: 14px 16px 20px;
+    }
+  </style>
+</head>
+<body class="page-hearing">
+
+<header>
+  <div class="hd-left">
+    <button id="menuBtn" onclick="toggleSideMenu()">☰</button>
+    <button class="header-title hd-title-btn" onclick="goHomePage()" title="ホームへ戻る">🩺 ヒアリングチェックシート</button>
+  </div>
+  <div class="hd-center"></div>
+  <div class="hd-right">
+    <button class="nav-btn" onclick="openNamedTab('script.html','scriptTab')">📋 スクリプト</button>
+    <button class="nav-btn" onclick="openNamedTab('mail.html','mailTab')">✉️ メール</button>
+    <button class="nav-btn" onclick="openNamedTab('screen.html','screenFlowTab')">🖥️ 画面遷移</button>
+  </div>
+</header>
+
+<aside id="sideMenu"></aside>
+
+<div class="hr-page-body">
+  <div class="hr-page-card">
+    <div class="hr-page-head">
+      <span class="hr-page-title">ヒアリングチェックシート</span>
+      <button class="hearing-copy-btn" onclick="copyHearingText()" title="ヒアリング内容をコピー">📋 コピー</button>
+      <button class="hearing-reset-btn" onclick="resetHearing()">リセット</button>
+    </div>
+    <div id="hearingCopyToast" class="hearing-copy-toast"></div>
+    <div class="hr-page-scroll">
+      <!-- 共通の描画処理（renderHearing）がここに書き込む -->
+      <div class="hearing-content" id="hearingContent"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // 入力内容は localStorage を通じて他のタブと共有される。
+  // このページで入力すれば、スクリプト・メール・画面遷移の各タブにも反映される。
+  document.addEventListener('DOMContentLoaded', function () {
+    if (typeof renderHearing === 'function') renderHearing();
+  });
+</script>
+</body>
+</html>

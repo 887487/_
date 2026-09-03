@@ -192,19 +192,14 @@ window.AppFS = (function() {
   /** バイナリ（Blob）を書き込む。サブフォルダは自動作成する */
   function writeBinary(path, blob, allowPrompt) {
     return ensure(allowPrompt !== false).then(function(dir) {
-      if (!dir) { console.warn('[AppFS] 書き込み不可（未接続または権限なし）:', path); return false; }
+      if (!dir) return false;
       return _resolvePath(dir, path, true).then(function(loc) {
         return loc.dir.getFileHandle(loc.name, { create: true }).then(function(fh) {
           return fh.createWritable().then(function(w) {
             return Promise.resolve(w.write(blob)).then(function() { return w.close(); });
           });
         });
-      }).then(function() { return true; })
-        .catch(function(e) {
-          // 例外を握りつぶすと「成功したのにファイルが無い」ように見えるので記録する
-          console.warn('[AppFS] 書き込み失敗:', path, e && e.message);
-          return false;
-        });
+      }).then(function() { return true; });
     });
   }
 
@@ -2112,6 +2107,99 @@ function saveHearingState() {
 }
 
 var hearingState = loadHearingState();
+/**
+ * ホーム（index.html）を開く。
+ * app.js の goHome() は「スクリプトの先頭に戻る」別機能なので名前を分ける。
+ * 既にホームのタブが開いていればそれを再利用する。
+ */
+window.goHomePage = function() {
+  if (typeof openNamedTab === 'function') openNamedTab('index.html', 'homeTab');
+  else location.href = 'index.html';
+};
+
+/**
+ * ヘッダーに［🏠 ホーム］ボタンを差し込む。
+ *
+ * これまでページ名（📋 トークスクリプト など）自体がホームへのリンクだったが、
+ * 見た目がボタンに見えず気づきにくかった。また画面遷移・管理画面には
+ * 導線そのものが無かったため、全ページで同じ位置に置く。
+ * ホーム自身には不要なので付けない。
+ */
+function _injectHomeBtn() {
+  if (document.getElementById('homeBtn')) return;                       // 既にある
+  if (document.querySelector('.home-header')) return;                   // ホーム自身
+  var left = document.querySelector('header .hd-left');
+  if (!left) return;
+
+  var b = document.createElement('button');
+  b.id = 'homeBtn';
+  b.className = 'home-nav-btn';
+  b.type = 'button';
+  b.title = 'ホームへ戻る';
+  b.textContent = '🏠 ホーム';
+  b.onclick = function() { goHomePage(); };
+
+  // ☰ の直後（ページ名の前）に置く
+  var menu = left.querySelector('#menuBtn');
+  if (menu && menu.nextSibling) left.insertBefore(b, menu.nextSibling);
+  else if (menu) left.appendChild(b);
+  else left.insertBefore(b, left.firstChild);
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', _injectHomeBtn);
+} else {
+  _injectHomeBtn();
+}
+
+/**
+ * ヒアリングパネルを各ページに差し込む。
+ *
+ * これまで script.html にだけ直接書かれていたが、
+ * メール・画面遷移を見ながら聞き取りたい場面があるため共通化した。
+ * 管理画面（.page-admin）は編集用のプレビューを持つので対象外。
+ * すでにページ内にパネルがある場合は二重に作らない。
+ */
+function _hrInjectPanel() {
+  if (document.body.classList.contains('page-admin')) return;   // 管理画面は除外
+  if (document.body.classList.contains('page-hearing')) return; // 専用ページは1枚表示
+  if (document.getElementById('hearingPanel')) return;          // 既にある
+
+  var el = document.createElement('div');
+  el.id = 'hearingPanel';
+  el.className = 'hearing-panel';
+  el.innerHTML =
+    '<button id="hearingToggleBtn" class="hearing-toggle-btn" onclick="toggleHearingPanel()"' +
+    ' title="ヒアリングチェックシート">＜</button>' +
+    '<div class="hearing-panel-body">' +
+      '<div class="hearing-header">' +
+        '<span class="hearing-title">ヒアリングチェックシート</span>' +
+        '<div class="hearing-header-btns">' +
+          '<button class="hearing-copy-btn" onclick="copyHearingText()" title="ヒアリング内容をコピー">📋 コピー</button>' +
+          '<button class="hearing-open-btn" onclick="openNamedTab(\'hearing.html\',\'hearingTab\')" title="別タブで大きく開く">↗ 別タブ</button>' +
+          '<button class="hearing-reset-btn" onclick="resetHearing()">リセット</button>' +
+        '</div>' +
+      '</div>' +
+      '<div id="hearingCopyToast" class="hearing-copy-toast"></div>' +
+      '<div class="hearing-content" id="hearingContent"></div>' +
+    '</div>';
+  document.body.appendChild(el);
+  if (typeof renderHearing === 'function') renderHearing();
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', _hrInjectPanel);
+} else {
+  _hrInjectPanel();
+}
+
+// 他のタブでヒアリング内容が変わったら追従する（同じ内容を見せるため）
+window.addEventListener('storage', function(e) {
+  if (e.key !== HEARING_KEY) return;
+  if (typeof loadHearingState === 'function') hearingState = loadHearingState();
+  if (typeof renderHearing === 'function') renderHearing();
+});
+
 var hearingPanelOpen = false;
 
 window.toggleHearingPanel = function () {
