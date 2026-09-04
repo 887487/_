@@ -2364,7 +2364,16 @@ function calcPolicies(s) {
   if (typeof _hrCustomPolicies === 'function') {
     _hrCustomPolicies(s).forEach(function(p){ if(p)policies.push(p); });
   }
-  return policies;
+
+  // 同じ文言が複数の条件から出ることがある（組み込み判定と、
+  // それを再現した登録済み方針が両方ヒットするなど）。重複は1つにまとめる。
+  var seen = {}, uniq = [];
+  policies.forEach(function(p) {
+    var k = String(p == null ? '' : p).trim();
+    if (!k || seen[k]) return;
+    seen[k] = 1; uniq.push(k);
+  });
+  return uniq;
 }
 
 

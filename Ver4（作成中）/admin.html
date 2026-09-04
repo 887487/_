@@ -476,11 +476,15 @@ details[open] > summary .hr-acc-arrow { transform: rotate(90deg); }
 #hrPatModal {
   display: none; position: fixed; inset: 0; z-index: 7000;
   background: rgba(0,0,0,.55); align-items: center; justify-content: center;
+  /* ヘッダーが position:fixed のため、上に寄せすぎると
+     モーダル上部がヘッダーの裏に隠れる。その分だけ下げる。 */
+  padding: calc(var(--header-h) + 12px) 16px 24px;
+  box-sizing: border-box;
 }
 #hrPatModal.open { display: flex; }
 .hr-pat-modal-box {
   background: var(--surface); border-radius: 14px;
-  width: min(92vw, 720px); max-height: 90vh;
+  width: min(92vw, 720px); max-height: 100%;
   display: flex; flex-direction: column;
   box-shadow: 0 24px 64px rgba(0,0,0,.3); overflow: hidden;
 }
@@ -578,6 +582,15 @@ details[open] > summary .hr-acc-arrow { transform: rotate(90deg); }
 .fixed-item-editor-hd-title{font-size:16px;font-weight:700;color:var(--text);flex:1;}
 /* 削除ボタン。絵文字だけだと環境によって潰れて見えるため、
    赤字＋赤枠の「×」で統一する。 */
+/* 「＋ 質問を追加」と同じ見た目の追加ボタン */
+.hr-add-btn{
+  height:28px;padding:0 14px;border:1px dashed var(--accent);
+  border-radius:6px;background:var(--accent-lt);color:var(--accent-text);
+  font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;
+  transition:background .12s,color .12s;
+}
+.hr-add-btn:hover{background:var(--accent);color:#fff;}
+
 .btn-del{
   display:inline-flex;align-items:center;justify-content:center;
   height:22px;min-width:22px;padding:0 6px;
@@ -1593,7 +1606,7 @@ html[data-theme="dark"] .nav-arrow-btn { background: rgba(40,42,54,.9); }
           <span class="hr-acc-arrow">▶</span>
           <span class="hr-section-acc-title">🗂 対応方針エディタ</span>
           <span class="hr-section-acc-count" id="hrEditorCountBadge">0件</span>
-          <button class="btn btn-primary" style="font-size:11px;" onclick="event.stopPropagation();document.getElementById('hrPolicySection').open=true;_hrEditorAdd()">＋ 対応方針を追加</button>
+          <button class="hr-add-btn" onclick="event.stopPropagation();document.getElementById('hrPolicySection').open=true;_hrEditorAdd()">＋ 対応方針を追加</button>
         </summary>
         <div class="hr-section-acc-body">
           <div style="font-size:11px;color:var(--text3);margin-bottom:10px;">選択値の組み合わせに応じて対応方針を表示します。条件を空にすると常に表示されます。</div>
@@ -1607,7 +1620,7 @@ html[data-theme="dark"] .nav-arrow-btn { background: rgba(40,42,54,.9); }
           <span class="hr-acc-arrow">▶</span>
           <span class="hr-section-acc-title">🎯 表示/非表示パターン登録</span>
           <span class="hr-section-acc-count" id="hrPatCountBadge">0件</span>
-          <button class="btn btn-primary" style="font-size:11px;" onclick="event.stopPropagation();document.getElementById('hrPatSection').open=true;_hrPatOpen(-1)">＋ パターンを追加</button>
+          <button class="hr-add-btn" onclick="event.stopPropagation();document.getElementById('hrPatSection').open=true;_hrPatOpen(-1)">＋ パターンを追加</button>
         </summary>
         <div class="hr-section-acc-body">
           <div style="font-size:11px;color:var(--text3);margin-bottom:10px;">
@@ -2375,6 +2388,7 @@ function _hrEditorRender() {
     var card = document.createElement('details');
     card.className = 'hr-policy-acc';
     card.open = !!_hrPolicyOpenState[item.id];
+    card.id = 'hrPolicy_' + item.id;   // 追加直後にスクロールする対象
     card.addEventListener('toggle', function() { _hrPolicyOpenState[item.id] = card.open; });
 
     // ── summary（常時表示：ヘッダー行＋プレビュー行）──
@@ -2505,13 +2519,30 @@ function _hrCondSetField(pIdx, cIdx, field, val) {
   l[pIdx].conditions[cIdx][field] = val;
   _hrPoliciesSave(l);
 }
+/**
+ * 対応方針を追加する。
+ * 以前は空のまま黙って1件増えていたため、押した実感が無く
+ * 空の項目だけが溜まりやすかった。文面を先に入力させる。
+ */
 function _hrEditorAdd() {
-  var l = _hrPoliciesLoad()||[];
-  var newId = 'hr'+Math.random().toString(36).substr(2,8);
-  l.push({id:newId, conditions:[], policy:'', enabled:true});
+  var txt = prompt('対応方針の文面を入力してください。\n\n（追加後に条件を設定できます）');
+  if (txt === null) return;                       // キャンセル
+  txt = txt.trim();
+  if (!txt) { toast('⚠️ 文面を入力してください'); return; }
+
+  var l = _hrPoliciesLoad() || [];
+  var newId = 'hr' + Math.random().toString(36).substr(2, 8);
+  l.push({ id: newId, conditions: [], policy: txt, enabled: true });
   _hrPoliciesSave(l);
-  _hrPolicyOpenState[newId] = true; // 追加した項目は開いた状態で表示
+  _hrPolicyOpenState[newId] = true;               // 追加した項目は開いた状態で表示
   _hrLoadAndRender();
+  toast('✅ 対応方針を追加しました。条件を設定してください');
+
+  // 追加した項目までスクロールする
+  setTimeout(function() {
+    var el = document.getElementById('hrPolicy_' + newId);
+    if (el && el.scrollIntoView) el.scrollIntoView({ block: 'center' });
+  }, 60);
 }
 
 
