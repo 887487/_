@@ -368,17 +368,14 @@
 .tab-panel-sidemenu { display: none; }
 
 .hist-del-btn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: var(--muted);
-  font-size: 12px;
-  padding: 4px 6px;
-  width: 100%;
-  height: 100%;
-  transition: color .15s;
+  display:inline-flex;align-items:center;justify-content:center;
+  height:20px;min-width:20px;padding:0 5px;font-size:0;line-height:1;
+  color:var(--red,#e63946);background:var(--surface);
+  border:1px solid var(--red,#e63946);border-radius:4px;
+  cursor:pointer;flex-shrink:0;font-family:inherit;transition:background .12s,color .12s;
 }
-.hist-del-btn:hover { color: var(--red); }
+.hist-del-btn::before{content:'×';font-size:12px;font-weight:700;}
+.hist-del-btn:hover { background:var(--red,#e63946);color:#fff; }
 
 /* モーダル: display切り替えで確実に制御 */
 .modal-overlay-admin {
@@ -579,6 +576,20 @@ details[open] > summary .hr-acc-arrow { transform: rotate(90deg); }
 .fixed-item-editor-hd{display:flex;align-items:center;gap:10px;margin-bottom:16px;padding-bottom:12px;border-bottom:2px solid var(--border);}
 .fixed-item-editor-hd-icon{font-size:24px;}
 .fixed-item-editor-hd-title{font-size:16px;font-weight:700;color:var(--text);flex:1;}
+/* 削除ボタン。絵文字だけだと環境によって潰れて見えるため、
+   赤字＋赤枠の「×」で統一する。 */
+.btn-del{
+  display:inline-flex;align-items:center;justify-content:center;
+  height:22px;min-width:22px;padding:0 6px;
+  font-size:12px;font-weight:700;line-height:1;font-family:inherit;
+  color:var(--red,#e63946);background:var(--surface);
+  border:1px solid var(--red,#e63946);border-radius:4px;
+  cursor:pointer;flex-shrink:0;transition:background .12s,color .12s;
+}
+.btn-del:hover{background:var(--red,#e63946);color:#fff;}
+.btn-del:disabled{opacity:.4;cursor:not-allowed;}
+.btn-del.wide{padding:0 9px;}
+
 .fixed-item-editor-hd-badge{font-size:10px;background:var(--accent-lt);color:var(--accent-text);border:1px solid var(--accent);border-radius:10px;padding:2px 8px;font-weight:700;}
 .fixed-item-field-block{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:12px;}
 .fixed-item-field-label{font-size:11px;font-weight:700;color:var(--text2);margin-bottom:6px;}
@@ -5168,8 +5179,8 @@ function _faqRenderCats() {
       + '<span style="font-size:10px;color:var(--text3);flex-shrink:0;">' + n + '</span>'
       + (key ? '<button onclick="event.stopPropagation();_faqRenameCat(' + jsa(key) + ')"'
              + ' title="カテゴリ名を変更" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:11px;padding:0 2px;">✏️</button>'
-             + '<button onclick="event.stopPropagation();_faqDeleteCat(' + jsa(key) + ')"'
-             + ' title="カテゴリごと削除" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:11px;padding:0 2px;">🗑</button>'
+             + '<button class="btn-del" onclick="event.stopPropagation();_faqDeleteCat(' + jsa(key) + ')"'
+             + ' title="カテゴリごと削除">×</button>'
              : '')
       + '</div>';
   };
@@ -5216,7 +5227,7 @@ function _faqRenderList() {
       +     ' oninput="_faqSet(' + i + ',\'category\',this.value)"'
       +     ' style="width:170px;height:24px;padding:0 7px;font-size:11px;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text);">'
       +   '<span style="flex:1;"></span>'
-      +   '<button onclick="_faqDelete(' + i + ')" title="削除" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:13px;">🗑</button>'
+      +   '<button class="btn-del wide" onclick="_faqDelete(' + i + ')" title="この FAQ を削除">× 削除</button>'
       + '</div>'
       + '<input type="text" value="' + esc(f.question || '') + '" placeholder="質問"'
       +   ' oninput="_faqSet(' + i + ',\'question\',this.value)"'
@@ -9848,7 +9859,7 @@ function _imgLibHsRenderList() {
           'oninput="_imgLibHsList[' + idx + '].note=this.value">' +
         '<button onclick="_imgLibHsCopy(' + idx + ')" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:12px;padding:0 2px;" title="このホットスポットをコピー（他の画像に貼り付けられます）">📋</button>' +
         '<button onclick="_imgLibHsDuplicate(' + idx + ')" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:12px;padding:0 2px;" title="この画像内に複製">⧉</button>' +
-        '<button onclick="_imgLibHsDelete(' + idx + ')" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:13px;padding:0 2px;" title="削除">🗑</button>' +
+        '<button class="btn-del" onclick="_imgLibHsDelete(' + idx + ')" title="このホットスポットを削除">×</button>' +
       '</div>' +
 
       // ── 2段目：遷移先の種別 ──
@@ -11399,10 +11410,10 @@ function _imgLibDraw(items, query) {
     // （画像名クリックでHS登録ペインに原寸表示されるため不要）
 
     var delBtn = document.createElement('button');
-    delBtn.textContent = '🗑';
+    delBtn.textContent = '×';
+    delBtn.className = 'btn-del';
     delBtn.disabled = used;
     delBtn.title = used ? '使用中のため削除できません' : 'ライブラリから削除';
-    delBtn.style.cssText = 'font-size:10px;padding:1px 6px;border:1px solid var(--border);border-radius:4px;background:var(--surface2);cursor:' + (used?'not-allowed':'pointer') + ';color:' + (used?'var(--text3)':'var(--text)') + ';font-family:inherit;';
     delBtn.onclick = function() {
       if (!confirm('この画像をライブラリから削除しますか？')) return;
       imgLibDelete(item.id).then(function(ok) {
@@ -12189,18 +12200,10 @@ window.addEventListener('resize',function(){
       // 質問そのものを削除するボタン（追加はできるのに削除手段が無かった）
       var delQ = document.createElement('button');
       delQ.type = 'button';
-      delQ.textContent = '🗑';
+      delQ.textContent = '×';
+      delQ.className = 'btn-del';
       delQ.title = 'この質問を削除';
-      delQ.style.cssText =
-        'margin-left:6px;height:18px;width:20px;padding:0;border:1px solid var(--border);' +
-        'border-radius:3px;background:var(--surface2);color:var(--text3);font-size:10px;' +
-        'cursor:pointer;font-family:inherit;vertical-align:middle;line-height:1;';
-      delQ.addEventListener('mouseover', function() {
-        delQ.style.background = 'var(--danger-lt,#ffeaea)'; delQ.style.color = 'var(--red,#e63946)';
-      });
-      delQ.addEventListener('mouseout', function() {
-        delQ.style.background = 'var(--surface2)'; delQ.style.color = 'var(--text3)';
-      });
+      delQ.style.marginLeft = '6px';
       delQ.addEventListener('click', function(e) {
         e.stopPropagation();
         _hrDeleteQuestion(qId, q.label);

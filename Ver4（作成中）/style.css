@@ -869,8 +869,20 @@ html[data-theme="dark"] .page-admin .tab-panel-history{background:var(--bg);}
 .cat-name-input{flex:1;border:none;background:transparent;font-family:inherit;font-size:12px;font-weight:700;color:var(--text);padding:4px 4px;border-radius:4px;cursor:pointer;}
 .cat-name-input:focus{outline:none;background:var(--accent-lt);cursor:text;}
 .cat-actions{display:flex;gap:6px;align-items:center;}
-.cat-del-btn{background:none;border:none;cursor:pointer;color:var(--muted);font-size:12px;padding:3px 5px;border-radius:4px;transition:color .15s,background .15s;}
-.cat-del-btn:hover{color:var(--red);background:#fff0f0;}
+/* 削除ボタン。絵文字は環境によって潰れて見えるため「×」に統一し、
+   赤字＋赤枠で削除操作であることを明示する。 */
+.cat-del-btn{
+  display:inline-flex;align-items:center;justify-content:center;
+  height:20px;min-width:20px;padding:0 5px;
+  font-size:12px;font-weight:700;line-height:1;font-family:inherit;
+  color:var(--red,#e63946);background:var(--surface);
+  border:1px solid var(--red,#e63946);border-radius:4px;
+  cursor:pointer;flex-shrink:0;transition:background .12s,color .12s;
+}
+.cat-del-btn:hover{background:var(--red,#e63946);color:#fff;}
+/* ボタン内の絵文字を隠して「×」を出す（HTML を全箇所書き換えずに済ませる） */
+.cat-del-btn{font-size:0;}
+.cat-del-btn::before{content:'×';font-size:12px;}
 .sub-cat-block{border-left:3px solid #e0e4ff;margin-left:10px;}
 .memo-details{margin-top:10px;}
 .memo-summary{font-size:11px;font-weight:700;color:#888;cursor:pointer;user-select:none;padding:4px 0;list-style:none;}

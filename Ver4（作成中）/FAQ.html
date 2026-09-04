@@ -53,11 +53,6 @@
     }
     .faq-bar-title { font-size: 14px; font-weight: 700; }
     .faq-bar-count { font-size: 11px; color: var(--text3); }
-    .faq-search {
-      width: 280px; height: 30px; padding: 0 10px; font-size: 12px;
-      border: 1px solid var(--border); border-radius: 6px;
-      background: var(--surface); color: var(--text);
-    }
     .faq-scroll { flex: 1; overflow-y: auto; padding: 16px 18px 40px; }
     .faq-inner { max-width: 900px; margin: 0 auto; }
 
@@ -92,6 +87,24 @@
     .faq-meta { margin-top: 8px; font-size: 10px; color: var(--text3); }
     .faq-hit { background: var(--mark-bg, #fff3a3); border-radius: 2px; }
 
+    /* 回答内の画像 */
+    .faq-fig { margin: 10px 0; }
+    .faq-fig img {
+      max-width: 100%; height: auto; display: block;
+      border: 1px solid var(--border); border-radius: 6px;
+      background: var(--surface2); cursor: zoom-in;
+    }
+    .faq-fig figcaption {
+      margin-top: 5px; font-size: 11px; color: var(--text3);
+    }
+    /* 画像の拡大表示 */
+    .faq-zoom {
+      display: none; position: fixed; inset: 0; z-index: 9000;
+      background: rgba(0,0,0,.78); align-items: center; justify-content: center;
+      padding: 24px; cursor: zoom-out;
+    }
+    .faq-zoom img { max-width: 100%; max-height: 100%; object-fit: contain; }
+
     .faq-empty {
       padding: 60px 0; text-align: center;
       color: var(--text3); font-size: 13px; line-height: 2;
@@ -99,7 +112,7 @@
 
     @media (max-width: 760px) {
       .faq-side { display: none; }
-      .faq-search { width: 160px; }
+      #searchBox { width: 180px; }
     }
   </style>
 </head>
@@ -115,6 +128,13 @@
     <button class="nav-btn" onclick="openNamedTab('script.html','scriptTab')">📋 スクリプト</button>
     <button class="nav-btn" onclick="openNamedTab('mail.html','mailTab')">✉️ メール</button>
     <button class="nav-btn" onclick="openNamedTab('screen.html','screenFlowTab')">🖥️ 画面遷移</button>
+    <!-- 他ページ（スクリプト／メール／画面遷移）と同じ位置・同じ仕様の検索欄 -->
+    <div class="search-wrap">
+      <input type="text" id="searchBox" placeholder="FAQ 検索（質問・回答・備考）" autocomplete="off"
+             oninput="faqSearch(this.value)"
+             onkeydown="if(event.key==='Escape'){this.value='';faqSearch('');}">
+      <button id="clearBtn" onclick="faqClearSearch()">×</button>
+    </div>
   </div>
 </header>
 
@@ -124,20 +144,24 @@
   <aside class="faq-side">
     <div class="sidebar-top"><span class="sidebar-top-label">カテゴリ</span></div>
     <div class="faq-side-scroll" id="faqCats"></div>
+    <button class="add-cat-btn" onclick="faqToggleAll()" id="faqToggleBtn"
+            title="すべての回答を開く / 閉じる">全て開く</button>
   </aside>
 
   <main class="faq-main">
     <div class="faq-bar">
       <span class="faq-bar-title" id="faqTitle">すべて</span>
       <span class="faq-bar-count" id="faqCount"></span>
-      <span style="flex:1;"></span>
-      <input type="text" class="faq-search" id="faqSearch" placeholder="質問・回答から検索" autocomplete="off">
-      <button class="nav-btn" onclick="faqToggleAll()" id="faqToggleBtn" title="すべての回答を開く / 閉じる">全て開く</button>
     </div>
     <div class="faq-scroll">
       <div class="faq-inner" id="faqList"></div>
     </div>
   </main>
+</div>
+
+<!-- 画像の拡大表示 -->
+<div class="faq-zoom" id="faqZoom" onclick="faqZoomClose()">
+  <img id="faqZoomImg" alt="">
 </div>
 
 <script>
@@ -171,6 +195,64 @@
       .replace(/'/g, "\\'")
       .replace(/"/g, '&quot;')
       .replace(/</g, '&lt;') + "'";
+  }
+
+  /**
+   * 回答テキストを表示用の HTML にする。
+   * 画像は次の書き方に対応する（1行に1つ書く）。
+   *   ![説明](images/example.png)   … Markdown 風
+   *   images/example.png            … 画像の拡張子で終わる行
+   * 相対パスは日本語やスペースを含むと file:// で読めないためエンコードする。
+   */
+  var IMG_RE = /\.(png|jpe?g|gif|webp|bmp|svg)$/i;
+
+  function imgSrc(p) {
+    var v = String(p || '').trim();
+    if (!v) return '';
+    if (/^(data:|https?:|file:)/i.test(v)) return v;
+    if (/%[0-9a-f]{2}/i.test(v)) return v;
+    try { return v.split('/').map(encodeURIComponent).join('/'); } catch (e) { return v; }
+  }
+
+  function renderAnswer(text, q) {
+    var lines = String(text == null ? '' : text).split(/\r?\n/);
+    var out = [], buf = [];
+
+    var flush = function () {
+      if (!buf.length) return;
+      out.push('<div class="faq-a-text">' + mark(buf.join('\n'), q) + '</div>');
+      buf = [];
+    };
+
+    lines.forEach(function (ln) {
+      var t = ln.trim();
+      var m = /^!\[([^\]]*)\]\(([^)]+)\)$/.exec(t);          // ![説明](パス)
+      var path = m ? m[2].trim() : (IMG_RE.test(t) ? t : null);
+      if (!path) { buf.push(ln); return; }
+
+      flush();
+      var alt = m ? m[1] : '';
+      out.push('<figure class="faq-fig">'
+        + '<img src="' + esc(imgSrc(path)) + '" alt="' + esc(alt) + '" loading="lazy"'
+        + ' onclick="faqZoom(this.src)" title="クリックで拡大">'
+        + (alt ? '<figcaption>' + esc(alt) + '</figcaption>' : '')
+        + '</figure>');
+    });
+    flush();
+    return out.join('');
+  }
+
+  /** 画像を全画面で拡大表示する */
+  function faqZoom(src) {
+    var ov = document.getElementById('faqZoom');
+    var im = document.getElementById('faqZoomImg');
+    if (!ov || !im) return;
+    im.src = src;
+    ov.style.display = 'flex';
+  }
+  function faqZoomClose() {
+    var ov = document.getElementById('faqZoom');
+    if (ov) ov.style.display = 'none';
   }
 
   /** 検索語をハイライトする（エスケープ後の文字列に対して行う） */
@@ -212,7 +294,7 @@
   function renderList() {
     var el = document.getElementById('faqList');
     if (!el) return;
-    var q = (document.getElementById('faqSearch').value || '').trim().toLowerCase();
+    var q = ((document.getElementById('searchBox') || {}).value || '').trim().toLowerCase();
 
     var list = faqData().filter(function (f) {
       if (_faqCat && (f.category || '未分類') !== _faqCat) return false;
@@ -243,11 +325,24 @@
         +   '<span class="faq-q-arrow">▶</span>'
         + '</div>'
         + '<div class="faq-a">'
-        +   '<div class="faq-a-text">' + mark(f.answer, q) + '</div>'
+        +   renderAnswer(f.answer, q)
         +   (f.note ? '<div class="faq-note">' + mark(f.note, q) + '</div>' : '')
         +   '<div class="faq-meta">ID ' + esc(f.id) + '　/　' + esc(f.category || '未分類') + '</div>'
         + '</div></div>';
     }).join('');
+  }
+
+  /** 検索の実行。他ページと同じく × ボタンの出し分けも行う */
+  function faqSearch(v) {
+    var btn = document.getElementById('clearBtn');
+    if (btn) btn.style.display = (v && v.length) ? '' : 'none';
+    renderList();
+  }
+
+  function faqClearSearch() {
+    var el = document.getElementById('searchBox');
+    if (el) { el.value = ''; el.focus(); }
+    faqSearch('');
   }
 
   function toggleItem(id) {
@@ -264,8 +359,11 @@
   }
 
   document.addEventListener('DOMContentLoaded', function () {
-    document.getElementById('faqSearch').addEventListener('input', renderList);
-    var start = function () { renderCats(); renderList(); };
+    var start = function () {
+      renderCats(); renderList();
+      var btn = document.getElementById('clearBtn');
+      if (btn) btn.style.display = 'none';   // 初期は非表示（他ページと同じ）
+    };
     // IndexedDB 側に新しいデータがあれば読み込んでから描画する
     (window.initAppData ? window.initAppData() : Promise.resolve()).then(start).catch(start);
   });

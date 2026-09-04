@@ -2166,6 +2166,7 @@ if (document.readyState === 'loading') {
 function _hrInjectPanel() {
   if (document.body.classList.contains('page-admin')) return;   // 管理画面は除外
   if (document.body.classList.contains('page-hearing')) return; // 専用ページは1枚表示
+  if (document.body.classList.contains('page-home')) return;    // ホームは一覧のみ（カードから開く）
   if (document.getElementById('hearingPanel')) return;          // 既にある
 
   var el = document.createElement('div');
