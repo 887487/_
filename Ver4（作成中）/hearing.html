@@ -9,8 +9,12 @@
   <script src="common-utils.js"></script>
   <style>
     html, body { height: 100%; overflow: hidden; }
+    /* header は position:fixed のため、本文をヘッダーの高さ分だけ下げる。
+       これが無いと上部がヘッダーに隠れる。 */
     body {
       margin: 0;
+      padding-top: var(--header-h);
+      box-sizing: border-box;
       font-family: 'Noto Sans JP', sans-serif;
       background: var(--bg);
       color: var(--text);

@@ -9,8 +9,12 @@
   <script src="common-utils.js"></script>
   <style>
     html, body { height: 100%; overflow: hidden; }
+    /* header は position:fixed のため、本文をヘッダーの高さ分だけ下げる。
+       これが無いと上部がヘッダーに隠れる。 */
     body {
       margin: 0;
+      padding-top: var(--header-h);
+      box-sizing: border-box;
       font-family: 'Noto Sans JP', sans-serif;
       background: var(--bg);
       color: var(--text);
@@ -156,6 +160,19 @@
       .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
 
+  /**
+   * onclick 属性に文字列を埋め込むためのエスケープ。
+   * JSON.stringify だと二重引用符が入って属性が途中で閉じてしまうので、
+   * シングルクォートで包んだうえで中身を退避する。
+   */
+  function jsAttr(s) {
+    return "'" + String(s == null ? '' : s)
+      .replace(/\\/g, '\\\\')
+      .replace(/'/g, "\\'")
+      .replace(/"/g, '&quot;')
+      .replace(/</g, '&lt;') + "'";
+  }
+
   /** 検索語をハイライトする（エスケープ後の文字列に対して行う） */
   function mark(text, q) {
     var t = esc(text);
@@ -179,7 +196,7 @@
     });
     var row = function (key, label, n) {
       return '<div class="faq-cat' + (_faqCat === key ? ' active' : '') + '"'
-        + ' onclick="selectCat(' + JSON.stringify(key).replace(/"/g, '&quot;') + ')">'
+        + ' onclick="selectCat(' + jsAttr(key) + ')">'
         + '<span>' + esc(label) + '</span>'
         + '<span class="faq-cat-count">' + n + '</span></div>';
     };
@@ -220,7 +237,7 @@
       // 検索中は探しやすいよう自動で開く
       var open = _faqAllOpen || !!_faqOpen[f.id] || !!q;
       return '<div class="faq-item' + (open ? ' open' : '') + '" id="faq_' + esc(f.id) + '">'
-        + '<div class="faq-q" onclick="toggleItem(' + JSON.stringify(String(f.id)) + ')">'
+        + '<div class="faq-q" onclick="toggleItem(' + jsAttr(f.id) + ')">'
         +   '<span class="faq-q-mark">Q</span>'
         +   '<span class="faq-q-text">' + mark(f.question, q) + '</span>'
         +   '<span class="faq-q-arrow">▶</span>'
