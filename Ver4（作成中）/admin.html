@@ -1353,20 +1353,21 @@ html[data-theme="dark"] .nav-arrow-btn { background: rgba(40,42,54,.9); }
 </div>
 
 <header>
-  <div class="hd-left" style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
-    <button id="menuBtn" onclick="toggleSideMenu()" style="height:32px;width:32px;padding:0;font-size:18px;background:none;border:none;color:#fff;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;border-radius:6px;">☰</button>
-    <span class="hd-title-btn">⚙️ 管理画面</span>
+  <div class="hd-left">
+    <button id="menuBtn" onclick="toggleSideMenu()">☰</button>
+    <span class="header-title hd-title-btn">⚙️ 管理画面</span>
     <button class="help-circle-btn" onclick="openAdminHelp()" title="使い方マニュアル">?</button>
   </div>
-  <div style="display:flex;align-items:center;justify-content:center;gap:4px;">
+  <div class="hd-center">
     <button class="tab-btn active" id="tabBtnScript"  onclick="switchTab('script')">📋 スクリプト</button>
     <button class="tab-btn" id="tabBtnMail"    onclick="switchTab('mail')">✉️ メール</button>
     <button class="tab-btn" id="tabBtnScreen"  onclick="switchTab('screen')">🖥 画面遷移</button>
+    <button class="tab-btn" id="tabBtnFaq"     onclick="switchTab('faq')">❓ FAQ</button>
     <button class="tab-btn" id="tabBtnHearing" onclick="switchTab('hearing')">📋 ヒアリング</button>
     <button class="tab-btn" id="tabBtnSideMenu" onclick="switchTab('sidemenu')">☰ サイドメニュー</button>
     <button class="tab-btn" id="tabBtnHistory" onclick="switchTab('history')">📝 更新履歴</button>
   </div>
-  <div class="hd-right" style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
+  <div class="hd-right">
     <button class="nav-btn" onclick="openNamedTab('script.html','scriptTab')">📋 スクリプト</button>
     <button class="nav-btn" onclick="openNamedTab('mail.html','mailTab')">✉️ メール</button>
     <button class="nav-btn" onclick="openNamedTab('screen.html','screenFlowTab')">🖥️ 画面遷移</button>
@@ -1416,6 +1417,29 @@ html[data-theme="dark"] .nav-arrow-btn { background: rgba(40,42,54,.9); }
   </div>
 
   <!-- ===== メールタブ ===== -->
+  <!-- ===== FAQタブ ===== -->
+  <div class="tab-panel" id="tabFaq">
+    <aside class="sidebar">
+      <div class="sidebar-top"><span class="sidebar-top-label">カテゴリ</span></div>
+      <div class="sidebar-scroll" id="faqCatList"></div>
+      <button class="add-cat-btn" onclick="_faqAddCategory()">＋ カテゴリを追加</button>
+      <button class="add-cat-btn" onclick="document.getElementById('faqXlsxInput').click()" title="シート名をカテゴリ、A列を質問、B列を回答、C列を備考として取り込みます">📊 Excel から取り込み</button>
+      <input type="file" id="faqXlsxInput" accept=".xlsx" style="display:none" onchange="_faqImportXlsx(this)">
+    </aside>
+
+    <div style="flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden;">
+      <div style="display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0;">
+        <span id="faqCurCat" style="font-size:13px;font-weight:700;flex-shrink:0;">すべて</span>
+        <span id="faqCount" style="font-size:11px;color:var(--text3);flex-shrink:0;"></span>
+        <span style="flex:1;"></span>
+        <input type="text" id="faqSearch" placeholder="質問・回答で検索" oninput="_faqRenderList()"
+               style="width:220px;height:28px;padding:0 9px;font-size:12px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);">
+        <button class="btn btn-primary" style="font-size:12px;height:28px;" onclick="_faqAddItem()">＋ 追加</button>
+      </div>
+      <div id="faqList" style="flex:1;overflow-y:auto;padding:12px 14px;"></div>
+    </div>
+  </div>
+
   <div class="tab-panel" id="tabMail">
     <div class="sidebar">
       <div class="sidebar-top"><span class="sidebar-top-label">カテゴリ / テンプレート</span></div>
@@ -2529,7 +2553,7 @@ function switchTab(tab){
   // （画面遷移タブ内の機能なので、他タブへ移動したあとも残っていると操作できなくなる）
   // 旧・全画面ライブラリは廃止したため、閉じる処理は不要
 
-  ['script','mail','screen','history','hearing','sidemenu'].forEach(t=>{
+  ['script','mail','screen','history','hearing','sidemenu','faq'].forEach(t=>{
     // タブIDのキャメルケース変換
     const capId = t==='sidemenu'?'SideMenu': t.charAt(0).toUpperCase()+t.slice(1);
     const panel=document.getElementById('tab'+capId);
@@ -2537,6 +2561,7 @@ function switchTab(tab){
     if(panel)panel.classList.toggle('active',t===tab);
     if(btn)btn.classList.toggle('active',t===tab);
   });
+  if(tab==='faq'){ _faqRender(); }
   if(tab==='hearing'&&window.renderHearing){
     // hearingPolicies / hearingPatterns を IDB から毎回取得してから描画
     var _reloadHrData = function() {
@@ -5082,6 +5107,235 @@ function hrSave() {
 // サイドメニュー・添付ファイル・ヒアリング・更新履歴・固定テキストを
 // data.js として出力。HTML ファイルと同じフォルダに配置で次回起動から反映。
 // =============================================================================
+// ===================================================================
+// FAQ タブ
+//   データ形式: [{ id, category, question, answer, note }]
+//   id は作成順の連番。Excel からは「シート名＝カテゴリ、A列＝質問、
+//   B列＝回答、C列＝備考」で取り込む。
+// ===================================================================
+var _faqCat = '';   // 選択中のカテゴリ（空＝すべて）
+
+function _faqAll() {
+  if (!Array.isArray(window._appCache.faqData)) window._appCache.faqData = [];
+  return window._appCache.faqData;
+}
+
+/** 次の ID（既存の最大値＋1） */
+function _faqNextId() {
+  var mx = 0;
+  _faqAll().forEach(function(f) {
+    var n = parseInt(f.id, 10);
+    if (!isNaN(n) && n > mx) mx = n;
+  });
+  return mx + 1;
+}
+
+function _faqSave() {
+  markDirty();
+  try { window.idbSetAppData('faqData', _faqAll()); } catch (e) {}
+}
+
+/** タブ全体を描き直す */
+function _faqRender() {
+  _faqRenderCats();
+  _faqRenderList();
+}
+
+function _faqRenderCats() {
+  var el = document.getElementById('faqCatList');
+  if (!el) return;
+  var all = _faqAll();
+  var cnt = {};
+  all.forEach(function(f) {
+    var c = f.category || '未分類';
+    cnt[c] = (cnt[c] || 0) + 1;
+  });
+  var names = Object.keys(cnt).sort(function(a, b) { return _imgLibCollator.compare(a, b); });
+
+  var row = function(key, label, n, active) {
+    return '<div class="script-item' + (active ? ' active' : '') + '"'
+      + ' onclick="_faqSelectCat(' + JSON.stringify(key).replace(/"/g, '&quot;') + ')"'
+      + ' style="display:flex;align-items:center;gap:6px;cursor:pointer;">'
+      + '<span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + esc(label) + '</span>'
+      + '<span style="font-size:10px;color:var(--text3);flex-shrink:0;">' + n + '</span>'
+      + (key ? '<button onclick="event.stopPropagation();_faqRenameCat(' + JSON.stringify(key).replace(/"/g, '&quot;') + ')"'
+             + ' title="カテゴリ名を変更" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:11px;padding:0 2px;">✏️</button>'
+             + '<button onclick="event.stopPropagation();_faqDeleteCat(' + JSON.stringify(key).replace(/"/g, '&quot;') + ')"'
+             + ' title="カテゴリごと削除" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:11px;padding:0 2px;">🗑</button>'
+             : '')
+      + '</div>';
+  };
+
+  el.innerHTML = row('', 'すべて', all.length, !_faqCat)
+    + names.map(function(n) { return row(n, n, cnt[n], _faqCat === n); }).join('');
+}
+
+function _faqSelectCat(cat) {
+  _faqCat = cat || '';
+  _faqRender();
+}
+
+function _faqRenderList() {
+  var el = document.getElementById('faqList');
+  if (!el) return;
+  var q = ((document.getElementById('faqSearch') || {}).value || '').trim().toLowerCase();
+
+  var list = _faqAll().filter(function(f) {
+    if (_faqCat && (f.category || '未分類') !== _faqCat) return false;
+    if (!q) return true;
+    return (String(f.question || '') + String(f.answer || '') + String(f.note || ''))
+             .toLowerCase().indexOf(q) >= 0;
+  });
+
+  var cur = document.getElementById('faqCurCat');
+  if (cur) cur.textContent = _faqCat || 'すべて';
+  var cnt = document.getElementById('faqCount');
+  if (cnt) cnt.textContent = list.length + ' 件';
+
+  if (!list.length) {
+    el.innerHTML = '<div style="padding:30px 0;text-align:center;color:var(--text3);font-size:12px;">'
+      + (q ? '「' + esc(q) + '」に一致する項目はありません' : 'まだ登録がありません。「＋ 追加」または「📊 Excel から取り込み」でご登録ください。')
+      + '</div>';
+    return;
+  }
+
+  el.innerHTML = list.map(function(f) {
+    var i = _faqAll().indexOf(f);
+    return '<div style="border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:10px;background:var(--surface);">'
+      + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:7px;">'
+      +   '<span style="font-size:10px;font-weight:700;color:var(--accent-text);background:var(--accent-lt);border-radius:4px;padding:1px 7px;flex-shrink:0;">ID ' + esc(f.id) + '</span>'
+      +   '<input type="text" value="' + esc(f.category || '') + '" placeholder="カテゴリ"'
+      +     ' oninput="_faqSet(' + i + ',\'category\',this.value)"'
+      +     ' style="width:170px;height:24px;padding:0 7px;font-size:11px;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text);">'
+      +   '<span style="flex:1;"></span>'
+      +   '<button onclick="_faqDelete(' + i + ')" title="削除" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:13px;">🗑</button>'
+      + '</div>'
+      + '<input type="text" value="' + esc(f.question || '') + '" placeholder="質問"'
+      +   ' oninput="_faqSet(' + i + ',\'question\',this.value)"'
+      +   ' style="width:100%;box-sizing:border-box;height:28px;padding:0 8px;margin-bottom:6px;font-size:12px;font-weight:700;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text);">'
+      + '<textarea rows="3" placeholder="回答" oninput="_faqSet(' + i + ',\'answer\',this.value)"'
+      +   ' style="width:100%;box-sizing:border-box;padding:6px 8px;margin-bottom:6px;font-size:12px;line-height:1.7;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text);font-family:inherit;resize:vertical;">' + esc(f.answer || '') + '</textarea>'
+      + '<input type="text" value="' + esc(f.note || '') + '" placeholder="備考（任意）"'
+      +   ' oninput="_faqSet(' + i + ',\'note\',this.value)"'
+      +   ' style="width:100%;box-sizing:border-box;height:26px;padding:0 8px;font-size:11px;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text2);">'
+      + '</div>';
+  }).join('');
+}
+
+function _faqSet(i, key, val) {
+  var a = _faqAll();
+  if (!a[i]) return;
+  a[i][key] = val;
+  _faqSave();
+}
+
+function _faqAddItem() {
+  _faqAll().push({
+    id: _faqNextId(),
+    category: _faqCat || '未分類',
+    question: '', answer: '', note: ''
+  });
+  _faqSave(); _faqRender();
+}
+
+function _faqDelete(i) {
+  var a = _faqAll();
+  if (!a[i]) return;
+  if (!confirm('この FAQ を削除しますか？\n\n' + (a[i].question || '（質問未入力）'))) return;
+  a.splice(i, 1);
+  _faqSave(); _faqRender();
+}
+
+function _faqAddCategory() {
+  var n = prompt('カテゴリ名を入力してください');
+  if (n === null) return;
+  n = n.trim(); if (!n) return;
+  _faqAll().push({ id: _faqNextId(), category: n, question: '', answer: '', note: '' });
+  _faqCat = n;
+  _faqSave(); _faqRender();
+}
+
+function _faqRenameCat(cat) {
+  var n = prompt('カテゴリ名を変更します', cat);
+  if (n === null) return;
+  n = n.trim(); if (!n || n === cat) return;
+  var c = 0;
+  _faqAll().forEach(function(f) { if ((f.category || '未分類') === cat) { f.category = n; c++; } });
+  if (_faqCat === cat) _faqCat = n;
+  _faqSave(); _faqRender();
+  toast('✏️ ' + c + ' 件のカテゴリを変更しました');
+}
+
+function _faqDeleteCat(cat) {
+  var n = _faqAll().filter(function(f) { return (f.category || '未分類') === cat; }).length;
+  if (!confirm('カテゴリ「' + cat + '」の ' + n + ' 件をすべて削除しますか？')) return;
+  window._appCache.faqData = _faqAll().filter(function(f) { return (f.category || '未分類') !== cat; });
+  if (_faqCat === cat) _faqCat = '';
+  _faqSave(); _faqRender();
+  toast('🗑 ' + n + ' 件を削除しました');
+}
+
+/**
+ * Excel から取り込む。
+ * シート名＝カテゴリ、A列＝質問、B列＝回答、C列＝備考。
+ * 1行目が見出し（「質問」など）の場合は読み飛ばす。
+ */
+function _faqImportXlsx(input) {
+  var file = input.files && input.files[0];
+  input.value = '';
+  if (!file) return;
+  if (!window.readXlsx) { toast('❌ Excel 読み込み機能が利用できません'); return; }
+
+  _importProgressShow('Excel を読み込んでいます…', file.name, 10);
+
+  window.readXlsx(file).then(function(book) {
+    var added = [], sheets = 0, skipped = 0;
+    var id = _faqNextId();
+
+    // readXlsx は { sheets: [{ name, rows }] } を返す
+    (book && book.sheets ? book.sheets : []).forEach(function(sh) {
+      var sheetName = sh.name;
+      var rows = sh.rows || [];
+      if (!rows.length) return;
+      sheets++;
+
+      rows.forEach(function(row, ri) {
+        var q = String((row[0] == null ? '' : row[0])).trim();
+        var a = String((row[1] == null ? '' : row[1])).trim();
+        var nt = String((row[2] == null ? '' : row[2])).trim();
+
+        if (!q && !a) return;                       // 空行
+        // 見出し行を読み飛ばす
+        if (ri === 0 && /^(質問|question|q)$/i.test(q)) { skipped++; return; }
+
+        added.push({
+          id: id++,
+          category: String(sheetName || '未分類').trim() || '未分類',
+          question: q, answer: a, note: nt
+        });
+      });
+    });
+
+    _importProgressHide();
+    if (!added.length) {
+      toast('⚠️ 取り込める行がありませんでした（A列＝質問、B列＝回答）');
+      return;
+    }
+
+    var msg = added.length + ' 件（' + sheets + ' シート）を取り込みます。\n\n'
+            + '既存の ' + _faqAll().length + ' 件はそのまま残り、末尾に追加されます。'
+            + (skipped ? '\n※ 見出し行 ' + skipped + ' 行は除外しました。' : '');
+    if (!confirm(msg)) return;
+
+    window._appCache.faqData = _faqAll().concat(added);
+    _faqSave(); _faqRender();
+    toast('✅ ' + added.length + ' 件を取り込みました');
+  }).catch(function(e) {
+    _importProgressHide();
+    toast('❌ 読み込みに失敗: ' + (e && e.message || e));
+  });
+}
+
 function exportDataJS(silent) {
   // 編集中の _smData があれば最新とみなす（保存ボタン以外の経路からの呼び出し対策）
   var sideMenuData = (typeof _smData !== 'undefined' && _smData)
@@ -5112,6 +5366,7 @@ function exportDataJS(silent) {
       hearingPatterns:  window._appCache.hearingPatterns  || [],
       updateHistory:    loadHistory(),
       fixedTexts:       window._appCache.fixedTexts       || {},
+      faqData:          window._appCache.faqData          || [],
       // スクリプト・メールも構成ファイルに含める
       talkScripts:      window._appCache.scripts          || (typeof data     !== 'undefined' ? data     : {}),
       mailTemplates:    window._appCache.mailTemplates    || (typeof mailData !== 'undefined' ? mailData : []),
@@ -11634,6 +11889,42 @@ window.addEventListener('resize',function(){
     return b;
   }
 
+  /**
+   * 質問を削除する。
+   * 対応方針やパターンがその質問を条件に使っている場合は、
+   * 消すと判定が壊れるため件数を示して確認する。
+   */
+  function _hrDeleteQuestion(qId, label) {
+    var pol = (window._appCache.hearingPolicies || []).filter(function(p) {
+      return (p.conditions || []).some(function(c) { return c.field === qId; });
+    }).length;
+    var pat = (window._appCache.hearingPatterns || []).filter(function(p) {
+      return (p.targets || []).some(function(t) { return t.id === qId; });
+    }).length;
+
+    var msg = '質問「' + label + '」を削除しますか？\n\n入力済みの回答も表示されなくなります。';
+    if (pol || pat) {
+      msg += '\n\n⚠️ この質問を条件に使っている設定があります。'
+           + (pol ? '\n　・対応方針 ' + pol + ' 件' : '')
+           + (pat ? '\n　・パターン ' + pat + ' 件' : '')
+           + '\n　削除すると、その条件は成立しなくなります。';
+    }
+    if (!confirm(msg)) return;
+
+    var qs = _hrQuestionsGet().filter(function(x) { return x.id !== qId; });
+    _hrQuestionsSave(qs);
+    // 入力済みの回答も片付ける
+    try {
+      if (hearingState && hearingState[qId] !== undefined) {
+        delete hearingState[qId];
+        if (typeof saveHearingState === 'function') saveHearingState();
+      }
+    } catch (e) {}
+    window.renderHearing();
+    if (typeof _hrLoadAndRender === 'function') _hrLoadAndRender();
+    toast('🗑 質問「' + label + '」を削除しました');
+  }
+
   // ── ×ボタン（選択肢削除） ──
   function _mkDelBtn(onClick) {
     var b = document.createElement('button');
@@ -11886,6 +12177,27 @@ window.addEventListener('resize',function(){
           window.renderHearing();
         });
       });
+
+      // 質問そのものを削除するボタン（追加はできるのに削除手段が無かった）
+      var delQ = document.createElement('button');
+      delQ.type = 'button';
+      delQ.textContent = '🗑';
+      delQ.title = 'この質問を削除';
+      delQ.style.cssText =
+        'margin-left:6px;height:18px;width:20px;padding:0;border:1px solid var(--border);' +
+        'border-radius:3px;background:var(--surface2);color:var(--text3);font-size:10px;' +
+        'cursor:pointer;font-family:inherit;vertical-align:middle;line-height:1;';
+      delQ.addEventListener('mouseover', function() {
+        delQ.style.background = 'var(--danger-lt,#ffeaea)'; delQ.style.color = 'var(--red,#e63946)';
+      });
+      delQ.addEventListener('mouseout', function() {
+        delQ.style.background = 'var(--surface2)'; delQ.style.color = 'var(--text3)';
+      });
+      delQ.addEventListener('click', function(e) {
+        e.stopPropagation();
+        _hrDeleteQuestion(qId, q.label);
+      });
+      labelEl.appendChild(delQ);
     }
 
     // ② ボタン群の編集

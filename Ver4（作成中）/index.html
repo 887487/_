@@ -154,7 +154,7 @@
     /* 4枚を常に1列（横一列）に並べる */
     .home-grid {
       display: grid;
-      grid-template-columns: repeat(5, 1fr);
+      grid-template-columns: repeat(3, 1fr);
       gap: 14px;
       width: 100%;
       max-width: 1200px;
@@ -274,7 +274,7 @@
   <div class="home-grid">
 
     <!-- トークスクリプト -->
-    <a class="home-card" onclick="openNamedTab('script.html','scriptTab')" href="javascript:void(0)">
+    <a class="home-card" onclick="openNamedTab('script.html','scriptTab')" href="javascript:void(0)" data-file="script.html">
       <span class="home-card-icon">📋</span>
       <span class="home-card-title">トークスクリプト</span>
       <span class="home-card-desc">お問い合わせ対応のトークスクリプトを一覧から検索・参照できます。ヒアリングチェックシート付き。
@@ -283,7 +283,7 @@
     </a>
 
     <!-- メールテンプレート -->
-    <a class="home-card" onclick="openNamedTab('mail.html','mailTab')" href="javascript:void(0)">
+    <a class="home-card" onclick="openNamedTab('mail.html','mailTab')" href="javascript:void(0)" data-file="mail.html">
       <span class="home-card-icon">✉️</span>
       <span class="home-card-title">メールテンプレート</span>
       <span class="home-card-desc">メールのテンプレートをカテゴリ別に管理。件名/本文から検索して確認できます。
@@ -292,7 +292,7 @@
     </a>
 
     <!-- 画面遷移 -->
-    <a class="home-card" onclick="openNamedTab('screen.html','screenFlowTab')" href="javascript:void(0)">
+    <a class="home-card" onclick="openNamedTab('screen.html','screenFlowTab')" href="javascript:void(0)" data-file="screen.html">
       <span class="home-card-icon">🖥️</span>
       <span class="home-card-title">画面遷移</span>
       <span class="home-card-desc">システム画面の遷移フローを視覚的に確認できます。操作手順の確認・説明に活用できます。
@@ -300,8 +300,17 @@
       <span class="home-card-arrow">開く →</span>
     </a>
 
+    <!-- FAQ -->
+    <a class="home-card" onclick="openNamedTab('FAQ.html','faqTab')" href="javascript:void(0)" data-file="FAQ.html">
+      <span class="home-card-icon">❓</span>
+      <span class="home-card-title">FAQ</span>
+      <span class="home-card-desc">よくある質問と回答をカテゴリ別に確認できます。質問・回答から検索できます。
+      </span>
+      <span class="home-card-arrow">開く →</span>
+    </a>
+
     <!-- ヒアリングチェックシート -->
-    <a class="home-card" onclick="openNamedTab('hearing.html','hearingTab')" href="javascript:void(0)">
+    <a class="home-card" onclick="openNamedTab('hearing.html','hearingTab')" href="javascript:void(0)" data-file="hearing.html">
       <span class="home-card-icon">🩺</span>
       <span class="home-card-title">ヒアリングシート</span>
       <span class="home-card-desc">聞き取り内容を記録し、対応方針の確認とコピーができます。各ページの右端からも開けます。
@@ -310,7 +319,7 @@
     </a>
 
     <!-- 管理画面 -->
-    <a class="home-card admin-card" onclick="openNamedTab('admin.html','adminTab')" href="javascript:void(0)">
+    <a class="home-card admin-card" onclick="openNamedTab('admin.html','adminTab')" href="javascript:void(0)" data-file="admin.html">
       <span class="home-card-icon">⚙️</span>
       <span class="home-card-title">管理画面</span>
       <span class="home-card-desc">スクリプト・メールテンプレート・画面フローのデータ編集・追加・削除を行います。
@@ -433,6 +442,26 @@
         })
         .catch(embed);
     } catch (e) { embed(); }
+  })();
+
+  // ===== 存在しないページのカードを隠す =====
+  // file:// では fetch も XHR も使えないため、フォルダを接続している場合だけ
+  // 実際のファイル一覧と突き合わせる。未接続のときは判定できないので
+  // 全部表示したままにする（誤って隠すより出しておくほうが安全）。
+  (function hideMissingCards() {
+    if (!window.AppFS || !window.AppFS.isSupported()) return;
+    window.AppFS.ensure(false).then(function (dir) {
+      if (!dir) return;                       // 未接続 → 判定しない
+      return window.AppFS.listFiles('').then(function (names) {
+        if (!names || !names.length) return;  // 取得できなければ触らない
+        var have = {};
+        names.forEach(function (n) { have[String(n).toLowerCase()] = 1; });
+        document.querySelectorAll('.home-card[data-file]').forEach(function (card) {
+          var f = (card.dataset.file || '').toLowerCase();
+          if (f && !have[f]) card.style.display = 'none';
+        });
+      });
+    }).catch(function () { /* 判定できないときは全部表示のまま */ });
   })();
 
   (function() {

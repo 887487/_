@@ -629,7 +629,7 @@ html[data-theme="dark"] .modal-box { background: var(--surface); border: 1px sol
 <header class="hd">
   <div class="hd-left">
     <button id="menuBtn" onclick="toggleSideMenu()">☰</button>
-    <button class="hd-title-btn" onclick="switchTab('flow')" title="フロー図へ">🖥️ 画面遷移</button>
+    <button class="header-title hd-title-btn" onclick="goHomePage()" title="ホームへ戻る">🖥️ 画面遷移</button>
     <button class="help-circle-btn" onclick="openScreenHelp()" title="使い方マニュアル">?</button>
   </div>
   <div class="hd-center">
@@ -637,6 +637,7 @@ html[data-theme="dark"] .modal-box { background: var(--surface); border: 1px sol
     <button class="tab-btn"        id="tabBtnPreview" onclick="switchTab('preview')">▶ プレビュー</button>
   </div>
   <div class="hd-right">
+    <button class="nav-btn" onclick="openNamedTab('FAQ.html','faqTab')">❓ FAQ</button>
     <button class="nav-btn" onclick="openNamedTab('script.html','scriptTab')">📋 スクリプト</button>
     <button class="nav-btn" onclick="openNamedTab('mail.html','mailTab')">✉️ メール</button>
     <div class="quick-copy-area">

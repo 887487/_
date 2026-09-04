@@ -139,11 +139,12 @@
 <header>
   <div class="hd-left">
     <button id="menuBtn" onclick="toggleSideMenu()">☰</button>
-    <button class="hd-title hd-title-btn" onclick="goHome()" title="ホームへ戻る">✉️ メールテンプレート</button>
+    <button class="header-title hd-title-btn" onclick="goHome()" title="ホームへ戻る">✉️ メールテンプレート</button>
     <button class="help-circle-btn" onclick="openHelpModal()" title="使い方マニュアル">?</button>
   </div>
   <div class="hd-center"></div>
   <div class="hd-right">
+    <button class="nav-btn" onclick="openNamedTab('FAQ.html','faqTab')">❓ FAQ</button>
     <button class="hd-btn" onclick="openNamedTab('script.html','scriptTab')">📋 スクリプト</button>
     <!-- メール：自ページのため非表示 -->
     <button class="hd-btn" onclick="openNamedTab('screen.html','screenFlowTab')">🖥️ 画面遷移</button>

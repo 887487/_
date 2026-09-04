@@ -632,7 +632,8 @@ window._appCache = {
   hearingQuestions: [],
   hearingPolicies:  [],
   hearingPatterns:  [],
-  sideMenuData:     null
+  sideMenuData:     null,
+  faqData:          []
 };
 
 // ── data.js の内容を「読み込み直後に同期で」キャッシュへ流し込む ──
@@ -652,6 +653,7 @@ window._appCache = {
   if (sd.talkScripts      != null) window._appCache.scripts          = sd.talkScripts;
   if (sd.mailTemplates    != null) window._appCache.mailTemplates    = sd.mailTemplates;
   if (sd.mailCatMeta      != null) window._appCache.mailCatMeta      = sd.mailCatMeta;
+  if (sd.faqData          != null) window._appCache.faqData          = sd.faqData;
 })();
 
 // localStorage からの一回限りのマイグレーション
@@ -700,6 +702,7 @@ window.initAppData = function() {
     if (sd.hearingPatterns  != null && sd.hearingPatterns.length)  window._appCache.hearingPatterns  = sd.hearingPatterns;
     if (sd.updateHistory    != null) window._appCache.updateHistory    = sd.updateHistory;
     if (sd.fixedTexts       != null) window._appCache.fixedTexts       = sd.fixedTexts;
+    if (sd.faqData          != null) window._appCache.faqData          = sd.faqData;
     if (sd.sideMenuFiles) {
       Object.keys(sd.sideMenuFiles).forEach(function(id) {
         var f = sd.sideMenuFiles[id];

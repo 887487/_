@@ -30,6 +30,7 @@
       box-sizing: border-box;
     }
     .hr-page-card {
+      position: relative;   /* コピー時のトーストの位置基準 */
       width: 100%;
       max-width: 760px;
       display: flex;
@@ -65,6 +66,7 @@
   </div>
   <div class="hd-center"></div>
   <div class="hd-right">
+    <button class="nav-btn" onclick="openNamedTab('FAQ.html','faqTab')">❓ FAQ</button>
     <button class="nav-btn" onclick="openNamedTab('script.html','scriptTab')">📋 スクリプト</button>
     <button class="nav-btn" onclick="openNamedTab('mail.html','mailTab')">✉️ メール</button>
     <button class="nav-btn" onclick="openNamedTab('screen.html','screenFlowTab')">🖥️ 画面遷移</button>
@@ -77,8 +79,10 @@
   <div class="hr-page-card">
     <div class="hr-page-head">
       <span class="hr-page-title">ヒアリングチェックシート</span>
-      <button class="hearing-copy-btn" onclick="copyHearingText()" title="ヒアリング内容をコピー">📋 コピー</button>
-      <button class="hearing-reset-btn" onclick="resetHearing()">リセット</button>
+      <div class="hearing-header-btns">
+        <button class="hearing-copy-btn" onclick="copyHearingText()" title="ヒアリング内容をコピー">📋 コピー</button>
+        <button class="hearing-reset-btn" onclick="resetHearing()" title="入力内容をすべて消去">🗑 リセット</button>
+      </div>
     </div>
     <div id="hearingCopyToast" class="hearing-copy-toast"></div>
     <div class="hr-page-scroll">
