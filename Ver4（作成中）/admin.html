@@ -1606,7 +1606,9 @@ html[data-theme="dark"] .nav-arrow-btn { background: rgba(40,42,54,.9); }
           <span class="hr-acc-arrow">▶</span>
           <span class="hr-section-acc-title">🗂 対応方針エディタ</span>
           <span class="hr-section-acc-count" id="hrEditorCountBadge">0件</span>
-          <button class="hr-add-btn" onclick="event.stopPropagation();document.getElementById('hrPolicySection').open=true;_hrEditorAdd()">＋ 対応方針を追加</button>
+          <button class="hr-add-btn" id="hrAddPolicyBtn"
+                  title="プレビューで選択中の組み合わせを条件として登録します"
+                  onclick="event.stopPropagation();document.getElementById('hrPolicySection').open=true;_hrEditorAdd()">＋ 対応方針を追加</button>
         </summary>
         <div class="hr-section-acc-body">
           <div style="font-size:11px;color:var(--text3);margin-bottom:10px;">選択値の組み合わせに応じて対応方針を表示します。条件を空にすると常に表示されます。</div>
@@ -2328,7 +2330,14 @@ function _hrPoliciesLoad() {
 function _hrPoliciesSave(list) {
   // builtin も含めて全件保存する（data.js に書き出される）
   window._appCache.hearingPolicies = JSON.parse(JSON.stringify(list || []));
-  window.idbSetAppData('hearingPolicies', window._appCache.hearingPolicies);
+  // バージョンも一緒に保存する。これが無いと _hrLoadAndRender() の
+  // バージョン判定に外れ、data.js の内容で上書きされて追加が消える。
+  var p = window.idbSetAppData('hearingPolicies', window._appCache.hearingPolicies);
+  if (typeof window.HEARING_DATA_VERSION !== 'undefined') {
+    window.idbSetAppData('hearingDataVersion', window.HEARING_DATA_VERSION);
+  }
+  markDirty();
+  return p || Promise.resolve();
 }
 
 // ヒアリング状態のフィールド一覧（表示名 → 実フィールド名）
@@ -2520,25 +2529,112 @@ function _hrCondSetField(pIdx, cIdx, field, val) {
   _hrPoliciesSave(l);
 }
 /**
+ * いま「ヒアリングシート（プレビュー）」で選択している状態を条件に変換する。
+ *
+ *  ・ON（true）や選択済みの項目だけを拾う
+ *  ・未選択（null / undefined / 空文字）と OFF（false）は無視する
+ * これにより「実際に押した組み合わせ＝そのまま条件」になる。
+ */
+function _hrConditionsFromPreview() {
+  var s = (typeof hearingState !== 'undefined') ? hearingState : null;
+  if (!s) return [];
+  var qs = (typeof _hrGetQuestions === 'function') ? _hrGetQuestions() : [];
+  var out = [];
+
+  qs.forEach(function(q) {
+    var v = s[q.field || q.id];
+    if (v === undefined || v === null || v === '') return;   // 未選択
+    if (v === false) return;                                 // OFF は条件にしない
+    out.push({
+      field: q.field || q.id,
+      value: (v === true) ? 'true' : String(v),
+      _label: q.label,
+      _valueLabel: (v === true) ? 'ON' : String(v)
+    });
+  });
+  return out;
+}
+
+/** 追加ボタンに、いま条件になる項目数を出す（何が登録されるか分かるように） */
+function _hrUpdateAddPolicyBtn() {
+  var b = document.getElementById('hrAddPolicyBtn');
+  if (!b) return;
+  var n = _hrConditionsFromPreview().length;
+  b.textContent = n ? '＋ 対応方針を追加（条件 ' + n + ' 件）' : '＋ 対応方針を追加';
+}
+
+/** 同じ条件の組み合わせを持つ対応方針を探す（順序は問わない） */
+function _hrFindSamePolicy(conds, list) {
+  var key = function(cs) {
+    return (cs || []).map(function(c) { return c.field + '=' + c.value; }).sort().join('|');
+  };
+  var k = key(conds);
+  if (!k) return null;   // 条件なしは重複判定しない
+  return (list || []).find(function(p) { return key(p.conditions) === k; }) || null;
+}
+
+/**
  * 対応方針を追加する。
- * 以前は空のまま黙って1件増えていたため、押した実感が無く
- * 空の項目だけが溜まりやすかった。文面を先に入力させる。
+ * プレビューで選択中の組み合わせをそのまま条件として取り込み、
+ * 文面だけ入力すれば完成する形にしている。
  */
 function _hrEditorAdd() {
-  var txt = prompt('対応方針の文面を入力してください。\n\n（追加後に条件を設定できます）');
+  var conds = _hrConditionsFromPreview();
+  var list  = _hrPoliciesLoad() || [];
+
+  // 同じ条件の組み合わせが既にあれば知らせる
+  var dup = _hrFindSamePolicy(conds, list);
+  if (dup) {
+    var ok = confirm(
+      '同じ条件の対応方針が既に登録されています。\n\n'
+      + '　条件：' + (conds.map(function(c){ return c._label + '＝' + c._valueLabel; }).join(' / ') || '（条件なし）') + '\n'
+      + '　文面：' + (dup.policy || '（未入力）') + '\n\n'
+      + 'それでも別の方針として追加しますか？\n'
+      + '（同じ条件のときは両方が表示されます）'
+    );
+    if (!ok) {
+      // 既存のほうを開いて示す
+      _hrPolicyOpenState[dup.id] = true;
+      _hrLoadAndRender();
+      setTimeout(function() {
+        var el = document.getElementById('hrPolicy_' + dup.id);
+        if (el && el.scrollIntoView) el.scrollIntoView({ block: 'center' });
+      }, 60);
+      return;
+    }
+  }
+
+  var head = conds.length
+    ? '下の組み合わせを条件として登録します。\n\n　' +
+      conds.map(function(c){ return c._label + '＝' + c._valueLabel; }).join('\n　') +
+      '\n\n対応方針の文面を入力してください。'
+    : 'プレビューで選択されている項目がないため、条件なしで登録します。\n'
+      + '（すべての場合に表示されます。追加後に条件を設定できます）\n\n'
+      + '対応方針の文面を入力してください。';
+
+  var txt = prompt(head);
   if (txt === null) return;                       // キャンセル
   txt = txt.trim();
   if (!txt) { toast('⚠️ 文面を入力してください'); return; }
 
-  var l = _hrPoliciesLoad() || [];
   var newId = 'hr' + Math.random().toString(36).substr(2, 8);
-  l.push({ id: newId, conditions: [], policy: txt, enabled: true });
-  _hrPoliciesSave(l);
-  _hrPolicyOpenState[newId] = true;               // 追加した項目は開いた状態で表示
-  _hrLoadAndRender();
-  toast('✅ 対応方針を追加しました。条件を設定してください');
+  list.push({
+    id: newId,
+    // 表示用のラベルは保存しない（項目名を変えても条件は field で追随する）
+    conditions: conds.map(function(c) { return { field: c.field, value: c.value }; }),
+    policy: txt,
+    enabled: true
+  });
+  // 保存が終わる前に再描画すると、IndexedDB から読み直した古い内容で
+  // 上書きされて追加が消える。完了を待ってから描き直す。
+  Promise.resolve(_hrPoliciesSave(list)).then(function() {
+    _hrPolicyOpenState[newId] = true;             // 追加した項目は開いた状態で表示
+    _hrLoadAndRender();
+  });
+  toast(conds.length
+    ? '✅ ' + conds.length + ' 件の条件付きで追加しました'
+    : '✅ 条件なしで追加しました。条件を設定してください');
 
-  // 追加した項目までスクロールする
   setTimeout(function() {
     var el = document.getElementById('hrPolicy_' + newId);
     if (el && el.scrollIntoView) el.scrollIntoView({ block: 'center' });
@@ -4484,7 +4580,14 @@ function _hrPatsLoad() {
 }
 function _hrPatsSave(arr) {
   window._appCache.hearingPatterns = arr;
-  window.idbSetAppData('hearingPatterns', arr);
+  // 対応方針と同様、バージョンも保存しないと再読込時に
+  // data.js の内容で上書きされて登録が消える。
+  var p = window.idbSetAppData('hearingPatterns', arr);
+  if (typeof window.HEARING_DATA_VERSION !== 'undefined') {
+    window.idbSetAppData('hearingDataVersion', window.HEARING_DATA_VERSION);
+  }
+  markDirty();
+  return p || Promise.resolve();
 }
 
 /** パターン一覧を描画 */
@@ -12432,6 +12535,7 @@ window.addEventListener('resize',function(){
 
       // サマリ描画
       if (typeof window.renderHearingSummary === 'function') window.renderHearingSummary();
+      if (typeof _hrUpdateAddPolicyBtn === 'function') _hrUpdateAddPolicyBtn();
 
       // 各 [data-q-id] 行に編集機能を付加
       el.querySelectorAll('.hr-row[data-q-id]').forEach(function(rowEl) {

@@ -2566,6 +2566,8 @@ function renderHearing() {
   h += '<div id="hearingSummaryArea"></div>';
   el.innerHTML = h;
   renderHearingSummary();
+  // 管理画面では「＋ 対応方針を追加」に、いま条件になる件数を出す
+  if (typeof _hrUpdateAddPolicyBtn === 'function') _hrUpdateAddPolicyBtn();
 }
 
 function _mkOpt(val, selected) { return '<option value="' + val + '"' + (selected === val ? ' selected' : '') + '>' + val + '</option>'; }
