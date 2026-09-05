@@ -5491,13 +5491,14 @@ function _faqImportXlsx(input) {
   _importProgressShow('Excel を読み込んでいます…', file.name, 10);
 
   window.readXlsx(file).then(function(book) {
-    var added = [], sheets = 0, skipped = 0;
+    var added = [], sheets = 0, skipped = 0, pics = 0;
     var id = _faqNextId();
 
     // readXlsx は { sheets: [{ name, rows }] } を返す
     (book && book.sheets ? book.sheets : []).forEach(function(sh) {
       var sheetName = sh.name;
       var rows = sh.rows || [];
+      var imgs = sh.images || {};   // 'row,col' → [dataURL, ...]
       if (!rows.length) return;
       sheets++;
 
@@ -5513,7 +5514,22 @@ function _faqImportXlsx(input) {
         };
         var q = cell(1), a = cell(2), nt = cell(3);
 
-        if (!q.text && !a.text) return;             // 空行
+        // セルに貼られた画像を、その列の内容の末尾に足す
+        var addImgs = function(colIdx, cur) {
+          var list = imgs[ri + ',' + colIdx];
+          if (!list || !list.length) return cur;
+          var tags = list.map(function(u) {
+            return '<img src="' + u + '" alt="" style="max-width:100%;height:auto;">';
+          }).join('');
+          return (cur.html || esc(cur.text).replace(/\n/g, '<br>')) + tags;
+        };
+        q.html  = addImgs(1, q);
+        a.html  = addImgs(2, a);
+        nt.html = addImgs(3, nt);
+
+        var hasImg = !!(imgs[ri + ',1'] || imgs[ri + ',2'] || imgs[ri + ',3']);
+        if (!q.text && !a.text && !hasImg) return;   // 空行（画像だけの行は残す）
+        if (hasImg) pics++;
 
         added.push({
           id: id++,
@@ -5534,7 +5550,8 @@ function _faqImportXlsx(input) {
     var msg = added.length + ' 件（' + sheets + ' シート）を取り込みます。\n\n'
             + '　シート名 → カテゴリ\n　B列 → 質問　C列 → 回答　D列 → 備考\n'
             + '　※ 1行目は見出しとして除外します\n\n'
-            + '既存の ' + _faqAll().length + ' 件はそのまま残り、末尾に追加されます。';
+            + (pics ? '　🖼 画像を含む行：' + pics + ' 件\n' : '')
+            + '\n既存の ' + _faqAll().length + ' 件はそのまま残り、末尾に追加されます。';
     if (!confirm(msg)) return;
 
     window._appCache.faqData = _faqAll().concat(added);

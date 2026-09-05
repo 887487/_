@@ -54,7 +54,9 @@
     .faq-bar-title { font-size: 14px; font-weight: 700; }
     .faq-bar-count { font-size: 11px; color: var(--text3); }
     .faq-scroll { flex: 1; overflow-y: auto; padding: 16px 18px 40px; }
-    .faq-inner { max-width: 900px; margin: 0 auto; }
+    /* カードの幅がスクロールバーや内容で揺れないよう固定する */
+    .faq-inner { width: 100%; max-width: 900px; margin: 0 auto; }
+    .faq-scroll { scrollbar-gutter: stable; }
 
     /* 1件ぶんのカード（クリックで回答を開閉） */
     .faq-item {
@@ -72,8 +74,18 @@
     .faq-q-arrow { flex-shrink: 0; color: var(--text3); font-size: 11px; transition: transform .15s; }
     .faq-item.open .faq-q-arrow { transform: rotate(90deg); }
 
-    .faq-a { display: none; padding: 0 14px 14px 38px; }
-    .faq-item.open .faq-a { display: block; }
+    .faq-a { display: none; padding: 14px 16px 16px; }
+    .faq-item.open .faq-a {
+      display: block;
+      border-top: 1px solid var(--border);   /* 質問と回答の区切り */
+    }
+    /* 回答の先頭に A を出して質問と対応させる */
+    .faq-a-body { display: flex; gap: 10px; align-items: flex-start; }
+    .faq-a-mark {
+      flex-shrink: 0; font-size: 14px; font-weight: 700;
+      color: var(--text3); line-height: 1.9;
+    }
+    .faq-a-main { flex: 1; min-width: 0; }
     .faq-a-text s, .faq-q-text s, .faq-note s { text-decoration: line-through; }
     .faq-a-text u, .faq-q-text u, .faq-note u { text-decoration: underline; }
     .faq-a-text {
@@ -81,14 +93,28 @@
       white-space: pre-wrap; word-break: break-word;
     }
     .faq-note {
-      margin-top: 9px; padding: 7px 10px; font-size: 11px; line-height: 1.7;
-      color: var(--text2); background: var(--surface2);
-      border-left: 3px solid var(--border); border-radius: 4px;
+      margin-top: 14px; padding-top: 12px;
+      border-top: 1px dashed var(--border);   /* 回答と備考の区切り */
+      font-size: 12px; line-height: 1.8; color: var(--text2);
       white-space: pre-wrap;
     }
-    .faq-meta { margin-top: 8px; font-size: 10px; color: var(--text3); }
+    .faq-note-label {
+      display: block; margin-bottom: 4px;
+      font-size: 10px; font-weight: 700; color: var(--text3);
+    }
+    .faq-meta {
+      margin-top: 14px; padding-top: 8px;
+      border-top: 1px solid var(--border);
+      font-size: 10px; color: var(--text3);
+    }
     .faq-hit { background: var(--mark-bg, #fff3a3); border-radius: 2px; }
 
+    /* Excel から取り込んだ画像 */
+    .faq-inline-img {
+      max-width: 100%; height: auto; display: block; margin: 8px 0;
+      border: 1px solid var(--border); border-radius: 6px;
+      background: var(--surface2); cursor: zoom-in;
+    }
     /* 回答内の画像 */
     .faq-fig { margin: 10px 0; }
     .faq-fig img {
@@ -221,7 +247,7 @@
    * Excel から取り込んだ太字・取り消し線・色などを再現するため。
    * 許可するタグを絞り、それ以外は取り除く（スクリプト混入を防ぐ）。
    */
-  var ALLOW_TAGS = /^(b|strong|i|em|u|s|strike|br|span|div|p|ul|ol|li|font)$/i;
+  var ALLOW_TAGS = /^(b|strong|i|em|u|s|strike|br|span|div|p|ul|ol|li|font|img|figure|figcaption)$/i;
 
   function sanitize(html) {
     var box = document.createElement('div');
@@ -236,12 +262,26 @@
             node.removeChild(c);
             return;
           }
+          var isImg = (c.tagName || '').toLowerCase() === 'img';
           Array.prototype.slice.call(c.attributes).forEach(function (a) {
-            // style の color 以外は落とす（onclick などを持ち込ませない）
+            // 画像は src / alt だけ残す。src は data: と相対パスのみ許可
+            if (isImg) {
+              if (a.name === 'alt') return;
+              if (a.name === 'src' && /^(data:image\/|[^a-z]|[a-z0-9._\-]+\/)/i.test(a.value)
+                  && !/^\s*javascript:/i.test(a.value)) return;
+              c.removeAttribute(a.name);
+              return;
+            }
+            // style は color 指定のみ通す（onclick などを持ち込ませない）
             if (a.name === 'style' && /color\s*:/i.test(a.value)) return;
             if (a.name === 'color') return;
             c.removeAttribute(a.name);
           });
+          if (isImg) {
+            c.setAttribute('loading', 'lazy');
+            c.setAttribute('onclick', '');   // 下で付け直す
+            c.className = 'faq-inline-img';
+          }
           walk(c);
         }
       });
@@ -365,8 +405,11 @@
         +   '<span class="faq-q-arrow">▶</span>'
         + '</div>'
         + '<div class="faq-a">'
-        +   renderAnswer(f.answer, q, f.answerHtml)
-        +   (f.note ? '<div class="faq-note">'
+        +   '<div class="faq-a-body">'
+        +     '<span class="faq-a-mark">A</span>'
+        +     '<div class="faq-a-main">' + renderAnswer(f.answer, q, f.answerHtml) + '</div>'
+        +   '</div>'
+        +   (f.note ? '<div class="faq-note"><span class="faq-note-label">備考</span>'
         +     ((f.noteHtml && !q) ? sanitize(f.noteHtml) : mark(f.note, q)) + '</div>' : '')
         +   '<div class="faq-meta">ID ' + esc(f.id) + '　/　' + esc(f.category || '未分類') + '</div>'
         + '</div></div>';
@@ -398,6 +441,12 @@
     document.getElementById('faqToggleBtn').textContent = _faqAllOpen ? '全て閉じる' : '全て開く';
     renderList();
   }
+
+  // 取り込み画像もクリックで拡大する（毎回属性を付けずに委譲で扱う）
+  document.addEventListener('click', function (e) {
+    var t = e.target;
+    if (t && t.classList && t.classList.contains('faq-inline-img')) faqZoom(t.src);
+  });
 
   document.addEventListener('DOMContentLoaded', function () {
     var start = function () {

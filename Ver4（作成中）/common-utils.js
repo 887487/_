@@ -497,6 +497,27 @@ window.screenImgFileSrc = function(libId) {
     return new Response(blob.stream().pipeThrough(ds)).text();
   }
 
+  /** _zipRead のバイナリ版（画像を取り出すのに使う） */
+  function _zipReadBinary(buf, entries, path) {
+    var e = entries[path];
+    if (!e) return Promise.resolve(null);
+    var dv = new DataView(buf);
+    var lo = e.localOffset;
+    if (_u32(dv, lo) !== 0x04034b50) return Promise.resolve(null);
+    var dataStart = lo + 30 + _u16(dv, lo + 26) + _u16(dv, lo + 28);
+    var raw = new Uint8Array(buf, dataStart, e.compSize);
+
+    if (e.method === 0) return Promise.resolve(raw.slice(0));
+    if (e.method !== 8) return Promise.resolve(null);
+    if (typeof DecompressionStream !== 'function') return Promise.resolve(null);
+
+    var ds = new DecompressionStream('deflate-raw');
+    var blob = new Blob([raw.slice(0)]);
+    return new Response(blob.stream().pipeThrough(ds)).arrayBuffer()
+      .then(function(ab) { return new Uint8Array(ab); })
+      .catch(function() { return null; });
+  }
+
   function _parseXml(text) {
     var doc = new DOMParser().parseFromString(text, 'application/xml');
     if (doc.getElementsByTagName('parsererror').length) throw new Error('XML の解析に失敗しました');
@@ -608,6 +629,97 @@ window.screenImgFileSrc = function(libId) {
     return v;
   }
 
+  /**
+   * シートに貼られた画像を取り出す。
+   *
+   * xlsx では画像はセルの中ではなく drawing として「この行・この列の位置」に
+   * 浮かんでいる。アンカーの行列を見て、対応するセルの画像として拾う。
+   *   sheet.xml.rels → drawingN.xml → drawingN.xml.rels → xl/media/*
+   * @returns Promise<{ 'r,c': [dataURL, ...] }>
+   */
+  function _readSheetImages(buf, entries, sheetPath) {
+    var relPath = sheetPath.replace(/([^/]+)$/, '_rels/$1.rels');
+    return _zipRead(buf, entries, relPath).then(function(relXml) {
+      if (!relXml) return {};
+      var rels = _parseXml(relXml).getElementsByTagName('Relationship');
+      var drawPath = null;
+      for (var i = 0; i < rels.length; i++) {
+        if (/drawing/i.test(rels[i].getAttribute('Type') || '')) {
+          var t = (rels[i].getAttribute('Target') || '').replace(/^\.\.\//, '').replace(/^\/?xl\//, '');
+          drawPath = 'xl/' + t;
+          break;
+        }
+      }
+      if (!drawPath) return {};
+
+      var dRelPath = drawPath.replace(/([^/]+)$/, '_rels/$1.rels');
+      return Promise.all([
+        _zipRead(buf, entries, drawPath),
+        _zipRead(buf, entries, dRelPath)
+      ]).then(function(r) {
+        if (!r[0]) return {};
+        var doc = _parseXml(r[0]);
+        // rId → メディアのパス
+        var media = {};
+        if (r[1]) {
+          var drs = _parseXml(r[1]).getElementsByTagName('Relationship');
+          for (var k = 0; k < drs.length; k++) {
+            var tt = (drs[k].getAttribute('Target') || '').replace(/^\.\.\//, '').replace(/^\/?xl\//, '');
+            media[drs[k].getAttribute('Id')] = 'xl/' + tt;
+          }
+        }
+
+        // アンカーごとに「行・列」と画像を対応づける
+        var jobs = [], map = {};
+        var anchors = [];
+        ['oneCellAnchor', 'twoCellAnchor', 'absoluteAnchor'].forEach(function(tag) {
+          var els = doc.getElementsByTagName(tag);
+          for (var a = 0; a < els.length; a++) anchors.push(els[a]);
+        });
+
+        anchors.forEach(function(an) {
+          var from = an.getElementsByTagName('from')[0];
+          var col = 0, row = 0;
+          if (from) {
+            var cEl = from.getElementsByTagName('col')[0];
+            var rEl = from.getElementsByTagName('row')[0];
+            col = cEl ? parseInt(cEl.textContent, 10) : 0;
+            row = rEl ? parseInt(rEl.textContent, 10) : 0;
+          }
+          var blips = an.getElementsByTagName('blip');
+          if (!blips.length) blips = an.getElementsByTagName('a:blip');
+          for (var b = 0; b < blips.length; b++) {
+            var rid = blips[b].getAttribute('r:embed') || blips[b].getAttribute('embed');
+            var mp  = rid && media[rid];
+            if (!mp) continue;
+            (function(mPath, key) {
+              jobs.push(
+                _zipReadBinary(buf, entries, mPath).then(function(bytes) {
+                  if (!bytes) return;
+                  var ext  = (mPath.split('.').pop() || 'png').toLowerCase();
+                  var mime = ext === 'jpg' ? 'image/jpeg'
+                           : ext === 'svg' ? 'image/svg+xml' : 'image/' + ext;
+                  var url  = 'data:' + mime + ';base64,' + _bytesToBase64(bytes);
+                  (map[key] = map[key] || []).push(url);
+                }).catch(function(){})
+              );
+            })(mp, row + ',' + col);
+          }
+        });
+        return Promise.all(jobs).then(function() { return map; });
+      }).catch(function() { return {}; });
+    }).catch(function() { return {}; });
+  }
+
+  /** Uint8Array → base64（大きい画像でも落ちないよう分割して変換する） */
+  function _bytesToBase64(bytes) {
+    var bin = '', chunk = 0x8000;
+    for (var i = 0; i < bytes.length; i += chunk) {
+      bin += String.fromCharCode.apply(null, bytes.subarray(i, i + chunk));
+    }
+    return btoa(bin);
+  }
+
   /** worksheet XML → 2次元配列 */
   function _parseSheet(doc, shared) {
     var rowsEl = doc.getElementsByTagName('row'), rows = [];
@@ -686,9 +798,14 @@ window.screenImgFileSrc = function(libId) {
                        (el.attributes.getNamedItem('r:id') ? el.attributes.getNamedItem('r:id').value : null);
             var path = (rid && relMap[rid]) || ('xl/worksheets/sheet' + (idx + 1) + '.xml');
             jobs.push(
-              _zipRead(buf, entries, path).then(function(xml) {
-                return { name: name, rows: xml ? _parseSheet(_parseXml(xml), shared) : [] };
-              }).catch(function() { return { name: name, rows: [] }; })
+              Promise.all([
+                _zipRead(buf, entries, path),
+                _readSheetImages(buf, entries, path)
+              ]).then(function(rr) {
+                var rows = rr[0] ? _parseSheet(_parseXml(rr[0]), shared) : [];
+                // 画像はセル位置（行,列）ごとにまとめて添える
+                return { name: name, rows: rows, images: rr[1] || {} };
+              }).catch(function() { return { name: name, rows: [], images: {} }; })
             );
           })(sheetEls[s], s);
         }
