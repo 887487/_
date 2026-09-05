@@ -110,6 +110,18 @@
     }
     .faq-hit { background: var(--mark-bg, #fff3a3); border-radius: 2px; }
 
+    /* 本文中の表 */
+    .faq-a-text table, .faq-note table {
+      border-collapse: collapse; width: 100%; margin: 8px 0; font-size: 12px;
+    }
+    .faq-a-text th, .faq-a-text td,
+    .faq-note th, .faq-note td {
+      border: 1px solid var(--text3); padding: 5px 8px; vertical-align: top;
+    }
+    .faq-a-text th, .faq-note th {
+      background: var(--surface2); font-weight: 700; text-align: left;
+    }
+
     /* Excel から取り込んだ画像 */
     .faq-inline-img {
       max-width: 100%; height: auto; display: block; margin: 8px 0;
@@ -248,7 +260,7 @@
    * Excel から取り込んだ太字・取り消し線・色などを再現するため。
    * 許可するタグを絞り、それ以外は取り除く（スクリプト混入を防ぐ）。
    */
-  var ALLOW_TAGS = /^(b|strong|i|em|u|s|strike|br|span|div|p|ul|ol|li|font|img|figure|figcaption)$/i;
+  var ALLOW_TAGS = /^(b|strong|i|em|u|s|strike|br|span|div|p|ul|ol|li|font|img|figure|figcaption|table|thead|tbody|tr|th|td)$/i;
 
   function sanitize(html) {
     var box = document.createElement('div');
@@ -273,6 +285,8 @@
               c.removeAttribute(a.name);
               return;
             }
+            // 表の結合情報は残す
+            if (a.name === 'colspan' || a.name === 'rowspan') return;
             // style は color 指定のみ通す（onclick などを持ち込ませない）
             if (a.name === 'style' && /color\s*:/i.test(a.value)) return;
             if (a.name === 'color') return;
@@ -483,6 +497,16 @@
     var t = e.target;
     if (t && t.classList && t.classList.contains('faq-inline-img')) faqZoom(t.src);
   });
+
+  // 管理画面での変更を受け取って描き直す
+  try {
+    var _faqBc = new BroadcastChannel('tool_data_update');
+    _faqBc.onmessage = function (e) {
+      if (!e.data || e.data.type !== 'faqUpdated') return;
+      if (window._appCache) window._appCache.faqData = e.data.data;
+      renderCats(); renderList();
+    };
+  } catch (e) {}
 
   document.addEventListener('DOMContentLoaded', function () {
     var start = function () {

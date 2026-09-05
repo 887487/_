@@ -2392,16 +2392,24 @@ var _lkBusy = false;
 
   var _observe = function() {
     document.querySelectorAll('[data-linkify]').forEach(function(el) {
-      obs.observe(el, { childList: true, subtree: true, characterData: true });
+      // data-linkify（設定の切り替え）の変化も拾う。
+      // これが無いと ON→OFF にしてもリンクのまま残る。
+      obs.observe(el, {
+        childList: true, subtree: true, characterData: true,
+        attributes: true, attributeFilter: ['data-linkify']
+      });
     });
   };
 
   var start = function() {
-    obs = new MutationObserver(function() {
+    obs = new MutationObserver(function(muts) {
       if (_lkBusy) return;
-      // 中身が変わったら適用済みフラグを外して付け直す
-      document.querySelectorAll('[data-linkify]').forEach(function(el) {
-        el.dataset.linkified = '';
+      muts.forEach(function(m) {
+        var el = m.target.nodeType === 1 ? m.target : m.target.parentNode;
+        el = el && el.closest ? el.closest('[data-linkify]') : null;
+        // 中身が変わった場合だけ適用済みフラグを外す。
+        // 属性（設定）の変化では外さない（外すと解除処理が走らない）。
+        if (el && m.type !== 'attributes') el.dataset.linkified = '';
       });
       kick();
     });

@@ -681,11 +681,13 @@ details[open] > summary .hr-acc-arrow { transform: rotate(90deg); }
 .rt-merge{border-color:var(--accent);color:var(--accent-text);}
 
 /* 挿入した表 */
-.rt-table{border-collapse:collapse;width:100%;margin:8px 0;font-size:12px;}
-.rt-table th,.rt-table td{
-  border:1px solid var(--border);padding:5px 8px;min-width:40px;vertical-align:top;
+/* 編集欄の中の表は、クラスが落ちても罫線が見えるようにする */
+.rt-table,.rt-edit table{border-collapse:collapse;width:100%;margin:8px 0;font-size:12px;}
+.rt-table th,.rt-table td,
+.rt-edit table th,.rt-edit table td{
+  border:1px solid var(--text3);padding:5px 8px;min-width:40px;vertical-align:top;
 }
-.rt-table th{background:var(--surface2);font-weight:700;text-align:left;}
+.rt-table th,.rt-edit table th{background:var(--surface2);font-weight:700;text-align:left;}
 .rt-table th::selection,.rt-table td::selection{background:var(--accent-lt);}
 .rt-table th *::selection,.rt-table td *::selection{background:var(--accent-lt);}
 
@@ -5810,6 +5812,8 @@ function _rtMarkSel(cells) {
 }
 
 document.addEventListener('mousedown', function(e) {
+  // 書式バーの操作でセル選択を消すと、結合ボタンを押した時点で対象が失われる
+  if (e.target.closest && e.target.closest('.rt-bar')) return;
   var cell = e.target.closest && e.target.closest('.rt-table th, .rt-table td');
   if (!cell || !cell.closest('[contenteditable="true"]')) { _rtClearSel(); return; }
   _rtSelAnchor = cell;
@@ -5971,6 +5975,13 @@ function _faqSetLink(i, on) {
   if (!a[i]) return;
   a[i].linkify = !!on;
   _faqSave();
+  // 開いている FAQ タブにも即座に伝える
+  try {
+    var bc = new BroadcastChannel('tool_data_update');
+    bc.postMessage({ type: 'faqUpdated', data: a });
+    bc.close();
+  } catch (e) {}
+  toast(on ? '🔗 URL をリンクとして表示します' : '⛓️ URL を文字列のまま表示します');
 }
 
 /** 1項目ぶんの編集欄。HTML があればそれを、無ければテキストを表示する */
