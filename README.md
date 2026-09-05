@@ -1,21 +1,35 @@
 **https://887487.github.io/_/**
 ---
-* スクリプト内で文字の左/中央/右揃え　セルの結合　を可能にしてください
-* ホットスポットで遷移先なしで備考テキストのみの表示を可能にする
-* 同一画像に対してホットスポットが追加されたとき、別パターンにも反映させる
+前頁共通
+---
+---
+20260807追記
+* ダークモードの配色を改善する
+* サイドメニューから指定したExcelファイルを開く
+
+20260905追記
+* 使い方マニュアル を更新（FAQページにも追加）
+* URLをハイパーリンクとして認識させるかどうか選択可能にする ※有効時はクリック時に別タブで開く → 認識に誤りがあるため修正して下さい。正しくは、コンテンツ（スクリプト/メール/画面遷移/FAQ）内でテキストとして表示されているURLをリンクとして取り扱うかどうかをadmin.htmlで個別に切り替え可能にしてほしい
+* 別フォルダのindex.htmlから起動したとき、直下のdata.jsが読み込まれていない
+---
+**script.html**
+* 固定文言が更新されない
 ---
 **admin.html ヒアリングタブ**
 * ボタン非表示条件が保存されない
 * [🔒 組み込み]と[✏️ カスタム]の表示を削除（すべてadmin.htmlから編集可能な設計を想定しているため）
   
-20260606追記
-* インライン（リッチテキスト）で編集可能にする
-
+20260904追記
+* 表示/非表示パターンを登録 0件になっている（組み込み分が含まれていない）
+* 対応方針エディタ ”この方針を削除しますか” のダイアログからOKを押下した後、組み込み分の表示が組み込み分が見えなくなる（実際には削除されていない）
+* 管理画面からノーコードで構築できるようにする(記述／プルダウン／ラジオボタン／トグルボタンに対応)
 ---
-20260807追記
-* ダークモードの配色を改善する
-* サイドメニューから指定したExcelファイルを開く
+**admin.html FAQタブ**
+* Excelから取り込み　[object Object] の表示。セルから画像も取り込めていない。
+* ❌ 保存失敗: Converting circular structure to JSON --> starting at object with constructor 'Object' --- property 'html' closes the circle
+* admin.html:1 Unsafe attempt to load URL file:///C:/Users/sk2505812/OneDrive%20-%20transcosmos%20inc/%E3%83%87%E3%82%B9%E3%82%AF%E3%83%88%E3%83%83%E3%83%97/%E7%9C%9F%E3%83%BB%E6%A5%AD%E5%8B%99%E3%83%84%E3%83%BC%E3%83%AB/%E7%9C%9F%E3%83%BB%E6%A5%AD%E5%8B%99%E3%83%84%E3%83%BC%E3%83%AB%20Ver4.1%EF%BC%88SOD%EF%BC%89/admin.html from frame with URL file:///C:/Users/sk2505812/OneDrive%20-%20transcosmos%20inc/%E3%83%87%E3%82%B9%E3%82%AF%E3%83%88%E3%83%83%E3%83%97/%E7%9C%9F%E3%83%BB%E6%A5%AD%E5%8B%99%E3%83%84%E3%83%BC%E3%83%AB/%E7%9C%9F%E3%83%BB%E6%A5%AD%E5%8B%99%E3%83%84%E3%83%BC%E3%83%AB%20Ver4.1%EF%BC%88SOD%EF%BC%89/admin.html. 'file:' URLs are treated as unique security origins.
 ---
+* 
 20260809追記
 * 読み込み高速化
 * 別PCでadmin.htmlを開いたとき、画像ライブラリが空になっている（screen.html と パターン には反映されている）※jsonから個別で画面遷移をインポートすれば解消される
@@ -40,14 +54,6 @@
 * 管理者用の定型文ボタン の表示を考える → admin.htmlにのみ表示？
 * HS登録 → HS部分に遷移先となる画像をライブラリからD&D
 ---
-20260904追記
-
-admin.html ヒアリングタブ
-* 対応方針エディタ削除した場合、組み込み分が見えなくなる（実際には削除されていない）手動登録分を削除すると復活する
-
-表示/非表示パターンを登録
-* 0件になっている
-   
 ［CTRL］+［；］で日付入力　／　［CTRL］+［：］で時間入力 に対応する
 
 「hearing.html」上部にテンプレを配置
@@ -68,22 +74,4 @@ admin.html ヒアリングタブ
 ※ラジオボタン／トグルボタン（選択した場合、各項目名と複数選択を許可するかどうか）
 プレースホルダーテキスト
 
----
-前頁共通
-* 使い方マニュアル を更新（FAQページにも追加）
-* URLをハイパーリンクとして認識させるかどうか選択可能にする ※有効時はクリック時に別タブで開く → 認識に誤りがあるため修正して下さい。正しくは、コンテンツ（スクリプト/メール/画面遷移/FAQ）内でテキストとして表示されているURLをリンクとして取り扱うかどうかをadmin.htmlで個別に切り替え可能にしてほしい
-* 別フォルダのindex.htmlから起動したとき、直下のdata.jsが読み込まれていない
 
-script.html
-* 固定文言が更新されない
-
-admin.html ヒアリングタブ
-* 管理画面からノーコードで構築できるようにする(記述／プルダウン／ラジオボタン／トグルボタンに対応)
-
-admin.html スクリプトタブ,メールタブ,画面遷移タブ,FAQタブ
-* 各テキストエリアにデザイン共通の書式設定バーを配置（太字　斜体　下線　取消線　赤字　左揃え　中央揃え　右揃え　表挿入　画像挿入）
-
-admin.html FAQタブ
-* Excelから取り込み　[object Object] の表示。セルから画像も取り込めていない。
-* ❌ 保存失敗: Converting circular structure to JSON --> starting at object with constructor 'Object' --- property 'html' closes the circle
-* admin.html:1 Unsafe attempt to load URL file:///C:/Users/sk2505812/OneDrive%20-%20transcosmos%20inc/%E3%83%87%E3%82%B9%E3%82%AF%E3%83%88%E3%83%83%E3%83%97/%E7%9C%9F%E3%83%BB%E6%A5%AD%E5%8B%99%E3%83%84%E3%83%BC%E3%83%AB/%E7%9C%9F%E3%83%BB%E6%A5%AD%E5%8B%99%E3%83%84%E3%83%BC%E3%83%AB%20Ver4.1%EF%BC%88SOD%EF%BC%89/admin.html from frame with URL file:///C:/Users/sk2505812/OneDrive%20-%20transcosmos%20inc/%E3%83%87%E3%82%B9%E3%82%AF%E3%83%88%E3%83%83%E3%83%97/%E7%9C%9F%E3%83%BB%E6%A5%AD%E5%8B%99%E3%83%84%E3%83%BC%E3%83%AB/%E7%9C%9F%E3%83%BB%E6%A5%AD%E5%8B%99%E3%83%84%E3%83%BC%E3%83%AB%20Ver4.1%EF%BC%88SOD%EF%BC%89/admin.html. 'file:' URLs are treated as unique security origins.
