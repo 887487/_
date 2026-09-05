@@ -103,15 +103,14 @@ admin.html ヒアリングタブ
 
 前頁共通
 * 使い方マニュアル を更新（FAQページにも追加）
-* URL をハイパーリンクとして認識させるかどうか選択可能にする ※有効時はクリック時に別タブで開く
+* URL をハイパーリンクとして認識させるかどうか選択可能にする ※有効時はクリック時に別タブで開く　→認識に誤りがあるため修正して下さい
+* コンテンツ（スクリプト/メール/FAQ）内のURLをリンクとして取り扱うかどうかをadmin.htmlで個別に切り替え可能にしてほしい
+
+
 * 別フォルダのindex.htmlから起動したとき、直下のdata.jsが読み込まれていない
 
 script.html
 * 固定文言が更新されない
-
-FAQ.html
-* 検索結果の表示には書式設定が反映されていない
-* 左サイドバーの幅を他ページと統一する
 
 admin.html スクリプトタブ
 * インラインリッチテキスト の仕様をFAQ側と統一する
@@ -119,8 +118,10 @@ admin.html スクリプトタブ
 
 admin.html FAQタブ
 * Excelから取り込み　[object Object] の表示。セルから画像も取り込めていない。
+* ❌ 保存失敗: Converting circular structure to JSON --> starting at object with constructor 'Object' --- property 'html' closes the circle
+* admin.html:1 Unsafe attempt to load URL file:///C:/Users/sk2505812/OneDrive%20-%20transcosmos%20inc/%E3%83%87%E3%82%B9%E3%82%AF%E3%83%88%E3%83%83%E3%83%97/%E7%9C%9F%E3%83%BB%E6%A5%AD%E5%8B%99%E3%83%84%E3%83%BC%E3%83%AB/%E7%9C%9F%E3%83%BB%E6%A5%AD%E5%8B%99%E3%83%84%E3%83%BC%E3%83%AB%20Ver4.1%EF%BC%88SOD%EF%BC%89/admin.html from frame with URL file:///C:/Users/sk2505812/OneDrive%20-%20transcosmos%20inc/%E3%83%87%E3%82%B9%E3%82%AF%E3%83%88%E3%83%83%E3%83%97/%E7%9C%9F%E3%83%BB%E6%A5%AD%E5%8B%99%E3%83%84%E3%83%BC%E3%83%AB/%E7%9C%9F%E3%83%BB%E6%A5%AD%E5%8B%99%E3%83%84%E3%83%BC%E3%83%AB%20Ver4.1%EF%BC%88SOD%EF%BC%89/admin.html. 'file:' URLs are treated as unique security origins.
+* 書式設定 のバーに画像挿入ボタンを追加　→　［画像名］の形式でテキストに画像を挿入したい
 
 admin.html ヒアリングタブ
 * 管理画面からノーコードで構築できるようにする(記述／プルダウン／ラジオボタン／トグルボタンに対応)
-* 
 
