@@ -53,7 +53,8 @@
     <!-- オープニングトーク（常時表示） -->
     <div class="opening">
       <div class="opening-title">オープニングトーク</div>
-      <div class="opening-text">お電話 ありがとうございます。NHKONE窓口 担当●●でございます。</div>
+      <!-- 文言は admin.html の「固定テキスト」で編集する（JS が流し込む） -->
+      <div class="opening-text" id="openingText"></div>
     </div>
 
     <!-- スクリプト表示エリア（JSが描画。クロージングも対応完了時にここに含まれる） -->
@@ -145,6 +146,31 @@
 </div>
 
 <script src="app.js"></script>
+
+<!-- 固定文言（オープニング）を反映。データ読み込み後にも更新する -->
+<script>
+  (function () {
+    function apply() {
+      var el = document.getElementById('openingText');
+      if (el && window.fixedTextHtml) el.innerHTML = window.fixedTextHtml('opening');
+    }
+    apply();
+    // data.js / IndexedDB の読み込み完了後にもう一度反映する
+    if (window.initAppData) window.initAppData().then(apply).catch(apply);
+    // 管理画面で保存された変更を受け取る
+    try {
+      var bc = new BroadcastChannel('tool_data_update');
+      bc.onmessage = function (e) {
+        if (!e.data) return;
+        if (e.data.type === 'fixedTextsUpdated') {
+          window._appCache.fixedTexts = e.data.data;
+          apply();
+          if (typeof renderClosingText === 'function') renderClosingText();
+        }
+      };
+    } catch (e) {}
+  })();
+</script>
 
 <!-- 使い方マニュアル モーダル開閉 -->
 <script>

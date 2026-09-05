@@ -21,6 +21,31 @@ var _APP_IDB_INST = null;
 // ヒアリング項目／対応方針／パターンのデフォルト内容を大幅に作り直した際にインクリメントする。
 // IndexedDB 上の保存値とこの値が異なる場合、保存データを破棄して新しいデフォルトで上書きする。
 var HEARING_DATA_VERSION = 2;
+
+// ── 固定文言（オープニング／クロージング）──
+// admin.html で編集し data.js に保存される。
+// script.html でも同じ値を使うため、既定値と取得口を共通側に置く。
+window.FIXED_TEXT_DEFAULTS = {
+  opening:        'お電話 ありがとうございます。NHKONE窓口 担当●●でございます。',
+  closingDefault: 'ご案内は以上となりますが、そのほか確認されたいことなどはございませんでしょうか？',
+  closingNone:    'ありがとうございます。 それでは本日●●がご案内いたしました。それでは失礼いたします。',
+  closingAsk:     '○○○についてでございますね。（お問い合わせ内容に回答）'
+};
+
+/** 固定文言を1つ取り出す（未設定なら既定値） */
+window.getFixedText = function(key) {
+  var ft = (window._appCache && window._appCache.fixedTexts) || {};
+  var v  = ft[key];
+  if (v === undefined || v === null || v === '') v = window.FIXED_TEXT_DEFAULTS[key];
+  return v || '';
+};
+
+/** 改行を <br> にして表示用の HTML にする */
+window.fixedTextHtml = function(key) {
+  return String(window.getFixedText(key))
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/\n/g, '<br>');
+};
 function _appIdbOpen() {
   if (_APP_IDB_INST) return Promise.resolve(_APP_IDB_INST);
   return new Promise(function(resolve, reject) {

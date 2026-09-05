@@ -219,6 +219,13 @@
   display: block;
   text-align: center;
 }
+/* 枠線を消しているぶん、編集中がどこか分かるようにする */
+.hist-cell:focus {
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--accent);
+  border-radius: 4px;
+  cursor: text;
+}
 .hist-cell:focus {
   cursor: text;
   background: var(--accent-lt);
@@ -586,9 +593,11 @@ details[open] > summary .hr-acc-arrow { transform: rotate(90deg); }
 /* ── 共通の書式設定バー ── */
 .rt-bar{
   display:flex;align-items:center;flex-wrap:wrap;gap:3px;
-  padding:5px 6px;margin-bottom:5px;
+  padding:5px 6px;
   background:var(--surface2);border:1px solid var(--border);
-  border-radius:6px 6px 0 0;border-bottom:none;
+  border-radius:6px 6px 0 0;
+  /* 下辺は編集欄の上辺と重ねる（margin-bottom を空けると線が二重になる） */
+  margin-bottom:-1px;position:relative;
 }
 .rt-btn{
   display:inline-flex;align-items:center;justify-content:center;
@@ -3253,7 +3262,8 @@ function _richInsertHtml(si,html){
 function fmtStep(si,type){fmtRich(si,type);}// 後方互換
 
 // ── 固定テキスト（オープニング/クロージング）──
-var FIXED_TEXT_DEFAULTS={opening:'お電話 ありがとうございます。NHKONE窓口 担当●●でございます。',closingDefault:'ご案内は以上となりますが、そのほか確認されたいことなどはございませんでしょうか？',closingNone:'ありがとうございます。 それでは本日●●がご案内いたしました。それでは失礼いたします。',closingAsk:'○○○についてでございますね。（お問い合わせ内容に回答）'};
+// 既定値は common-utils.js に集約（script.html と共用するため）
+var FIXED_TEXT_DEFAULTS = window.FIXED_TEXT_DEFAULTS;
 
 function loadFixedTexts(){
   // エディタが動的に描画されている場合のみ更新

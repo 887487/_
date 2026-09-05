@@ -173,9 +173,11 @@ function buildAllSteps(type, subKey, itemIndex, currentStepIndex) {
 
       // 対応完了なら同じ step-cards 内にクロージングを追加
       if (!step.choices || step.choices.length === 0) {
+        // 固定文言は admin.html で編集する。common-utils.js 経由で取得する。
         const closingTextEl = document.getElementById('closingText');
         const closingText   = closingTextEl ? closingTextEl.innerHTML
-          : 'ご案内は以上となりますが、そのほか確認されたいことなどはございませんでしょうか？';
+          : (window.fixedTextHtml ? window.fixedTextHtml('closingDefault')
+                                  : 'ご案内は以上となりますが、そのほか確認されたいことなどはございませんでしょうか？');
         html += `<div class="closing inline-closing">
           <div class="opening-title">クロージングトーク</div>
           <div id="inlineClosingText" class="opening-text">${closingText}</div>
@@ -311,14 +313,26 @@ function goHome() {
 function showClosingSection() { /* contentAreaにインライン描画するため不要 */ }
 function hideClosingSection()  { /* contentArea再描画時に自動消去されるため不要 */ }
 
-// クロージング文言切り替え
+// クロージング文言切り替え。文言は admin.html の「固定テキスト」で編集する。
+function _fixed(key, fallback) {
+  return window.fixedTextHtml ? window.fixedTextHtml(key) : fallback;
+}
 function closingNone() {
   const el = document.getElementById('inlineClosingText');
-  if (el) el.innerHTML = 'ありがとうございます。 それでは本日●●がご案内いたしました。それでは失礼いたします。';
+  if (el) el.innerHTML = _fixed('closingNone',
+    'ありがとうございます。 それでは本日●●がご案内いたしました。それでは失礼いたします。');
 }
 function closingAsk() {
   const el = document.getElementById('inlineClosingText');
-  if (el) el.innerHTML = '○○○についてでございますね。（お問い合わせ内容に回答）';
+  if (el) el.innerHTML = _fixed('closingAsk',
+    '○○○についてでございますね。（お問い合わせ内容に回答）');
+}
+
+/** 表示中のクロージングを現在の設定で描き直す（管理画面の保存を受けたとき用） */
+function renderClosingText() {
+  const el = document.getElementById('inlineClosingText');
+  if (el) el.innerHTML = _fixed('closingDefault',
+    'ご案内は以上となりますが、そのほか確認されたいことなどはございませんでしょうか？');
 }
 
 // =====================================================

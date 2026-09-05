@@ -29,7 +29,7 @@
     .detail-head { background: var(--surface2, #f8f9fa); padding: 12px 16px; border-bottom: 1px solid var(--border, #dfe4ea); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
     .detail-back { height: 30px; padding: 0 12px; background: none; border: 1px solid var(--border, #dfe4ea); border-radius: 5px; font-size: 12px; color: var(--text2, #555); cursor: pointer; transition: background 0.15s; flex-shrink: 0; }
     .detail-back:hover { background: var(--bg, #f1f2f6); }
-    .detail-cat-badge { font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; background: #eef0ff; color: #3742fa; flex-shrink: 0; }
+    .detail-cat-badge { font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; background: #eef0ff; color: var(--accent); flex-shrink: 0; }
     .detail-title { font-size: 15px; font-weight: 700; min-width: 0; color: var(--text, #2f3542); }
     .detail-title-wrap { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; overflow: hidden; }
     .detail-note { font-size: 11px; color: var(--text3, #888); flex-shrink: 0; white-space: nowrap; background: var(--surface, #fff); border: 1px solid var(--border, #dfe4ea); border-radius: 20px; padding: 2px 9px; }
@@ -50,7 +50,7 @@
       font-size: 11px; font-family: inherit; cursor: pointer; white-space: nowrap;
       transition: background .12s, border-color .12s;
     }
-    .copy-btn:hover { background: var(--accent-lt, #eef0ff); border-color: var(--accent, #3742fa); color: var(--accent, #3742fa); }
+    .copy-btn:hover { background: var(--accent-lt, #eef0ff); border-color: var(--accent, var(--accent)); color: var(--accent, var(--accent)); }
     .copy-btn.copied { background: #e8f5e9; border-color: #4caf50; color: #388e3c; }
     .copy-toast-inline { font-size: 10px; color: #4caf50; text-align: center; opacity: 0; transition: opacity .2s; }
     .copy-toast-inline.show { opacity: 1; }
@@ -95,15 +95,16 @@
     .mail-extra-body { padding: 16px; display: flex; flex-direction: column; gap: 14px; border-top: 1px solid var(--border, #dfe4ea); }
     .form-row { display: flex; flex-direction: column; gap: 6px; }
     .form-row select { height: 34px; padding: 0 10px; border: 1px solid var(--border, #dfe4ea); border-radius: 6px; font-size: 12px; font-family: inherit; color: var(--text, #2f3542); background: var(--surface, white); cursor: pointer; transition: border-color 0.15s; }
-    .form-row select:focus { outline: none; border-color: #3742fa; }
+    /* 他ページと同じアクセント色にそろえる（ダークモードでも見える） */
+.form-row select:focus { outline: none; border-color: var(--accent); }
     .form-row input[type="text"] { height: 34px; padding: 0 10px; border: 1px solid var(--border, #dfe4ea); border-radius: 6px; font-size: 12px; font-family: inherit; color: var(--text, #2f3542); width: 100%; background: var(--surface, white); transition: border-color 0.15s; }
-    .form-row input[type="text"]:focus { outline: none; border-color: #3742fa; }
+    .form-row input[type="text"]:focus { outline: none; border-color: var(--accent); }
     .extra-check-label { display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--text, #2f3542); cursor: pointer; padding: 4px 0; }
-    .extra-check-label input[type="checkbox"] { width: 15px; height: 15px; cursor: pointer; accent-color: #3742fa; flex-shrink: 0; }
+    .extra-check-label input[type="checkbox"] { width: 15px; height: 15px; cursor: pointer; accent-color: var(--accent); flex-shrink: 0; }
     .mail-extra-summary { background: var(--accent-lt, #f0f4ff); border: 1px solid #c5cee8; border-radius: 6px; padding: 10px 12px; }
     .extra-summary-inner { display: flex; flex-wrap: wrap; gap: 6px; }
     .extra-tag { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; }
-    .extra-tag-domain { background: #dfe6ff; color: #3742fa; }
+    .extra-tag-domain { background: #dfe6ff; color: var(--accent); }
     .extra-tag-check  { background: #fff3cd; color: #856404; }
 
     @media (prefers-color-scheme: dark) {
@@ -242,7 +243,7 @@ function getCats() {
   templates.forEach(t => {
     if (!seen.has(t.catKey)) {
       seen.add(t.catKey);
-      out.push({ key: t.catKey, name: t.category || '', color: t.catColor || '#3742fa' });
+      out.push({ key: t.catKey, name: t.category || '', color: t.catColor || 'var(--accent)' });
     }
   });
   return out;
