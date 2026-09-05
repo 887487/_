@@ -2404,13 +2404,7 @@ var _lkBusy = false;
   var start = function() {
     obs = new MutationObserver(function(muts) {
       if (_lkBusy) return;
-      muts.forEach(function(m) {
-        var el = m.target.nodeType === 1 ? m.target : m.target.parentNode;
-        el = el && el.closest ? el.closest('[data-linkify]') : null;
-        // 中身が変わった場合だけ適用済みフラグを外す。
-        // 属性（設定）の変化では外さない（外すと解除処理が走らない）。
-        if (el && m.type !== 'attributes') el.dataset.linkified = '';
-      });
+      // 状態（リンクの有無）で判断する方式にしたのでフラグ操作は不要
       kick();
     });
     _observe();
@@ -2432,21 +2426,24 @@ window.applyLinkify = function(root) {
     // 編集中の欄はリンクにしない（クリックすると編集の妨げになる）
     if (el.isContentEditable) return;
     if (el.closest && el.closest('[contenteditable="true"]')) return;
-    // data-linkify="0" のときだけ無効。未指定・"1" は有効。
-    if (el.getAttribute('data-linkify') !== '0') _linkifyEl(el);
-    else _unlinkifyEl(el);
+
+    var want = (el.getAttribute('data-linkify') !== '0');   // "0" のときだけ無効
+    var has  = !!el.querySelector('a.auto-link');
+    if (want === has) return;      // すでに望む状態
+    if (want) _linkifyEl(el); else _unlinkifyEl(el);
   });
 };
 
 var URL_RE = /(https?:\/\/[^\s<>"'）】」』]+)/g;
 
+/** テキスト中の URL を <a> に置き換える */
 function _linkifyEl(el) {
-  if (el.dataset.linkified === '1') return;
   (function walk(node) {
     Array.prototype.slice.call(node.childNodes).forEach(function(c) {
       if (c.nodeType === 3) {
         var t = c.nodeValue;
-        if (!URL_RE.test(t)) { URL_RE.lastIndex = 0; return; }
+        URL_RE.lastIndex = 0;
+        if (!URL_RE.test(t)) return;
         URL_RE.lastIndex = 0;
         var span = document.createElement('span');
         span.innerHTML = t.replace(/&/g, '&amp;').replace(/</g, '&lt;')
@@ -2457,16 +2454,11 @@ function _linkifyEl(el) {
       }
     });
   })(el);
-  el.dataset.linkified = '1';
 }
 
+/** リンクを外して元のテキストに戻す */
 function _unlinkifyEl(el) {
-  // フラグの有無で判断すると、監視でフラグが消えたあとに解除できなくなる。
-  // 実際にリンクが残っているかどうかで判断する。
-  var links = el.querySelectorAll('a.auto-link');
-  el.dataset.linkified = '';
-  if (!links.length) return;
-  Array.prototype.slice.call(links).forEach(function(a) {
+  Array.prototype.slice.call(el.querySelectorAll('a.auto-link')).forEach(function(a) {
     a.parentNode.replaceChild(document.createTextNode(a.textContent), a);
   });
   el.normalize();

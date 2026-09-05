@@ -591,14 +591,27 @@ details[open] > summary .hr-acc-arrow { transform: rotate(90deg); }
    赤字＋赤枠の「×」で統一する。 */
 /* 「＋ 質問を追加」と同じ見た目の追加ボタン */
 /* ── 共通の書式設定バー ── */
+/* 書式バー：画面上部に固定表示する */
+#rtFixedBar{
+  position:sticky;top:0;z-index:500;
+  background:var(--surface);border-bottom:1px solid var(--border);
+  opacity:.5;transition:opacity .15s;
+}
+#rtFixedBar.is-active{opacity:1;}
+#rtFixedBar .rt-bar{border:none;border-radius:0;margin:0;background:var(--surface);}
+
 .rt-bar{
   display:flex;align-items:center;flex-wrap:wrap;gap:3px;
-  padding:5px 6px;
+  padding:6px 14px;
   background:var(--surface2);border:1px solid var(--border);
   border-radius:6px 6px 0 0;
-  /* 下辺は編集欄の上辺と重ねる（margin-bottom を空けると線が二重になる） */
   margin-bottom:-1px;position:relative;
 }
+/* いま効いている書式のボタン */
+.rt-btn.is-on{
+  background:var(--accent);border-color:var(--accent);color:#fff;
+}
+.rt-btn.is-on:hover{background:var(--accent);color:#fff;}
 .rt-btn{
   display:inline-flex;align-items:center;justify-content:center;
   height:24px;min-width:26px;padding:0 6px;
@@ -688,8 +701,11 @@ details[open] > summary .hr-acc-arrow { transform: rotate(90deg); }
   border:1px solid var(--text3);padding:5px 8px;min-width:40px;vertical-align:top;
 }
 .rt-table th,.rt-edit table th{background:var(--surface2);font-weight:700;text-align:left;}
-.rt-table th::selection,.rt-table td::selection{background:var(--accent-lt);}
-.rt-table th *::selection,.rt-table td *::selection{background:var(--accent-lt);}
+/* 文字の選択範囲。既定色は薄くて範囲が分かりにくいので濃くする */
+.rt-edit ::selection, .rt-edit::selection,
+.fixed-text-rich ::selection, .fixed-text-rich::selection{
+  background:#2f6df6; color:#fff;
+}
 
 /* FAQ のリッチテキスト編集欄 */
 .faq-rich:focus{border-color:var(--accent);}
@@ -1515,6 +1531,10 @@ html[data-theme="dark"] .nav-arrow-btn { background: rgba(40,42,54,.9); }
 </header>
 
 <aside id="sideMenu"></aside>
+
+<!-- 書式設定バー（全タブ共通・画面上部に固定）。
+     編集欄にカーソルが入ったときだけ操作できる状態になる。 -->
+<div id="rtFixedBar"></div>
 
 <div class="content-area">
 
@@ -5478,11 +5498,13 @@ function _faqRenderList() {
       +     ' oninput="_faqSet(' + i + ',\'category\',this.value)"'
       +     ' style="width:170px;height:24px;padding:0 7px;font-size:11px;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text);">'
       +   '<span style="flex:1;"></span>'
+      +   '<label class="rt-link" style="margin:0 8px 0 0;" title="本文中の URL をクリックできるリンクとして表示します">'
+      +     '<input type="checkbox"' + (f.linkify !== false ? ' checked' : '')
+      +     ' onchange="_faqSetLink(' + i + ',this.checked)">🔗 URLをリンクにする</label>'
       +   '<button class="btn-del wide" onclick="_faqDelete(' + i + ')" title="この FAQ を削除">× 削除</button>'
       + '</div>'
-      // 書式（太字・取り消し線・色など）を保てるよう contenteditable で編集する
-      + rtBar('_faqSetLink(' + i + ',', f.linkify !== false)
-      + _faqRich(i, 'question', f, '質問', 'font-weight:700;min-height:28px;border-radius:0;')
+      // 書式バーは画面上部に固定表示（項目ごとには置かない）
+      + _faqRich(i, 'question', f, '質問', 'font-weight:700;min-height:28px;border-radius:6px 6px 0 0;')
       + _faqRich(i, 'answer',   f, '回答', 'min-height:62px;border-radius:0;')
       + _faqRich(i, 'note',     f, '備考（任意）', 'min-height:24px;font-size:11px;color:var(--text2);')
       + '</div>';
@@ -5502,7 +5524,7 @@ function _faqRenderList() {
  */
 function rtBar(onLink, linked) {
   var b = function(cmd, label, title, style) {
-    return '<button type="button" class="rt-btn" onmousedown="event.preventDefault()"'
+    return '<button type="button" class="rt-btn" data-cmd="' + cmd + '" onmousedown="event.preventDefault()"'
       + ' onclick="rtExec(\'' + cmd + '\',this)" title="' + title + '"'
       + (style ? ' style="' + style + '"' : '') + '>' + label + '</button>';
   };
@@ -5553,20 +5575,94 @@ function _rtAlignIcon(kind) {
        + ' style="display:block;">' + h + '</svg>';
 }
 
+/**
+ * いまカーソル位置に効いている書式をボタンに反映する。
+ * どれが適用中か見て分かるようにするため。
+ */
+function _rtUpdateActiveStates() {
+  var host = document.getElementById('rtFixedBar');
+  if (!host) return;
+
+  var check = {
+    bold: 'bold', italic: 'italic', underline: 'underline',
+    strikeThrough: 'strikeThrough',
+    justifyLeft: 'justifyLeft', justifyCenter: 'justifyCenter', justifyRight: 'justifyRight'
+  };
+  Object.keys(check).forEach(function(cmd) {
+    var on = false;
+    try { on = document.queryCommandState(check[cmd]); } catch (e) {}
+    var b = host.querySelector('[data-cmd="' + cmd + '"]');
+    if (b) b.classList.toggle('is-on', !!on);
+  });
+
+  // 赤字は文字色を調べる
+  var red = false;
+  try {
+    var c = document.queryCommandValue('foreColor') || '';
+    red = /230,\s*57,\s*70|#e63946/i.test(c);
+  } catch (e) {}
+  var rb = host.querySelector('[data-cmd="red"]');
+  if (rb) rb.classList.toggle('is-on', red);
+
+  _rtUpdateMergeBtn();
+}
+
+/** 画面上部の固定バーを組み立てる（1回だけ） */
+function _rtInitFixedBar() {
+  var host = document.getElementById('rtFixedBar');
+  if (!host || host.dataset.ready) return;
+  host.innerHTML = rtBar();
+  host.dataset.ready = '1';
+  _rtSyncBarState();
+}
+
+/** 編集欄にカーソルがあるときだけ操作できるようにする */
+function _rtSyncBarState() {
+  var host = document.getElementById('rtFixedBar');
+  if (!host) return;
+  var on = !!(_rtActive && document.contains(_rtActive));
+  host.classList.toggle('is-active', on);
+  host.title = on ? '' : '編集欄をクリックすると使えます';
+}
+
+document.addEventListener('DOMContentLoaded', _rtInitFixedBar);
+
 /** 書式を適用する（直前にフォーカスしていた編集欄が対象） */
 function rtExec(cmd, btn) {
   if (cmd === 'table' && btn) _rtLastTableBtn = btn;
-  if (cmd === 'red')   { document.execCommand('foreColor', false, '#e63946'); return; }
+  if (cmd === 'red') {
+    // すでに赤なら黒へ戻す（押すたびに切り替わる）
+    var cur = '';
+    try { cur = document.queryCommandValue('foreColor') || ''; } catch (e) {}
+    var isRed = /230,\s*57,\s*70|#e63946/i.test(cur);
+    document.execCommand('foreColor', false, isRed ? '#000000' : '#e63946');
+    if (_rtActive) _rtActive.dispatchEvent(new Event('input'));
+    _rtUpdateActiveStates();
+    return;
+  }
   if (cmd === 'table') { rtInsertTable(); return; }   // 位置は _rtLastTableBtn を使う
   if (cmd === 'image') { rtInsertImage(); return; }
   document.execCommand(cmd, false, null);
   if (_rtActive) _rtActive.dispatchEvent(new Event('input'));
+  _rtUpdateActiveStates();
 }
 
 // 直前に編集していた欄を覚えておく（ボタンを押すとフォーカスが外れるため）
 var _rtActive = null;
 document.addEventListener('focusin', function(e) {
-  if (e.target && e.target.classList && e.target.classList.contains('rt-edit')) _rtActive = e.target;
+  if (e.target && e.target.classList && e.target.classList.contains('rt-edit')) {
+    _rtActive = e.target;
+    _rtSyncBarState();
+    _rtUpdateActiveStates();
+  }
+});
+
+// カーソル位置が変わるたびに、いま効いている書式をボタンに反映する
+document.addEventListener('selectionchange', function() {
+  if (_rtActive) _rtUpdateActiveStates();
+});
+document.addEventListener('keyup', function() {
+  if (_rtActive) _rtUpdateActiveStates();
 });
 
 /** 表を挿入する。行数・列数を選んでから入れる */
