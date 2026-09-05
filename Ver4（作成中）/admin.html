@@ -636,6 +636,36 @@ details[open] > summary .hr-acc-arrow { transform: rotate(90deg); }
 .rt-edit u{text-decoration:underline;}
 .rt-edit img{max-width:100%;height:auto;}
 
+/* 選択中のセル（範囲が一目で分かるようにする） */
+.rt-table th.rt-cell-sel,.rt-table td.rt-cell-sel{
+  background:var(--accent-lt);
+  box-shadow:inset 0 0 0 2px var(--accent);
+}
+
+/* 表のサイズを選ぶマス目 */
+#rtGridPop{
+  display:none;position:absolute;z-index:9000;
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:6px;box-shadow:0 6px 20px rgba(0,0,0,.25);
+  padding:0;user-select:none;
+}
+.rt-grid-hd{
+  padding:6px 10px;font-size:11px;font-weight:700;color:var(--text2);
+  border-bottom:1px solid var(--border);
+}
+.rt-grid{
+  display:grid;grid-template-columns:repeat(10,18px);gap:2px;padding:8px 10px;
+}
+.rt-grid i{
+  width:18px;height:18px;display:block;cursor:pointer;
+  background:var(--surface);border:1px solid var(--border2,var(--border));
+}
+.rt-grid i.on{background:var(--accent);border-color:var(--accent);}
+.rt-grid-ft{
+  padding:6px 10px;font-size:11px;color:var(--text2);
+  border-top:1px solid var(--border);text-align:center;
+}
+
 /* 表の行・列を追加する ＋ ボタン */
 #rtAddBtns{position:absolute;inset:0;pointer-events:none;z-index:60;}
 .rt-add-btn{
@@ -5471,7 +5501,7 @@ function _faqRenderList() {
 function rtBar(onLink, linked) {
   var b = function(cmd, label, title, style) {
     return '<button type="button" class="rt-btn" onmousedown="event.preventDefault()"'
-      + ' onclick="rtExec(\'' + cmd + '\')" title="' + title + '"'
+      + ' onclick="rtExec(\'' + cmd + '\',this)" title="' + title + '"'
       + (style ? ' style="' + style + '"' : '') + '>' + label + '</button>';
   };
   var h = '<div class="rt-bar">'
@@ -5522,9 +5552,10 @@ function _rtAlignIcon(kind) {
 }
 
 /** 書式を適用する（直前にフォーカスしていた編集欄が対象） */
-function rtExec(cmd) {
+function rtExec(cmd, btn) {
+  if (cmd === 'table' && btn) _rtLastTableBtn = btn;
   if (cmd === 'red')   { document.execCommand('foreColor', false, '#e63946'); return; }
-  if (cmd === 'table') { rtInsertTable(); return; }
+  if (cmd === 'table') { rtInsertTable(); return; }   // 位置は _rtLastTableBtn を使う
   if (cmd === 'image') { rtInsertImage(); return; }
   document.execCommand(cmd, false, null);
   if (_rtActive) _rtActive.dispatchEvent(new Event('input'));
@@ -5537,25 +5568,88 @@ document.addEventListener('focusin', function(e) {
 });
 
 /** 表を挿入する。行数・列数を選んでから入れる */
+/** 表を挿入する。マス目にカーソルを合わせて行×列を決める */
 function rtInsertTable() {
-  var spec = prompt('表の行数と列数を「行×列」で入力してください。\n例）3x4', '3x3');
-  if (spec === null) return;
-  var m = /^\s*(\d+)\s*[x×*,\s]\s*(\d+)\s*$/.exec(spec);
-  if (!m) { toast('⚠️ 「3x4」のように入力してください'); return; }
-  var rows = Math.min(30, Math.max(1, parseInt(m[1], 10)));
-  var cols = Math.min(12, Math.max(1, parseInt(m[2], 10)));
+  var pop = document.getElementById('rtGridPop');
+  if (!pop) {
+    pop = document.createElement('div');
+    pop.id = 'rtGridPop';
+    pop.innerHTML =
+      '<div class="rt-grid-hd">表の挿入</div>' +
+      '<div class="rt-grid" id="rtGrid"></div>' +
+      '<div class="rt-grid-ft"><span id="rtGridLabel">表の挿入</span></div>';
+    document.body.appendChild(pop);
 
+    // 10×8 のマス目を作る
+    var g = pop.querySelector('#rtGrid');
+    var html = '';
+    for (var r = 1; r <= 8; r++) {
+      for (var c = 1; c <= 10; c++) {
+        html += '<i data-r="' + r + '" data-c="' + c + '"></i>';
+      }
+    }
+    g.innerHTML = html;
+
+    g.addEventListener('mousemove', function(e) {
+      var t = e.target.closest('i');
+      if (!t) return;
+      _rtGridHighlight(+t.dataset.r, +t.dataset.c);
+    });
+    g.addEventListener('mousedown', function(e) {
+      e.preventDefault();
+      var t = e.target.closest('i');
+      if (!t) return;
+      _rtGridClose();
+      _rtBuildTable(+t.dataset.r, +t.dataset.c);
+    });
+    // 外側をクリックしたら閉じる
+    document.addEventListener('mousedown', function(e) {
+      if (pop.style.display === 'block' && !pop.contains(e.target)) _rtGridClose();
+    });
+  }
+
+  // 押したボタンの真下に出す
+  var btn = document.activeElement && document.activeElement.classList &&
+            document.activeElement.classList.contains('rt-btn')
+            ? document.activeElement : _rtLastTableBtn;
+  var r = btn ? btn.getBoundingClientRect() : { left: 40, bottom: 80 };
+  pop.style.display = 'block';
+  pop.style.left = (window.scrollX + r.left) + 'px';
+  pop.style.top  = (window.scrollY + r.bottom + 4) + 'px';
+  _rtGridHighlight(0, 0);
+}
+
+var _rtLastTableBtn = null;
+
+function _rtGridHighlight(rows, cols) {
+  var g = document.getElementById('rtGrid');
+  if (!g) return;
+  Array.prototype.forEach.call(g.children, function(i) {
+    i.classList.toggle('on', +i.dataset.r <= rows && +i.dataset.c <= cols);
+  });
+  var lbl = document.getElementById('rtGridLabel');
+  if (lbl) lbl.textContent = rows ? (rows + ' × ' + cols + ' の表') : '表の挿入';
+}
+
+function _rtGridClose() {
+  var pop = document.getElementById('rtGridPop');
+  if (pop) pop.style.display = 'none';
+}
+
+/** 指定した行数・列数の表を挿入する */
+function _rtBuildTable(rows, cols) {
+  if (!rows || !cols) return;
   var html = '<table class="rt-table"><tbody>';
   for (var r = 0; r < rows; r++) {
     html += '<tr>';
     for (var c = 0; c < cols; c++) {
-      // 1行目は見出しとして扱う
-      html += (r === 0) ? '<th><br></th>' : '<td><br></td>';
+      html += (r === 0) ? '<th><br></th>' : '<td><br></td>';   // 1行目は見出し
     }
     html += '</tr>';
   }
   html += '</tbody></table><p><br></p>';
 
+  if (_rtActive) _rtActive.focus();
   document.execCommand('insertHTML', false, html);
   if (_rtActive) _rtActive.dispatchEvent(new Event('input'));
 }
@@ -5677,19 +5771,67 @@ function _rtTouched(t) {
   if (host) host.dispatchEvent(new Event('input'));
 }
 
-/** 選択範囲に含まれるセルを集める */
-function _rtSelectedCells() {
-  var sel = window.getSelection();
-  if (!sel || sel.rangeCount === 0 || sel.isCollapsed) return [];
-  var range = sel.getRangeAt(0);
-  var tbl = range.commonAncestorContainer;
-  if (tbl.nodeType === 3) tbl = tbl.parentNode;
-  tbl = tbl.closest && tbl.closest('.rt-table');
-  if (!tbl) return [];
+// ── セルの範囲選択 ──
+// 文字列選択だと範囲が分かりにくいので、セル単位で選び、
+// 選択中のセルに色を付ける。
+var _rtSelAnchor = null;   // ドラッグの起点セル
+var _rtDragging  = false;
 
-  return Array.prototype.filter.call(tbl.querySelectorAll('th,td'), function(c) {
-    return range.intersectsNode(c);
+function _rtCellsBetween(a, b) {
+  var tbl = a.closest('table');
+  if (!tbl || b.closest('table') !== tbl) return [a];
+  var r0 = Math.min(a.parentNode.rowIndex, b.parentNode.rowIndex);
+  var r1 = Math.max(a.parentNode.rowIndex, b.parentNode.rowIndex);
+  var c0 = Math.min(a.cellIndex, b.cellIndex);
+  var c1 = Math.max(a.cellIndex, b.cellIndex);
+
+  var out = [];
+  for (var r = r0; r <= r1; r++) {
+    var tr = tbl.rows[r];
+    if (!tr) continue;
+    for (var c = c0; c <= c1 && c < tr.cells.length; c++) out.push(tr.cells[c]);
+  }
+  return out;
+}
+
+function _rtClearSel() {
+  document.querySelectorAll('.rt-cell-sel').forEach(function(c) {
+    c.classList.remove('rt-cell-sel');
   });
+  _rtUpdateMergeBtn();
+}
+
+function _rtMarkSel(cells) {
+  document.querySelectorAll('.rt-cell-sel').forEach(function(c) {
+    c.classList.remove('rt-cell-sel');
+  });
+  cells.forEach(function(c) { c.classList.add('rt-cell-sel'); });
+  _rtUpdateMergeBtn();
+}
+
+document.addEventListener('mousedown', function(e) {
+  var cell = e.target.closest && e.target.closest('.rt-table th, .rt-table td');
+  if (!cell || !cell.closest('[contenteditable="true"]')) { _rtClearSel(); return; }
+  _rtSelAnchor = cell;
+  _rtDragging = true;
+  _rtClearSel();
+});
+
+document.addEventListener('mousemove', function(e) {
+  if (!_rtDragging || !_rtSelAnchor) return;
+  var cell = e.target.closest && e.target.closest('.rt-table th, .rt-table td');
+  if (!cell) return;
+  if (cell === _rtSelAnchor) { _rtClearSel(); return; }
+  // 2セル以上にまたがったらセル選択に切り替える（文字選択は解除）
+  window.getSelection().removeAllRanges();
+  _rtMarkSel(_rtCellsBetween(_rtSelAnchor, cell));
+});
+
+document.addEventListener('mouseup', function() { _rtDragging = false; });
+
+/** 選択中のセルを返す */
+function _rtSelectedCells() {
+  return Array.prototype.slice.call(document.querySelectorAll('.rt-cell-sel'));
 }
 
 /** 範囲選択中だけ「結合」ボタンを出す */
@@ -5699,7 +5841,6 @@ function _rtUpdateMergeBtn() {
     b.style.display = (cells.length >= 2) ? 'inline-flex' : 'none';
   });
 }
-document.addEventListener('selectionchange', _rtUpdateMergeBtn);
 
 /** 選択したセルを1つに結合する */
 function rtMergeCells() {
@@ -5957,13 +6098,48 @@ function _faqImportXlsx(input) {
 
     _importProgressHide();
     if (!added.length) {
-      toast('⚠️ 取り込める行がありませんでした（A列＝質問、B列＝回答）');
+      toast('⚠️ 取り込める行がありませんでした（B列＝質問、C列＝回答）');
       return;
+    }
+
+    // ── 重複チェック ──
+    // 「カテゴリ＋質問」が同じものを重複とみなす。
+    // 既存との重複と、取り込むファイル内での重複の両方を見る。
+    var dupKey = function(f) {
+      return String(f.category || '').trim() + '\u0000' +
+             String(f.question || '').trim().replace(/\s+/g, ' ');
+    };
+    var known = {};
+    _faqAll().forEach(function(f) { known[dupKey(f)] = 1; });
+
+    var dupExisting = [], dupInFile = [], seen = {}, fresh = [];
+    added.forEach(function(f) {
+      if (!String(f.question || '').trim()) { fresh.push(f); return; }   // 質問が空なら対象外
+      var k = dupKey(f);
+      if (known[k]) { dupExisting.push(f); return; }
+      if (seen[k])  { dupInFile.push(f);   return; }
+      seen[k] = 1; fresh.push(f);
+    });
+
+    var dupTotal = dupExisting.length + dupInFile.length;
+    if (dupTotal) {
+      var sample = dupExisting.concat(dupInFile).slice(0, 5)
+        .map(function(f) { return '　・' + f.category + ' / ' + f.question; }).join('\n');
+      var dmsg = '重複が ' + dupTotal + ' 件見つかりました。\n'
+        + (dupExisting.length ? '　既存と重複：' + dupExisting.length + ' 件\n' : '')
+        + (dupInFile.length   ? '　ファイル内で重複：' + dupInFile.length + ' 件\n' : '')
+        + '\n' + sample + (dupTotal > 5 ? '\n　…ほか ' + (dupTotal - 5) + ' 件' : '')
+        + '\n\n［OK］重複を除いて ' + fresh.length + ' 件だけ取り込む'
+        + '\n［キャンセル］取り込みをやめる';
+      if (!confirm(dmsg)) { toast('取り込みを中止しました'); return; }
+      added = fresh;
+      if (!added.length) { toast('✅ すべて登録済みでした'); return; }
     }
 
     var msg = added.length + ' 件（' + sheets + ' シート）を取り込みます。\n\n'
             + '　シート名 → カテゴリ\n　B列 → 質問　C列 → 回答　D列 → 備考\n'
             + '　※ 1行目は見出しとして除外します\n\n'
+            + (dupTotal ? '　※ 重複 ' + dupTotal + ' 件は除外済み\n' : '')
             + '\n既存の ' + _faqAll().length + ' 件はそのまま残り、末尾に追加されます。';
     if (!confirm(msg)) return;
 

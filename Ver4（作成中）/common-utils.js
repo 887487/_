@@ -2453,12 +2453,15 @@ function _linkifyEl(el) {
 }
 
 function _unlinkifyEl(el) {
-  if (el.dataset.linkified !== '1') return;
-  Array.prototype.slice.call(el.querySelectorAll('a.auto-link')).forEach(function(a) {
+  // フラグの有無で判断すると、監視でフラグが消えたあとに解除できなくなる。
+  // 実際にリンクが残っているかどうかで判断する。
+  var links = el.querySelectorAll('a.auto-link');
+  el.dataset.linkified = '';
+  if (!links.length) return;
+  Array.prototype.slice.call(links).forEach(function(a) {
     a.parentNode.replaceChild(document.createTextNode(a.textContent), a);
   });
   el.normalize();
-  el.dataset.linkified = '';
 }
 
 /**
