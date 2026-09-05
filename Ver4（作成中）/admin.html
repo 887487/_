@@ -636,12 +636,28 @@ details[open] > summary .hr-acc-arrow { transform: rotate(90deg); }
 .rt-edit u{text-decoration:underline;}
 .rt-edit img{max-width:100%;height:auto;}
 
+/* 表の行・列を追加する ＋ ボタン */
+#rtAddBtns{position:absolute;inset:0;pointer-events:none;z-index:60;}
+.rt-add-btn{
+  position:absolute;display:none;align-items:center;justify-content:center;
+  width:18px;height:18px;padding:0;pointer-events:auto;
+  font-size:12px;line-height:1;font-family:inherit;font-weight:700;
+  color:#fff;background:var(--accent);border:1px solid var(--accent);
+  border-radius:50%;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.25);
+}
+.rt-add-btn:hover{transform:scale(1.15);}
+
+/* 結合ボタン（範囲選択中のみ表示） */
+.rt-merge{border-color:var(--accent);color:var(--accent-text);}
+
 /* 挿入した表 */
 .rt-table{border-collapse:collapse;width:100%;margin:8px 0;font-size:12px;}
 .rt-table th,.rt-table td{
   border:1px solid var(--border);padding:5px 8px;min-width:40px;vertical-align:top;
 }
 .rt-table th{background:var(--surface2);font-weight:700;text-align:left;}
+.rt-table th::selection,.rt-table td::selection{background:var(--accent-lt);}
+.rt-table th *::selection,.rt-table td *::selection{background:var(--accent-lt);}
 
 /* FAQ のリッチテキスト編集欄 */
 .faq-rich:focus{border-color:var(--accent);}
@@ -5471,6 +5487,11 @@ function rtBar(onLink, linked) {
     + '<span class="rt-sep"></span>'
     + b('table', '⊞ 表', '表を挿入')
     + b('image', '🖼 画像', '画像を挿入')
+    // 表のセルを範囲選択したときだけ現れる
+    + '<button type="button" class="rt-btn rt-merge" style="display:none;"'
+    +   ' onmousedown="event.preventDefault()" onclick="rtMergeCells()" title="選択したセルを結合">⊟ 結合</button>'
+    + '<button type="button" class="rt-btn rt-merge" style="display:none;"'
+    +   ' onmousedown="event.preventDefault()" onclick="rtSplitCell()" title="結合を解除">⊞ 解除</button>'
     + b('removeFormat', '書式解除', '選択部分の書式を消す', 'font-size:10px;');
 
   if (onLink) {
@@ -5538,6 +5559,249 @@ function rtInsertTable() {
   document.execCommand('insertHTML', false, html);
   if (_rtActive) _rtActive.dispatchEvent(new Event('input'));
 }
+
+// ===================================================================
+// 表の操作
+//   ・境界にカーソルを近づけると ＋ ボタンが出て、行/列を追加できる
+//   ・セルを範囲選択して Delete で、その行または列をまとめて削除
+//   ・範囲選択中は共通バーに「結合」ボタンが出る
+// ===================================================================
+var _rtHoverTable = null;
+
+/** ＋ ボタン2つを用意する（1組を使い回す） */
+function _rtAddBtns() {
+  var wrap = document.getElementById('rtAddBtns');
+  if (wrap) return wrap;
+  wrap = document.createElement('div');
+  wrap.id = 'rtAddBtns';
+  wrap.innerHTML =
+    '<button type="button" class="rt-add-btn" id="rtAddRow" title="ここに行を追加">＋</button>' +
+    '<button type="button" class="rt-add-btn" id="rtAddCol" title="ここに列を追加">＋</button>';
+  document.body.appendChild(wrap);
+  wrap.querySelector('#rtAddRow').addEventListener('mousedown', function(e) {
+    e.preventDefault(); _rtInsertRow();
+  });
+  wrap.querySelector('#rtAddCol').addEventListener('mousedown', function(e) {
+    e.preventDefault(); _rtInsertCol();
+  });
+  return wrap;
+}
+
+var _rtInsertAt = { row: -1, col: -1, table: null };
+
+/** 表の上でカーソルを動かしたとき、境界に近ければ ＋ を出す */
+document.addEventListener('mousemove', function(e) {
+  var cell = e.target && e.target.closest && e.target.closest('.rt-table th, .rt-table td');
+  var tbl  = cell && cell.closest('table');
+  if (!tbl || !tbl.closest('[contenteditable="true"]')) { _rtHideAdd(); return; }
+
+  _rtHoverTable = tbl;
+  var wrap = _rtAddBtns();
+  var rowBtn = wrap.querySelector('#rtAddRow');
+  var colBtn = wrap.querySelector('#rtAddCol');
+  var r = cell.getBoundingClientRect();
+  var NEAR = 8;   // 境界とみなす距離
+
+  // 上下の境界 → 行の追加
+  if (e.clientY - r.top <= NEAR || r.bottom - e.clientY <= NEAR) {
+    var after = (r.bottom - e.clientY <= NEAR);
+    _rtInsertAt.row = cell.parentNode.rowIndex + (after ? 1 : 0);
+    _rtInsertAt.table = tbl;
+    rowBtn.style.display = 'flex';
+    rowBtn.style.left = (window.scrollX + tbl.getBoundingClientRect().left - 22) + 'px';
+    rowBtn.style.top  = (window.scrollY + (after ? r.bottom : r.top) - 9) + 'px';
+  } else { rowBtn.style.display = 'none'; }
+
+  // 左右の境界 → 列の追加
+  if (e.clientX - r.left <= NEAR || r.right - e.clientX <= NEAR) {
+    var afterC = (r.right - e.clientX <= NEAR);
+    _rtInsertAt.col = cell.cellIndex + (afterC ? 1 : 0);
+    _rtInsertAt.table = tbl;
+    colBtn.style.display = 'flex';
+    colBtn.style.left = (window.scrollX + (afterC ? r.right : r.left) - 9) + 'px';
+    colBtn.style.top  = (window.scrollY + tbl.getBoundingClientRect().top - 22) + 'px';
+  } else { colBtn.style.display = 'none'; }
+});
+
+var _rtHideTimer = null;
+
+function _rtHideAdd() {
+  var wrap = document.getElementById('rtAddBtns');
+  if (!wrap) return;
+  // ボタンへカーソルを移す途中で消えないよう、少し待ってから隠す
+  clearTimeout(_rtHideTimer);
+  _rtHideTimer = setTimeout(function() {
+    var hovering = Array.prototype.some.call(
+      wrap.querySelectorAll('.rt-add-btn'), function(b) { return b.matches(':hover'); });
+    if (hovering) return;
+    wrap.querySelectorAll('.rt-add-btn').forEach(function(b) { b.style.display = 'none'; });
+  }, 250);
+}
+
+// 編集欄の外へ出たら確実に片付ける
+document.addEventListener('mouseleave', _rtHideAdd, true);
+window.addEventListener('scroll', function() {
+  var wrap = document.getElementById('rtAddBtns');
+  if (wrap) wrap.querySelectorAll('.rt-add-btn').forEach(function(b) { b.style.display = 'none'; });
+}, true);
+
+/** ＋（行）を押したとき */
+function _rtInsertRow() {
+  var t = _rtInsertAt.table;
+  if (!t) return;
+  var body = t.tBodies[0] || t;
+  var ref  = body.rows[Math.min(_rtInsertAt.row, body.rows.length - 1)];
+  var cols = ref ? ref.cells.length : 1;
+  var tr = body.insertRow(Math.min(_rtInsertAt.row, body.rows.length));
+  for (var i = 0; i < cols; i++) tr.insertCell(-1).innerHTML = '<br>';
+  _rtTouched(t);
+}
+
+/** ＋（列）を押したとき */
+function _rtInsertCol() {
+  var t = _rtInsertAt.table;
+  if (!t) return;
+  var at = _rtInsertAt.col;
+  Array.prototype.forEach.call(t.rows, function(tr, ri) {
+    var cell = document.createElement(ri === 0 && tr.cells[0] &&
+                 tr.cells[0].tagName === 'TH' ? 'th' : 'td');
+    cell.innerHTML = '<br>';
+    tr.insertBefore(cell, tr.cells[Math.min(at, tr.cells.length)] || null);
+  });
+  _rtTouched(t);
+}
+
+/** 変更を保存対象として通知する */
+function _rtTouched(t) {
+  var host = t && t.closest('[contenteditable="true"]');
+  if (host) host.dispatchEvent(new Event('input'));
+}
+
+/** 選択範囲に含まれるセルを集める */
+function _rtSelectedCells() {
+  var sel = window.getSelection();
+  if (!sel || sel.rangeCount === 0 || sel.isCollapsed) return [];
+  var range = sel.getRangeAt(0);
+  var tbl = range.commonAncestorContainer;
+  if (tbl.nodeType === 3) tbl = tbl.parentNode;
+  tbl = tbl.closest && tbl.closest('.rt-table');
+  if (!tbl) return [];
+
+  return Array.prototype.filter.call(tbl.querySelectorAll('th,td'), function(c) {
+    return range.intersectsNode(c);
+  });
+}
+
+/** 範囲選択中だけ「結合」ボタンを出す */
+function _rtUpdateMergeBtn() {
+  var cells = _rtSelectedCells();
+  document.querySelectorAll('.rt-merge').forEach(function(b) {
+    b.style.display = (cells.length >= 2) ? 'inline-flex' : 'none';
+  });
+}
+document.addEventListener('selectionchange', _rtUpdateMergeBtn);
+
+/** 選択したセルを1つに結合する */
+function rtMergeCells() {
+  var cells = _rtSelectedCells();
+  if (cells.length < 2) { toast('⚠️ 2つ以上のセルを選択してください'); return; }
+
+  var tbl = cells[0].closest('table');
+  // 選択範囲の行・列の広がりを求める
+  var rows = cells.map(function(c) { return c.parentNode.rowIndex; });
+  var cols = cells.map(function(c) { return c.cellIndex; });
+  var r0 = Math.min.apply(null, rows), r1 = Math.max.apply(null, rows);
+  var c0 = Math.min.apply(null, cols), c1 = Math.max.apply(null, cols);
+
+  var keep = null, texts = [];
+  cells.forEach(function(c) {
+    var t = (c.innerText || '').trim();
+    if (t) texts.push(t);
+    if (!keep) keep = c; else c.parentNode.removeChild(c);
+  });
+  if (!keep) return;
+  keep.rowSpan = (r1 - r0) + 1;
+  keep.colSpan = (c1 - c0) + 1;
+  keep.innerHTML = texts.length ? texts.join(' ') : '<br>';
+
+  window.getSelection().removeAllRanges();
+  _rtTouched(tbl);
+  _rtUpdateMergeBtn();
+  toast('⊟ ' + cells.length + ' セルを結合しました');
+}
+
+/** 結合を解除する */
+function rtSplitCell() {
+  var cells = _rtSelectedCells();
+  var target = cells.length ? cells[0] : null;
+  if (!target) {
+    var sel = window.getSelection();
+    var n = sel && sel.anchorNode;
+    if (n && n.nodeType === 3) n = n.parentNode;
+    target = n && n.closest && n.closest('.rt-table th, .rt-table td');
+  }
+  if (!target) return;
+  var rs = target.rowSpan || 1, cs = target.colSpan || 1;
+  if (rs < 2 && cs < 2) { toast('⚠️ 結合されたセルを選択してください'); return; }
+
+  var tbl = target.closest('table');
+  var r0 = target.parentNode.rowIndex, c0 = target.cellIndex;
+  target.rowSpan = 1; target.colSpan = 1;
+
+  for (var r = r0; r < r0 + rs; r++) {
+    var tr = tbl.rows[r];
+    if (!tr) continue;
+    for (var c = 0; c < cs; c++) {
+      if (r === r0 && c === 0) continue;   // 元のセル
+      var cell = document.createElement(target.tagName.toLowerCase());
+      cell.innerHTML = '<br>';
+      tr.insertBefore(cell, tr.cells[Math.min(c0 + c, tr.cells.length)] || null);
+    }
+  }
+  _rtTouched(tbl);
+  toast('⊞ 結合を解除しました');
+}
+
+/** Delete キー：選択した範囲の行または列をまとめて削除する */
+document.addEventListener('keydown', function(e) {
+  if (e.key !== 'Delete' && e.key !== 'Backspace') return;
+  var cells = _rtSelectedCells();
+  if (cells.length < 2) return;   // 通常の文字削除は妨げない
+
+  var tbl = cells[0].closest('table');
+  var rowSet = {}, colSet = {};
+  cells.forEach(function(c) { rowSet[c.parentNode.rowIndex] = 1; colSet[c.cellIndex] = 1; });
+  var rowsN = Object.keys(rowSet).length, colsN = Object.keys(colSet).length;
+  var totalRows = tbl.rows.length;
+  var totalCols = tbl.rows[0] ? tbl.rows[0].cells.length : 0;
+
+  // 行がすべて選ばれている列 → 列を削除。逆も同様。
+  var delCols = (rowsN === totalRows && colsN < totalCols);
+  var delRows = (colsN === totalCols && rowsN < totalRows);
+
+  if (!delRows && !delCols) {
+    // 一部だけの選択は中身を空にする
+    e.preventDefault();
+    cells.forEach(function(c) { c.innerHTML = '<br>'; });
+    _rtTouched(tbl);
+    return;
+  }
+  e.preventDefault();
+
+  if (delRows) {
+    Object.keys(rowSet).map(Number).sort(function(a, b){ return b - a; })
+      .forEach(function(ri) { if (tbl.rows[ri]) tbl.deleteRow(ri); });
+    toast('🗑 ' + rowsN + ' 行を削除しました');
+  } else {
+    var cs = Object.keys(colSet).map(Number).sort(function(a, b){ return b - a; });
+    Array.prototype.forEach.call(tbl.rows, function(tr) {
+      cs.forEach(function(ci) { if (tr.cells[ci]) tr.deleteCell(ci); });
+    });
+    toast('🗑 ' + colsN + ' 列を削除しました');
+  }
+  window.getSelection().removeAllRanges();
+  _rtTouched(tbl);
+});
 
 /** 画像を挿入する（ファイルを選んで base64 で埋め込む） */
 function rtInsertImage() {
