@@ -5499,6 +5499,7 @@ function _faqImportXlsx(input) {
       var sheetName = sh.name;
       var rows = sh.rows || [];
       var imgs = sh.images || {};   // 'row,col' → [dataURL, ...]
+      var rich = sh.html   || {};   // 'row,col' → 書式付き HTML
       if (!rows.length) return;
       sheets++;
 
@@ -5509,8 +5510,10 @@ function _faqImportXlsx(input) {
         // B列＝質問、C列＝回答、D列＝備考（A列はIDなど別用途）
         var cell = function(i) {
           var v = row[i];
-          if (v == null) return { text: '', html: '' };
-          return { text: String(v).trim(), html: (v.html != null ? v.html : '') };
+          return {
+            text: (v == null) ? '' : String(v).trim(),
+            html: rich[ri + ',' + i] || ''
+          };
         };
         var q = cell(1), a = cell(2), nt = cell(3);
 

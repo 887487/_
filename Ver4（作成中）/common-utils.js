@@ -546,6 +546,7 @@ window.screenImgFileSrc = function(libId) {
   function _parseSharedStrings(doc) {
     if (!doc) return [];
     var sis = doc.getElementsByTagName('si'), out = [];
+    out.html = [];   // 添字ごとの書式付き HTML
     for (var i = 0; i < sis.length; i++) {
       var si = sis[i];
       // 本文の <t> だけを拾う（<rPh> はふりがななので除外）
@@ -558,7 +559,8 @@ window.screenImgFileSrc = function(libId) {
         }
         if (!skip) plain += ts[j].textContent;
       }
-      out.push(_richValue(plain, _richToHtml(si)));
+      out.push(plain);
+      out.html[i] = _richToHtml(si);
     }
     return out;
   }
@@ -622,11 +624,15 @@ window.screenImgFileSrc = function(libId) {
     return html;
   }
 
-  /** 文字列に HTML を添えて返す（プレーン値としても従来どおり使える） */
-  function _richValue(text, html) {
-    var v = new String(text == null ? '' : text);
-    v.html = html || '';
-    return v;
+  /**
+   * 文字列に HTML を添えて返す。
+   * String オブジェクトを使うと JSON 化や比較で扱いを誤りやすいため、
+   * プレーン文字列を返し、書式は別のマップ（rows.html）で持つ。
+   */
+  function _richValue(text, html, store, r, c) {
+    var t = (text == null ? '' : String(text));
+    if (store && html) store[r + ',' + c] = html;
+    return t;
   }
 
   /**
@@ -723,6 +729,7 @@ window.screenImgFileSrc = function(libId) {
   /** worksheet XML → 2次元配列 */
   function _parseSheet(doc, shared) {
     var rowsEl = doc.getElementsByTagName('row'), rows = [];
+    rows.html = {};   // 'row,col' → 書式付き HTML
     for (var i = 0; i < rowsEl.length; i++) {
       var rEl  = rowsEl[i];
       var rNum = parseInt(rEl.getAttribute('r') || (i + 1), 10) - 1;
@@ -738,11 +745,16 @@ window.screenImgFileSrc = function(libId) {
           var isNode = c.getElementsByTagName('is')[0];
           var isEl = c.getElementsByTagName('t');
           for (var k = 0; k < isEl.length; k++) val += isEl[k].textContent;
-          val = _richValue(val, _richToHtml(isNode));
+          val = _richValue(val, _richToHtml(isNode), rows.html, rNum, ci);
         } else {
           var vEl = c.getElementsByTagName('v')[0];
           var raw = vEl ? vEl.textContent : '';
-          if (t === 's')      val = shared[parseInt(raw, 10)] || '';
+          if (t === 's') {
+            var si2 = parseInt(raw, 10);
+            val = shared[si2] || '';
+            var sh = shared.html && shared.html[si2];
+            if (sh) rows.html[rNum + ',' + ci] = sh;
+          }
           else if (t === 'b') val = (raw === '1') ? 'TRUE' : 'FALSE';
           else if (t === 'e') val = '';
           else                val = raw;
@@ -803,9 +815,9 @@ window.screenImgFileSrc = function(libId) {
                 _readSheetImages(buf, entries, path)
               ]).then(function(rr) {
                 var rows = rr[0] ? _parseSheet(_parseXml(rr[0]), shared) : [];
-                // 画像はセル位置（行,列）ごとにまとめて添える
-                return { name: name, rows: rows, images: rr[1] || {} };
-              }).catch(function() { return { name: name, rows: [], images: {} }; })
+                // 書式と画像はセル位置（'行,列'）をキーにまとめて添える
+                return { name: name, rows: rows, html: rows.html || {}, images: rr[1] || {} };
+              }).catch(function() { return { name: name, rows: [], html: {}, images: {} }; })
             );
           })(sheetEls[s], s);
         }
@@ -2089,6 +2101,14 @@ function _buildSideMenuHTML(isDark) {
   html += '<div class="side-section"><div style="display:flex;align-items:center;justify-content:space-between;padding:13px 16px;">' +
     '<span style="font-size:13px;font-weight:600;">🌙 ダークモード</span>' +
     '<label class="dark-toggle-sw"><input type="checkbox" id="darkModeToggle"' + (isDark ? ' checked' : '') + ' onchange="window.applyDarkMode(this.checked)"><span class="dark-toggle-sl"></span></label>' +
+    '</div>' +
+    // URL のリンク化（本文中の http(s):// をクリックできるようにする）
+    '<div style="display:flex;align-items:center;justify-content:space-between;padding:13px 16px;border-top:1px solid var(--border);">' +
+      '<span style="font-size:13px;font-weight:600;">🔗 URL をリンクにする' +
+        '<span style="display:block;font-size:10px;font-weight:400;color:var(--text3);margin-top:2px;">別タブで開きます</span></span>' +
+      '<label class="dark-toggle-sw"><input type="checkbox" id="linkifyToggle"' +
+        (window.isLinkifyOn && window.isLinkifyOn() ? ' checked' : '') +
+        ' onchange="window.setLinkify(this.checked)"><span class="dark-toggle-sl"></span></label>' +
     '</div></div>';
 
   // JSON 定義セクション
@@ -2311,6 +2331,66 @@ window.goHomePage = function() {
   if (typeof openNamedTab === 'function') openNamedTab('index.html', 'homeTab');
   else location.href = 'index.html';
 };
+
+// ── URL のハイパーリンク化 ──
+// 本文中の http(s):// を自動でリンクにするかどうかを切り替える。
+// 有効時は別タブで開く（同じタブだと作業中の内容が失われるため）。
+var LINKIFY_KEY = 'linkifyUrls';
+
+window.isLinkifyOn = function() {
+  try { return localStorage.getItem(LINKIFY_KEY) !== '0'; } catch (e) { return true; }
+};
+
+window.setLinkify = function(on) {
+  try { localStorage.setItem(LINKIFY_KEY, on ? '1' : '0'); } catch (e) {}
+  // 開いている他のタブにも伝える
+  try { if (window._bc) window._bc.postMessage({ type: 'linkify', on: !!on }); } catch (e) {}
+  if (typeof window.applyLinkify === 'function') window.applyLinkify();
+};
+
+/**
+ * 表示済みの本文に対してリンク化を適用/解除する。
+ * 対象は data-linkify 属性を持つ要素の中だけに限る。
+ */
+window.applyLinkify = function(root) {
+  var on = window.isLinkifyOn();
+  var scope = root || document;
+  var targets = scope.querySelectorAll('[data-linkify]');
+  Array.prototype.forEach.call(targets, function(el) {
+    if (on) _linkifyEl(el); else _unlinkifyEl(el);
+  });
+};
+
+var URL_RE = /(https?:\/\/[^\s<>"'）】」』]+)/g;
+
+function _linkifyEl(el) {
+  if (el.dataset.linkified === '1') return;
+  (function walk(node) {
+    Array.prototype.slice.call(node.childNodes).forEach(function(c) {
+      if (c.nodeType === 3) {
+        var t = c.nodeValue;
+        if (!URL_RE.test(t)) { URL_RE.lastIndex = 0; return; }
+        URL_RE.lastIndex = 0;
+        var span = document.createElement('span');
+        span.innerHTML = t.replace(/&/g, '&amp;').replace(/</g, '&lt;')
+          .replace(URL_RE, '<a href="$1" target="_blank" rel="noopener noreferrer" class="auto-link">$1</a>');
+        c.parentNode.replaceChild(span, c);
+      } else if (c.nodeType === 1 && c.tagName !== 'A' && c.tagName !== 'IMG') {
+        walk(c);
+      }
+    });
+  })(el);
+  el.dataset.linkified = '1';
+}
+
+function _unlinkifyEl(el) {
+  if (el.dataset.linkified !== '1') return;
+  Array.prototype.slice.call(el.querySelectorAll('a.auto-link')).forEach(function(a) {
+    a.parentNode.replaceChild(document.createTextNode(a.textContent), a);
+  });
+  el.normalize();
+  el.dataset.linkified = '';
+}
 
 /**
  * ヘッダーに［🏠 ホーム］ボタンを差し込む。

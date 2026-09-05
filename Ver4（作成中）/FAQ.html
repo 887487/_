@@ -25,9 +25,10 @@
     .faq-layout { flex: 1; display: flex; overflow: hidden; }
 
     /* 左：カテゴリ一覧 */
+    /* 他ページ（スクリプト・メール・画面遷移）のサイドバーと同じ幅にそろえる */
     .faq-side {
-      width: 240px;
-      min-width: 240px;
+      width: var(--sidebar-w, 400px);
+      min-width: var(--sidebar-w, 400px);
       display: flex;
       flex-direction: column;
       border-right: 1px solid var(--border);
@@ -290,16 +291,18 @@
   }
 
   function renderAnswer(text, q, html) {
-    // 書式付きで、かつ検索していないときは HTML をそのまま出す
-    if (html && !q) {
-      return '<div class="faq-a-text">' + sanitize(html) + '</div>';
+    // 書式付きなら、検索中でもそれを保ったまま表示する。
+    // 検索語のハイライトは HTML のタグを壊さないよう、
+    // テキストノードだけを対象にして後から施す。
+    if (html) {
+      return '<div class="faq-a-text" data-linkify>' + markHtml(sanitize(html), q) + '</div>';
     }
     var lines = String(text == null ? '' : text).split(/\r?\n/);
     var out = [], buf = [];
 
     var flush = function () {
       if (!buf.length) return;
-      out.push('<div class="faq-a-text">' + mark(buf.join('\n'), q) + '</div>');
+      out.push('<div class="faq-a-text" data-linkify>' + mark(buf.join('\n'), q) + '</div>');
       buf = [];
     };
 
@@ -332,6 +335,36 @@
   function faqZoomClose() {
     var ov = document.getElementById('faqZoom');
     if (ov) ov.style.display = 'none';
+  }
+
+  /**
+   * 書式付き HTML の中でだけ検索語をハイライトする。
+   * innerHTML を文字列置換するとタグまで壊れるので、
+   * テキストノードを走査して該当部分だけを差し替える。
+   */
+  function markHtml(html, q) {
+    if (!q) return html;
+    var box = document.createElement('div');
+    box.innerHTML = html;
+    var re;
+    try { re = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'); }
+    catch (e) { return html; }
+
+    (function walk(node) {
+      Array.prototype.slice.call(node.childNodes).forEach(function (c) {
+        if (c.nodeType === 3) {           // テキストノード
+          var t = c.nodeValue;
+          if (!re.test(t)) { re.lastIndex = 0; return; }
+          re.lastIndex = 0;
+          var span = document.createElement('span');
+          span.innerHTML = esc(t).replace(re, '<span class="faq-hit">$&</span>');
+          c.parentNode.replaceChild(span, c);
+        } else if (c.nodeType === 1 && c.tagName !== 'IMG') {
+          walk(c);
+        }
+      });
+    })(box);
+    return box.innerHTML;
   }
 
   /** 検索語をハイライトする（エスケープ後の文字列に対して行う） */
@@ -394,6 +427,7 @@
       return;
     }
 
+    setTimeout(function () { if (window.applyLinkify) window.applyLinkify(); }, 0);
     el.innerHTML = list.map(function (f) {
       // 検索中は探しやすいよう自動で開く
       var open = _faqAllOpen || !!_faqOpen[f.id] || !!q;
@@ -401,7 +435,7 @@
         + '<div class="faq-q" onclick="toggleItem(' + jsAttr(f.id) + ')">'
         +   '<span class="faq-q-mark">Q</span>'
         +   '<span class="faq-q-text">'
-        +     ((f.questionHtml && !q) ? sanitize(f.questionHtml) : mark(f.question, q)) + '</span>'
+        +     (f.questionHtml ? markHtml(sanitize(f.questionHtml), q) : mark(f.question, q)) + '</span>'
         +   '<span class="faq-q-arrow">▶</span>'
         + '</div>'
         + '<div class="faq-a">'
@@ -409,8 +443,8 @@
         +     '<span class="faq-a-mark">A</span>'
         +     '<div class="faq-a-main">' + renderAnswer(f.answer, q, f.answerHtml) + '</div>'
         +   '</div>'
-        +   (f.note ? '<div class="faq-note"><span class="faq-note-label">備考</span>'
-        +     ((f.noteHtml && !q) ? sanitize(f.noteHtml) : mark(f.note, q)) + '</div>' : '')
+        +   (f.note ? '<div class="faq-note" data-linkify><span class="faq-note-label">備考</span>'
+        +     (f.noteHtml ? markHtml(sanitize(f.noteHtml), q) : mark(f.note, q)) + '</div>' : '')
         +   '<div class="faq-meta">ID ' + esc(f.id) + '　/　' + esc(f.category || '未分類') + '</div>'
         + '</div></div>';
     }).join('');
@@ -453,6 +487,7 @@
       renderCats(); renderList();
       var btn = document.getElementById('clearBtn');
       if (btn) btn.style.display = 'none';   // 初期は非表示（他ページと同じ）
+      if (window.applyLinkify) window.applyLinkify();
     };
     // IndexedDB 側に新しいデータがあれば読み込んでから描画する
     (window.initAppData ? window.initAppData() : Promise.resolve()).then(start).catch(start);
