@@ -583,6 +583,11 @@ details[open] > summary .hr-acc-arrow { transform: rotate(90deg); }
 /* 削除ボタン。絵文字だけだと環境によって潰れて見えるため、
    赤字＋赤枠の「×」で統一する。 */
 /* 「＋ 質問を追加」と同じ見た目の追加ボタン */
+/* FAQ のリッチテキスト編集欄 */
+.faq-rich:focus{border-color:var(--accent);}
+.faq-rich:empty::before{content:attr(data-ph);color:var(--text3);}
+.faq-rich s{text-decoration:line-through;}
+
 .hr-add-btn{
   height:28px;padding:0 14px;border:1px dashed var(--accent);
   border-radius:6px;background:var(--accent-lt);color:var(--accent-text);
@@ -1448,7 +1453,7 @@ html[data-theme="dark"] .nav-arrow-btn { background: rgba(40,42,54,.9); }
       <div class="sidebar-scroll" id="faqCatList"></div>
       <button class="add-cat-btn" onclick="_faqAddItem()">＋ FAQ を追加</button>
       <button class="add-cat-btn" onclick="_faqAddCategory()">＋ カテゴリを追加</button>
-      <button class="add-cat-btn" onclick="document.getElementById('faqXlsxInput').click()" title="シート名をカテゴリ、A列を質問、B列を回答、C列を備考として取り込みます">📊 Excel から取り込み</button>
+      <button class="add-cat-btn" onclick="document.getElementById('faqXlsxInput').click()" title="シート名をカテゴリ、B列を質問、C列を回答、D列を備考として取り込みます（1行目は見出しとして除外）">📊 Excel から取り込み</button>
       <input type="file" id="faqXlsxInput" accept=".xlsx" style="display:none" onchange="_faqImportXlsx(this)">
     </aside>
 
@@ -5363,16 +5368,60 @@ function _faqRenderList() {
       +   '<span style="flex:1;"></span>'
       +   '<button class="btn-del wide" onclick="_faqDelete(' + i + ')" title="この FAQ を削除">× 削除</button>'
       + '</div>'
-      + '<input type="text" value="' + esc(f.question || '') + '" placeholder="質問"'
-      +   ' oninput="_faqSet(' + i + ',\'question\',this.value)"'
-      +   ' style="width:100%;box-sizing:border-box;height:28px;padding:0 8px;margin-bottom:6px;font-size:12px;font-weight:700;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text);">'
-      + '<textarea rows="3" placeholder="回答" oninput="_faqSet(' + i + ',\'answer\',this.value)"'
-      +   ' style="width:100%;box-sizing:border-box;padding:6px 8px;margin-bottom:6px;font-size:12px;line-height:1.7;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text);font-family:inherit;resize:vertical;">' + esc(f.answer || '') + '</textarea>'
-      + '<input type="text" value="' + esc(f.note || '') + '" placeholder="備考（任意）"'
-      +   ' oninput="_faqSet(' + i + ',\'note\',this.value)"'
-      +   ' style="width:100%;box-sizing:border-box;height:26px;padding:0 8px;font-size:11px;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text2);">'
+      // 書式（太字・取り消し線・色など）を保てるよう contenteditable で編集する
+      + _faqRichBar(i)
+      + _faqRich(i, 'question', f, '質問', 'font-weight:700;min-height:28px;')
+      + _faqRich(i, 'answer',   f, '回答', 'min-height:62px;line-height:1.8;')
+      + _faqRich(i, 'note',     f, '備考（任意）', 'min-height:24px;font-size:11px;color:var(--text2);')
       + '</div>';
   }).join('');
+}
+
+/** 書式ボタン（選択部分に太字などを適用する） */
+function _faqRichBar(i) {
+  var b = function(cmd, label, title, style) {
+    return '<button type="button" onmousedown="event.preventDefault()"'
+      + ' onclick="_faqExec(\'' + cmd + '\')" title="' + title + '"'
+      + ' style="height:22px;min-width:24px;padding:0 6px;font-size:11px;border:1px solid var(--border);'
+      + 'border-radius:4px;background:var(--surface);color:var(--text);cursor:pointer;font-family:inherit;'
+      + (style || '') + '">' + label + '</button>';
+  };
+  return '<div style="display:flex;gap:4px;margin-bottom:5px;flex-wrap:wrap;">'
+    + b('bold', 'B', '太字', 'font-weight:700;')
+    + b('italic', 'I', '斜体', 'font-style:italic;')
+    + b('underline', 'U', '下線', 'text-decoration:underline;')
+    + b('strikeThrough', 'S', '取り消し線', 'text-decoration:line-through;')
+    + b('red', '赤', '文字を赤くする', 'color:#e63946;')
+    + b('black', '黒', '文字色を戻す', '')
+    + b('removeFormat', '書式解除', '選択部分の書式を消す', 'font-size:10px;')
+    + '</div>';
+}
+
+/** 書式を適用する（選択範囲に対して実行） */
+function _faqExec(cmd) {
+  if (cmd === 'red')   { document.execCommand('foreColor', false, '#e63946'); return; }
+  if (cmd === 'black') { document.execCommand('foreColor', false, '#000000'); return; }
+  document.execCommand(cmd, false, null);
+}
+
+/** 1項目ぶんの編集欄。HTML があればそれを、無ければテキストを表示する */
+function _faqRich(i, key, f, placeholder, style) {
+  var html = f[key + 'Html'];
+  var body = (html != null && html !== '') ? html : esc(f[key] || '').replace(/\n/g, '<br>');
+  return '<div contenteditable="true" data-ph="' + placeholder + '"'
+    + ' class="faq-rich" oninput="_faqSetRich(' + i + ',\'' + key + '\',this)"'
+    + ' style="width:100%;box-sizing:border-box;padding:6px 8px;margin-bottom:6px;font-size:12px;'
+    + 'border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text);'
+    + 'outline:none;overflow-wrap:anywhere;' + (style || '') + '">' + body + '</div>';
+}
+
+/** 編集内容を保存する。HTML と、検索用のプレーンテキストの両方を持つ */
+function _faqSetRich(i, key, el) {
+  var a = _faqAll();
+  if (!a[i]) return;
+  a[i][key + 'Html'] = el.innerHTML;
+  a[i][key] = (el.innerText || el.textContent || '').replace(/\u00a0/g, ' ');
+  _faqSave();
 }
 
 function _faqSet(i, key, val) {
@@ -5453,18 +5502,25 @@ function _faqImportXlsx(input) {
       sheets++;
 
       rows.forEach(function(row, ri) {
-        var q = String((row[0] == null ? '' : row[0])).trim();
-        var a = String((row[1] == null ? '' : row[1])).trim();
-        var nt = String((row[2] == null ? '' : row[2])).trim();
+        // 1行目は見出しとして必ず読み飛ばし、2行目以降を取り込む
+        if (ri === 0) { skipped++; return; }
 
-        if (!q && !a) return;                       // 空行
-        // 見出し行を読み飛ばす
-        if (ri === 0 && /^(質問|question|q)$/i.test(q)) { skipped++; return; }
+        // B列＝質問、C列＝回答、D列＝備考（A列はIDなど別用途）
+        var cell = function(i) {
+          var v = row[i];
+          if (v == null) return { text: '', html: '' };
+          return { text: String(v).trim(), html: (v.html != null ? v.html : '') };
+        };
+        var q = cell(1), a = cell(2), nt = cell(3);
+
+        if (!q.text && !a.text) return;             // 空行
 
         added.push({
           id: id++,
           category: String(sheetName || '未分類').trim() || '未分類',
-          question: q, answer: a, note: nt
+          question: q.text, answer: a.text, note: nt.text,
+          // セル内の書式（太字・取り消し線・色など）を保持する
+          questionHtml: q.html, answerHtml: a.html, noteHtml: nt.html
         });
       });
     });
@@ -5476,8 +5532,9 @@ function _faqImportXlsx(input) {
     }
 
     var msg = added.length + ' 件（' + sheets + ' シート）を取り込みます。\n\n'
-            + '既存の ' + _faqAll().length + ' 件はそのまま残り、末尾に追加されます。'
-            + (skipped ? '\n※ 見出し行 ' + skipped + ' 行は除外しました。' : '');
+            + '　シート名 → カテゴリ\n　B列 → 質問　C列 → 回答　D列 → 備考\n'
+            + '　※ 1行目は見出しとして除外します\n\n'
+            + '既存の ' + _faqAll().length + ' 件はそのまま残り、末尾に追加されます。';
     if (!confirm(msg)) return;
 
     window._appCache.faqData = _faqAll().concat(added);

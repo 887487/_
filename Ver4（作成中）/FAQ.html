@@ -74,6 +74,8 @@
 
     .faq-a { display: none; padding: 0 14px 14px 38px; }
     .faq-item.open .faq-a { display: block; }
+    .faq-a-text s, .faq-q-text s, .faq-note s { text-decoration: line-through; }
+    .faq-a-text u, .faq-q-text u, .faq-note u { text-decoration: underline; }
     .faq-a-text {
       font-size: 13px; line-height: 1.9; color: var(--text);
       white-space: pre-wrap; word-break: break-word;
@@ -214,7 +216,44 @@
     try { return v.split('/').map(encodeURIComponent).join('/'); } catch (e) { return v; }
   }
 
-  function renderAnswer(text, q) {
+  /**
+   * 書式付きの HTML がある場合はそれを表示する。
+   * Excel から取り込んだ太字・取り消し線・色などを再現するため。
+   * 許可するタグを絞り、それ以外は取り除く（スクリプト混入を防ぐ）。
+   */
+  var ALLOW_TAGS = /^(b|strong|i|em|u|s|strike|br|span|div|p|ul|ol|li|font)$/i;
+
+  function sanitize(html) {
+    var box = document.createElement('div');
+    box.innerHTML = String(html == null ? '' : html);
+    (function walk(node) {
+      var kids = Array.prototype.slice.call(node.childNodes);
+      kids.forEach(function (c) {
+        if (c.nodeType === 1) {
+          if (!ALLOW_TAGS.test(c.tagName)) {
+            // 許可外のタグは中身だけ残して取り除く
+            while (c.firstChild) node.insertBefore(c.firstChild, c);
+            node.removeChild(c);
+            return;
+          }
+          Array.prototype.slice.call(c.attributes).forEach(function (a) {
+            // style の color 以外は落とす（onclick などを持ち込ませない）
+            if (a.name === 'style' && /color\s*:/i.test(a.value)) return;
+            if (a.name === 'color') return;
+            c.removeAttribute(a.name);
+          });
+          walk(c);
+        }
+      });
+    })(box);
+    return box.innerHTML;
+  }
+
+  function renderAnswer(text, q, html) {
+    // 書式付きで、かつ検索していないときは HTML をそのまま出す
+    if (html && !q) {
+      return '<div class="faq-a-text">' + sanitize(html) + '</div>';
+    }
     var lines = String(text == null ? '' : text).split(/\r?\n/);
     var out = [], buf = [];
 
@@ -321,12 +360,14 @@
       return '<div class="faq-item' + (open ? ' open' : '') + '" id="faq_' + esc(f.id) + '">'
         + '<div class="faq-q" onclick="toggleItem(' + jsAttr(f.id) + ')">'
         +   '<span class="faq-q-mark">Q</span>'
-        +   '<span class="faq-q-text">' + mark(f.question, q) + '</span>'
+        +   '<span class="faq-q-text">'
+        +     ((f.questionHtml && !q) ? sanitize(f.questionHtml) : mark(f.question, q)) + '</span>'
         +   '<span class="faq-q-arrow">▶</span>'
         + '</div>'
         + '<div class="faq-a">'
-        +   renderAnswer(f.answer, q)
-        +   (f.note ? '<div class="faq-note">' + mark(f.note, q) + '</div>' : '')
+        +   renderAnswer(f.answer, q, f.answerHtml)
+        +   (f.note ? '<div class="faq-note">'
+        +     ((f.noteHtml && !q) ? sanitize(f.noteHtml) : mark(f.note, q)) + '</div>' : '')
         +   '<div class="faq-meta">ID ' + esc(f.id) + '　/　' + esc(f.category || '未分類') + '</div>'
         + '</div></div>';
     }).join('');

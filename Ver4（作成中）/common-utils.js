@@ -515,24 +515,97 @@ window.screenImgFileSrc = function(libId) {
   }
 
   /** sharedStrings.xml → 文字列配列（ふりがな rPh は除外する） */
+  /**
+   * 共有文字列を読む。
+   * セル内の書式（太字・斜体・下線・取り消し線・文字色）は <r><rPr> に入っているので、
+   * プレーンテキストと合わせて HTML も組み立てて返す。
+   *   out[i]      … プレーンテキスト（従来どおり）
+   *   out[i].html … 書式を反映した HTML
+   */
   function _parseSharedStrings(doc) {
     if (!doc) return [];
     var sis = doc.getElementsByTagName('si'), out = [];
     for (var i = 0; i < sis.length; i++) {
-      var ts = sis[i].getElementsByTagName('t'), s = '';
+      var si = sis[i];
+      // 本文の <t> だけを拾う（<rPh> はふりがななので除外）
+      var ts = si.getElementsByTagName('t'), plain = '';
       for (var j = 0; j < ts.length; j++) {
-        // <rPh>（ふりがな）配下の <t> は本文ではないので除外
         var skip = false, p = ts[j].parentNode;
-        while (p && p !== sis[i]) {
-          var ln = p.localName || p.nodeName;
-          if (ln === 'rPh') { skip = true; break; }
+        while (p && p !== si) {
+          if ((p.localName || p.nodeName) === 'rPh') { skip = true; break; }
           p = p.parentNode;
         }
-        if (!skip) s += ts[j].textContent;
+        if (!skip) plain += ts[j].textContent;
       }
-      out.push(s);
+      out.push(_richValue(plain, _richToHtml(si)));
     }
     return out;
+  }
+
+
+  /**
+   * <si> や <is> の中身から、書式を反映した HTML を組み立てる。
+   * 太字・斜体・下線・取り消し線・文字色に対応する。
+   */
+  function _richToHtml(node) {
+    if (!node) return '';
+    var esc = function(t) {
+      return String(t == null ? '' : t)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    };
+    var childByName = function(el, name) {
+      if (!el) return null;
+      for (var k = 0; k < el.childNodes.length; k++) {
+        var c = el.childNodes[k];
+        if ((c.localName || c.nodeName) === name) return c;
+      }
+      return null;
+    };
+
+    var html = '';
+    for (var n = 0; n < node.childNodes.length; n++) {
+      var run = node.childNodes[n];
+      var nm  = run.localName || run.nodeName;
+      if (nm !== 'r' && nm !== 't') continue;
+
+      var tEl = (nm === 't') ? run : childByName(run, 't');
+      if (!tEl) continue;
+
+      var open = '', close = '';
+      var pr = (nm === 'r') ? childByName(run, 'rPr') : null;
+      if (pr) {
+        var has = function(tag) {
+          var e = childByName(pr, tag);
+          if (!e) return false;
+          var v = e.getAttribute('val');
+          return v === null || v === '' || v === '1' || v === 'true';
+        };
+        if (has('b'))      { open += '<strong>'; close = '</strong>' + close; }
+        if (has('i'))      { open += '<em>';     close = '</em>' + close; }
+        if (has('strike')) { open += '<s>';      close = '</s>' + close; }
+        var u = childByName(pr, 'u');
+        if (u && (u.getAttribute('val') || 'single') !== 'none') {
+          open += '<u>'; close = '</u>' + close;
+        }
+        var col = childByName(pr, 'color');
+        var rgb = col && col.getAttribute('rgb');
+        if (rgb && /^[0-9A-Fa-f]{6,8}$/.test(rgb)) {
+          var hex = rgb.length === 8 ? rgb.slice(2) : rgb;   // ARGB → RGB
+          if (hex.toUpperCase() !== '000000') {
+            open += '<span style="color:#' + hex + '">'; close = '</span>' + close;
+          }
+        }
+      }
+      html += open + esc(tEl.textContent).replace(/\n/g, '<br>') + close;
+    }
+    return html;
+  }
+
+  /** 文字列に HTML を添えて返す（プレーン値としても従来どおり使える） */
+  function _richValue(text, html) {
+    var v = new String(text == null ? '' : text);
+    v.html = html || '';
+    return v;
   }
 
   /** worksheet XML → 2次元配列 */
@@ -550,8 +623,10 @@ window.screenImgFileSrc = function(libId) {
         var t   = c.getAttribute('t');
         var val = '';
         if (t === 'inlineStr') {
+          var isNode = c.getElementsByTagName('is')[0];
           var isEl = c.getElementsByTagName('t');
           for (var k = 0; k < isEl.length; k++) val += isEl[k].textContent;
+          val = _richValue(val, _richToHtml(isNode));
         } else {
           var vEl = c.getElementsByTagName('v')[0];
           var raw = vEl ? vEl.textContent : '';
