@@ -810,14 +810,11 @@ window.screenImgFileSrc = function(libId) {
                        (el.attributes.getNamedItem('r:id') ? el.attributes.getNamedItem('r:id').value : null);
             var path = (rid && relMap[rid]) || ('xl/worksheets/sheet' + (idx + 1) + '.xml');
             jobs.push(
-              Promise.all([
-                _zipRead(buf, entries, path),
-                _readSheetImages(buf, entries, path)
-              ]).then(function(rr) {
-                var rows = rr[0] ? _parseSheet(_parseXml(rr[0]), shared) : [];
-                // 書式と画像はセル位置（'行,列'）をキーにまとめて添える
-                return { name: name, rows: rows, html: rows.html || {}, images: rr[1] || {} };
-              }).catch(function() { return { name: name, rows: [], html: {}, images: {} }; })
+              _zipRead(buf, entries, path).then(function(xml) {
+                var rows = xml ? _parseSheet(_parseXml(xml), shared) : [];
+                // 書式はセル位置（'行,列'）をキーにして添える
+                return { name: name, rows: rows, html: rows.html || {} };
+              }).catch(function() { return { name: name, rows: [], html: {} }; })
             );
           })(sheetEls[s], s);
         }
@@ -2333,20 +2330,8 @@ window.goHomePage = function() {
 // http(s):// を、クリックできるリンクとして扱うかどうか。
 // 利用者ごとの好みではなく運用上の判断なので、admin.html で
 // コンテンツ種別ごとに設定し、data.js に保存して全員に配る。
-window.LINKIFY_KINDS = ['script', 'mail', 'screen', 'faq'];
-
-window.getLinkifySettings = function() {
-  var d = (window._appCache && window._appCache.linkify) ||
-          (window.APP_STATIC_DATA && window.APP_STATIC_DATA.linkify) || {};
-  var out = {};
-  window.LINKIFY_KINDS.forEach(function(k) { out[k] = (d[k] !== false); });   // 既定は有効
-  return out;
-};
-
-window.isLinkifyOn = function(kind) {
-  var s = window.getLinkifySettings();
-  return kind ? !!s[kind] : true;
-};
+// 対象の要素に data-linkify="0" が付いていればリンク化しない。
+// 設定はコンテンツ1件ごとに持ち、admin.html の書式バーで切り替える。
 
 /**
  * 表示済みの本文に対してリンク化を適用/解除する。
@@ -2376,13 +2361,11 @@ window.isLinkifyOn = function(kind) {
 })();
 
 window.applyLinkify = function(root) {
-  var st = window.getLinkifySettings();
   var scope = root || document;
   var targets = scope.querySelectorAll('[data-linkify]');
   Array.prototype.forEach.call(targets, function(el) {
-    // data-linkify="faq" のように種別を書く。未指定なら常に有効。
-    var kind = el.getAttribute('data-linkify');
-    var on = (!kind || st[kind] !== false);
+    // data-linkify="0" のときだけ無効。未指定・"1" は有効。
+    var on = el.getAttribute('data-linkify') !== '0';
     if (on) _linkifyEl(el); else _unlinkifyEl(el);
   });
 };

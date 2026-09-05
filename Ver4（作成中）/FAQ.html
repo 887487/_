@@ -291,19 +291,19 @@
     return box.innerHTML;
   }
 
-  function renderAnswer(text, q, html) {
+  function renderAnswer(text, q, html, lk) {
     // 書式付きなら、検索中でもそれを保ったまま表示する。
     // 検索語のハイライトは HTML のタグを壊さないよう、
     // テキストノードだけを対象にして後から施す。
     if (html) {
-      return '<div class="faq-a-text" data-linkify="faq">' + markHtml(sanitize(html), q) + '</div>';
+      return '<div class="faq-a-text" data-linkify="' + lk + '">' + markHtml(sanitize(html), q) + '</div>';
     }
     var lines = String(text == null ? '' : text).split(/\r?\n/);
     var out = [], buf = [];
 
     var flush = function () {
       if (!buf.length) return;
-      out.push('<div class="faq-a-text" data-linkify="faq">' + mark(buf.join('\n'), q) + '</div>');
+      out.push('<div class="faq-a-text" data-linkify="1">' + mark(buf.join('\n'), q) + '</div>');
       buf = [];
     };
 
@@ -432,6 +432,7 @@
     el.innerHTML = list.map(function (f) {
       // 検索中は探しやすいよう自動で開く
       var open = _faqAllOpen || !!_faqOpen[f.id] || !!q;
+      var lk = (f.linkify === false) ? '0' : '1';   // この FAQ のリンク設定
       return '<div class="faq-item' + (open ? ' open' : '') + '" id="faq_' + esc(f.id) + '">'
         + '<div class="faq-q" onclick="toggleItem(' + jsAttr(f.id) + ')">'
         +   '<span class="faq-q-mark">Q</span>'
@@ -442,9 +443,9 @@
         + '<div class="faq-a">'
         +   '<div class="faq-a-body">'
         +     '<span class="faq-a-mark">A</span>'
-        +     '<div class="faq-a-main">' + renderAnswer(f.answer, q, f.answerHtml) + '</div>'
+        +     '<div class="faq-a-main">' + renderAnswer(f.answer, q, f.answerHtml, lk) + '</div>'
         +   '</div>'
-        +   (f.note ? '<div class="faq-note" data-linkify="faq"><span class="faq-note-label">備考</span>'
+        +   (f.note ? '<div class="faq-note" data-linkify="' + lk + '"><span class="faq-note-label">備考</span>'
         +     (f.noteHtml ? markHtml(sanitize(f.noteHtml), q) : mark(f.note, q)) + '</div>' : '')
         +   '<div class="faq-meta">ID ' + esc(f.id) + '　/　' + esc(f.category || '未分類') + '</div>'
         + '</div></div>';

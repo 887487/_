@@ -583,6 +583,49 @@ details[open] > summary .hr-acc-arrow { transform: rotate(90deg); }
 /* 削除ボタン。絵文字だけだと環境によって潰れて見えるため、
    赤字＋赤枠の「×」で統一する。 */
 /* 「＋ 質問を追加」と同じ見た目の追加ボタン */
+/* ── 共通の書式設定バー ── */
+.rt-bar{
+  display:flex;align-items:center;flex-wrap:wrap;gap:3px;
+  padding:5px 6px;margin-bottom:5px;
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:6px 6px 0 0;border-bottom:none;
+}
+.rt-btn{
+  display:inline-flex;align-items:center;justify-content:center;
+  height:24px;min-width:26px;padding:0 6px;
+  font-size:12px;line-height:1;font-family:inherit;
+  color:var(--text);background:var(--surface);
+  border:1px solid var(--border);border-radius:4px;
+  cursor:pointer;transition:background .12s,border-color .12s;
+}
+.rt-btn:hover{background:var(--accent-lt);border-color:var(--accent);color:var(--accent-text);}
+.rt-sep{width:1px;height:18px;background:var(--border);margin:0 3px;}
+.rt-link{
+  margin-left:auto;display:flex;align-items:center;gap:5px;
+  font-size:11px;color:var(--text2);white-space:nowrap;cursor:pointer;
+}
+.rt-link input{width:14px;height:14px;cursor:pointer;accent-color:var(--accent-text);}
+
+/* 書式バーとつながる編集欄 */
+.rt-edit{
+  width:100%;box-sizing:border-box;padding:8px 10px;
+  border:1px solid var(--border);border-radius:0 0 6px 6px;
+  background:var(--surface);color:var(--text);
+  font-size:12px;line-height:1.8;outline:none;overflow-wrap:anywhere;
+}
+.rt-edit:focus{border-color:var(--accent);}
+.rt-edit:empty::before{content:attr(data-ph);color:var(--text3);}
+.rt-edit s{text-decoration:line-through;}
+.rt-edit u{text-decoration:underline;}
+.rt-edit img{max-width:100%;height:auto;}
+
+/* 挿入した表 */
+.rt-table{border-collapse:collapse;width:100%;margin:8px 0;font-size:12px;}
+.rt-table th,.rt-table td{
+  border:1px solid var(--border);padding:5px 8px;min-width:40px;vertical-align:top;
+}
+.rt-table th{background:var(--surface2);font-weight:700;text-align:left;}
+
 /* FAQ のリッチテキスト編集欄 */
 .faq-rich:focus{border-color:var(--accent);}
 .faq-rich:empty::before{content:attr(data-ph);color:var(--text3);}
@@ -1467,13 +1510,6 @@ html[data-theme="dark"] .nav-arrow-btn { background: rgba(40,42,54,.9); }
       </div>
       <div id="faqList" style="flex:1;overflow-y:auto;padding:12px 14px;"></div>
 
-      <!-- URL のリンク化設定（コンテンツ種別ごと） -->
-      <div style="flex-shrink:0;border-top:1px solid var(--border);background:var(--surface);padding:10px 14px;">
-        <div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:7px;">
-          🔗 本文中の URL をリンクとして扱う（有効時はクリックで別タブに開きます）
-        </div>
-        <div id="linkifyRow" style="display:flex;flex-wrap:wrap;gap:14px;"></div>
-      </div>
     </div>
   </div>
 
@@ -1977,6 +2013,8 @@ html[data-theme="dark"] .nav-arrow-btn { background: rgba(40,42,54,.9); }
       <div class="scr-lib-menu-sep"></div>
       <button class="scr-lib-menu-item" style="color:var(--red);" onclick="_scrLibRowMenuDo('delete')">🗑 削除</button>
     </div>
+    <!-- 書式バーの「🖼 画像」で使う -->
+    <input type="file" id="rtImageInput" accept="image/*" style="display:none" onchange="rtImageChosen(this)">
     <input type="file" id="scrLibReplaceInput" accept="image/*" style="display:none" onchange="_scrLibReplaceFile(this)">
     <input type="file" id="scrLibAddInput" accept="image/*" multiple style="display:none" onchange="_scrLibAddFiles(this)">
 
@@ -2712,7 +2750,7 @@ function switchTab(tab){
     if(panel)panel.classList.toggle('active',t===tab);
     if(btn)btn.classList.toggle('active',t===tab);
   });
-  if(tab==='faq'){ _faqRender(); _linkifyRender(); }
+  if(tab==='faq'){ _faqRender(); }
   if(tab==='hearing'&&window.renderHearing){
     // hearingPolicies / hearingPatterns を IDB から毎回取得してから描画
     var _reloadHrData = function() {
@@ -5377,64 +5415,120 @@ function _faqRenderList() {
       +   '<button class="btn-del wide" onclick="_faqDelete(' + i + ')" title="この FAQ を削除">× 削除</button>'
       + '</div>'
       // 書式（太字・取り消し線・色など）を保てるよう contenteditable で編集する
-      + _faqRichBar(i)
-      + _faqRich(i, 'question', f, '質問', 'font-weight:700;min-height:28px;')
-      + _faqRich(i, 'answer',   f, '回答', 'min-height:62px;line-height:1.8;')
-      + _faqRich(i, 'note',     f, '備考（任意）', 'min-height:24px;font-size:11px;color:var(--text2);')
+      + rtBar('_faqSetLink(' + i + ',', f.linkify !== false)
+      + _faqRich(i, 'question', f, '質問', 'font-weight:700;min-height:28px;border-radius:0;')
+      + _faqRich(i, 'answer',   f, '回答', 'min-height:62px;border-top:none;border-radius:0;')
+      + _faqRich(i, 'note',     f, '備考（任意）', 'min-height:24px;font-size:11px;color:var(--text2);border-top:none;')
       + '</div>';
   }).join('');
 }
 
-// ── URL リンク化の設定（コンテンツ種別ごと）──
-var LINKIFY_LABELS = { script:'📋 スクリプト', mail:'✉️ メール', screen:'🖥 画面遷移', faq:'❓ FAQ' };
+// ===================================================================
+// 共通の書式設定バー（スクリプト／メール／画面遷移／FAQ で共用）
+//   ・contenteditable な編集欄に対して execCommand で書式を適用する
+//   ・右端に「URL をリンクにする」チェックを置き、コンテンツ単位で切替
+// ===================================================================
 
-function _linkifyRender() {
-  var el = document.getElementById('linkifyRow');
-  if (!el) return;
-  var st = window.getLinkifySettings ? window.getLinkifySettings() : {};
-  el.innerHTML = (window.LINKIFY_KINDS || []).map(function(k) {
-    return '<label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;">'
-      + '<input type="checkbox"' + (st[k] !== false ? ' checked' : '')
-      +   ' onchange="_linkifySet(\'' + k + '\',this.checked)"'
-      +   ' style="width:15px;height:15px;cursor:pointer;accent-color:var(--accent-text);">'
-      + (LINKIFY_LABELS[k] || k) + '</label>';
-  }).join('');
-}
-
-function _linkifySet(kind, on) {
-  if (!window._appCache.linkify) window._appCache.linkify = {};
-  window._appCache.linkify[kind] = !!on;
-  markDirty();
-  try { window.idbSetAppData('linkify', window._appCache.linkify); } catch (e) {}
-  toast((on ? '🔗 ' : '⛓️‍💥 ') + (LINKIFY_LABELS[kind] || kind) + ' の URL リンクを'
-        + (on ? '有効' : '無効') + 'にしました');
-}
-
-/** 書式ボタン（選択部分に太字などを適用する） */
-function _faqRichBar(i) {
+/**
+ * 書式バーの HTML を返す。
+ * @param onLink  チェック変更時に呼ぶ関数名（引数: boolean）。省略時はチェックを出さない
+ * @param linked  チェックの初期状態
+ */
+function rtBar(onLink, linked) {
   var b = function(cmd, label, title, style) {
-    return '<button type="button" onmousedown="event.preventDefault()"'
-      + ' onclick="_faqExec(\'' + cmd + '\')" title="' + title + '"'
-      + ' style="height:22px;min-width:24px;padding:0 6px;font-size:11px;border:1px solid var(--border);'
-      + 'border-radius:4px;background:var(--surface);color:var(--text);cursor:pointer;font-family:inherit;'
-      + (style || '') + '">' + label + '</button>';
+    return '<button type="button" class="rt-btn" onmousedown="event.preventDefault()"'
+      + ' onclick="rtExec(\'' + cmd + '\')" title="' + title + '"'
+      + (style ? ' style="' + style + '"' : '') + '>' + label + '</button>';
   };
-  return '<div style="display:flex;gap:4px;margin-bottom:5px;flex-wrap:wrap;">'
+  var h = '<div class="rt-bar">'
     + b('bold', 'B', '太字', 'font-weight:700;')
     + b('italic', 'I', '斜体', 'font-style:italic;')
     + b('underline', 'U', '下線', 'text-decoration:underline;')
     + b('strikeThrough', 'S', '取り消し線', 'text-decoration:line-through;')
-    + b('red', '赤', '文字を赤くする', 'color:#e63946;')
-    + b('black', '黒', '文字色を戻す', '')
-    + b('removeFormat', '書式解除', '選択部分の書式を消す', 'font-size:10px;')
-    + '</div>';
+    + b('red', 'A', '赤字', 'color:#e63946;font-weight:700;')
+    + '<span class="rt-sep"></span>'
+    + b('justifyLeft', '⯇', '左揃え')
+    + b('justifyCenter', '⯀', '中央揃え')
+    + b('justifyRight', '⯈', '右揃え')
+    + '<span class="rt-sep"></span>'
+    + b('table', '⊞ 表', '表を挿入')
+    + b('image', '🖼 画像', '画像を挿入')
+    + b('removeFormat', '書式解除', '選択部分の書式を消す', 'font-size:10px;');
+
+  if (onLink) {
+    h += '<label class="rt-link" title="本文中の URL をクリックできるリンクとして表示します">'
+      + '<input type="checkbox"' + (linked !== false ? ' checked' : '')
+      + ' onchange="' + onLink + '(this.checked)">🔗 URLをリンクにする</label>';
+  }
+  return h + '</div>';
 }
 
-/** 書式を適用する（選択範囲に対して実行） */
-function _faqExec(cmd) {
+/** 書式を適用する（直前にフォーカスしていた編集欄が対象） */
+function rtExec(cmd) {
   if (cmd === 'red')   { document.execCommand('foreColor', false, '#e63946'); return; }
-  if (cmd === 'black') { document.execCommand('foreColor', false, '#000000'); return; }
+  if (cmd === 'table') { rtInsertTable(); return; }
+  if (cmd === 'image') { rtInsertImage(); return; }
   document.execCommand(cmd, false, null);
+  if (_rtActive) _rtActive.dispatchEvent(new Event('input'));
+}
+
+// 直前に編集していた欄を覚えておく（ボタンを押すとフォーカスが外れるため）
+var _rtActive = null;
+document.addEventListener('focusin', function(e) {
+  if (e.target && e.target.classList && e.target.classList.contains('rt-edit')) _rtActive = e.target;
+});
+
+/** 表を挿入する。行数・列数を選んでから入れる */
+function rtInsertTable() {
+  var spec = prompt('表の行数と列数を「行×列」で入力してください。\n例）3x4', '3x3');
+  if (spec === null) return;
+  var m = /^\s*(\d+)\s*[x×*,\s]\s*(\d+)\s*$/.exec(spec);
+  if (!m) { toast('⚠️ 「3x4」のように入力してください'); return; }
+  var rows = Math.min(30, Math.max(1, parseInt(m[1], 10)));
+  var cols = Math.min(12, Math.max(1, parseInt(m[2], 10)));
+
+  var html = '<table class="rt-table"><tbody>';
+  for (var r = 0; r < rows; r++) {
+    html += '<tr>';
+    for (var c = 0; c < cols; c++) {
+      // 1行目は見出しとして扱う
+      html += (r === 0) ? '<th><br></th>' : '<td><br></td>';
+    }
+    html += '</tr>';
+  }
+  html += '</tbody></table><p><br></p>';
+
+  document.execCommand('insertHTML', false, html);
+  if (_rtActive) _rtActive.dispatchEvent(new Event('input'));
+}
+
+/** 画像を挿入する（ファイルを選んで base64 で埋め込む） */
+function rtInsertImage() {
+  var inp = document.getElementById('rtImageInput');
+  if (inp) { inp.value = ''; inp.click(); }
+}
+
+function rtImageChosen(input) {
+  var f = input.files && input.files[0];
+  if (!f) return;
+  if (!/^image\//.test(f.type)) { toast('⚠️ 画像ファイルを選んでください'); return; }
+
+  var reader = new FileReader();
+  reader.onload = function(ev) {
+    if (_rtActive) _rtActive.focus();
+    document.execCommand('insertHTML', false,
+      '<img src="' + ev.target.result + '" alt="" style="max-width:100%;height:auto;">');
+    if (_rtActive) _rtActive.dispatchEvent(new Event('input'));
+  };
+  reader.readAsDataURL(f);
+}
+
+/** この FAQ の URL をリンクとして扱うかを切り替える */
+function _faqSetLink(i, on) {
+  var a = _faqAll();
+  if (!a[i]) return;
+  a[i].linkify = !!on;
+  _faqSave();
 }
 
 /** 1項目ぶんの編集欄。HTML があればそれを、無ければテキストを表示する */
@@ -5442,10 +5536,8 @@ function _faqRich(i, key, f, placeholder, style) {
   var html = f[key + 'Html'];
   var body = (html != null && html !== '') ? html : esc(f[key] || '').replace(/\n/g, '<br>');
   return '<div contenteditable="true" data-ph="' + placeholder + '"'
-    + ' class="faq-rich" oninput="_faqSetRich(' + i + ',\'' + key + '\',this)"'
-    + ' style="width:100%;box-sizing:border-box;padding:6px 8px;margin-bottom:6px;font-size:12px;'
-    + 'border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text);'
-    + 'outline:none;overflow-wrap:anywhere;' + (style || '') + '">' + body + '</div>';
+    + ' class="rt-edit" oninput="_faqSetRich(' + i + ',\'' + key + '\',this)"'
+    + ' style="' + (style || '') + '">' + body + '</div>';
 }
 
 /** 編集内容を保存する。HTML と、検索用のプレーンテキストの両方を持つ */
@@ -5524,15 +5616,14 @@ function _faqImportXlsx(input) {
   _importProgressShow('Excel を読み込んでいます…', file.name, 10);
 
   window.readXlsx(file).then(function(book) {
-    var added = [], sheets = 0, skipped = 0, pics = 0;
+    var added = [], sheets = 0, skipped = 0;
     var id = _faqNextId();
 
     // readXlsx は { sheets: [{ name, rows }] } を返す
     (book && book.sheets ? book.sheets : []).forEach(function(sh) {
       var sheetName = sh.name;
       var rows = sh.rows || [];
-      var imgs = sh.images || {};   // 'row,col' → [dataURL, ...]
-      var rich = sh.html   || {};   // 'row,col' → 書式付き HTML
+      var rich = sh.html || {};     // 'row,col' → 書式付き HTML
       if (!rows.length) return;
       sheets++;
 
@@ -5550,35 +5641,15 @@ function _faqImportXlsx(input) {
         };
         var q = cell(1), a = cell(2), nt = cell(3);
 
-        // セルに貼られた画像を、その列の内容の末尾に足す。
-        // 画像が無いときは元の html をそのまま返す（オブジェクトを返すと
-        // q.html = q となって循環参照になり、保存時に JSON 化できなくなる）
-        var addImgs = function(colIdx, cur) {
-          var list = imgs[ri + ',' + colIdx];
-          var base = cur.html || '';
-          if (!list || !list.length) return base;
-          if (!base) base = esc(cur.text).replace(/\n/g, '<br>');
-          return base + list.filter(function(u) {
-            // 空の src はページ自身を読みに行き 'file:' のエラーになる
-            return u && u.indexOf('data:') === 0;
-          }).map(function(u) {
-            return '<img src="' + u + '" alt="" style="max-width:100%;height:auto;">';
-          }).join('');
-        };
-        q.html  = addImgs(1, q);
-        a.html  = addImgs(2, a);
-        nt.html = addImgs(3, nt);
-
-        var hasImg = !!(imgs[ri + ',1'] || imgs[ri + ',2'] || imgs[ri + ',3']);
-        if (!q.text && !a.text && !hasImg) return;   // 空行（画像だけの行は残す）
-        if (hasImg) pics++;
+        if (!q.text && !a.text) return;   // 空行
 
         added.push({
           id: id++,
           category: String(sheetName || '未分類').trim() || '未分類',
           question: q.text, answer: a.text, note: nt.text,
           // セル内の書式（太字・取り消し線・色など）を保持する
-          questionHtml: q.html, answerHtml: a.html, noteHtml: nt.html
+          questionHtml: q.html, answerHtml: a.html, noteHtml: nt.html,
+          linkify: true
         });
       });
     });
@@ -5592,7 +5663,6 @@ function _faqImportXlsx(input) {
     var msg = added.length + ' 件（' + sheets + ' シート）を取り込みます。\n\n'
             + '　シート名 → カテゴリ\n　B列 → 質問　C列 → 回答　D列 → 備考\n'
             + '　※ 1行目は見出しとして除外します\n\n'
-            + (pics ? '　🖼 画像を含む行：' + pics + ' 件\n' : '')
             + '\n既存の ' + _faqAll().length + ' 件はそのまま残り、末尾に追加されます。';
     if (!confirm(msg)) return;
 
@@ -5636,7 +5706,6 @@ function exportDataJS(silent) {
       updateHistory:    loadHistory(),
       fixedTexts:       window._appCache.fixedTexts       || {},
       faqData:          window._appCache.faqData          || [],
-      linkify:          window._appCache.linkify          || {},
       // スクリプト・メールも構成ファイルに含める
       talkScripts:      window._appCache.scripts          || (typeof data     !== 'undefined' ? data     : {}),
       mailTemplates:    window._appCache.mailTemplates    || (typeof mailData !== 'undefined' ? mailData : []),
