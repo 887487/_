@@ -612,8 +612,16 @@ details[open] > summary .hr-acc-arrow { transform: rotate(90deg); }
   border:1px solid var(--border);border-radius:0 0 6px 6px;
   background:var(--surface);color:var(--text);
   font-size:12px;line-height:1.8;outline:none;overflow-wrap:anywhere;
+  position:relative;   /* フォーカス時に隣の欄より前に出すため */
 }
-.rt-edit:focus{border-color:var(--accent);}
+/* 欄を縦に並べると境界が重なる。上辺を消すと選択時に枠が欠けて見えるので、
+   負のマージンで重ねたうえで、フォーカス中の欄を前面に出して全周を見せる。 */
+.rt-edit + .rt-edit{ margin-top:-1px; }
+.rt-edit:focus{
+  border-color:var(--accent);
+  box-shadow:0 0 0 1px var(--accent);
+  z-index:1;
+}
 .rt-edit:empty::before{content:attr(data-ph);color:var(--text3);}
 .rt-edit s{text-decoration:line-through;}
 .rt-edit u{text-decoration:underline;}
@@ -5417,8 +5425,8 @@ function _faqRenderList() {
       // 書式（太字・取り消し線・色など）を保てるよう contenteditable で編集する
       + rtBar('_faqSetLink(' + i + ',', f.linkify !== false)
       + _faqRich(i, 'question', f, '質問', 'font-weight:700;min-height:28px;border-radius:0;')
-      + _faqRich(i, 'answer',   f, '回答', 'min-height:62px;border-top:none;border-radius:0;')
-      + _faqRich(i, 'note',     f, '備考（任意）', 'min-height:24px;font-size:11px;color:var(--text2);border-top:none;')
+      + _faqRich(i, 'answer',   f, '回答', 'min-height:62px;border-radius:0;')
+      + _faqRich(i, 'note',     f, '備考（任意）', 'min-height:24px;font-size:11px;color:var(--text2);')
       + '</div>';
   }).join('');
 }
@@ -5447,9 +5455,9 @@ function rtBar(onLink, linked) {
     + b('strikeThrough', 'S', '取り消し線', 'text-decoration:line-through;')
     + b('red', 'A', '赤字', 'color:#e63946;font-weight:700;')
     + '<span class="rt-sep"></span>'
-    + b('justifyLeft', '⯇', '左揃え')
-    + b('justifyCenter', '⯀', '中央揃え')
-    + b('justifyRight', '⯈', '右揃え')
+    + b('justifyLeft',   _rtAlignIcon('left'),   '左揃え')
+    + b('justifyCenter', _rtAlignIcon('center'), '中央揃え')
+    + b('justifyRight',  _rtAlignIcon('right'),  '右揃え')
     + '<span class="rt-sep"></span>'
     + b('table', '⊞ 表', '表を挿入')
     + b('image', '🖼 画像', '画像を挿入')
@@ -5461,6 +5469,25 @@ function rtBar(onLink, linked) {
       + ' onchange="' + onLink + '(this.checked)">🔗 URLをリンクにする</label>';
   }
   return h + '</div>';
+}
+
+/**
+ * 整列アイコン（線の長さで左・中央・右を表す）。
+ * 記号文字だと環境によって形が変わるため SVG で描く。
+ */
+function _rtAlignIcon(kind) {
+  var lines = {
+    left:   [[1, 12], [1, 8], [1, 12], [1, 8]],   // [開始x, 長さ]
+    center: [[1, 12], [3, 8], [1, 12], [3, 8]],
+    right:  [[1, 12], [5, 8], [1, 12], [5, 8]]
+  }[kind] || [];
+  var y = 2, h = '';
+  lines.forEach(function(l) {
+    h += '<rect x="' + l[0] + '" y="' + y + '" width="' + l[1] + '" height="1.6" rx="0.8"/>';
+    y += 3.2;
+  });
+  return '<svg viewBox="0 0 14 14" width="13" height="13" fill="currentColor"'
+       + ' style="display:block;">' + h + '</svg>';
 }
 
 /** 書式を適用する（直前にフォーカスしていた編集欄が対象） */

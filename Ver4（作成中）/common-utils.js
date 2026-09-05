@@ -2338,35 +2338,70 @@ window.goHomePage = function() {
  * 対象は data-linkify 属性を持つ要素の中だけに限る。
  */
 /**
- * 本文を描き替えたあとに呼ぶ。DOM の変化を監視して自動で適用するので、
- * 各ページが個別に applyLinkify を呼ばなくてもリンク化が効く。
+ * 本文が描き替わったら自動でリンク化する。
+ *
+ * 自分が挿入した <a> も監視対象になってしまうため、適用中は監視を止める。
+ * これをしないと「書き換え → 検知 → また書き換え」で回り続け、
+ * 途中で止まったときに未適用のまま残ってしまう。
  */
+var _lkBusy = false;
+
 (function _watchLinkify() {
   var timer = null;
+  var obs = null;
+
+  var run = function() {
+    if (!window.applyLinkify) return;
+    _lkBusy = true;
+    if (obs) obs.disconnect();
+    try { window.applyLinkify(); } catch (e) {}
+    _lkBusy = false;
+    if (obs) _observe();
+  };
+
   var kick = function() {
+    if (_lkBusy) return;
     clearTimeout(timer);
-    timer = setTimeout(function() {
-      if (window.applyLinkify) window.applyLinkify();
-    }, 80);
+    timer = setTimeout(run, 60);
   };
-  var start = function() {
+
+  var _observe = function() {
     document.querySelectorAll('[data-linkify]').forEach(function(el) {
-      new MutationObserver(function() { el.dataset.linkified = ''; kick(); })
-        .observe(el, { childList: true, subtree: true });
+      obs.observe(el, { childList: true, subtree: true, characterData: true });
     });
-    kick();
   };
+
+  var start = function() {
+    obs = new MutationObserver(function() {
+      if (_lkBusy) return;
+      // 中身が変わったら適用済みフラグを外して付け直す
+      document.querySelectorAll('[data-linkify]').forEach(function(el) {
+        el.dataset.linkified = '';
+      });
+      kick();
+    });
+    _observe();
+    run();
+  };
+
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);
   else start();
 })();
 
+/**
+ * 表示中の本文にリンク化を適用/解除する。
+ * data-linkify="0" の要素は対象外。編集中の欄も触らない。
+ */
 window.applyLinkify = function(root) {
   var scope = root || document;
   var targets = scope.querySelectorAll('[data-linkify]');
   Array.prototype.forEach.call(targets, function(el) {
+    // 編集中の欄はリンクにしない（クリックすると編集の妨げになる）
+    if (el.isContentEditable) return;
+    if (el.closest && el.closest('[contenteditable="true"]')) return;
     // data-linkify="0" のときだけ無効。未指定・"1" は有効。
-    var on = el.getAttribute('data-linkify') !== '0';
-    if (on) _linkifyEl(el); else _unlinkifyEl(el);
+    if (el.getAttribute('data-linkify') !== '0') _linkifyEl(el);
+    else _unlinkifyEl(el);
   });
 };
 
