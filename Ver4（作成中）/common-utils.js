@@ -837,7 +837,8 @@ window._appCache = {
   hearingPolicies:  [],
   hearingPatterns:  [],
   sideMenuData:     null,
-  faqData:          []
+  faqData:          [],
+  linkify:          {}
 };
 
 // ── data.js の内容を「読み込み直後に同期で」キャッシュへ流し込む ──
@@ -858,6 +859,7 @@ window._appCache = {
   if (sd.mailTemplates    != null) window._appCache.mailTemplates    = sd.mailTemplates;
   if (sd.mailCatMeta      != null) window._appCache.mailCatMeta      = sd.mailCatMeta;
   if (sd.faqData          != null) window._appCache.faqData          = sd.faqData;
+  if (sd.linkify          != null) window._appCache.linkify          = sd.linkify;
 })();
 
 // localStorage からの一回限りのマイグレーション
@@ -907,6 +909,8 @@ window.initAppData = function() {
     if (sd.updateHistory    != null) window._appCache.updateHistory    = sd.updateHistory;
     if (sd.fixedTexts       != null) window._appCache.fixedTexts       = sd.fixedTexts;
     if (sd.faqData          != null) window._appCache.faqData          = sd.faqData;
+    if (sd.linkify          != null) window._appCache.linkify          = sd.linkify;
+  if (sd.linkify          != null) window._appCache.linkify          = sd.linkify;
     if (sd.sideMenuFiles) {
       Object.keys(sd.sideMenuFiles).forEach(function(id) {
         var f = sd.sideMenuFiles[id];
@@ -2101,14 +2105,6 @@ function _buildSideMenuHTML(isDark) {
   html += '<div class="side-section"><div style="display:flex;align-items:center;justify-content:space-between;padding:13px 16px;">' +
     '<span style="font-size:13px;font-weight:600;">🌙 ダークモード</span>' +
     '<label class="dark-toggle-sw"><input type="checkbox" id="darkModeToggle"' + (isDark ? ' checked' : '') + ' onchange="window.applyDarkMode(this.checked)"><span class="dark-toggle-sl"></span></label>' +
-    '</div>' +
-    // URL のリンク化（本文中の http(s):// をクリックできるようにする）
-    '<div style="display:flex;align-items:center;justify-content:space-between;padding:13px 16px;border-top:1px solid var(--border);">' +
-      '<span style="font-size:13px;font-weight:600;">🔗 URL をリンクにする' +
-        '<span style="display:block;font-size:10px;font-weight:400;color:var(--text3);margin-top:2px;">別タブで開きます</span></span>' +
-      '<label class="dark-toggle-sw"><input type="checkbox" id="linkifyToggle"' +
-        (window.isLinkifyOn && window.isLinkifyOn() ? ' checked' : '') +
-        ' onchange="window.setLinkify(this.checked)"><span class="dark-toggle-sl"></span></label>' +
     '</div></div>';
 
   // JSON 定義セクション
@@ -2333,30 +2329,60 @@ window.goHomePage = function() {
 };
 
 // ── URL のハイパーリンク化 ──
-// 本文中の http(s):// を自動でリンクにするかどうかを切り替える。
-// 有効時は別タブで開く（同じタブだと作業中の内容が失われるため）。
-var LINKIFY_KEY = 'linkifyUrls';
+// コンテンツ（スクリプト / メール / 画面遷移 / FAQ）の本文に書かれた
+// http(s):// を、クリックできるリンクとして扱うかどうか。
+// 利用者ごとの好みではなく運用上の判断なので、admin.html で
+// コンテンツ種別ごとに設定し、data.js に保存して全員に配る。
+window.LINKIFY_KINDS = ['script', 'mail', 'screen', 'faq'];
 
-window.isLinkifyOn = function() {
-  try { return localStorage.getItem(LINKIFY_KEY) !== '0'; } catch (e) { return true; }
+window.getLinkifySettings = function() {
+  var d = (window._appCache && window._appCache.linkify) ||
+          (window.APP_STATIC_DATA && window.APP_STATIC_DATA.linkify) || {};
+  var out = {};
+  window.LINKIFY_KINDS.forEach(function(k) { out[k] = (d[k] !== false); });   // 既定は有効
+  return out;
 };
 
-window.setLinkify = function(on) {
-  try { localStorage.setItem(LINKIFY_KEY, on ? '1' : '0'); } catch (e) {}
-  // 開いている他のタブにも伝える
-  try { if (window._bc) window._bc.postMessage({ type: 'linkify', on: !!on }); } catch (e) {}
-  if (typeof window.applyLinkify === 'function') window.applyLinkify();
+window.isLinkifyOn = function(kind) {
+  var s = window.getLinkifySettings();
+  return kind ? !!s[kind] : true;
 };
 
 /**
  * 表示済みの本文に対してリンク化を適用/解除する。
  * 対象は data-linkify 属性を持つ要素の中だけに限る。
  */
+/**
+ * 本文を描き替えたあとに呼ぶ。DOM の変化を監視して自動で適用するので、
+ * 各ページが個別に applyLinkify を呼ばなくてもリンク化が効く。
+ */
+(function _watchLinkify() {
+  var timer = null;
+  var kick = function() {
+    clearTimeout(timer);
+    timer = setTimeout(function() {
+      if (window.applyLinkify) window.applyLinkify();
+    }, 80);
+  };
+  var start = function() {
+    document.querySelectorAll('[data-linkify]').forEach(function(el) {
+      new MutationObserver(function() { el.dataset.linkified = ''; kick(); })
+        .observe(el, { childList: true, subtree: true });
+    });
+    kick();
+  };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);
+  else start();
+})();
+
 window.applyLinkify = function(root) {
-  var on = window.isLinkifyOn();
+  var st = window.getLinkifySettings();
   var scope = root || document;
   var targets = scope.querySelectorAll('[data-linkify]');
   Array.prototype.forEach.call(targets, function(el) {
+    // data-linkify="faq" のように種別を書く。未指定なら常に有効。
+    var kind = el.getAttribute('data-linkify');
+    var on = (!kind || st[kind] !== false);
     if (on) _linkifyEl(el); else _unlinkifyEl(el);
   });
 };

@@ -1466,6 +1466,14 @@ html[data-theme="dark"] .nav-arrow-btn { background: rgba(40,42,54,.9); }
                style="width:220px;height:28px;padding:0 9px;font-size:12px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);">
       </div>
       <div id="faqList" style="flex:1;overflow-y:auto;padding:12px 14px;"></div>
+
+      <!-- URL のリンク化設定（コンテンツ種別ごと） -->
+      <div style="flex-shrink:0;border-top:1px solid var(--border);background:var(--surface);padding:10px 14px;">
+        <div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:7px;">
+          🔗 本文中の URL をリンクとして扱う（有効時はクリックで別タブに開きます）
+        </div>
+        <div id="linkifyRow" style="display:flex;flex-wrap:wrap;gap:14px;"></div>
+      </div>
     </div>
   </div>
 
@@ -2704,7 +2712,7 @@ function switchTab(tab){
     if(panel)panel.classList.toggle('active',t===tab);
     if(btn)btn.classList.toggle('active',t===tab);
   });
-  if(tab==='faq'){ _faqRender(); }
+  if(tab==='faq'){ _faqRender(); _linkifyRender(); }
   if(tab==='hearing'&&window.renderHearing){
     // hearingPolicies / hearingPatterns を IDB から毎回取得してから描画
     var _reloadHrData = function() {
@@ -5377,6 +5385,31 @@ function _faqRenderList() {
   }).join('');
 }
 
+// ── URL リンク化の設定（コンテンツ種別ごと）──
+var LINKIFY_LABELS = { script:'📋 スクリプト', mail:'✉️ メール', screen:'🖥 画面遷移', faq:'❓ FAQ' };
+
+function _linkifyRender() {
+  var el = document.getElementById('linkifyRow');
+  if (!el) return;
+  var st = window.getLinkifySettings ? window.getLinkifySettings() : {};
+  el.innerHTML = (window.LINKIFY_KINDS || []).map(function(k) {
+    return '<label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;">'
+      + '<input type="checkbox"' + (st[k] !== false ? ' checked' : '')
+      +   ' onchange="_linkifySet(\'' + k + '\',this.checked)"'
+      +   ' style="width:15px;height:15px;cursor:pointer;accent-color:var(--accent-text);">'
+      + (LINKIFY_LABELS[k] || k) + '</label>';
+  }).join('');
+}
+
+function _linkifySet(kind, on) {
+  if (!window._appCache.linkify) window._appCache.linkify = {};
+  window._appCache.linkify[kind] = !!on;
+  markDirty();
+  try { window.idbSetAppData('linkify', window._appCache.linkify); } catch (e) {}
+  toast((on ? '🔗 ' : '⛓️‍💥 ') + (LINKIFY_LABELS[kind] || kind) + ' の URL リンクを'
+        + (on ? '有効' : '無効') + 'にしました');
+}
+
 /** 書式ボタン（選択部分に太字などを適用する） */
 function _faqRichBar(i) {
   var b = function(cmd, label, title, style) {
@@ -5517,14 +5550,20 @@ function _faqImportXlsx(input) {
         };
         var q = cell(1), a = cell(2), nt = cell(3);
 
-        // セルに貼られた画像を、その列の内容の末尾に足す
+        // セルに貼られた画像を、その列の内容の末尾に足す。
+        // 画像が無いときは元の html をそのまま返す（オブジェクトを返すと
+        // q.html = q となって循環参照になり、保存時に JSON 化できなくなる）
         var addImgs = function(colIdx, cur) {
           var list = imgs[ri + ',' + colIdx];
-          if (!list || !list.length) return cur;
-          var tags = list.map(function(u) {
+          var base = cur.html || '';
+          if (!list || !list.length) return base;
+          if (!base) base = esc(cur.text).replace(/\n/g, '<br>');
+          return base + list.filter(function(u) {
+            // 空の src はページ自身を読みに行き 'file:' のエラーになる
+            return u && u.indexOf('data:') === 0;
+          }).map(function(u) {
             return '<img src="' + u + '" alt="" style="max-width:100%;height:auto;">';
           }).join('');
-          return (cur.html || esc(cur.text).replace(/\n/g, '<br>')) + tags;
         };
         q.html  = addImgs(1, q);
         a.html  = addImgs(2, a);
@@ -5597,6 +5636,7 @@ function exportDataJS(silent) {
       updateHistory:    loadHistory(),
       fixedTexts:       window._appCache.fixedTexts       || {},
       faqData:          window._appCache.faqData          || [],
+      linkify:          window._appCache.linkify          || {},
       // スクリプト・メールも構成ファイルに含める
       talkScripts:      window._appCache.scripts          || (typeof data     !== 'undefined' ? data     : {}),
       mailTemplates:    window._appCache.mailTemplates    || (typeof mailData !== 'undefined' ? mailData : []),

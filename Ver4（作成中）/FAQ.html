@@ -279,8 +279,9 @@
             c.removeAttribute(a.name);
           });
           if (isImg) {
+            // src が空だとページ自身を読みに行きエラーになるので取り除く
+            if (!c.getAttribute('src')) { node.removeChild(c); return; }
             c.setAttribute('loading', 'lazy');
-            c.setAttribute('onclick', '');   // 下で付け直す
             c.className = 'faq-inline-img';
           }
           walk(c);
@@ -295,14 +296,14 @@
     // 検索語のハイライトは HTML のタグを壊さないよう、
     // テキストノードだけを対象にして後から施す。
     if (html) {
-      return '<div class="faq-a-text" data-linkify>' + markHtml(sanitize(html), q) + '</div>';
+      return '<div class="faq-a-text" data-linkify="faq">' + markHtml(sanitize(html), q) + '</div>';
     }
     var lines = String(text == null ? '' : text).split(/\r?\n/);
     var out = [], buf = [];
 
     var flush = function () {
       if (!buf.length) return;
-      out.push('<div class="faq-a-text" data-linkify>' + mark(buf.join('\n'), q) + '</div>');
+      out.push('<div class="faq-a-text" data-linkify="faq">' + mark(buf.join('\n'), q) + '</div>');
       buf = [];
     };
 
@@ -443,7 +444,7 @@
         +     '<span class="faq-a-mark">A</span>'
         +     '<div class="faq-a-main">' + renderAnswer(f.answer, q, f.answerHtml) + '</div>'
         +   '</div>'
-        +   (f.note ? '<div class="faq-note" data-linkify><span class="faq-note-label">備考</span>'
+        +   (f.note ? '<div class="faq-note" data-linkify="faq"><span class="faq-note-label">備考</span>'
         +     (f.noteHtml ? markHtml(sanitize(f.noteHtml), q) : mark(f.note, q)) + '</div>' : '')
         +   '<div class="faq-meta">ID ' + esc(f.id) + '　/　' + esc(f.category || '未分類') + '</div>'
         + '</div></div>';
