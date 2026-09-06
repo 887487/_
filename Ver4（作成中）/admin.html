@@ -598,6 +598,13 @@ details[open] > summary .hr-acc-arrow { transform: rotate(90deg); }
   white-space:nowrap;overflow-x:auto;
 }
 
+/* 書式バーの行。4タブとも同じ見た目・同じ高さにそろえる */
+.rt-bar-row{
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;flex-shrink:0;
+  min-height:40px;padding:4px 12px;box-sizing:border-box;
+  border-bottom:1px solid var(--border);background:var(--surface);
+}
+
 /* 書式バー：各タブの上部に置く */
 .rt-bar-host{
   display:flex;align-items:center;flex:1;min-width:0;
@@ -1568,9 +1575,7 @@ html[data-theme="dark"] .nav-arrow-btn { background: rgba(40,42,54,.9); }
     </div>
     <div class="editor-wrap">
       <!-- 書式設定バー（編集欄にカーソルが入ると操作できる） -->
-      <div style="display:flex;align-items:center;padding:6px 12px;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0;">
-        <div id="rtFixedBarScript"></div>
-      </div>
+      <div class="rt-bar-row"><div id="rtFixedBarScript"></div></div>
       <div class="editor-scroll" id="editorScroll">
         <div class="empty-state"><div class="empty-icon">📋</div><div>左のリストからスクリプトを選んでください</div></div>
       </div>
@@ -1596,10 +1601,7 @@ html[data-theme="dark"] .nav-arrow-btn { background: rgba(40,42,54,.9); }
     </aside>
 
     <div style="flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden;">
-      <div style="display:flex;align-items:center;gap:8px;padding:8px 14px;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0;flex-wrap:wrap;">
-        <span id="faqCurCat" style="font-size:13px;font-weight:700;flex-shrink:0;">すべて</span>
-        <span id="faqCount" style="font-size:11px;color:var(--text3);flex-shrink:0;"></span>
-        <span style="flex:1;"></span>
+      <div class="rt-bar-row">
         <!-- 書式設定バー（編集欄にカーソルが入ると操作できる） -->
         <div id="rtFixedBar"></div>
         <input type="text" id="faqSearch" placeholder="質問・回答で検索" oninput="_faqRenderList()"
@@ -1620,9 +1622,7 @@ html[data-theme="dark"] .nav-arrow-btn { background: rgba(40,42,54,.9); }
     </div>
     <div style="flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden;">
       <!-- 書式設定バー（編集欄にカーソルが入ると操作できる） -->
-      <div style="display:flex;align-items:center;gap:8px;padding:8px 14px;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0;flex-wrap:wrap;">
-        <div id="rtFixedBarMail"></div>
-      </div>
+      <div class="rt-bar-row"><div id="rtFixedBarMail"></div></div>
     <div class="mail-editor-wrap" id="mailEditorWrap">
       <div class="empty-state"><div class="empty-icon">✉️</div><div>左のリストからテンプレートを選んでください</div></div>
     </div>
@@ -1861,9 +1861,7 @@ html[data-theme="dark"] .nav-arrow-btn { background: rgba(40,42,54,.9); }
         <button class="scr-zoom-btn" onclick="scrBarZoomFit()" title="画面に合わせる" style="font-size:11px;width:auto;padding:0 8px;">Fit</button>
       </div>
       <!-- 書式設定バー（編集欄にカーソルが入ると操作できる） -->
-      <div style="display:flex;align-items:center;padding:6px 12px;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0;">
-        <div id="rtFixedBarScreen"></div>
-      </div>
+      <div class="rt-bar-row"><div id="rtFixedBarScreen"></div></div>
 
       <!-- 画面メモ（screen.html で備考として表示される） -->
       <div id="scrMemoBar" style="display:none;align-items:center;gap:8px;padding:6px 12px;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0;">
@@ -5539,10 +5537,7 @@ function _faqRenderList() {
              .toLowerCase().indexOf(q) >= 0;
   });
 
-  var cur = document.getElementById('faqCurCat');
-  if (cur) cur.textContent = _faqCat || 'すべて';
-  var cnt = document.getElementById('faqCount');
-  if (cnt) cnt.textContent = list.length + ' 件';
+  // カテゴリ名と件数は左サイドバーに出ているので、ここには表示しない
 
   if (!list.length) {
     el.innerHTML = '<div style="padding:30px 0;text-align:center;color:var(--text3);font-size:12px;">'
@@ -5595,7 +5590,8 @@ function rtBar(onLink, linked) {
     + b('italic', 'I', '斜体', 'font-style:italic;')
     + b('underline', 'U', '下線', 'text-decoration:underline;')
     + b('strikeThrough', 'S', '取り消し線', 'text-decoration:line-through;')
-    + b('red', 'A', '赤字', 'color:#e63946;font-weight:700;')
+    + b('red',  'A', '赤字', 'color:#e63946;font-weight:700;')
+    + b('blue', 'A', '青字', 'color:#2f6df6;font-weight:700;')
     + '<span class="rt-sep"></span>'
     + b('justifyLeft',   _rtAlignIcon('left'),   '左揃え')
     + b('justifyCenter', _rtAlignIcon('center'), '中央揃え')
@@ -5659,15 +5655,16 @@ function _rtUpdateActiveStates() {
     });
   });
 
-  // 赤字は文字色を調べる
-  var red = false;
-  try {
-    var c = document.queryCommandValue('foreColor') || '';
-    red = /230,\s*57,\s*70|#e63946/i.test(c);
-  } catch (e) {}
+  // 文字色は queryCommandValue で調べる
+  var col = '';
+  try { col = document.queryCommandValue('foreColor') || ''; } catch (e) {}
+  var isRed  = /230,\s*57,\s*70|#e63946/i.test(col);
+  var isBlue = /47,\s*109,\s*246|#2f6df6/i.test(col);
   hosts.forEach(function(host) {
     var rb = host.querySelector('[data-cmd="red"]');
-    if (rb) rb.classList.toggle('is-on', red);
+    if (rb) rb.classList.toggle('is-on', isRed);
+    var bb = host.querySelector('[data-cmd="blue"]');
+    if (bb) bb.classList.toggle('is-on', isBlue);
   });
 
   _rtUpdateMergeBtn();
@@ -5708,12 +5705,14 @@ document.addEventListener('DOMContentLoaded', function() {
 /** 書式を適用する（直前にフォーカスしていた編集欄が対象） */
 function rtExec(cmd, btn) {
   if (cmd === 'table' && btn) _rtLastTableBtn = btn;
-  if (cmd === 'red') {
-    // すでに赤なら黒へ戻す（押すたびに切り替わる）
+  if (cmd === 'red' || cmd === 'blue') {
+    // 同じ色なら黒へ戻す（押すたびに切り替わる）
+    var COLORS = { red: '#e63946', blue: '#2f6df6' };
+    var RE_C   = { red: /230,\s*57,\s*70|#e63946/i, blue: /47,\s*109,\s*246|#2f6df6/i };
     var cur = '';
     try { cur = document.queryCommandValue('foreColor') || ''; } catch (e) {}
-    var isRed = /230,\s*57,\s*70|#e63946/i.test(cur);
-    document.execCommand('foreColor', false, isRed ? '#000000' : '#e63946');
+    var same = RE_C[cmd].test(cur);
+    document.execCommand('foreColor', false, same ? '#000000' : COLORS[cmd]);
     if (_rtActive) _rtActive.dispatchEvent(new Event('input'));
     _rtUpdateActiveStates();
     return;
@@ -13060,7 +13059,8 @@ window.addEventListener('resize',function(){
       '<option value="text">記述</option>' +
       '<option value="select">プルダウン</option>' +
       '<option value="radio">ラジオボタン</option>' +
-      '<option value="toggle">トグルボタン</option>';
+      '<option value="toggle">トグルボタン</option>' +
+      '<option value="heading">見出し（入力なし）</option>';
     row('回答方法', typeSel);
 
     // ── 回答方法ごとの追加設定 ──
@@ -13092,6 +13092,9 @@ window.addEventListener('resize',function(){
       extra.innerHTML = '';
       multiline = multi = optsArea = null;
       var t = typeSel.value;
+
+      if (t === 'heading') { extra.style.display = 'none'; return; }
+      extra.style.display = '';
 
       if (t === 'text') {
         var lw = document.createElement('label');
@@ -13136,6 +13139,56 @@ window.addEventListener('resize',function(){
     typeSel.addEventListener('change', renderExtra);
     renderExtra();
 
+    // ── 表示条件（他の項目の選択に応じて出し分ける）──
+    var condWrap = document.createElement('div');
+    condWrap.style.cssText = 'display:flex;flex-direction:column;gap:6px;padding:10px 12px;' +
+      'background:var(--surface2);border-radius:6px;';
+    var condHd = document.createElement('div');
+    condHd.style.cssText = 'font-size:11px;font-weight:700;color:var(--text2);';
+    condHd.textContent = '表示条件（省略時は常に表示）';
+    condWrap.appendChild(condHd);
+
+    var condRow = document.createElement('div');
+    condRow.style.cssText = 'display:flex;align-items:center;gap:6px;flex-wrap:wrap;';
+    var condQ = document.createElement('select');
+    condQ.style.cssText = INP + 'flex:0 0 150px;';
+    var condV = document.createElement('select');
+    condV.style.cssText = INP + 'flex:0 0 150px;';
+
+    // 選択肢を持つ既存の質問だけを条件に使える
+    var srcQs = (typeof _hrQuestionsGet === 'function' ? _hrQuestionsGet() : [])
+      .filter(function(x) { return x.type === 'bool' || (x.options && x.options.length); });
+    condQ.innerHTML = '<option value="">（条件なし）</option>'
+      + srcQs.map(function(x) {
+          return '<option value="' + (x.field || x.id) + '">' + hEsc(x.label) + '</option>';
+        }).join('');
+
+    var fillVals = function() {
+      var f = condQ.value;
+      var q2 = srcQs.find(function(x) { return (x.field || x.id) === f; });
+      if (!q2) { condV.innerHTML = ''; condV.style.display = 'none'; return; }
+      condV.style.display = '';
+      condV.innerHTML = (q2.type === 'bool')
+        ? '<option value="true">' + hEsc(q2.trueLabel || 'はい') + '</option>' +
+          '<option value="false">' + hEsc(q2.falseLabel || 'いいえ') + '</option>'
+        : (q2.options || []).map(function(o) {
+            return '<option value="' + hEsc(o.v) + '">' + hEsc(o.l) + '</option>';
+          }).join('');
+    };
+    condQ.addEventListener('change', fillVals);
+    fillVals();
+
+    var eq = document.createElement('span');
+    eq.textContent = 'が';
+    eq.style.cssText = 'font-size:11px;color:var(--text2);';
+    var sfx = document.createElement('span');
+    sfx.textContent = 'のとき表示';
+    sfx.style.cssText = 'font-size:11px;color:var(--text2);';
+    condRow.appendChild(condQ); condRow.appendChild(eq);
+    condRow.appendChild(condV); condRow.appendChild(sfx);
+    condWrap.appendChild(condRow);
+    container.appendChild(condWrap);
+
     // ── ボタン ──
     var btnRow = document.createElement('div');
     btnRow.style.cssText = 'display:flex;gap:8px;justify-content:flex-end;';
@@ -13168,14 +13221,23 @@ window.addEventListener('resize',function(){
       var t = typeSel.value;
       var newQ = {
         id: 'q_' + Math.random().toString(36).substr(2, 7),
+        enabled: true,                      // これが無いと一覧に出ない
         label: label,
         outLabel: outInp.value.trim(),      // 空なら出力時に label を使う
         type: t,
         common: !tplId,                     // テンプレート未指定＝共通項目
         tplId: tplId || ''
       };
+      newQ.field = newQ.id;                 // 回答の保存先キー
 
-      if (t === 'text') {
+      // 表示条件（既存の showIf と同じ形式で保存する）
+      if (condQ.value) {
+        newQ.showIf = [[{ field: condQ.value, op: 'eq', value: condV.value }]];
+      }
+
+      if (t === 'heading') {
+        // 入力欄を持たないので追加設定は不要
+      } else if (t === 'text') {
         newQ.multiline = !!(multiline && multiline.checked);
       } else {
         newQ.options = [];
@@ -13189,9 +13251,11 @@ window.addEventListener('resize',function(){
 
       var qs = _hrQuestionsGet();
       qs.push(newQ);
-      _hrQuestionsSave(qs);
-      window.renderHearing();
-      if (typeof _hrLoadAndRender === 'function') _hrLoadAndRender();
+      // 保存を待たずに再描画すると、読み直しで追加が消える
+      Promise.resolve(_hrQuestionsSave(qs)).then(function() {
+        window.renderHearing();
+        if (typeof _hrLoadAndRender === 'function') _hrLoadAndRender();
+      });
       toast('✅ 「' + label + '」を追加しました');
     });
 

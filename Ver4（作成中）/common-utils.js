@@ -2785,7 +2785,13 @@ function _hrQuestionsLoad() {
 }
 function _hrQuestionsSave(list) {
   window._appCache.hearingQuestions = JSON.parse(JSON.stringify(list || []));
-  window.idbSetAppData('hearingQuestions', window._appCache.hearingQuestions);
+  var p = window.idbSetAppData('hearingQuestions', window._appCache.hearingQuestions);
+  // バージョンも保存しないと、次の読み込みで data.js の内容に戻され追加が消える
+  if (typeof window.HEARING_DATA_VERSION !== 'undefined') {
+    window.idbSetAppData('hearingDataVersion', window.HEARING_DATA_VERSION);
+  }
+  if (typeof markDirty === 'function') markDirty();
+  return p || Promise.resolve();
 }
 function _hrGetQuestions() {
   var cached = _hrQuestionsLoad();
@@ -2990,6 +2996,11 @@ function renderHearing() {
       return;
     }
     var fld = q.field || q.id;
+    // 見出し：入力欄を持たず、区切りとして表示する（コピー時も出力する）
+    if (q.type === 'heading') {
+      h += '<div class="hr-heading">' + _hEsc(q.label) + '</div>';
+      return;
+    }
     if (q.type === 'bool') {
       h += _hrRow(q.label, _boolBtns(fld, s[fld], q.trueLabel||'はい', q.falseLabel||'いいえ'));
     } else if (q.type === 'str' || q.type === 'toggle') {
@@ -3163,7 +3174,9 @@ window.copyHearingText = function () {
   }
 
   // ── 質問（builtin/カスタム問わず全て）の回答 ──
-  var cqs = (typeof _hrGetQuestions === 'function') ? _hrGetQuestions() : [];
+  // 表示中のテンプレートに合わせて絞る（画面の見た目とコピー結果をそろえる）
+  var cqs = (typeof _hrGetQuestions === 'function')
+    ? window.filterQuestionsByTemplate(_hrGetQuestions()) : [];
   var cpats = window._appCache.hearingPatterns || [];
   var cpOver = {};
   cpats.forEach(function(pat) {
@@ -3179,7 +3192,10 @@ window.copyHearingText = function () {
     if (!q.enabled) return;
     if (q.id in cpOver) { if (!cpOver[q.id]) return; }
     else if (!_hrEvalShowIf(q.showIf, s)) return;
-    var val = s[q.field];
+    // 見出しは入力を持たないが、対応履歴の区切りとして出力する
+    if (q.type === 'heading') { lines.push('■ ' + (q.outLabel || q.label)); return; }
+
+    var val = s[q.field || q.id];
     if (val === null || val === undefined || val === '') return;
     var disp = '';
     if (q.type === 'bool') {

@@ -402,6 +402,13 @@ th { background:var(--bg); }
 .hearing-title { font-size:12px;font-weight:700;color:var(--text); }
 /* ヘッダーの［🏠 ホーム］ボタン（全ページ共通・common-utils.js が差し込む） */
 /* 自動リンク（URL をクリックできるようにしたもの） */
+/* 入力を持たない見出し（対応履歴の区切りにも使う） */
+.hr-heading{
+  margin:14px 0 6px;padding:5px 10px;
+  font-size:12px;font-weight:700;color:var(--accent-text);
+  background:var(--accent-lt);border-left:3px solid var(--accent);border-radius:4px;
+}
+
 /* ラジオ／チェックの並び */
 .hr-radio-group{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;}
 .hr-radio{display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer;color:var(--text);}
