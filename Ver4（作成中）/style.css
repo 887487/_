@@ -402,6 +402,27 @@ th { background:var(--bg); }
 .hearing-title { font-size:12px;font-weight:700;color:var(--text); }
 /* ヘッダーの［🏠 ホーム］ボタン（全ページ共通・common-utils.js が差し込む） */
 /* 自動リンク（URL をクリックできるようにしたもの） */
+/* ラジオ／チェックの並び */
+.hr-radio-group{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;}
+.hr-radio{display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer;color:var(--text);}
+.hr-radio input{width:15px;height:15px;cursor:pointer;accent-color:var(--accent);}
+
+/* ヒアリングのテンプレート選択 */
+.hr-tpl-bar{
+  display:flex;flex-wrap:wrap;gap:6px;
+  padding:8px 10px;margin-bottom:10px;
+  background:var(--surface2);border:1px solid var(--border);border-radius:8px;
+}
+.hr-tpl-btn{
+  height:28px;padding:0 14px;font-size:12px;font-weight:600;font-family:inherit;
+  color:var(--text);background:var(--surface);
+  border:1px solid var(--border);border-radius:6px;cursor:pointer;
+  transition:background .12s,border-color .12s,color .12s;
+}
+.hr-tpl-btn:hover{border-color:var(--accent);color:var(--accent-text);}
+.hr-tpl-btn.active{background:var(--accent);border-color:var(--accent);color:#fff;}
+.hr-tpl-clear{margin-left:auto;padding:0 10px;color:var(--text3);}
+
 a.auto-link{ color:var(--accent-text);text-decoration:underline;word-break:break-all; }
 a.auto-link:hover{ opacity:.8; }
 

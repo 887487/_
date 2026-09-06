@@ -39,6 +39,13 @@
     .subject-text { font-size: 14px; font-weight: 600; color: var(--text, #2f3542); flex: 1; word-break: break-all; }
     .body-wrap { background: var(--surface2, #f8f9fa); border: 1px solid var(--border, #dfe4ea); border-radius: 7px; padding: 14px 16px; }
     .body-text { font-size: 13px; line-height: 1.85; color: var(--text, #2f3542); white-space: pre-wrap; word-break: break-all; }
+    /* 管理画面で付けた書式をそのまま表示する */
+    .body-text s { text-decoration: line-through; }
+    .body-text u { text-decoration: underline; }
+    .body-text img { max-width: 100%; height: auto; }
+    .body-text table { border-collapse: collapse; width: 100%; margin: 8px 0; font-size: 12px; white-space: normal; }
+    .body-text th, .body-text td { border: 1px solid var(--text3); padding: 5px 8px; vertical-align: top; }
+    .body-text th { background: var(--surface2); font-weight: 700; text-align: left; }
 
     /* コピーボタン付きフィールド */
     .field-copy-row { display: flex; align-items: flex-start; gap: 8px; }
@@ -419,7 +426,9 @@ function showDetail(id) {
         <div>
           <div class="field-label">本文</div>
           <div class="body-wrap">
-            <div class="body-text">${esc(t.body||'')}</div>
+            <div class="body-text" data-linkify="${t.linkify === false ? '0' : '1'}">${
+              t.bodyHtml ? sanitizeMail(t.bodyHtml) : esc(t.body||'')
+            }</div>
           </div>
         </div>
       </div>
@@ -575,6 +584,42 @@ document.addEventListener('click', (e) => {
 });
 
 // ===== UTILS =====
+/**
+ * 管理画面で付けた書式をそのまま表示する。
+ * 許可したタグ・属性だけを残し、それ以外は取り除く。
+ */
+var MAIL_ALLOW = /^(b|strong|i|em|u|s|strike|br|span|div|p|ul|ol|li|font|img|table|thead|tbody|tr|th|td)$/i;
+
+function sanitizeMail(html) {
+  var box = document.createElement('div');
+  box.innerHTML = String(html == null ? '' : html);
+  (function walk(node) {
+    Array.prototype.slice.call(node.childNodes).forEach(function (c) {
+      if (c.nodeType !== 1) return;
+      if (!MAIL_ALLOW.test(c.tagName)) {
+        while (c.firstChild) node.insertBefore(c.firstChild, c);
+        node.removeChild(c);
+        return;
+      }
+      var isImg = c.tagName.toLowerCase() === 'img';
+      Array.prototype.slice.call(c.attributes).forEach(function (a) {
+        if (isImg) {
+          if (a.name === 'alt') return;
+          if (a.name === 'src' && /^data:image\//i.test(a.value)) return;
+          c.removeAttribute(a.name);
+          return;
+        }
+        if (a.name === 'colspan' || a.name === 'rowspan') return;
+        if (a.name === 'style' && /color\s*:/i.test(a.value)) return;
+        c.removeAttribute(a.name);
+      });
+      if (isImg && !c.getAttribute('src')) { node.removeChild(c); return; }
+      walk(c);
+    });
+  })(box);
+  return box.innerHTML;
+}
+
 function esc(s) {
   return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }

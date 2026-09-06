@@ -620,6 +620,15 @@ html[data-theme="dark"] .modal-box { background: var(--surface); border: 1px sol
   color: #fff;
   font-weight: 700;
 }
+/* メモ欄の書式（管理画面で付けたものを再現する） */
+#pvMemo s { text-decoration: line-through; }
+#pvMemo u { text-decoration: underline; }
+#pvMemo img { max-width: 100%; height: auto; }
+#pvMemo table { border-collapse: collapse; width: 100%; margin: 6px 0; font-size: 11px; }
+#pvMemo th, #pvMemo td { border: 1px solid var(--text3); padding: 4px 6px; vertical-align: top; }
+#pvMemo th { background: var(--surface2); font-weight: 700; text-align: left; }
+
+
 </style>
 </head>
 <body class="page-screen">
@@ -895,6 +904,42 @@ function _pvSrcForDisplay(v) {
   if (/^[a-z][a-z0-9+.\-]*:/i.test(v)) return v;
   if (/%[0-9a-f]{2}/i.test(v)) return v;
   try { return v.split('/').map(encodeURIComponent).join('/'); } catch (e) { return v; }
+}
+
+/**
+ * 管理画面で付けた書式をそのまま表示する。
+ * 許可したタグ・属性だけを残し、それ以外は取り除く。
+ */
+var PV_ALLOW = /^(b|strong|i|em|u|s|strike|br|span|div|p|ul|ol|li|font|img|table|thead|tbody|tr|th|td)$/i;
+
+function sanitizePv(html) {
+  var box = document.createElement('div');
+  box.innerHTML = String(html == null ? '' : html);
+  (function walk(node) {
+    Array.prototype.slice.call(node.childNodes).forEach(function (c) {
+      if (c.nodeType !== 1) return;
+      if (!PV_ALLOW.test(c.tagName)) {
+        while (c.firstChild) node.insertBefore(c.firstChild, c);
+        node.removeChild(c);
+        return;
+      }
+      var isImg = c.tagName.toLowerCase() === 'img';
+      Array.prototype.slice.call(c.attributes).forEach(function (a) {
+        if (isImg) {
+          if (a.name === 'alt') return;
+          if (a.name === 'src' && /^data:image\//i.test(a.value)) return;
+          c.removeAttribute(a.name);
+          return;
+        }
+        if (a.name === 'colspan' || a.name === 'rowspan') return;
+        if (a.name === 'style' && /color\s*:/i.test(a.value)) return;
+        c.removeAttribute(a.name);
+      });
+      if (isImg && !c.getAttribute('src')) { node.removeChild(c); return; }
+      walk(c);
+    });
+  })(box);
+  return box.innerHTML;
 }
 
 function resolveImgPv(src) {
@@ -1658,9 +1703,12 @@ function renderPvCanvas(screen, variantSrc) {
   if (pvTitle) pvTitle.textContent = screen.name;
   if (pvBadge) pvBadge.textContent = `SCR-${String(idx+1).padStart(2,'0')}`;
   if (pvMemo) {
+    // 管理画面で付けた書式（太字・色・表など）があればそれを表示する
     const note = (screen.note || '').trim();
-    pvMemo.textContent  = note;
-    pvMemo.style.display = note ? '' : 'none';
+    if (screen.noteHtml) pvMemo.innerHTML = sanitizePv(screen.noteHtml);
+    else                 pvMemo.textContent = note;
+    pvMemo.setAttribute('data-linkify', screen.linkify === false ? '0' : '1');
+    pvMemo.style.display = (note || screen.noteHtml) ? '' : 'none';
   }
 
   if (!_shownSrc) {

@@ -591,14 +591,24 @@ details[open] > summary .hr-acc-arrow { transform: rotate(90deg); }
    赤字＋赤枠の「×」で統一する。 */
 /* 「＋ 質問を追加」と同じ見た目の追加ボタン */
 /* ── 共通の書式設定バー ── */
-/* 書式バー：画面上部に固定表示する */
-#rtFixedBar{
-  position:sticky;top:0;z-index:500;
-  background:var(--surface);border-bottom:1px solid var(--border);
-  opacity:.5;transition:opacity .15s;
+/* 選択肢のラベル欄（1行で扱う。改行は入れさせない） */
+.choice-label-in.rt-edit{
+  flex:1;min-width:0;min-height:26px;padding:4px 8px;
+  font-size:12px;line-height:1.5;border-radius:5px;
+  white-space:nowrap;overflow-x:auto;
 }
-#rtFixedBar.is-active{opacity:1;}
-#rtFixedBar .rt-bar{border:none;border-radius:0;margin:0;background:var(--surface);}
+
+/* 書式バー：各タブの上部に置く */
+.rt-bar-host{
+  display:flex;align-items:center;flex:1;min-width:0;
+  opacity:.4;transition:opacity .15s;
+}
+.rt-bar-host.is-active{opacity:1;}
+.rt-bar-host .rt-bar{
+  border:none;border-radius:6px;margin:0;padding:3px 5px;gap:2px;
+  background:var(--surface2);
+}
+.rt-bar-host .rt-btn{height:22px;min-width:22px;padding:0 5px;font-size:11px;}
 
 .rt-bar{
   display:flex;align-items:center;flex-wrap:wrap;gap:3px;
@@ -1532,10 +1542,6 @@ html[data-theme="dark"] .nav-arrow-btn { background: rgba(40,42,54,.9); }
 
 <aside id="sideMenu"></aside>
 
-<!-- 書式設定バー（全タブ共通・画面上部に固定）。
-     編集欄にカーソルが入ったときだけ操作できる状態になる。 -->
-<div id="rtFixedBar"></div>
-
 <div class="content-area">
 
   <!-- ===== スクリプトタブ ===== -->
@@ -1561,6 +1567,10 @@ html[data-theme="dark"] .nav-arrow-btn { background: rgba(40,42,54,.9); }
       <button class="add-cat-btn" onclick="openAddCat()">＋ カテゴリを追加</button>
     </div>
     <div class="editor-wrap">
+      <!-- 書式設定バー（編集欄にカーソルが入ると操作できる） -->
+      <div style="display:flex;align-items:center;padding:6px 12px;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0;">
+        <div id="rtFixedBarScript"></div>
+      </div>
       <div class="editor-scroll" id="editorScroll">
         <div class="empty-state"><div class="empty-icon">📋</div><div>左のリストからスクリプトを選んでください</div></div>
       </div>
@@ -1586,12 +1596,14 @@ html[data-theme="dark"] .nav-arrow-btn { background: rgba(40,42,54,.9); }
     </aside>
 
     <div style="flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden;">
-      <div style="display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0;">
+      <div style="display:flex;align-items:center;gap:8px;padding:8px 14px;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0;flex-wrap:wrap;">
         <span id="faqCurCat" style="font-size:13px;font-weight:700;flex-shrink:0;">すべて</span>
         <span id="faqCount" style="font-size:11px;color:var(--text3);flex-shrink:0;"></span>
         <span style="flex:1;"></span>
+        <!-- 書式設定バー（編集欄にカーソルが入ると操作できる） -->
+        <div id="rtFixedBar"></div>
         <input type="text" id="faqSearch" placeholder="質問・回答で検索" oninput="_faqRenderList()"
-               style="width:220px;height:28px;padding:0 9px;font-size:12px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);">
+               style="width:200px;height:28px;padding:0 9px;font-size:12px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);flex-shrink:0;">
       </div>
       <div id="faqList" style="flex:1;overflow-y:auto;padding:12px 14px;"></div>
 
@@ -1606,8 +1618,14 @@ html[data-theme="dark"] .nav-arrow-btn { background: rgba(40,42,54,.9); }
       <button class="add-cat-btn" onclick="openAddMailCat()">＋ カテゴリを追加</button>
       <button class="add-cat-btn" onclick="mlOpenXlsxImport()" style="border-style:dashed;">📊 Excel から一括登録</button>
     </div>
+    <div style="flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden;">
+      <!-- 書式設定バー（編集欄にカーソルが入ると操作できる） -->
+      <div style="display:flex;align-items:center;gap:8px;padding:8px 14px;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0;flex-wrap:wrap;">
+        <div id="rtFixedBarMail"></div>
+      </div>
     <div class="mail-editor-wrap" id="mailEditorWrap">
       <div class="empty-state"><div class="empty-icon">✉️</div><div>左のリストからテンプレートを選んでください</div></div>
+    </div>
     </div>
   </div>
 
@@ -1842,12 +1860,18 @@ html[data-theme="dark"] .nav-arrow-btn { background: rgba(40,42,54,.9); }
         <button class="scr-zoom-btn" onclick="scrBarZoom(1)" title="拡大">＋</button>
         <button class="scr-zoom-btn" onclick="scrBarZoomFit()" title="画面に合わせる" style="font-size:11px;width:auto;padding:0 8px;">Fit</button>
       </div>
+      <!-- 書式設定バー（編集欄にカーソルが入ると操作できる） -->
+      <div style="display:flex;align-items:center;padding:6px 12px;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0;">
+        <div id="rtFixedBarScreen"></div>
+      </div>
+
       <!-- 画面メモ（screen.html で備考として表示される） -->
       <div id="scrMemoBar" style="display:none;align-items:center;gap:8px;padding:6px 12px;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0;">
         <span style="font-size:11px;color:var(--text3);white-space:nowrap;flex-shrink:0;">📝 メモ</span>
-        <input id="scrRsMemo" class="scr-rs-input" placeholder="この画面の備考（screen.html に表示されます）"
-               oninput="scrRsUpdateMemo()"
-               style="flex:1;min-width:0;height:26px;font-size:12px;">
+        <div id="scrRsMemo" class="rt-edit" contenteditable="true"
+             data-ph="この画面の備考（screen.html に表示されます）"
+             oninput="scrRsUpdateMemo()"
+             style="flex:1;min-width:0;min-height:26px;max-height:120px;overflow-y:auto;font-size:12px;padding:4px 8px;border-radius:5px;"></div>
         <span id="scrMemoState" style="font-size:10px;white-space:nowrap;color:var(--text3);"></span>
         <button id="scrMemoReset" class="scr-zoom-btn" onclick="scrMemoResetToLib()"
                 title="画像ライブラリで登録した初期値に戻す"
@@ -1925,7 +1949,6 @@ html[data-theme="dark"] .nav-arrow-btn { background: rgba(40,42,54,.9); }
          ・画面名  → 左の画面一覧をダブルクリックしてリネーム
          ・メモ    → ズームバー下の入力欄
          ・HS設定  → キャンバス上のホットスポットをクリックしてモーダルで編集 -->
-    <textarea id="scrRsMemoLegacy" style="display:none"></textarea>
 
     <!-- ===== 右：画像ライブラリ（全機能を統合） ===== -->
     <div id="scrLibResizer" title="ドラッグで幅を変更"></div>
@@ -2756,6 +2779,8 @@ function _hrEditorAdd() {
   var newId = 'hr' + Math.random().toString(36).substr(2, 8);
   list.push({
     id: newId,
+    // いま選んでいるテンプレートに紐づける（未選択なら全テンプレート共通）
+    tplId: window.getCurrentTemplate ? window.getCurrentTemplate() : '',
     // 表示用のラベルは保存しない（項目名を変えても条件は field で追随する）
     conditions: conds.map(function(c) { return { field: c.field, value: c.value }; }),
     policy: txt,
@@ -2780,7 +2805,12 @@ function _hrEditorAdd() {
 
 // calcPolicies から呼ばれるカスタムポリシーを注入
 function _hrCustomPolicies(s) {
-  var list = _hrPoliciesLoad()||[];
+  // 対応方針はテンプレートごとに持つ。
+  // いま選んでいるテンプレートのものと、テンプレート指定なし（共通）だけを見る。
+  var cur = window.getCurrentTemplate ? window.getCurrentTemplate() : '';
+  var list = (_hrPoliciesLoad()||[]).filter(function(p) {
+    return !p.tplId || p.tplId === cur;
+  });
   var result = [];
   list.forEach(function(item) {
     if (item.enabled === false || !item.policy) return;
@@ -2835,7 +2865,7 @@ function switchTab(tab){
     if(panel)panel.classList.toggle('active',t===tab);
     if(btn)btn.classList.toggle('active',t===tab);
   });
-  if(tab==='faq'){ _faqRender(); }
+  if(tab==='faq'||tab==='mail'||tab==='screen'||tab==='script'){ if(tab==='faq')_faqRender(); _rtInitFixedBar(); }
   if(tab==='hearing'&&window.renderHearing){
     // hearingPolicies / hearingPatterns を IDB から毎回取得してから描画
     var _reloadHrData = function() {
@@ -2983,7 +3013,7 @@ function renderFixedItemEditor(key){
       '<div class="fixed-item-field-block">'+
         '<div class="fixed-item-field-label">オープニングトーク文言</div>'+
         '<div class="fixed-item-field-desc">電話受付時の第一声として表示されます。「●●」は担当者名を入力してください。</div>'+
-        '<div class="fixed-text-rich" id="fixedOpening" contenteditable="true" data-placeholder="オープニングテキストを入力…" oninput="saveFixedTexts()" style="'+richStyle+'">'+toHtml(val('opening'))+'</div>'+
+        '<div class="fixed-text-rich rt-edit" id="fixedOpening" contenteditable="true" data-placeholder="オープニングテキストを入力…" oninput="saveFixedTexts()" style="'+richStyle+'">'+toHtml(val('opening'))+'</div>'+
       '</div>'+
     '</div>';
   } else {
@@ -2992,17 +3022,17 @@ function renderFixedItemEditor(key){
       '<div class="fixed-item-field-block">'+
         '<div class="fixed-item-field-label">クロージング（デフォルト）</div>'+
         '<div class="fixed-item-field-desc">対応完了前の標準クロージング文言です。</div>'+
-        '<div class="fixed-text-rich" id="fixedClosingDefault" contenteditable="true" data-placeholder="クロージングデフォルトテキスト…" oninput="saveFixedTexts()" style="'+richStyle+'">'+toHtml(val('closingDefault'))+'</div>'+
+        '<div class="fixed-text-rich rt-edit" id="fixedClosingDefault" contenteditable="true" data-placeholder="クロージングデフォルトテキスト…" oninput="saveFixedTexts()" style="'+richStyle+'">'+toHtml(val('closingDefault'))+'</div>'+
       '</div>'+
       '<div class="fixed-item-field-block">'+
         '<div class="fixed-item-field-label">クロージング（不明点なし）</div>'+
         '<div class="fixed-item-field-desc">「不明点なし」選択時に表示されます。</div>'+
-        '<div class="fixed-text-rich" id="fixedClosingNone" contenteditable="true" data-placeholder="不明点なし時のテキスト…" oninput="saveFixedTexts()" style="'+richStyle+'">'+toHtml(val('closingNone'))+'</div>'+
+        '<div class="fixed-text-rich rt-edit" id="fixedClosingNone" contenteditable="true" data-placeholder="不明点なし時のテキスト…" oninput="saveFixedTexts()" style="'+richStyle+'">'+toHtml(val('closingNone'))+'</div>'+
       '</div>'+
       '<div class="fixed-item-field-block">'+
         '<div class="fixed-item-field-label">クロージング（不明点あり）</div>'+
         '<div class="fixed-item-field-desc">「不明点あり」選択時に表示されます。</div>'+
-        '<div class="fixed-text-rich" id="fixedClosingAsk" contenteditable="true" data-placeholder="不明点あり時のテキスト…" oninput="saveFixedTexts()" style="'+richStyle+'">'+toHtml(val('closingAsk'))+'</div>'+
+        '<div class="fixed-text-rich rt-edit" id="fixedClosingAsk" contenteditable="true" data-placeholder="不明点あり時のテキスト…" oninput="saveFixedTexts()" style="'+richStyle+'">'+toHtml(val('closingAsk'))+'</div>'+
       '</div>'+
     '</div>';
   }
@@ -3187,14 +3217,13 @@ function renderEditor(){
           let stepOpts='';const jSteps=jList[parseInt(jItem)]?.steps||[];jSteps.forEach((_,ss)=>{stepOpts+=`<option value="${ss}"${String(ss)===jStep?' selected':''}>ステップ${ss}${ss===0?' (開始)':''}</option>`;});
           jumpUi=`<div class="jump-config"><select class="jump-sel" onchange="updJumpCat(${si},${ci},this.value)"><option value="">--用途--</option>${catOpts.replace('<option value="'+jCat+'"','<option value="'+jCat+'" selected')}</select><select class="jump-sel" onchange="updJumpSub(${si},${ci},this.value)">${subOpts}</select><select class="jump-sel" onchange="updJumpItem(${si},${ci},this.value)"><option value="">--スクリプト--</option>${itemOpts}</select><select class="jump-sel" onchange="updJumpStep(${si},${ci},this.value)"><option value="">--ステップ--</option>${stepOpts}</select></div>`;
         }
-        cho+=`<div class="choice-row"><span class="choice-num">${ci+1}</span><input class="choice-label-in" type="text" value="${esc(c.label||'')}" placeholder="ボタンの文字（例：はい）" oninput="updCL(${si},${ci},this.value)"><span class="choice-arrow">→</span><select class="choice-go-sel" onchange="onGoSel(${si},${ci},this.value)">${opts}</select><button class="btn-icon" onclick="delChoice(${si},${ci})">✕</button></div>${jumpUi}`;
+        cho+=`<div class="choice-row"><span class="choice-num">${ci+1}</span><div class="choice-label-in rt-edit" contenteditable="true" data-ph="ボタンの文字（例：はい）" oninput="updCLRich(${si},${ci},this)">${c.labelHtml || esc(c.label||'')}</div><span class="choice-arrow">→</span><select class="choice-go-sel" onchange="onGoSel(${si},${ci},this.value)">${opts}</select><button class="btn-icon" onclick="delChoice(${si},${ci})">✕</button></div>${jumpUi}`;
       });
       cho+=`<button class="add-choice-btn" onclick="addChoice(${si})">＋ 選択肢を追加</button>`;
     }else{cho=`<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span class="end-tag">✓ ここで終了</span><button class="add-choice-btn" style="width:auto;padding:5px 14px" onclick="addChoice(${si})">選択肢を追加して分岐させる</button></div>`;}
     sh+=`<div class="step-card ${cardCls}"><div class="step-head">${badge}${endBadge}<span class="step-head-spacer"></span>${si>0?`<button class="step-del-btn" onclick="delStep(${si})">🗑 このステップを削除</button>`:''}</div>
     <div class="step-body"><div class="field-label">トーク内容</div>
-    <div class="fmt-bar"><button class="fmt-btn" type="button" onclick="fmtRich(${si},'bold')"><b>B</b> 太字</button><button class="fmt-btn" type="button" onclick="fmtRich(${si},'red')"><span class="fmt-red">A</span> 赤字</button><button class="fmt-btn" type="button" onclick="fmtRich(${si},'red-bold')"><span class="fmt-red"><b>A</b></span> 赤太字</button><button class="fmt-btn" type="button" onclick="fmtRich(${si},'clear')">✕ 解除</button><span class="fmt-sep"></span><button class="fmt-btn" type="button" onclick="fmtRich(${si},'alignLeft')"   title="左揃え">⬅</button><button class="fmt-btn" type="button" onclick="fmtRich(${si},'alignCenter')" title="中央揃え">↔</button><button class="fmt-btn" type="button" onclick="fmtRich(${si},'alignRight')"  title="右揃え">➡</button><span class="fmt-sep"></span><button class="fmt-btn" type="button" onclick="openTableEditor(${si})" title="表をビジュアル編集して挿入">⊞ 表</button></div>
-    <div class="ta-wrap"><div class="step-rich" id="stepRich_${si}" contenteditable="true" data-placeholder="オペレーターが話す内容を入力…" oninput="updSTRich(${si})" onkeydown="richKeydown(event,${si})">${renderStepHtml(step.text||'')}</div><textarea class="step-text" id="stepTa_${si}" style="display:none">${esc(step.text||'')}</textarea></div>
+    <div class="ta-wrap"><div class="step-rich rt-edit" id="stepRich_${si}" contenteditable="true" data-placeholder="オペレーターが話す内容を入力…" oninput="updSTRich(${si})" onkeydown="richKeydown(event,${si})">${renderStepHtml(step.text||'')}</div><textarea class="step-text" id="stepTa_${si}" style="display:none">${esc(step.text||'')}</textarea></div>
     <div class="tbl-inline-panel" id="tblPanel_${si}">
       <div class="tbl-inline-title">⊞ 表を作成</div>
       <div class="tbl-modal-controls">
@@ -3284,6 +3313,16 @@ function addCategory(){
 
 function getEditItem(){const cat=data[currentCat];const list=currentSubKey&&cat.sub&&cat.sub[currentSubKey]?cat.sub[currentSubKey].list:cat.list||[];return list[currentIdx];}
 function updTitle(v){getEditItem().title=v;save();renderSidebar();renderPreview();}
+/** 選択肢のラベルを保存する（書式付き＋検索用テキスト） */
+function updCLRich(si, ci, el) {
+  var it = getEditItem();
+  if (!it || !it.steps[si] || !it.steps[si].choices[ci]) return;
+  var c = it.steps[si].choices[ci];
+  c.labelHtml = el.innerHTML;
+  c.label = (el.innerText || el.textContent || '').replace(/\u00a0/g, ' ');
+  save(); renderPreview();
+}
+
 function updST(si,v){getEditItem().steps[si].text=v;save();renderPreview();}
 
 // ── リッチエディタ用ヘルパー ──
@@ -4373,11 +4412,34 @@ function renderMailEditor(){
     <div class="step-card"><div class="step-head"><span class="step-badge step-badge-num">✉️ メール内容</span><span class="step-head-spacer"></span></div>
     <div class="step-body">
       <div class="mail-field"><span class="mail-field-label">件名</span><input class="mail-input" type="text" value="${esc(t.subject||'')}" oninput="updMail('subject',this.value)" placeholder="件名を入力"></div>
-      <div class="mail-field"><span class="mail-field-label">本文</span><textarea class="mail-input" oninput="updMail('body',this.value)" placeholder="本文を入力">${esc(t.body||'')}</textarea></div>
+      <div class="mail-field"><span class="mail-field-label">本文</span>
+        <div class="rt-edit mail-input" contenteditable="true" data-ph="本文を入力"
+             oninput="updMailRich('body',this)"
+             style="min-height:220px;">${t.bodyHtml || esc(t.body||'').replace(/\n/g,'<br>')}</div>
+      </div>
+      <div class="mail-field"><span class="mail-field-label"></span>
+        <label class="rt-link" style="margin:0;">
+          <input type="checkbox" ${t.linkify !== false ? 'checked' : ''}
+                 onchange="updMail('linkify',this.checked)">🔗 URLをリンクにする
+        </label>
+      </div>
       <div class="mail-field"><span class="mail-field-label">備考 <span style="font-weight:400;color:var(--muted)">（サイドバーに表示・任意）</span></span><input class="mail-input" type="text" value="${esc(t.note||'')}" oninput="updMail('note',this.value)" placeholder="例：〇〇のとき使用　など"></div>
     </div></div>`;
 }
 function updMail(key,val){const t=mailData.find(x=>x.id===mId);if(t){t[key]=val;saveAll();renderMailSidebar();}}
+
+/**
+ * 書式付きの欄を保存する。
+ * 表示用の HTML と、検索・一覧用のプレーンテキストの両方を持つ。
+ */
+function updMailRich(key, el) {
+  const t = mailData.find(x => x.id === mId);
+  if (!t) return;
+  t[key + 'Html'] = el.innerHTML;
+  t[key] = (el.innerText || el.textContent || '').replace(/\u00a0/g, ' ');
+  saveAll();
+  renderMailSidebar();
+}
 function toggleMailEnabled(checked){
   const t=mailData.find(x=>x.id===mId);if(!t)return;
   t.enabled=checked;
@@ -5580,8 +5642,8 @@ function _rtAlignIcon(kind) {
  * どれが適用中か見て分かるようにするため。
  */
 function _rtUpdateActiveStates() {
-  var host = document.getElementById('rtFixedBar');
-  if (!host) return;
+  var hosts = document.querySelectorAll('.rt-bar-host');
+  if (!hosts.length) return;
 
   var check = {
     bold: 'bold', italic: 'italic', underline: 'underline',
@@ -5591,8 +5653,10 @@ function _rtUpdateActiveStates() {
   Object.keys(check).forEach(function(cmd) {
     var on = false;
     try { on = document.queryCommandState(check[cmd]); } catch (e) {}
-    var b = host.querySelector('[data-cmd="' + cmd + '"]');
-    if (b) b.classList.toggle('is-on', !!on);
+    hosts.forEach(function(host) {
+      var b = host.querySelector('[data-cmd="' + cmd + '"]');
+      if (b) b.classList.toggle('is-on', !!on);
+    });
   });
 
   // 赤字は文字色を調べる
@@ -5601,31 +5665,45 @@ function _rtUpdateActiveStates() {
     var c = document.queryCommandValue('foreColor') || '';
     red = /230,\s*57,\s*70|#e63946/i.test(c);
   } catch (e) {}
-  var rb = host.querySelector('[data-cmd="red"]');
-  if (rb) rb.classList.toggle('is-on', red);
+  hosts.forEach(function(host) {
+    var rb = host.querySelector('[data-cmd="red"]');
+    if (rb) rb.classList.toggle('is-on', red);
+  });
 
   _rtUpdateMergeBtn();
 }
 
-/** 画面上部の固定バーを組み立てる（1回だけ） */
+// タブごとに書式バーを置く場所
+var RT_BAR_HOSTS = ['rtFixedBar', 'rtFixedBarMail', 'rtFixedBarScript', 'rtFixedBarScreen'];
+
+/** 書式バーを組み立てる（各タブに1つずつ・初回のみ） */
 function _rtInitFixedBar() {
-  var host = document.getElementById('rtFixedBar');
-  if (!host || host.dataset.ready) return;
-  host.innerHTML = rtBar();
-  host.dataset.ready = '1';
+  RT_BAR_HOSTS.forEach(function(id) {
+    var host = document.getElementById(id);
+    if (!host || host.dataset.ready) return;
+    host.classList.add('rt-bar-host');
+    host.innerHTML = rtBar();
+    host.dataset.ready = '1';
+  });
   _rtSyncBarState();
 }
 
 /** 編集欄にカーソルがあるときだけ操作できるようにする */
 function _rtSyncBarState() {
-  var host = document.getElementById('rtFixedBar');
-  if (!host) return;
-  var on = !!(_rtActive && document.contains(_rtActive));
-  host.classList.toggle('is-active', on);
-  host.title = on ? '' : '編集欄をクリックすると使えます';
+  // 画面から消えた欄を掴んだままだと、別タブの操作で誤って書き換わる
+  if (_rtActive && !document.contains(_rtActive)) _rtActive = null;
+  var on = !!_rtActive;
+  document.querySelectorAll('.rt-bar-host').forEach(function(host) {
+    host.classList.toggle('is-active', on);
+    host.title = on ? '' : '編集欄をクリックすると使えます';
+  });
 }
 
-document.addEventListener('DOMContentLoaded', _rtInitFixedBar);
+document.addEventListener('DOMContentLoaded', function() {
+  _rtInitFixedBar();
+  // 起動直後はスクリプトタブが開いている。描画後にもう一度作る。
+  setTimeout(_rtInitFixedBar, 300);
+});
 
 /** 書式を適用する（直前にフォーカスしていた編集欄が対象） */
 function rtExec(cmd, btn) {
@@ -5649,6 +5727,13 @@ function rtExec(cmd, btn) {
 
 // 直前に編集していた欄を覚えておく（ボタンを押すとフォーカスが外れるため）
 var _rtActive = null;
+// 選択肢のラベルは1行。Enter で改行させない。
+document.addEventListener('keydown', function(e) {
+  if (e.key !== 'Enter') return;
+  var t = e.target;
+  if (t && t.classList && t.classList.contains('choice-label-in')) e.preventDefault();
+});
+
 document.addEventListener('focusin', function(e) {
   if (e.target && e.target.classList && e.target.classList.contains('rt-edit')) {
     _rtActive = e.target;
@@ -6290,6 +6375,7 @@ function exportDataJS(silent) {
       updateHistory:    loadHistory(),
       fixedTexts:       window._appCache.fixedTexts       || {},
       faqData:          window._appCache.faqData          || [],
+      hearingTemplates: window._appCache.hearingTemplates || [],
       // スクリプト・メールも構成ファイルに含める
       talkScripts:      window._appCache.scripts          || (typeof data     !== 'undefined' ? data     : {}),
       mailTemplates:    window._appCache.mailTemplates    || (typeof mailData !== 'undefined' ? mailData : []),
@@ -6997,7 +7083,8 @@ function _scrLibScanFolderInner(silent) {
             if (sd2.library.some(function(m){ return m.id === r.id; })) return;
             sd2.library.push({
               id: r.id, name: r.name, folder: r.folder, file: r.dataUrl,
-              note: r.note || '', hotspots: r.hotspots || [], hsLinkFrom: null
+              note: r.note || '', noteHtml: r.noteHtml || '',
+              hotspots: r.hotspots || [], hsLinkFrom: null
             });
           });
         }
@@ -7543,7 +7630,7 @@ function _imgLibShowStatus() {
 function _imgLibSyncLibrary(updates) {
   var sd = window.APP_SCREEN_DATA;
   if (!sd || !Array.isArray(sd.library)) return;
-  var META = ['name', 'folder', 'note', 'hotspots', 'hsLinkFrom'];
+  var META = ['name', 'folder', 'note', 'noteHtml', 'hotspots', 'hsLinkFrom'];
   (updates || []).forEach(function(u) {
     var m = sd.library.find(function(x){ return x.id === u.id; });
     if (!m || !u.fields) return;
@@ -7706,6 +7793,7 @@ function imgLibGetAllMeta(force) {
         id: m.id, name: m.name || m.id,
         folder: m.folder || '',
         note: m.note || '',
+        noteHtml: m.noteHtml || '',
         hotspots: m.hotspots || [],
         hsLinkFrom: m.hsLinkFrom || null,
         _metaOnly: true
@@ -7875,6 +7963,9 @@ function scrSaveIndex() {
             id: s.id,
             name: s.name,
             note: s.note || '',
+            noteHtml: s.noteHtml || '',       // 書式付きのメモ
+            noteOverride: !!s.noteOverride,
+            linkify: s.linkify !== false,
             hotspots: s.hotspots || [],
             // 画像セット（ボタンON/OFFなどのバリエーション）。lib: 参照のみ保存
             variants: Array.isArray(s.variants)
@@ -8034,6 +8125,7 @@ function _exportScreenToFiles() {
           folder:     _imgLibSafeFolder(item.folder),
           file:       path || '',      // 後で確定する
           note:       item.note || '',
+          noteHtml:   item.noteHtml || '',   // 書式付きのメモ
           hotspots:   item.hotspots || [],
           hsLinkFrom: item.hsLinkFrom || null
         });
@@ -9059,7 +9151,7 @@ function _scrUpdateRightSidebar(){
 
   if(!_scrSelScrId){
     if(memoBar) memoBar.style.display='none';
-    if(memoEl)  memoEl.value='';
+    if(memoEl)  memoEl.innerHTML='';
     if(nameLbl) nameLbl.textContent='';
     return;
   }
@@ -9067,7 +9159,8 @@ function _scrUpdateRightSidebar(){
   var scr=pat.screens.find(function(s){return s.id===_scrSelScrId;});if(!scr)return;
 
   if(memoBar) memoBar.style.display='flex';
-  if(memoEl)  memoEl.value=scr.note||'';
+  // 書式付きがあればそれを、無ければテキストを表示する
+  if(memoEl)  memoEl.innerHTML = scr.noteHtml || esc(scr.note||'').replace(/\n/g,'<br>');
   _scrMemoUpdateState();
   if(nameLbl){
     var i=pat.screens.findIndex(function(s){return s.id===_scrSelScrId;});
@@ -9115,14 +9208,19 @@ function _scrCommitScrName(patId, scrId, name){
  *    （ホットスポットの遷移先と同じ「初期値＋上書き」方式）
  */
 function scrRsUpdateMemo(){
-  var v = (document.getElementById('scrRsMemo')||{}).value || '';
+  // 書式付きの欄になったので、表示用の HTML と検索用のテキストを両方持つ
+  var el = document.getElementById('scrRsMemo');
+  if (!el) return;
+  var html = el.innerHTML;
+  var v = (el.innerText || el.textContent || '').replace(/\u00a0/g, ' ');
 
   if (_scrHsEditOn) {
     if (!_imgLibHsItem) return;
     _imgLibHsItem.note = v;
-    _imgLibBulkUpdate([{ id: _imgLibHsItem.id, fields: { note: v } }], function() {
+    _imgLibHsItem.noteHtml = html;
+    _imgLibBulkUpdate([{ id: _imgLibHsItem.id, fields: { note: v, noteHtml: html } }], function() {
       _imgLibInvalidateMeta();
-      _scrSyncNotesFromLib(_imgLibHsItem.id, v);
+      _scrSyncNotesFromLib(_imgLibHsItem.id, v, html);
     });
     return;
   }
@@ -9130,6 +9228,7 @@ function scrRsUpdateMemo(){
   var pat=screenPatterns.find(function(p){return p.id===_scrCurrentPatId;});if(!pat)return;
   var scr=pat.screens.find(function(s){return s.id===_scrSelScrId;});if(!scr)return;
   scr.note = v;
+  scr.noteHtml = html;
   scr.noteOverride = true;          // 初期値から外れた
   scrSaveData(); markDirty();
   _scrMemoUpdateState();
@@ -9139,12 +9238,14 @@ function scrRsUpdateMemo(){
  * ライブラリのメモを変更したとき、まだ上書きされていない画面に反映する。
  * 上書き済み（noteOverride）の画面は触らない。
  */
-function _scrSyncNotesFromLib(libId, note) {
+function _scrSyncNotesFromLib(libId, note, noteHtml) {
   var ref = 'lib:' + libId, n = 0;
   screenPatterns.forEach(function(p) {
     (p.screens || []).forEach(function(sc) {
       if (sc.imageSrc !== ref || sc.noteOverride) return;
-      sc.note = note; n++;
+      sc.note = note;
+      if (noteHtml !== undefined) sc.noteHtml = noteHtml;
+      n++;
     });
   });
   if (n) { scrSaveData(); markDirty(); }
@@ -9160,11 +9261,13 @@ function scrMemoResetToLib() {
 
   imgLibGetAll().then(function(all) {
     var item = (all || []).find(function(x){ return x.id === libId; });
-    var def  = (item && item.note) || '';
+    var def     = (item && item.note) || '';
+    var defHtml = (item && item.noteHtml) || esc(def).replace(/\n/g, '<br>');
     scr.note = def;
+    scr.noteHtml = defHtml;
     scr.noteOverride = false;
     var el = document.getElementById('scrRsMemo');
-    if (el) el.value = def;
+    if (el) el.innerHTML = defHtml;
     scrSaveData(); markDirty();
     _scrMemoUpdateState();
     toast(def ? '↩ 初期値に戻しました' : '↩ 初期値（未登録）に戻しました');
@@ -9604,8 +9707,8 @@ function scrEnterHsEdit(libId) {
   var mi = document.getElementById('scrRsMemo');
   if (mb) mb.style.display = 'flex';
   if (mi) {
-    mi.disabled = false;
-    mi.placeholder = 'この画像の備考（初期値。追加した画面に引き継がれます）';
+    mi.setAttribute('contenteditable', 'true');
+    mi.dataset.ph = 'この画像の備考（初期値。追加した画面に引き継がれます）';
   }
 
   ['scrCenterCanvas','scrCenterEmpty'].forEach(function(id) {
@@ -9620,7 +9723,7 @@ function scrEnterHsEdit(libId) {
     if (nm) nm.textContent = '📍 ' + (item.folder ? '📁' + item.folder + '　' : '') + (item.name || item.id);
     _imgLibHsActivate(item);
     var memoEl = document.getElementById('scrRsMemo');
-    if (memoEl) memoEl.value = item.note || '';
+    if (memoEl) memoEl.innerHTML = item.noteHtml || esc(item.note||'').replace(/\n/g,'<br>');
     _scrMemoUpdateState();
     document.querySelectorAll('#scrLibList .scr-lib-row').forEach(function(r) {
       r.classList.toggle('is-editing', r.dataset.libId === libId);
@@ -9643,7 +9746,7 @@ function scrExitHsEdit() {
 
   // メモ欄をパターン用に戻す
   var mi = document.getElementById('scrRsMemo');
-  if (mi) { mi.disabled = false; mi.placeholder = 'この画面の備考（screen.html に表示されます）'; }
+  if (mi) { mi.setAttribute('contenteditable', 'true'); mi.dataset.ph = 'この画面の備考（screen.html に表示されます）'; }
 
   _imgLibHsDeactivate();
   document.querySelectorAll('#scrLibList .scr-lib-row').forEach(function(r) {
@@ -12887,127 +12990,218 @@ window.addEventListener('resize',function(){
     container.appendChild(openBtn);
   }
 
+  /**
+   * 質問を追加するフォーム。
+   *   テンプレート名／項目名／出力名／回答方法 を指定する。
+   *   回答方法によって、必要な追加設定（複数行・選択肢・複数選択）を出し分ける。
+   */
   function _openInlineAddForm(container) {
     container.innerHTML = '';
     container.style.cssText =
       'margin:8px 0 4px;background:var(--surface);border:1px solid var(--accent);' +
-      'border-radius:8px;padding:12px 14px;display:flex;flex-direction:column;gap:8px;';
+      'border-radius:8px;padding:14px 16px;display:flex;flex-direction:column;gap:10px;';
 
-    var titleRow = document.createElement('div');
-    titleRow.style.cssText = 'font-size:12px;font-weight:700;color:var(--accent-text);';
-    titleRow.textContent = '＋ 新しい質問を追加';
-    container.appendChild(titleRow);
+    var LBL = 'font-size:11px;color:var(--text2);white-space:nowrap;min-width:86px;';
+    var INP = 'flex:1;min-width:0;height:28px;padding:0 8px;border:1px solid var(--border);' +
+              'border-radius:4px;font-size:12px;font-family:inherit;' +
+              'background:var(--bg);color:var(--text);outline:none;';
 
-    // ラベル入力
-    var labelRow = document.createElement('div');
-    labelRow.style.cssText = 'display:flex;align-items:center;gap:8px;';
-    var labelLbl = document.createElement('span');
-    labelLbl.textContent = '質問ラベル';
-    labelLbl.style.cssText = 'font-size:11px;color:var(--text2);white-space:nowrap;min-width:72px;';
-    var labelInp = document.createElement('input');
-    labelInp.type = 'text';
-    labelInp.placeholder = '例：契約種別';
-    labelInp.style.cssText =
-      'flex:1;height:28px;padding:0 8px;border:1px solid var(--border);' +
-      'border-radius:4px;font-size:12px;font-family:inherit;' +
-      'background:var(--bg);color:var(--text);outline:none;';
-    labelInp.addEventListener('focus', function() { labelInp.style.borderColor = 'var(--accent)'; });
-    labelInp.addEventListener('blur',  function() { labelInp.style.borderColor = 'var(--border)'; });
-    labelRow.appendChild(labelLbl); labelRow.appendChild(labelInp);
-    container.appendChild(labelRow);
+    var row = function(labelText, node) {
+      var r = document.createElement('div');
+      r.style.cssText = 'display:flex;align-items:center;gap:8px;';
+      var l = document.createElement('span');
+      l.textContent = labelText; l.style.cssText = LBL;
+      r.appendChild(l); r.appendChild(node);
+      container.appendChild(r);
+      return r;
+    };
 
-    // タイプ選択
-    var typeRow = document.createElement('div');
-    typeRow.style.cssText = 'display:flex;align-items:center;gap:8px;';
-    var typeLbl = document.createElement('span');
-    typeLbl.textContent = 'タイプ';
-    typeLbl.style.cssText = 'font-size:11px;color:var(--text2);white-space:nowrap;min-width:72px;';
-    var typeSel = document.createElement('select');
-    typeSel.style.cssText =
-      'height:28px;padding:0 6px;border:1px solid var(--border);' +
-      'border-radius:4px;font-size:12px;font-family:inherit;' +
-      'background:var(--bg);color:var(--text);cursor:pointer;';
-    [
-      { v: 'bool', l: 'はい / いいえ（2択）' },
-      { v: 'str',  l: '選択肢（複数）' },
-      { v: 'text', l: 'テキスト入力' }
-    ].forEach(function(o) {
-      var opt = document.createElement('option'); opt.value = o.v; opt.textContent = o.l;
-      typeSel.appendChild(opt);
+    var title = document.createElement('div');
+    title.style.cssText = 'font-size:12px;font-weight:700;color:var(--accent-text);';
+    title.textContent = '＋ 新しい質問を追加';
+    container.appendChild(title);
+
+    // ── テンプレート名 ──
+    var tplSel = document.createElement('select');
+    tplSel.style.cssText = INP;
+    var tpls = window.getHearingTemplates ? window.getHearingTemplates() : [];
+    tplSel.innerHTML = '<option value="">（共通：どのテンプレートでも表示）</option>'
+      + tpls.map(function(t) {
+          return '<option value="' + t.id + '">' + hEsc(t.name) + '</option>';
+        }).join('')
+      + '<option value="__new__">＋ 新しいテンプレートを作る…</option>';
+    row('テンプレート名', tplSel);
+
+    var newTplInp = document.createElement('input');
+    newTplInp.type = 'text'; newTplInp.placeholder = '例：A';
+    newTplInp.style.cssText = INP;
+    var newTplRow = row('新しい名前', newTplInp);
+    newTplRow.style.display = 'none';
+    tplSel.addEventListener('change', function() {
+      newTplRow.style.display = (tplSel.value === '__new__') ? 'flex' : 'none';
+      if (tplSel.value === '__new__') newTplInp.focus();
     });
-    typeRow.appendChild(typeLbl); typeRow.appendChild(typeSel);
-    container.appendChild(typeRow);
 
-    // 選択肢エリア（bool/str のとき表示）
-    var optsArea = document.createElement('div');
-    optsArea.style.cssText = 'display:flex;flex-direction:column;gap:4px;padding-left:80px;';
-    container.appendChild(optsArea);
+    // ── 項目名 / 出力名 ──
+    var labelInp = document.createElement('input');
+    labelInp.type = 'text'; labelInp.placeholder = '例：契約種別';
+    labelInp.style.cssText = INP;
+    row('項目名', labelInp);
 
-    // 初期描画
-    _refreshOptsArea(optsArea, typeSel.value);
-    typeSel.addEventListener('change', function() { _refreshOptsArea(optsArea, typeSel.value); });
+    var outInp = document.createElement('input');
+    outInp.type = 'text'; outInp.placeholder = '空欄なら項目名と同じ';
+    outInp.style.cssText = INP;
+    row('出力名', outInp);
 
-    // ボタン行
+    // ── 回答方法 ──
+    var typeSel = document.createElement('select');
+    typeSel.style.cssText = INP;
+    typeSel.innerHTML =
+      '<option value="text">記述</option>' +
+      '<option value="select">プルダウン</option>' +
+      '<option value="radio">ラジオボタン</option>' +
+      '<option value="toggle">トグルボタン</option>';
+    row('回答方法', typeSel);
+
+    // ── 回答方法ごとの追加設定 ──
+    var extra = document.createElement('div');
+    extra.style.cssText = 'display:flex;flex-direction:column;gap:8px;padding:10px 12px;' +
+      'background:var(--surface2);border-radius:6px;';
+    container.appendChild(extra);
+
+    var multiline = null, multi = null, optsArea = null;
+
+    var addOptRow = function(val) {
+      var r = document.createElement('div');
+      r.style.cssText = 'display:flex;align-items:center;gap:6px;';
+      var inp = document.createElement('input');
+      inp.type = 'text'; inp.dataset.role = 'opt';
+      inp.value = val || '';
+      inp.placeholder = '項目名';
+      inp.style.cssText = INP + 'height:26px;';
+      var del = document.createElement('button');
+      del.type = 'button'; del.className = 'btn-del'; del.textContent = '×';
+      del.title = 'この選択肢を削除';
+      del.addEventListener('click', function() { r.parentNode.removeChild(r); });
+      r.appendChild(inp); r.appendChild(del);
+      optsArea.insertBefore(r, optsArea.lastChild);
+      return inp;
+    };
+
+    var renderExtra = function() {
+      extra.innerHTML = '';
+      multiline = multi = optsArea = null;
+      var t = typeSel.value;
+
+      if (t === 'text') {
+        var lw = document.createElement('label');
+        lw.style.cssText = 'display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;';
+        multiline = document.createElement('input');
+        multiline.type = 'checkbox';
+        multiline.style.cssText = 'width:15px;height:15px;cursor:pointer;accent-color:var(--accent-text);';
+        lw.appendChild(multiline);
+        lw.appendChild(document.createTextNode('複数行の入力を許可する'));
+        extra.appendChild(lw);
+        return;
+      }
+
+      // プルダウン / ラジオ / トグル は選択肢が必要
+      var hd = document.createElement('div');
+      hd.style.cssText = 'font-size:11px;font-weight:700;color:var(--text2);';
+      hd.textContent = '各項目名';
+      extra.appendChild(hd);
+
+      optsArea = document.createElement('div');
+      optsArea.style.cssText = 'display:flex;flex-direction:column;gap:5px;';
+      var addBtn2 = document.createElement('button');
+      addBtn2.type = 'button'; addBtn2.className = 'hr-add-btn';
+      addBtn2.style.cssText = 'align-self:flex-start;height:24px;font-size:11px;';
+      addBtn2.textContent = '＋ 項目を追加';
+      addBtn2.addEventListener('click', function() { addOptRow('').focus(); });
+      optsArea.appendChild(addBtn2);
+      extra.appendChild(optsArea);
+      addOptRow(''); addOptRow('');
+
+      if (t === 'radio' || t === 'toggle') {
+        var mw = document.createElement('label');
+        mw.style.cssText = 'display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;';
+        multi = document.createElement('input');
+        multi.type = 'checkbox';
+        multi.style.cssText = 'width:15px;height:15px;cursor:pointer;accent-color:var(--accent-text);';
+        mw.appendChild(multi);
+        mw.appendChild(document.createTextNode('複数選択を許可する'));
+        extra.appendChild(mw);
+      }
+    };
+    typeSel.addEventListener('change', renderExtra);
+    renderExtra();
+
+    // ── ボタン ──
     var btnRow = document.createElement('div');
     btnRow.style.cssText = 'display:flex;gap:8px;justify-content:flex-end;';
-
     var cancelBtn = document.createElement('button');
-    cancelBtn.type = 'button'; cancelBtn.textContent = 'キャンセル';
-    cancelBtn.style.cssText =
-      'height:28px;padding:0 14px;border:1px solid var(--border);' +
-      'border-radius:5px;background:var(--surface2);color:var(--text2);' +
-      'font-size:12px;cursor:pointer;font-family:inherit;';
-    cancelBtn.addEventListener('click', function() {
-      container.style.cssText = 'margin:8px 0 4px;';
-      _renderInlineAddForm(container);
-    });
+    cancelBtn.type = 'button'; cancelBtn.className = 'btn btn-secondary';
+    cancelBtn.style.cssText = 'font-size:12px;height:28px;';
+    cancelBtn.textContent = 'キャンセル';
+    cancelBtn.addEventListener('click', function() { window.renderHearing(); });
 
     var addBtn = document.createElement('button');
-    addBtn.type = 'button'; addBtn.textContent = '✅ 追加';
-    addBtn.style.cssText =
-      'height:28px;padding:0 16px;border:none;' +
-      'border-radius:5px;background:var(--accent);color:var(--accent-on);' +
-      'font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;';
+    addBtn.type = 'button'; addBtn.className = 'btn btn-primary';
+    addBtn.style.cssText = 'font-size:12px;height:28px;';
+    addBtn.textContent = '追加する';
     addBtn.addEventListener('click', function() {
       var label = labelInp.value.trim();
-      if (!label) { labelInp.focus(); labelInp.style.borderColor = 'var(--red,#e63946)'; return; }
-      var type = typeSel.value;
-      var id   = 'cq_' + Math.random().toString(36).substr(2, 8);
+      if (!label) { toast('⚠️ 項目名を入力してください'); labelInp.focus(); return; }
+
+      // テンプレートを決める（新規なら作る）
+      var tplId = tplSel.value;
+      if (tplId === '__new__') {
+        var nm = newTplInp.value.trim();
+        if (!nm) { toast('⚠️ テンプレート名を入力してください'); newTplInp.focus(); return; }
+        tplId = 'tpl_' + Math.random().toString(36).substr(2, 6);
+        var list = (window._appCache.hearingTemplates || []).slice();
+        list.push({ id: tplId, name: nm, order: list.length });
+        window._appCache.hearingTemplates = list;
+        try { window.idbSetAppData('hearingTemplates', list); } catch (e) {}
+      }
+
+      var t = typeSel.value;
       var newQ = {
-        id: id, label: label, field: id, type: type,
-        trueLabel: 'はい', falseLabel: 'いいえ',
-        options: [], showIf: [], enabled: true, builtin: false, resets: []
+        id: 'q_' + Math.random().toString(36).substr(2, 7),
+        label: label,
+        outLabel: outInp.value.trim(),      // 空なら出力時に label を使う
+        type: t,
+        common: !tplId,                     // テンプレート未指定＝共通項目
+        tplId: tplId || ''
       };
-      if (type === 'bool') {
-        // はい/いいえラベルをカスタム入力から取得
-        var tl = optsArea.querySelector('[data-role="trueLabel"]');
-        var fl = optsArea.querySelector('[data-role="falseLabel"]');
-        if (tl && tl.value.trim()) newQ.trueLabel  = tl.value.trim();
-        if (fl && fl.value.trim()) newQ.falseLabel = fl.value.trim();
-      } else if (type === 'str') {
-        // 選択肢リスト
-        optsArea.querySelectorAll('[data-role="optLabel"]').forEach(function(inp2) {
-          var v = inp2.value.trim();
+
+      if (t === 'text') {
+        newQ.multiline = !!(multiline && multiline.checked);
+      } else {
+        newQ.options = [];
+        optsArea.querySelectorAll('[data-role="opt"]').forEach(function(inp) {
+          var v = inp.value.trim();
           if (v) newQ.options.push({ l: v, v: v });
         });
-        if (!newQ.options.length) newQ.options = [{ l: '選択肢1', v: '選択肢1' }];
+        if (!newQ.options.length) { toast('⚠️ 項目名を1つ以上入力してください'); return; }
+        if (t === 'radio' || t === 'toggle') newQ.multi = !!(multi && multi.checked);
       }
+
       var qs = _hrQuestionsGet();
       qs.push(newQ);
       _hrQuestionsSave(qs);
       window.renderHearing();
-     
-      toast('✅ 質問「' + label + '」を追加しました');
+      if (typeof _hrLoadAndRender === 'function') _hrLoadAndRender();
+      toast('✅ 「' + label + '」を追加しました');
     });
 
     btnRow.appendChild(cancelBtn); btnRow.appendChild(addBtn);
     container.appendChild(btnRow);
 
-    // フォーカス
     setTimeout(function() { labelInp.focus(); }, 30);
   }
 
-  // タイプ別の選択肢入力エリアを描画
+// タイプ別の選択肢入力エリアを描画
   function _refreshOptsArea(optsArea, type) {
     optsArea.innerHTML = '';
     if (type === 'bool') {

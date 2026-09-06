@@ -860,7 +860,8 @@ window._appCache = {
   hearingPatterns:  [],
   sideMenuData:     null,
   faqData:          [],
-  linkify:          {}
+  linkify:          {},
+  hearingTemplates: []
 };
 
 // ── data.js の内容を「読み込み直後に同期で」キャッシュへ流し込む ──
@@ -882,6 +883,7 @@ window._appCache = {
   if (sd.mailCatMeta      != null) window._appCache.mailCatMeta      = sd.mailCatMeta;
   if (sd.faqData          != null) window._appCache.faqData          = sd.faqData;
   if (sd.linkify          != null) window._appCache.linkify          = sd.linkify;
+  if (sd.hearingTemplates != null) window._appCache.hearingTemplates = sd.hearingTemplates;
 })();
 
 // localStorage からの一回限りのマイグレーション
@@ -932,7 +934,10 @@ window.initAppData = function() {
     if (sd.fixedTexts       != null) window._appCache.fixedTexts       = sd.fixedTexts;
     if (sd.faqData          != null) window._appCache.faqData          = sd.faqData;
     if (sd.linkify          != null) window._appCache.linkify          = sd.linkify;
+    if (sd.hearingTemplates != null) window._appCache.hearingTemplates = sd.hearingTemplates;
+  if (sd.hearingTemplates != null) window._appCache.hearingTemplates = sd.hearingTemplates;
   if (sd.linkify          != null) window._appCache.linkify          = sd.linkify;
+  if (sd.hearingTemplates != null) window._appCache.hearingTemplates = sd.hearingTemplates;
     if (sd.sideMenuFiles) {
       Object.keys(sd.sideMenuFiles).forEach(function(id) {
         var f = sd.sideMenuFiles[id];
@@ -2269,6 +2274,47 @@ _phonRow('_','アンダーバー') +
 // =============================================================================
 
 var HEARING_KEY = 'hearingState_v7';
+var HEARING_TPL_KEY = 'hearingTemplate';
+
+/** 登録されているテンプレート一覧 */
+window.getHearingTemplates = function() {
+  var t = (window._appCache && window._appCache.hearingTemplates) ||
+          (window.APP_STATIC_DATA && window.APP_STATIC_DATA.hearingTemplates) || [];
+  return t.slice().sort(function(a, b) { return (a.order || 0) - (b.order || 0); });
+};
+
+/** いま選ばれているテンプレートID（未選択なら空） */
+window.getCurrentTemplate = function() {
+  try { return localStorage.getItem(HEARING_TPL_KEY) || ''; } catch (e) { return ''; }
+};
+
+/**
+ * テンプレートを切り替える。
+ * 別の聞き取りを始める操作なので、入力済みの回答は消す。
+ */
+window.setCurrentTemplate = function(id) {
+  try { localStorage.setItem(HEARING_TPL_KEY, id || ''); } catch (e) {}
+  if (typeof hearingState !== 'undefined') {
+    hearingState = {};
+    if (typeof saveHearingState === 'function') saveHearingState();
+  }
+  if (typeof renderHearing === 'function') renderHearing();
+};
+
+/**
+ * いまのテンプレートで表示する質問だけを返す。
+ *   common: true … どのテンプレートでも表示
+ *   tplId 一致   … そのテンプレートのときだけ表示
+ * テンプレート未選択のときは共通項目だけを出す。
+ */
+window.filterQuestionsByTemplate = function(list) {
+  var cur = window.getCurrentTemplate();
+  return (list || []).filter(function(q) {
+    if (q.common) return true;
+    if (!q.tplId) return true;          // 未設定は従来どおり常に表示
+    return q.tplId === cur;
+  });
+};
 
 var DEFAULT_STATE = {
   usage: null,
@@ -2841,11 +2887,74 @@ function _hrMailCheckGroupHTML(s, opts) {
   return h;
 }
 
+/** テンプレート選択のボタン列。登録が無ければ何も出さない */
+/** プルダウン */
+function _selectBox(field, val, options) {
+  return '<select class="hr-text-input" onchange="setHearing(\'' + field + '\',this.value)">'
+    + '<option value="">（未選択）</option>'
+    + options.map(function(o) {
+        return '<option value="' + _hEsc(o.v) + '"' + (val === o.v ? ' selected' : '') + '>'
+          + _hEsc(o.l) + '</option>';
+      }).join('')
+    + '</select>';
+}
+
+/** ラジオボタン（複数選択を許可した場合はチェックボックスにする） */
+function _radioBtns(field, val, options, multi) {
+  var arr = Array.isArray(val) ? val : (val ? [val] : []);
+  return '<div class="hr-radio-group">' + options.map(function(o) {
+    var on = multi ? (arr.indexOf(o.v) >= 0) : (val === o.v);
+    return '<label class="hr-radio">'
+      + '<input type="' + (multi ? 'checkbox' : 'radio') + '"'
+      + ' name="hr_' + field + '"' + (on ? ' checked' : '')
+      + ' onchange="' + (multi ? 'toggleHearingMulti' : 'setHearing')
+      + '(\'' + field + '\',\'' + _hEsc(o.v).replace(/'/g, "\\'") + '\')">'
+      + '<span>' + _hEsc(o.l) + '</span></label>';
+  }).join('') + '</div>';
+}
+
+/** 複数選択のボタン群（トグル） */
+function _multiBtns(field, val, options) {
+  var arr = Array.isArray(val) ? val : (val ? [val] : []);
+  return '<div class="hr-btns">' + options.map(function(o) {
+    var on = arr.indexOf(o.v) >= 0;
+    return '<button type="button" class="hr-btn' + (on ? ' active' : '') + '"'
+      + ' onclick="toggleHearingMulti(\'' + field + '\',\'' + _hEsc(o.v).replace(/'/g, "\\'") + '\')">'
+      + _hEsc(o.l) + '</button>';
+  }).join('') + '</div>';
+}
+
+/** 複数選択の値を出し入れする */
+window.toggleHearingMulti = function(field, value) {
+  var cur = hearingState[field];
+  var arr = Array.isArray(cur) ? cur.slice() : (cur ? [cur] : []);
+  var i = arr.indexOf(value);
+  if (i >= 0) arr.splice(i, 1); else arr.push(value);
+  hearingState[field] = arr.length ? arr : null;
+  saveHearingState();
+  renderHearing();
+};
+
+function _hrTemplateBar() {
+  var tpls = window.getHearingTemplates();
+  if (!tpls.length) return '';
+  var cur = window.getCurrentTemplate();
+  return '<div class="hr-tpl-bar">'
+    + tpls.map(function(t) {
+        return '<button type="button" class="hr-tpl-btn' + (t.id === cur ? ' active' : '') + '"'
+          + ' onclick="window.setCurrentTemplate(\'' + t.id + '\')">' + _hEsc(t.name) + '</button>';
+      }).join('')
+    + (cur ? '<button type="button" class="hr-tpl-btn hr-tpl-clear"'
+           + ' onclick="window.setCurrentTemplate(\'\')" title="選択を解除して共通項目だけにする">✕</button>' : '')
+    + '</div>';
+}
+
 function renderHearing() {
   var el = document.getElementById('hearingContent');
   if (!el) return;
   var s = hearingState;
-  var qs = _hrGetQuestions();
+  // テンプレートで表示する項目を絞る（共通項目は常に表示）
+  var qs = window.filterQuestionsByTemplate(_hrGetQuestions());
 
   // ── パターンによる表示/非表示オーバーライドを評価 ──
   var patterns = window._appCache.hearingPatterns || [];
@@ -2880,12 +2989,22 @@ function renderHearing() {
     } else if (!_hrEvalShowIf(q.showIf, s)) {
       return;
     }
+    var fld = q.field || q.id;
     if (q.type === 'bool') {
-      h += _hrRow(q.label, _boolBtns(q.field, s[q.field], q.trueLabel||'はい', q.falseLabel||'いいえ'));
-    } else if (q.type === 'str') {
-      h += _hrRow(q.label, _strBtns(q.field, s[q.field], q.options||[]));
+      h += _hrRow(q.label, _boolBtns(fld, s[fld], q.trueLabel||'はい', q.falseLabel||'いいえ'));
+    } else if (q.type === 'str' || q.type === 'toggle') {
+      // トグルは従来のボタン群と同じ見た目。複数選択にも対応する
+      h += _hrRow(q.label, q.multi
+        ? _multiBtns(fld, s[fld], q.options||[])
+        : _strBtns(fld, s[fld], q.options||[]));
+    } else if (q.type === 'radio') {
+      h += _hrRow(q.label, _radioBtns(fld, s[fld], q.options||[], q.multi));
+    } else if (q.type === 'select') {
+      h += _hrRow(q.label, _selectBox(fld, s[fld], q.options||[]));
     } else if (q.type === 'text') {
-      h += _hrRow(q.label, '<input type="text" class="hr-text-input" value="' + _hEsc(s[q.field]||'') + '" oninput="setHearing(\'' + q.field + '\',this.value)">');
+      h += _hrRow(q.label, q.multiline
+        ? '<textarea class="hr-text-input" rows="3" style="resize:vertical;font-family:inherit;" oninput="setHearing(\'' + fld + '\',this.value)">' + _hEsc(s[fld]||'') + '</textarea>'
+        : '<input type="text" class="hr-text-input" value="' + _hEsc(s[fld]||'') + '" oninput="setHearing(\'' + fld + '\',this.value)">');
     }
   });
 
@@ -2908,6 +3027,7 @@ function renderHearing() {
   }
 
   h += '<div id="hearingSummaryArea"></div>';
+  h = _hrTemplateBar() + h;
   el.innerHTML = h;
   renderHearingSummary();
   // 管理画面では「＋ 対応方針を追加」に、いま条件になる件数を出す
@@ -3065,13 +3185,22 @@ window.copyHearingText = function () {
     if (q.type === 'bool') {
       if (val === true)  disp = q.trueResult  || q.trueLabel  || 'はい';
       if (val === false) disp = q.falseResult || q.falseLabel || 'いいえ';
-    } else if (q.type === 'str') {
-      var opt = (q.options || []).find(function(o) { return o.v === val; });
-      disp = opt ? (opt.r || opt.l) : String(val);
+    } else if (q.type === 'str' || q.type === 'select' || q.type === 'radio' || q.type === 'toggle') {
+      // 複数選択のときは配列で入る
+      if (Array.isArray(val)) {
+        disp = val.map(function(v) {
+          var o = (q.options || []).find(function(x) { return x.v === v; });
+          return o ? (o.r || o.l) : String(v);
+        }).join('、');
+      } else {
+        var opt = (q.options || []).find(function(o) { return o.v === val; });
+        disp = opt ? (opt.r || opt.l) : String(val);
+      }
     } else if (q.type === 'text') {
       disp = String(val);
     }
-    if (disp) lines.push(q.label + '：' + disp);
+    // 出力名が設定されていればそちらを使う
+    if (disp) lines.push((q.outLabel || q.label) + '：' + disp);
   });
 
   // ── メール受信なし確認項目（Sアカ／Jアカ） ──

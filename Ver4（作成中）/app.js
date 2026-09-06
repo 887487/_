@@ -155,11 +155,11 @@ function buildAllSteps(type, subKey, itemIndex, currentStepIndex) {
           if (typeof c.go === 'string' && c.go.includes('/')) {
             html += `<button class="step-choice-btn step-choice-jump"
               onclick="jumpToScript('${type}','${subKey||''}',${itemIndex},${si},'${c.go}','${(c.label||'').replace(/'/g,"\\'")}')">
-              ${c.label} ↗</button>`;
+              ${c.labelHtml || escHtml(c.label||'')} ↗</button>`;
           } else {
             html += `<button class="step-choice-btn"
               onclick="goStep('${type}','${subKey||''}',${itemIndex},${si},${c.go},'${(c.label||'').replace(/'/g,"\\'")}')">
-              ${c.label}</button>`;
+              ${c.labelHtml || escHtml(c.label||'')}</button>`;
           }
         });
         html += `</div>`;
