@@ -598,6 +598,17 @@ details[open] > summary .hr-acc-arrow { transform: rotate(90deg); }
   white-space:nowrap;overflow-x:auto;
 }
 
+/* 画面が狭いときにタブやボタンが重ならないようにする */
+.page-admin header .hd-center{ overflow-x:auto; }
+.page-admin header .tab-btn{ flex-shrink:0; }
+@media (max-width: 1500px) {
+  .page-admin header .tab-btn{ padding:0 8px;font-size:11px; }
+  .page-admin header .nav-btn{ padding:0 8px;font-size:11px; }
+}
+@media (max-width: 1200px) {
+  .page-admin header .tab-btn{ padding:0 6px;font-size:10px; }
+}
+
 /* 書式バーの行。4タブとも同じ見た目・同じ高さにそろえる */
 .rt-bar-row{
   display:flex;align-items:center;gap:8px;flex-wrap:wrap;flex-shrink:0;
@@ -1535,7 +1546,6 @@ html[data-theme="dark"] .nav-arrow-btn { background: rgba(40,42,54,.9); }
     <button class="tab-btn" id="tabBtnFaq"     onclick="switchTab('faq')">❓ FAQ</button>
     <button class="tab-btn" id="tabBtnHearing" onclick="switchTab('hearing')">📋 ヒアリング</button>
     <button class="tab-btn" id="tabBtnSideMenu" onclick="switchTab('sidemenu')">☰ サイドメニュー</button>
-    <button class="tab-btn" id="tabBtnHistory" onclick="switchTab('history')">📝 更新履歴</button>
   </div>
   <div class="hd-right">
     <button class="nav-btn" onclick="openNamedTab('script.html','scriptTab')">📋 スクリプト</button>
@@ -2144,17 +2154,6 @@ html[data-theme="dark"] .nav-arrow-btn { background: rgba(40,42,54,.9); }
   </div>
 
   <!-- ===== 更新履歴タブ（モーダル廃止・インライン編集） ===== -->
-  <div class="tab-panel tab-panel-history" id="tabHistory">
-    <div style="max-width:900px;margin:0 auto;">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
-        <div style="font-size:14px;font-weight:700;color:var(--text);">📝 更新履歴</div>
-      </div>
-      <div id="histWriteStatus" style="display:none;margin-bottom:12px;padding:8px 12px;border-radius:6px;font-size:12px;"></div>
-      <div style="background:var(--white);border:1px solid var(--border);border-radius:10px;overflow:hidden;">
-        <div id="adminHistoryPanel"></div>
-      </div>
-    </div>
-  </div>
 
   <!-- ===== ☰ サイドメニュー編集タブ ===== -->
   <div class="tab-panel tab-panel-sidemenu" id="tabSideMenu" style="padding:20px;overflow-y:auto;">
@@ -2170,7 +2169,20 @@ html[data-theme="dark"] .nav-arrow-btn { background: rgba(40,42,54,.9); }
 
       <!-- カテゴリ追加ボタン（最下段） -->
       <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border);">
-        <button class="btn btn-primary" onclick="smAddCategory()" style="width:100%;height:36px;font-size:13px;">＋ カテゴリを追加</button>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-primary" onclick="smAddCategory()" style="flex:1;height:36px;font-size:13px;">＋ カテゴリを追加</button>
+          <button class="btn btn-secondary" onclick="smAddTable()" style="flex:1;height:36px;font-size:13px;"
+                  title="フォネティックコードやドメイン一覧のような表を追加します">＋ 表を追加</button>
+        </div>
+      </div>
+
+      <!-- 更新履歴（旧・更新履歴タブから集約） -->
+      <div style="margin-top:32px;padding-top:20px;border-top:2px solid var(--border);">
+        <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:12px;">📝 更新履歴</div>
+        <div id="histWriteStatus" style="display:none;margin-bottom:12px;padding:8px 12px;border-radius:6px;font-size:12px;"></div>
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;">
+          <div id="adminHistoryPanel"></div>
+        </div>
       </div>
     </div>
   </div>
@@ -2855,7 +2867,7 @@ function switchTab(tab){
   // （画面遷移タブ内の機能なので、他タブへ移動したあとも残っていると操作できなくなる）
   // 旧・全画面ライブラリは廃止したため、閉じる処理は不要
 
-  ['script','mail','screen','history','hearing','sidemenu','faq'].forEach(t=>{
+  ['script','mail','screen','hearing','sidemenu','faq'].forEach(t=>{
     // タブIDのキャメルケース変換
     const capId = t==='sidemenu'?'SideMenu': t.charAt(0).toUpperCase()+t.slice(1);
     const panel=document.getElementById('tab'+capId);
@@ -2886,7 +2898,8 @@ function switchTab(tab){
     }
   }
   if(tab==='script'){ loadFixedTexts(); }
-  if(tab==='history')renderAdminHistoryPanel();
+  // 更新履歴はサイドメニュータブに集約した
+  if(tab==='sidemenu')renderAdminHistoryPanel();
   if(tab==='screen')initScreenEditor();
   if(tab==='sidemenu'){ _smData = null; smLoad(); smRender(); }
 }
@@ -5147,6 +5160,14 @@ function fsDisconnectFolder() {
 }
 
 // チェックボックスで選択されたデータをエクスポート
+// Ctrl+S で保存ダイアログを開く（ブラウザのページ保存は抑止する）
+document.addEventListener('keydown', function(e) {
+  if (!(e.ctrlKey || e.metaKey)) return;
+  if ((e.key || '').toLowerCase() !== 's') return;
+  e.preventDefault();
+  if (typeof openSaveModal === 'function') openSaveModal();
+});
+
 function saveAndExportSelected() {
   var st = document.getElementById('saveModalStatus');
   if (st) { st.textContent = '⏳ 保存中…'; st.style.display = 'block'; st.style.background = 'var(--accent-lt)'; st.style.color = 'var(--accent)'; st.style.border = '1px solid var(--accent)'; }
@@ -6438,12 +6459,18 @@ function _histSetStatus(msg, type) {
 
 function smRender() {
   if (!_smData) smLoad();
+  // 旧・ハードコードのフォネティックコードを、編集できる表として取り込む
+  if (window.ensureDefaultSideMenuTables) {
+    window._appCache.sideMenuData = _smData;
+    if (window.ensureDefaultSideMenuTables()) { _smData = window._appCache.sideMenuData; smSave(); }
+  }
   var list = document.getElementById('smCatList');
   if (!list) return;
 
   list.innerHTML = (_smData || []).map(function(sec, si) {
     var isLinksSub = sec.type === 'links_with_sub';
     var isPhonetic = sec.type === 'phonetic';
+    var isTable    = sec.type === 'table';
     var itemsHtml = '';
 
     // ── アイテム1行の共通HTML生成 ──
@@ -6457,7 +6484,9 @@ function smRender() {
         '</div>';
     }
 
-    if (isLinksSub) {
+    if (isTable) {
+      itemsHtml = smRenderTable(sec, si);
+    } else if (isLinksSub) {
       itemsHtml = (sec.subSections || []).map(function(sub, sj) {
         var subItems = '<div class="sm-row-wrap"><div class="sm-row-inner">' + _smHeadRow() +
           (sub.items || []).map(function(it, ij) {
@@ -6624,6 +6653,93 @@ function smDelCat(si) {
   if (!confirm('このカテゴリを削除しますか？')) return;
   _smData.splice(si, 1); smRender();
 }
+/** 表セクションを追加する（フォネティックコード等） */
+function smAddTable() {
+  var name = prompt('表の名前を入力してください\n（例：📖 フォネティックコード）');
+  if (name === null) return;
+  name = name.trim(); if (!name) return;
+
+  var cols = prompt('列の見出しを「,」区切りで入力してください\n（例：アルファベット,読み方）', 'アルファベット,読み方');
+  if (cols === null) return;
+  var headers = cols.split(',').map(function(t){ return t.trim(); }).filter(Boolean);
+  if (!headers.length) headers = ['項目', '内容'];
+
+  var list = window._appCache.sideMenuData || [];
+  list.push({
+    id: 'smt_' + Math.random().toString(36).substr(2, 7),
+    type: 'table',
+    label: name,
+    headers: headers,
+    rows: [headers.map(function(){ return ''; })]
+  });
+  window._appCache.sideMenuData = list;
+  _smData = list;
+  smSave(); smRender();
+  toast('✅ 表「' + name + '」を追加しました');
+}
+
+/** 表の行を追加する */
+function smTableAddRow(si) {
+  var sec = (_smData || [])[si];
+  if (!sec || sec.type !== 'table') return;
+  sec.rows = sec.rows || [];
+  sec.rows.push((sec.headers || ['', '']).map(function(){ return ''; }));
+  smSave(); smRender();
+}
+
+/** 表の行を削除する */
+function smTableDelRow(si, ri) {
+  var sec = (_smData || [])[si];
+  if (!sec || !sec.rows) return;
+  sec.rows.splice(ri, 1);
+  smSave(); smRender();
+}
+
+/** セルの内容を更新する */
+function smTableSet(si, ri, ci, val) {
+  var sec = (_smData || [])[si];
+  if (!sec || !sec.rows || !sec.rows[ri]) return;
+  sec.rows[ri][ci] = val;
+  smSave();
+}
+
+/** 見出しを更新する */
+function smTableSetHeader(si, ci, val) {
+  var sec = (_smData || [])[si];
+  if (!sec || !sec.headers) return;
+  sec.headers[ci] = val;
+  smSave(); smRender();
+}
+
+/** 表セクションの編集画面を組み立てる */
+function smRenderTable(sec, si) {
+  var inp = 'width:100%;box-sizing:border-box;height:26px;padding:0 6px;font-size:11px;' +
+            'border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text);';
+  var h = '<div style="padding:10px 12px;">'
+    + '<table style="width:100%;border-collapse:collapse;font-size:11px;">'
+    + '<thead><tr>'
+    + (sec.headers || []).map(function(t, ci) {
+        return '<th style="padding:3px;"><input type="text" value="' + esc(t) + '"'
+          + ' onchange="smTableSetHeader(' + si + ',' + ci + ',this.value)"'
+          + ' style="' + inp + 'font-weight:700;text-align:center;"></th>';
+      }).join('')
+    + '<th style="width:34px;"></th></tr></thead><tbody>'
+    + (sec.rows || []).map(function(r, ri) {
+        return '<tr>' + (sec.headers || []).map(function(_, ci) {
+            return '<td style="padding:3px;"><input type="text" value="' + esc(r[ci] || '') + '"'
+              + ' oninput="smTableSet(' + si + ',' + ri + ',' + ci + ',this.value)"'
+              + ' style="' + inp + '"></td>';
+          }).join('')
+          + '<td style="padding:3px;text-align:center;">'
+          + '<button class="btn-del" onclick="smTableDelRow(' + si + ',' + ri + ')" title="この行を削除">×</button>'
+          + '</td></tr>';
+      }).join('')
+    + '</tbody></table>'
+    + '<button class="hr-add-btn" style="margin-top:8px;" onclick="smTableAddRow(' + si + ')">＋ 行を追加</button>'
+    + '</div>';
+  return h;
+}
+
 function smAddCategory() {
   if (!_smData) smLoad();
   _smData.push({ id: 'smCat_' + Date.now(), label: '新規カテゴリ', type: 'links', items: [] });

@@ -2113,13 +2113,6 @@ window.saveSideMenuData = function(data) {
 // サイドメニューデータの正は data.js（APP_STATIC_DATA.sideMenuData）。
 // admin.html の「💾 保存して反映」で更新する。
 
-function _phonRow(letter, r1, r2) {
-  var cell = function (v) {
-    return '<td style="padding:6px 8px;border:1px solid var(--border,#e8eaed);text-align:center;color:var(--text,#2f3542)">' + v + '</td>';
-  };
-  return '<tr>' + cell(letter) + cell(r1) + '</tr>';
-}
-
 function _buildSideMenuHTML(isDark) {
   // localStorage は使用しない。data.js の内容（_appCache.sideMenuData）を正として参照する。
   // キャッシュ未設定のタイミングで呼ばれても欠けないよう data.js を直接見る保険を入れる。
@@ -2132,6 +2125,12 @@ function _buildSideMenuHTML(isDark) {
   html += '<div class="side-section"><div style="display:flex;align-items:center;justify-content:space-between;padding:13px 16px;">' +
     '<span style="font-size:13px;font-weight:600;">🌙 ダークモード</span>' +
     '<label class="dark-toggle-sw"><input type="checkbox" id="darkModeToggle"' + (isDark ? ' checked' : '') + ' onchange="window.applyDarkMode(this.checked)"><span class="dark-toggle-sl"></span></label>' +
+    '</div>' +
+    // ショートカットキー一覧
+    '<div style="display:flex;align-items:center;justify-content:space-between;padding:13px 16px;border-top:1px solid var(--border);cursor:pointer;"' +
+      ' onclick="window.openShortcutHelp()">' +
+      '<span style="font-size:13px;font-weight:600;">⌨️ ショートカットキー一覧</span>' +
+      '<span style="font-size:12px;color:var(--text3);">開く →</span>' +
     '</div></div>';
 
   // JSON 定義セクション
@@ -2174,6 +2173,26 @@ function _buildSideMenuHTML(isDark) {
       });
       html += '</ul></div>';
 
+    } else if (sec.type === 'table') {
+      // 表セクション（フォネティックコード、ドメイン一覧などに使う）。
+      // 見出し行 sec.headers と、明細 sec.rows を管理画面で編集できる。
+      var hd = (sec.headers || []).map(function(t) {
+        return '<th style="padding:6px 8px;border:1px solid var(--border,#e8eaed);text-align:center;'
+             + 'font-weight:700;color:var(--text2,#555)">' + _smHtmlEsc(t) + '</th>';
+      }).join('');
+      var bd = (sec.rows || []).map(function(r) {
+        return '<tr>' + (r || []).map(function(c) {
+          return '<td style="padding:5px 8px;border:1px solid var(--border,#e8eaed);">'
+               + _smHtmlEsc(c) + '</td>';
+        }).join('') + '</tr>';
+      }).join('');
+      html += '<div class="side-section"><div class="side-section-header" onclick="toggleAccordion(\'' + secId + '\')">' +
+        sec.label + ' <span class="arrow" style="display:inline-block;transition:transform .2s">▶</span></div>' +
+        '<div class="accordion-body" id="' + secId + '" style="padding:10px 12px 14px;"><div style="overflow-x:auto;">' +
+        '<table style="width:100%;border-collapse:collapse;font-size:11px;min-width:220px;">' +
+        (hd ? '<thead><tr style="background:var(--surface2,#f8f9fa)">' + hd + '</tr></thead>' : '') +
+        '<tbody>' + bd + '</tbody></table></div></div></div>';
+
     } else if (sec.type === 'phonetic') {
       // フォネティックコード（固定テーブル）
       html += '<div class="side-section"><div class="side-section-header" onclick="toggleAccordion(\'' + secId + '\')">' +
@@ -2210,55 +2229,10 @@ function _buildSideMenuHTML(isDark) {
         '<ul class="accordion-body" id="' + secId + '">' + lis + '</ul></div>';
     }
   });
+  // フォネティックコード・ドメインリストなどの表は
+  // 管理画面（サイドメニュー編集）で作れる「表セクション」に移行した。
+  // ここでのハードコードは廃止し、sideMenuData から描画する。
 
-  // フォネティックコード（固定）
-  html += '<div class="side-section"><div class="side-section-header" onclick="toggleAccordion(\'noticePanel\')">📖フォネティックコード <span class="arrow" style="display:inline-block;transition:transform .2s">▶</span></div>' +
-    '<div class="accordion-body" id="noticePanel" style="padding:10px 12px 14px;"><div style="overflow-x:auto;">' +
-    '<table style="width:100%;border-collapse:collapse;font-size:11px;min-width:220px;">' +
-    '<colgroup><col><col style="width:160px"></colgroup>' +
-    '<thead><tr style="background:var(--surface2,#f8f9fa)">' +
-    '<th style="padding:6px 8px;border:1px solid var(--border,#e8eaed);text-align:center;font-weight:700;color:var(--text2,#555)">アルファベット</th>' +
-    '<th style="padding:6px 8px;border:1px solid var(--border,#e8eaed);text-align:center;font-weight:700;color:var(--text2,#555)">読み方</th>' +
-    '</tr></thead><tbody>' +
-_phonRow('A','アメリカ') + 
-_phonRow('B','ブラジル') + 
-_phonRow('C','チャイナ') + 
-_phonRow('D','デンマーク') + 
-_phonRow('E','エジプト') + 
-_phonRow('F','フランス') + 
-_phonRow('G','ゴルフ') + 
-_phonRow('H','ホンコン') + 
-_phonRow('I','イタリア') + 
-_phonRow('J','ジャパン') + 
-_phonRow('K','コリア') + 
-_phonRow('L','ロンドン') + 
-_phonRow('M','メキシコ') + 
-_phonRow('N','ニューヨーク') + 
-_phonRow('O','大阪') + 
-_phonRow('P','パリ') + 
-_phonRow('Q','クイーン') + 
-_phonRow('R','ローマ') + 
-_phonRow('S','スペイン') + 
-_phonRow('T','東京') + 
-_phonRow('U','USA') + 
-_phonRow('V','ヴィクトリー') + 
-_phonRow('W','ワールド') + 
-_phonRow('X','エックス線') + 
-_phonRow('Y','ワイシャツ') + 
-_phonRow('Z','ゼブラ') + 
-_phonRow('-','ハイフン') + 
-_phonRow('_','アンダーバー') +
-    '</tbody></table></div></div></div>';
-
-  // ドメインリスト（固定・1列テーブル）
-  html += '<div class="side-section"><div class="side-section-header" onclick="toggleAccordion(\'domainListPanel\')">📧ドメインリスト <span class="arrow" style="display:inline-block;transition:transform .2s">▶</span></div>' +
-    '<div class="accordion-body" id="domainListPanel" style="padding:10px 12px 14px;"><div style="overflow-x:auto;">' +
-    '<table style="width:100%;border-collapse:collapse;font-size:11px;min-width:160px;">' +
-    '<tbody>' +
-    ['aol.com', 'asahinet.jp', 'au.com', 'auone-net.jp', 'bbiq.jp', 'biglobe.ne.jp', 'biz.ezweb.ne.jp', 'canet.ne.jp', 'commufa.jp', 'dion.ne.jp', 'docomo.ne.jp', 'dream.com', 'dti.ne.jp', 'eonet.ne.jp', 'excite.co.jp', 'ezweb.ne.jp', 'gmail.com', 'gmobb.jp', 'gol.com', 'goo.jp', 'googlemail.com', 'goomail.com', 'hotmail.co.jp', 'hotmail.com', 'i.softbank.jp', 'icloud.com', 'infoseek.co.jp', 'infoseek.jp', 'itscom.net', 'jcom.home.ne.jp', 'jcom.zaq.ne.jp', 'ktv.ne.jp', 'live.jp', 'mac.com', 'mail.bbexcite.jp', 'mail.goo.ne.jp', 'me.com', 'mineo.com', 'msn.com', 'mvt-net.com', 'nifty.com', 'ocn.ne.jp', 'odn.ne.jp', 'outlook.com', 'plala.or.jp', 'pobox.com', 'rakuten.jp', 'softbank.ne.jp', 'so-net.ne.jp', 'vodafone.ne.jp', 'wakwak.com', 'yahoo.co.jp', 'yahoo.ne.jp', 'ybb.ne.jp', 'ymobile.ne.jp', 'ztv.ne.jp'].map(function(d) {
-      return '<tr><td style="padding:6px 8px;border:1px solid var(--border,#e8eaed);text-align:center;color:var(--text,#2f3542)">' + d + '</td></tr>';
-    }).join('') +
-    '</tbody></table></div></div></div>';
 
   // 更新履歴（固定）
   html += '<div class="side-section" id="historySideSection">' +
@@ -2893,6 +2867,151 @@ function _hrMailCheckGroupHTML(s, opts) {
   return h;
 }
 
+// ── ヒアリング項目のグループ ──
+// 見出しから次の見出しまでを1グループとして扱い、まとめて開閉できるようにする。
+// 項目数が多いとき、いま使う範囲だけを開いておける。
+var _hrGroupOpen  = false;   // 描画中にグループを開いているか
+var _hrGroupState = {};      // グループごとの開閉状態
+
+try {
+  var _gs = localStorage.getItem('hearingGroups');
+  if (_gs) _hrGroupState = JSON.parse(_gs);
+} catch (e) { _hrGroupState = {}; }
+
+window.toggleHearingGroup = function(gid) {
+  _hrGroupState[gid] = (_hrGroupState[gid] === false);
+  try { localStorage.setItem('hearingGroups', JSON.stringify(_hrGroupState)); } catch (e) {}
+  renderHearing();
+};
+
+/**
+ * これまでハードコードしていたフォネティックコードとドメイン一覧を、
+ * 編集できる「表セクション」として一度だけ取り込む。
+ * すでに同じ見出しがあれば何もしない。
+ */
+window.SIDEMENU_DEFAULT_TABLES = [
+  {
+    id: 'sm_phonetic', type: 'table', label: '📖 フォネティックコード',
+    headers: ['アルファベット', '読み方'],
+    rows: [
+      ['A','アメリカ'],['B','ブラジル'],['C','チャイナ'],['D','デンマーク'],
+      ['E','エジプト'],['F','フランス'],['G','ゴルフ'],['H','ホテル'],
+      ['I','イタリア'],['J','ジャパン'],['K','キログラム'],['L','ロンドン'],
+      ['M','メキシコ'],['N','ノルウェー'],['O','オーサカ'],['P','パリ'],
+      ['Q','クイーン'],['R','ローマ'],['S','スペイン'],['T','トウキョウ'],
+      ['U','ユニオン'],['V','ビクトリー'],['W','ワシントン'],['X','エックスレイ'],
+      ['Y','ヨコハマ'],['Z','ゼブラ'],
+      ['-','ハイフン'],['_','アンダーバー']
+    ]
+  }
+];
+
+window.ensureDefaultSideMenuTables = function() {
+  var list = window._appCache.sideMenuData;
+  if (!Array.isArray(list)) return false;
+  var added = false;
+  window.SIDEMENU_DEFAULT_TABLES.forEach(function(t) {
+    var exists = list.some(function(sec) {
+      return sec.id === t.id || sec.type === 'phonetic';
+    });
+    if (exists) return;
+    list.push(JSON.parse(JSON.stringify(t)));
+    added = true;
+  });
+  return added;
+};
+
+// ── ショートカットキー一覧 ──
+// 一般的な PC 操作のキー。このツール固有の操作は使い方マニュアルに載せる。
+var SHORTCUTS = [
+  ['編集', [
+    ['Ctrl + C',        'コピー'],
+    ['Ctrl + X',        '切り取り'],
+    ['Ctrl + V',        '貼り付け'],
+    ['Ctrl + Shift + V','書式なしで貼り付け'],
+    ['Ctrl + Z',        '元に戻す'],
+    ['Ctrl + Y',        'やり直し'],
+    ['Ctrl + A',        'すべて選択'],
+    ['Ctrl + S',        '保存（管理画面では「保存して反映」）']
+  ]],
+  ['文字の書式', [
+    ['Ctrl + B',        '太字'],
+    ['Ctrl + I',        '斜体'],
+    ['Ctrl + U',        '下線']
+  ]],
+  ['ページ操作', [
+    ['Ctrl + F',        'ページ内を検索'],
+    ['F5',              '再読み込み'],
+    ['Ctrl + Shift + R','キャッシュを無視して再読み込み'],
+    ['Ctrl + P',        '印刷'],
+    ['Ctrl + マウスホイール', '拡大 / 縮小'],
+    ['Ctrl + 0',        '表示倍率を100%に戻す']
+  ]],
+  ['タブ・ウィンドウ', [
+    ['Ctrl + T',        '新しいタブ'],
+    ['Ctrl + W',        'タブを閉じる'],
+    ['Ctrl + Shift + T','閉じたタブを開き直す'],
+    ['Ctrl + Tab',      '次のタブへ'],
+    ['Alt + Tab',       'ウィンドウを切り替え'],
+    ['Win + ← / →',     'ウィンドウを左右に寄せる']
+  ]],
+  ['文字入力', [
+    ['半角/全角',        '日本語入力の切り替え'],
+    ['F7',              'カタカナに変換'],
+    ['F8',              '半角カタカナに変換'],
+    ['F9',              '全角英数に変換'],
+    ['F10',             '半角英数に変換']
+  ]]
+];
+
+/** ショートカット一覧を開く */
+window.openShortcutHelp = function() {
+  var box = document.getElementById('shortcutModal');
+  if (!box) {
+    box = document.createElement('div');
+    box.id = 'shortcutModal';
+    box.className = 'sc-modal';
+    box.addEventListener('click', function(e) {
+      if (e.target === box) window.closeShortcutHelp();
+    });
+    document.body.appendChild(box);
+  }
+
+  var keys = function(str) {
+    return str.split(' ').map(function(k) {
+      return (k === '/' || k === '+') ? k : '<kbd>' + _hEsc(k) + '</kbd>';
+    }).join(' ');
+  };
+
+  box.innerHTML =
+    '<div class="sc-box">' +
+      '<div class="sc-hd">' +
+        '<span>⌨️ ショートカットキー一覧</span>' +
+        '<button onclick="window.closeShortcutHelp()" class="sc-close">✕</button>' +
+      '</div>' +
+      '<div class="sc-body">' +
+        SHORTCUTS.map(function(sec) {
+          return '<div class="sc-sec">' + _hEsc(sec[0]) + '</div>'
+            + '<table class="sc-table">' + sec[1].map(function(r) {
+                return '<tr><th>' + keys(r[0]) + '</th><td>' + _hEsc(r[1]) + '</td></tr>';
+              }).join('') + '</table>';
+        }).join('') +
+        '<div class="sc-note">このツール固有の操作は、各ページの「?」から見られる使い方マニュアルをご覧ください。</div>' +
+      '</div>' +
+    '</div>';
+  box.style.display = 'flex';
+};
+
+window.closeShortcutHelp = function() {
+  var box = document.getElementById('shortcutModal');
+  if (box) box.style.display = 'none';
+};
+
+// Esc で閉じる
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') window.closeShortcutHelp();
+});
+
 /** テンプレート選択のボタン列。登録が無ければ何も出さない */
 /** プルダウン */
 function _selectBox(field, val, options) {
@@ -2997,8 +3116,17 @@ function renderHearing() {
     }
     var fld = q.field || q.id;
     // 見出し：入力欄を持たず、区切りとして表示する（コピー時も出力する）
+    // ここから次の見出しまでが1グループ。まとめて開閉できるようにする。
     if (q.type === 'heading') {
-      h += '<div class="hr-heading">' + _hEsc(q.label) + '</div>';
+      if (_hrGroupOpen) h += '</div>';          // 前のグループを閉じる
+      var gid = 'hrg_' + (q.id || fld);
+      var opened = (_hrGroupState[gid] !== false);
+      h += '<div class="hr-group' + (opened ? ' open' : '') + '">'
+        +   '<div class="hr-heading" onclick="toggleHearingGroup(\'' + gid + '\')">'
+        +     '<span class="hr-group-arrow">▼</span>' + _hEsc(q.label)
+        +   '</div>'
+        +   '<div class="hr-group-body">';
+      _hrGroupOpen = true;
       return;
     }
     if (q.type === 'bool') {
@@ -3037,6 +3165,7 @@ function renderHearing() {
     });
   }
 
+  if (_hrGroupOpen) { h += '</div></div>'; _hrGroupOpen = false; }
   h += '<div id="hearingSummaryArea"></div>';
   h = _hrTemplateBar() + h;
   el.innerHTML = h;
