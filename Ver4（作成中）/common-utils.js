@@ -2125,13 +2125,10 @@ function _buildSideMenuHTML(isDark) {
   html += '<div class="side-section"><div style="display:flex;align-items:center;justify-content:space-between;padding:13px 16px;">' +
     '<span style="font-size:13px;font-weight:600;">🌙 ダークモード</span>' +
     '<label class="dark-toggle-sw"><input type="checkbox" id="darkModeToggle"' + (isDark ? ' checked' : '') + ' onchange="window.applyDarkMode(this.checked)"><span class="dark-toggle-sl"></span></label>' +
-    '</div>' +
-    // ショートカットキー一覧
-    '<div style="display:flex;align-items:center;justify-content:space-between;padding:13px 16px;border-top:1px solid var(--border);cursor:pointer;"' +
-      ' onclick="window.openShortcutHelp()">' +
-      '<span style="font-size:13px;font-weight:600;">⌨️ ショートカットキー一覧</span>' +
-      '<span style="font-size:12px;color:var(--text3);">開く →</span>' +
     '</div></div>';
+
+  // ショートカットキー一覧（アコーディオンで表を表示）
+  html += _shortcutSection();
 
   // JSON 定義セクション
   sections.forEach(function(sec, si) {
@@ -2267,12 +2264,24 @@ window.getCurrentTemplate = function() {
  * 別の聞き取りを始める操作なので、入力済みの回答は消す。
  */
 window.setCurrentTemplate = function(id) {
-  try { localStorage.setItem(HEARING_TPL_KEY, id || ''); } catch (e) {}
-  if (typeof hearingState !== 'undefined') {
-    hearingState = {};
+  var next = id || '';
+  try {
+    // 空文字だと「未設定」と区別が付かない環境があるため、解除時はキーごと消す
+    if (next) localStorage.setItem(HEARING_TPL_KEY, next);
+    else      localStorage.removeItem(HEARING_TPL_KEY);
+  } catch (e) {}
+
+  // 別の聞き取りを始める操作なので入力済みの回答は消す
+  if (typeof hearingState !== 'undefined' && hearingState) {
+    Object.keys(hearingState).forEach(function(k) { delete hearingState[k]; });
     if (typeof saveHearingState === 'function') saveHearingState();
   }
   if (typeof renderHearing === 'function') renderHearing();
+};
+
+/** テンプレートの選択を解除する */
+window.clearHearingTemplate = function() {
+  window.setCurrentTemplate('');
 };
 
 /**
@@ -2964,53 +2973,43 @@ var SHORTCUTS = [
   ]]
 ];
 
-/** ショートカット一覧を開く */
-window.openShortcutHelp = function() {
-  var box = document.getElementById('shortcutModal');
-  if (!box) {
-    box = document.createElement('div');
-    box.id = 'shortcutModal';
-    box.className = 'sc-modal';
-    box.addEventListener('click', function(e) {
-      if (e.target === box) window.closeShortcutHelp();
-    });
-    document.body.appendChild(box);
-  }
-
+/** サイドメニューに入れるショートカット一覧（アコーディオン＋表） */
+function _shortcutSection() {
   var keys = function(str) {
     return str.split(' ').map(function(k) {
       return (k === '/' || k === '+') ? k : '<kbd>' + _hEsc(k) + '</kbd>';
     }).join(' ');
   };
+  var body = SHORTCUTS.map(function(sec) {
+    return '<div class="sc-sec">' + _hEsc(sec[0]) + '</div>'
+      + '<table class="sc-table">' + sec[1].map(function(r) {
+          return '<tr><th>' + keys(r[0]) + '</th><td>' + _hEsc(r[1]) + '</td></tr>';
+        }).join('') + '</table>';
+  }).join('');
 
-  box.innerHTML =
-    '<div class="sc-box">' +
-      '<div class="sc-hd">' +
-        '<span>⌨️ ショートカットキー一覧</span>' +
-        '<button onclick="window.closeShortcutHelp()" class="sc-close">✕</button>' +
-      '</div>' +
-      '<div class="sc-body">' +
-        SHORTCUTS.map(function(sec) {
-          return '<div class="sc-sec">' + _hEsc(sec[0]) + '</div>'
-            + '<table class="sc-table">' + sec[1].map(function(r) {
-                return '<tr><th>' + keys(r[0]) + '</th><td>' + _hEsc(r[1]) + '</td></tr>';
-              }).join('') + '</table>';
-        }).join('') +
-        '<div class="sc-note">このツール固有の操作は、各ページの「?」から見られる使い方マニュアルをご覧ください。</div>' +
-      '</div>' +
-    '</div>';
-  box.style.display = 'flex';
+  return '<div class="side-section">'
+    + '<div class="side-section-header" onclick="toggleAccordion(\'shortcutPanel\')">'
+    +   '⌨️ ショートカットキー一覧 '
+    +   '<span class="arrow" style="display:inline-block;transition:transform .2s">▶</span>'
+    + '</div>'
+    + '<div class="accordion-body" id="shortcutPanel" style="padding:10px 12px 14px;">'
+    +   body
+    +   '<div class="sc-note">このツール固有の操作は、各ページの「?」から見られる使い方マニュアルをご覧ください。</div>'
+    + '</div></div>';
+}
+
+/** ショートカット一覧を開く（外部から呼ばれた場合はサイドメニューを開く） */
+window.openShortcutHelp = function() {
+  if (typeof toggleSideMenu === 'function') {
+    var m = document.getElementById('sideMenu');
+    if (m && !m.classList.contains('open')) toggleSideMenu();
+  }
+  var p = document.getElementById('shortcutPanel');
+  if (p && !p.classList.contains('open')) toggleAccordion('shortcutPanel');
+  if (p && p.scrollIntoView) p.scrollIntoView({ block: 'nearest' });
 };
 
-window.closeShortcutHelp = function() {
-  var box = document.getElementById('shortcutModal');
-  if (box) box.style.display = 'none';
-};
 
-// Esc で閉じる
-document.addEventListener('keydown', function(e) {
-  if (e.key === 'Escape') window.closeShortcutHelp();
-});
 
 /** テンプレート選択のボタン列。登録が無ければ何も出さない */
 /** プルダウン */
@@ -3070,7 +3069,7 @@ function _hrTemplateBar() {
           + ' onclick="window.setCurrentTemplate(\'' + t.id + '\')">' + _hEsc(t.name) + '</button>';
       }).join('')
     + (cur ? '<button type="button" class="hr-tpl-btn hr-tpl-clear"'
-           + ' onclick="window.setCurrentTemplate(\'\')" title="選択を解除して共通項目だけにする">✕</button>' : '')
+           + ' onclick="window.clearHearingTemplate()" title="選択を解除して共通項目だけにする">✕ 解除</button>' : '')
     + '</div>';
 }
 
