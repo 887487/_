@@ -609,6 +609,15 @@ details[open] > summary .hr-acc-arrow { transform: rotate(90deg); }
   .page-admin header .tab-btn{ padding:0 6px;font-size:10px; }
 }
 
+/* 並び替えボタン */
+.sm-move-btn{
+  width:18px;height:11px;padding:0;font-size:7px;line-height:1;font-family:inherit;
+  color:var(--text2);background:var(--surface);
+  border:1px solid var(--border);border-radius:3px;cursor:pointer;
+}
+.sm-move-btn:hover:not(:disabled){background:var(--accent-lt);color:var(--accent-text);border-color:var(--accent);}
+.sm-move-btn:disabled{opacity:.3;cursor:not-allowed;}
+
 /* サイドメニュー編集の折りたたみボタン */
 .sm-fold-btn{
   width:22px;height:22px;flex-shrink:0;padding:0;
@@ -2166,7 +2175,7 @@ html[data-theme="dark"] .nav-arrow-btn { background: rgba(40,42,54,.9); }
   <!-- ===== 更新履歴タブ（モーダル廃止・インライン編集） ===== -->
 
   <!-- ===== ☰ サイドメニュー編集タブ ===== -->
-  <div class="tab-panel tab-panel-sidemenu" id="tabSideMenu" style="padding:20px;overflow-y:auto;">
+  <div class="tab-panel tab-panel-sidemenu" id="tabSideMenu" style="padding:20px;overflow-y:scroll;scrollbar-gutter:stable;">
     <div style="max-width:1680px;margin:0 auto;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
         <div style="font-size:14px;font-weight:700;color:var(--text);">☰ サイドメニュー編集</div>
@@ -2620,10 +2629,13 @@ function _hrEditorRender() {
       del.onclick = (function(iidx){ return function(e) {
         e.stopPropagation(); // アコーディオン開閉と干渉させない
         if(!confirm('この対応方針を削除しますか？'))return;
-        var l = (window._appCache.hearingPolicies||[]).filter(function(p){return !p.builtin;});
-        l.splice(iidx, 1);
+        // 組み込み分を除いたリストを保存すると、組み込みごと消えてしまう。
+        // 全件から該当IDだけを取り除く。
+        var all = (window._appCache.hearingPolicies || []).filter(function(p) {
+          return p.id !== item.id;
+        });
         delete _hrPolicyOpenState[item.id];
-        _hrPoliciesSave(l); _hrEditorRender();
+        Promise.resolve(_hrPoliciesSave(all)).then(function() { _hrEditorRender(); });
       }; })(idx);
       hd.appendChild(del);
     }
@@ -6485,6 +6497,16 @@ try {
  * smRender() で作り直すとスクロール位置が飛び、画面が揺れて見える。
  * 該当ブロックの表示だけを切り替える。
  */
+/** カテゴリの並び順を入れ替える（表示順もこの並びで決まる） */
+function smMoveCat(si, dir) {
+  var list = _smData || [];
+  var j = si + dir;
+  if (j < 0 || j >= list.length) return;
+  var t = list[si]; list[si] = list[j]; list[j] = t;
+  window._appCache.sideMenuData = list;
+  smSave(); smRender();
+}
+
 function smToggleCat(si) {
   var sec = (_smData || [])[si];
   if (!sec) return;
@@ -6533,6 +6555,7 @@ function smRender() {
     var isLinksSub = sec.type === 'links_with_sub';
     var isPhonetic = sec.type === 'phonetic';
     var isTable    = sec.type === 'table';
+    var isFixed    = sec.type === 'shortcut';           // 内容が固定のセクション
     var open       = _smOpen[sec.id || si] !== false;   // 既定は開いた状態
     var itemsHtml  = '';
 
@@ -6547,7 +6570,9 @@ function smRender() {
         '</div>';
     }
 
-    if (isTable) {
+    if (isFixed) {
+      itemsHtml = smRenderShortcut(sec, si);
+    } else if (isTable) {
       itemsHtml = smRenderTable(sec, si);
     } else if (isLinksSub) {
       itemsHtml = (sec.subSections || []).map(function(sub, sj) {
@@ -6596,11 +6621,22 @@ function smRender() {
         (open ? 'border-bottom:1px solid var(--border);' : '') + '">' +
       '<button class="sm-fold-btn" onclick="smToggleCat(' + si + ')" title="' + (open ? '折りたたむ' : '開く') + '">' +
         (open ? '▼' : '▶') + '</button>' +
+      // 並び替え（表示順は sideMenuData の並びで決まる）
+      '<span style="display:flex;flex-direction:column;gap:1px;flex-shrink:0;">' +
+        '<button class="sm-move-btn" onclick="smMoveCat(' + si + ',-1)" title="上へ移動"' +
+          (si === 0 ? ' disabled' : '') + '>▲</button>' +
+        '<button class="sm-move-btn" onclick="smMoveCat(' + si + ',1)" title="下へ移動"' +
+          (si === (_smData || []).length - 1 ? ' disabled' : '') + '>▼</button>' +
+      '</span>' +
       '<input class="sm-input" value="' + _smEsc(sec.label) + '" placeholder="カテゴリ名（絵文字可）" oninput="smSetCat(' + si + ',\'label\',this.value)" style="flex:1;font-weight:700;font-size:13px;">' +
-      '<select class="sm-select" onchange="smSetCat(' + si + ',\'type\',this.value)">' +
-      '<option value="links"' + (sec.type === 'links' ? ' selected' : '') + '>リンク一覧</option>' +
-      '<option value="links_with_sub"' + (sec.type === 'links_with_sub' ? ' selected' : '') + '>サブカテゴリ付き</option>' +
-      '</select>' +
+      (isFixed
+        ? '<span style="font-size:11px;color:var(--text3);white-space:nowrap;flex-shrink:0;">ショートカット一覧</span>'
+        : isTable
+          ? '<span style="font-size:11px;color:var(--text3);white-space:nowrap;flex-shrink:0;">表</span>'
+          : '<select class="sm-select" onchange="smSetCat(' + si + ',\'type\',this.value)">' +
+            '<option value="links"' + (sec.type === 'links' ? ' selected' : '') + '>リンク一覧</option>' +
+            '<option value="links_with_sub"' + (sec.type === 'links_with_sub' ? ' selected' : '') + '>サブカテゴリ付き</option>' +
+            '</select>') +
       '<button class="sm-del-btn" onclick="smDelCat(' + si + ')" title="カテゴリ削除" style="flex-shrink:0;">🗑 削除</button>' +
       '</div>' +
       // 項目数が多いと縦に長くなるので、カテゴリごとに折りたためるようにする
@@ -6776,6 +6812,98 @@ function smTableSetHeader(si, ci, val) {
   if (!sec || !sec.headers) return;
   sec.headers[ci] = val;
   smSave(); smRender();
+}
+
+/** ショートカット一覧の編集画面（見出しごとに キー / 説明 を並べる） */
+function smRenderShortcut(sec, si) {
+  var inp = 'width:100%;box-sizing:border-box;height:26px;padding:0 6px;font-size:11px;' +
+            'border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text);';
+
+  var h = '<div style="padding:10px 12px;">';
+  (sec.groups || []).forEach(function(g, gi) {
+    h += '<div style="display:flex;align-items:center;gap:6px;margin:10px 0 5px;">'
+      + '<input type="text" value="' + esc(g.label || '') + '" placeholder="見出し（例：編集）"'
+      +   ' onchange="smScSetGroup(' + si + ',' + gi + ',this.value)"'
+      +   ' style="' + inp + 'font-weight:700;flex:1;">'
+      + '<button class="btn-del" onclick="smScDelGroup(' + si + ',' + gi + ')" title="この見出しごと削除">×</button>'
+      + '</div>'
+      + '<table style="width:100%;border-collapse:collapse;font-size:11px;">'
+      + '<thead><tr>'
+      +   '<th style="width:40%;padding:2px;font-size:10px;color:var(--text3);text-align:left;">キー</th>'
+      +   '<th style="padding:2px;font-size:10px;color:var(--text3);text-align:left;">説明</th>'
+      +   '<th style="width:34px;"></th></tr></thead><tbody>';
+
+    (g.rows || []).forEach(function(r, ri) {
+      h += '<tr>'
+        + '<td style="padding:2px;"><input type="text" value="' + esc(r[0] || '') + '"'
+        +   ' placeholder="Ctrl + C" oninput="smScSet(' + si + ',' + gi + ',' + ri + ',0,this.value)"'
+        +   ' style="' + inp + '"></td>'
+        + '<td style="padding:2px;"><input type="text" value="' + esc(r[1] || '') + '"'
+        +   ' placeholder="コピー" oninput="smScSet(' + si + ',' + gi + ',' + ri + ',1,this.value)"'
+        +   ' style="' + inp + '"></td>'
+        + '<td style="padding:2px;text-align:center;">'
+        +   '<button class="btn-del" onclick="smScDelRow(' + si + ',' + gi + ',' + ri + ')" title="この行を削除">×</button>'
+        + '</td></tr>';
+    });
+
+    h += '</tbody></table>'
+      + '<button class="hr-add-btn" style="margin-top:5px;height:22px;font-size:10px;"'
+      +   ' onclick="smScAddRow(' + si + ',' + gi + ')">＋ 行を追加</button>';
+  });
+
+  h += '<div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border);">'
+    + '<button class="hr-add-btn" onclick="smScAddGroup(' + si + ')">＋ 見出しを追加</button>'
+    + '</div>'
+    + '<div style="margin-top:10px;">'
+    + '<div style="font-size:10px;color:var(--text3);margin-bottom:3px;">補足（一覧の下に表示されます）</div>'
+    + '<input type="text" value="' + esc(sec.note || '') + '"'
+    +   ' onchange="smScSetNote(' + si + ',this.value)" style="' + inp + '">'
+    + '</div></div>';
+  return h;
+}
+
+function _smSec(si) { return (_smData || [])[si]; }
+
+function smScSet(si, gi, ri, ci, val) {
+  var g = (_smSec(si) || {}).groups;
+  if (!g || !g[gi] || !g[gi].rows || !g[gi].rows[ri]) return;
+  g[gi].rows[ri][ci] = val;
+  smSave();
+}
+function smScSetGroup(si, gi, val) {
+  var g = (_smSec(si) || {}).groups;
+  if (!g || !g[gi]) return;
+  g[gi].label = val; smSave(); smRender();
+}
+function smScSetNote(si, val) {
+  var sec = _smSec(si); if (!sec) return;
+  sec.note = val; smSave();
+}
+function smScAddRow(si, gi) {
+  var g = (_smSec(si) || {}).groups;
+  if (!g || !g[gi]) return;
+  g[gi].rows = g[gi].rows || [];
+  g[gi].rows.push(['', '']);
+  smSave(); smRender();
+}
+function smScDelRow(si, gi, ri) {
+  var g = (_smSec(si) || {}).groups;
+  if (!g || !g[gi] || !g[gi].rows) return;
+  g[gi].rows.splice(ri, 1); smSave(); smRender();
+}
+function smScAddGroup(si) {
+  var sec = _smSec(si); if (!sec) return;
+  var name = prompt('見出しの名前を入力してください\n（例：ページ操作）');
+  if (name === null) return;
+  name = name.trim(); if (!name) return;
+  sec.groups = sec.groups || [];
+  sec.groups.push({ label: name, rows: [['', '']] });
+  smSave(); smRender();
+}
+function smScDelGroup(si, gi) {
+  var sec = _smSec(si); if (!sec || !sec.groups || !sec.groups[gi]) return;
+  if (!confirm('見出し「' + (sec.groups[gi].label || '') + '」を、含まれる行ごと削除しますか？')) return;
+  sec.groups.splice(gi, 1); smSave(); smRender();
 }
 
 /** 表セクションの編集画面を組み立てる */

@@ -2127,8 +2127,7 @@ function _buildSideMenuHTML(isDark) {
     '<label class="dark-toggle-sw"><input type="checkbox" id="darkModeToggle"' + (isDark ? ' checked' : '') + ' onchange="window.applyDarkMode(this.checked)"><span class="dark-toggle-sl"></span></label>' +
     '</div></div>';
 
-  // ショートカットキー一覧（アコーディオンで表を表示）
-  html += _shortcutSection();
+
 
   // JSON 定義セクション
   sections.forEach(function(sec, si) {
@@ -2169,6 +2168,27 @@ function _buildSideMenuHTML(isDark) {
           '</div><ul class="sub-acc-body" id="' + subId + '">' + lis + '</ul></li>';
       });
       html += '</ul></div>';
+
+    } else if (sec.type === 'shortcut') {
+      // ショートカットキー一覧。見出し（group）ごとに キー / 説明 を並べる。
+      var scBody = (sec.groups || []).map(function(g) {
+        return '<div class="sc-sec">' + _smHtmlEsc(g.label || '') + '</div>'
+          + '<table class="sc-table">' + (g.rows || []).map(function(r) {
+              var keys = String(r[0] || '').split(' ').map(function(k) {
+                return (k === '/' || k === '+') ? k : '<kbd>' + _smHtmlEsc(k) + '</kbd>';
+              }).join(' ');
+              return '<tr><th>' + keys + '</th><td>' + _smHtmlEsc(r[1] || '') + '</td></tr>';
+            }).join('') + '</table>';
+      }).join('');
+      html += '<div class="side-section">'
+        + '<div class="side-section-header" onclick="toggleAccordion(\'' + secId + '\')">'
+        +   (sec.label || '⌨️ ショートカットキー一覧') + ' '
+        +   '<span class="arrow" style="display:inline-block;transition:transform .2s">▶</span>'
+        + '</div>'
+        + '<div class="accordion-body" id="' + secId + '" style="padding:10px 12px 14px;">'
+        +   scBody
+        +   (sec.note ? '<div class="sc-note">' + _smHtmlEsc(sec.note) + '</div>' : '')
+        + '</div></div>';
 
     } else if (sec.type === 'table') {
       // 表セクション（フォネティックコード、ドメイン一覧などに使う）。
@@ -2253,6 +2273,37 @@ window.getHearingTemplates = function() {
           (window.APP_STATIC_DATA && window.APP_STATIC_DATA.hearingTemplates) || [];
   return t.slice().sort(function(a, b) { return (a.order || 0) - (b.order || 0); });
 };
+
+/**
+ * ヒアリング関連のデータを IndexedDB から読み込む。
+ * これまで admin.html でしか読んでおらず、hearing.html や script.html では
+ * 管理画面で作ったテンプレートや質問が反映されなかった。
+ */
+window.loadHearingData = function() {
+  if (!window.idbGetAppData) return Promise.resolve();
+  return Promise.all([
+    window.idbGetAppData('hearingTemplates'),
+    window.idbGetAppData('hearingQuestions'),
+    window.idbGetAppData('hearingPolicies'),
+    window.idbGetAppData('hearingDataVersion')
+  ]).then(function(r) {
+    // バージョンが合うときだけ保存データを使う（合わなければ data.js の内容）
+    if (r[3] === window.HEARING_DATA_VERSION) {
+      if (Array.isArray(r[1]) && r[1].length) window._appCache.hearingQuestions = r[1];
+      if (Array.isArray(r[2]) && r[2].length) window._appCache.hearingPolicies  = r[2];
+    }
+    // テンプレートはバージョン管理の対象外（後から追加した機能のため）
+    if (Array.isArray(r[0]) && r[0].length) window._appCache.hearingTemplates = r[0];
+    if (typeof renderHearing === 'function') renderHearing();
+  }).catch(function() {});
+};
+
+// ヒアリングを表示するページでは、読み込み後に反映する
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', function() { window.loadHearingData(); });
+} else {
+  window.loadHearingData();
+}
 
 /** いま選ばれているテンプレートID（未選択なら空） */
 window.getCurrentTemplate = function() {
@@ -2900,6 +2951,11 @@ window.toggleHearingGroup = function(gid) {
  */
 window.SIDEMENU_DEFAULT_TABLES = [
   {
+    id: 'sm_shortcut', type: 'shortcut', label: '⌨️ ショートカットキー一覧',
+    note: 'このツール固有の操作は、各ページの「?」から見られる使い方マニュアルをご覧ください。',
+    groups: null   // 実際の内容は ensureDefaultSideMenuTables で入れる（定義順の都合）
+  },
+  {
     id: 'sm_phonetic', type: 'table', label: '📖 フォネティックコード',
     headers: ['アルファベット', '読み方'],
     rows: [
@@ -2921,10 +2977,23 @@ window.ensureDefaultSideMenuTables = function() {
   var added = false;
   window.SIDEMENU_DEFAULT_TABLES.forEach(function(t) {
     var exists = list.some(function(sec) {
-      return sec.id === t.id || sec.type === 'phonetic';
+      if (sec.id === t.id) return true;
+      if (sec.type === t.type) {
+        // ショートカットは1つだけ。フォネティックは旧 phonetic 型も同じ扱い。
+        if (t.type === 'shortcut') return true;
+        if (t.id === 'sm_phonetic' && sec.type === 'phonetic') return true;
+      }
+      return sec.type === 'phonetic' && t.id === 'sm_phonetic';
     });
     if (exists) return;
-    list.push(JSON.parse(JSON.stringify(t)));
+    var copy = JSON.parse(JSON.stringify(t));
+    // ショートカットの中身はここで組み立てる（SHORTCUTS が後に定義されるため）
+    if (copy.type === 'shortcut' && !copy.groups) {
+      copy.groups = SHORTCUTS.map(function(sec) {
+        return { label: sec[0], rows: sec[1].map(function(r) { return [r[0], r[1]]; }) };
+      });
+    }
+    list.push(copy);
     added = true;
   });
   return added;
@@ -2973,8 +3042,8 @@ var SHORTCUTS = [
   ]]
 ];
 
-/** サイドメニューに入れるショートカット一覧（アコーディオン＋表） */
-function _shortcutSection() {
+/** ショートカット一覧の中身（表の部分だけ） */
+function _shortcutBody() {
   var keys = function(str) {
     return str.split(' ').map(function(k) {
       return (k === '/' || k === '+') ? k : '<kbd>' + _hEsc(k) + '</kbd>';
@@ -2987,15 +3056,8 @@ function _shortcutSection() {
         }).join('') + '</table>';
   }).join('');
 
-  return '<div class="side-section">'
-    + '<div class="side-section-header" onclick="toggleAccordion(\'shortcutPanel\')">'
-    +   '⌨️ ショートカットキー一覧 '
-    +   '<span class="arrow" style="display:inline-block;transition:transform .2s">▶</span>'
-    + '</div>'
-    + '<div class="accordion-body" id="shortcutPanel" style="padding:10px 12px 14px;">'
-    +   body
-    +   '<div class="sc-note">このツール固有の操作は、各ページの「?」から見られる使い方マニュアルをご覧ください。</div>'
-    + '</div></div>';
+  return body
+    + '<div class="sc-note">このツール固有の操作は、各ページの「?」から見られる使い方マニュアルをご覧ください。</div>';
 }
 
 /** ショートカット一覧を開く（外部から呼ばれた場合はサイドメニューを開く） */
@@ -3004,8 +3066,11 @@ window.openShortcutHelp = function() {
     var m = document.getElementById('sideMenu');
     if (m && !m.classList.contains('open')) toggleSideMenu();
   }
-  var p = document.getElementById('shortcutPanel');
-  if (p && !p.classList.contains('open')) toggleAccordion('shortcutPanel');
+  // セクション化したのでIDは sideMenuData 側で決まる
+  var sec = (window._appCache.sideMenuData || []).find(function(x) { return x.type === 'shortcut'; });
+  var id  = sec ? (sec.id || 'sm_shortcut') : 'sm_shortcut';
+  var p = document.getElementById(id);
+  if (p && !p.classList.contains('open')) toggleAccordion(id);
   if (p && p.scrollIntoView) p.scrollIntoView({ block: 'nearest' });
 };
 
