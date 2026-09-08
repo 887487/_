@@ -4760,17 +4760,36 @@ function smLoad() {
   _smData = JSON.parse(JSON.stringify(window._appCache.sideMenuData || (window.APP_STATIC_DATA && window.APP_STATIC_DATA.sideMenuData) || []));
 }
 
-function smSave() {
+var _smPersistTimer = null;
+
+/**
+ * 保存だけを行う（再描画しない）。
+ * 入力中（oninput）はこちらを使う。smSave() は末尾で smRender() するため、
+ * 1文字打つたびに入力欄が作り直されてフォーカスが外れてしまう。
+ * 連続入力でまとめて書き込むよう少しだけ遅らせる。
+ */
+function smPersist(immediate) {
   if (!_smData) smLoad();
   window._appCache.sideMenuData = JSON.parse(JSON.stringify(_smData));
-  window.idbSetAppData('sideMenuData', _smData).then(function() {
-    try {
-      var bc = new BroadcastChannel('tool_data_update');
-      bc.postMessage({ type: 'sideMenuUpdated', data: JSON.parse(JSON.stringify(_smData)) });
-      bc.close();
-    } catch(e) {}
-    exportDataJS(true).catch(function(){});
-  });
+  var run = function() {
+    _smPersistTimer = null;
+    window.idbSetAppData('sideMenuData', _smData).then(function() {
+      try {
+        var bc = new BroadcastChannel('tool_data_update');
+        bc.postMessage({ type: 'sideMenuUpdated', data: JSON.parse(JSON.stringify(_smData)) });
+        bc.close();
+      } catch(e) {}
+      exportDataJS(true).catch(function(){});
+    });
+  };
+  if (_smPersistTimer) { clearTimeout(_smPersistTimer); _smPersistTimer = null; }
+  if (immediate) run();
+  else _smPersistTimer = setTimeout(run, 400);
+}
+
+/** 保存して一覧も描き直す（行や見出しの増減など、構造が変わるとき用） */
+function smSave() {
+  smPersist(true);
   smRender();
 }
 
@@ -5345,9 +5364,14 @@ function exportIndividual(type) {
   }
 
   if (type === 'script') {
+    // 固定文言（オープニング／クロージング）もスクリプトの一部として一緒に持ち出す
     var d = window._appCache.scripts || data;
-    _dl(JSON.stringify({version:1, exportedAt:new Date().toISOString(), talkScripts:d}, null, 2), 'scripts_'+_ts+'.json');
-    toast('📥 スクリプトをエクスポートしました');
+    _dl(JSON.stringify({
+      version: 2, exportedAt: new Date().toISOString(),
+      talkScripts: d,
+      fixedTexts:  window._appCache.fixedTexts || {}
+    }, null, 2), 'scripts_'+_ts+'.json');
+    toast('📥 スクリプトをエクスポートしました（固定文言を含む）');
   } else if (type === 'mail') {
     var m = window._appCache.mailTemplates || mailData;
     _dl(JSON.stringify({version:1, exportedAt:new Date().toISOString(), mailTemplates:m, mailCatMeta:mailCatMeta}, null, 2), 'mail_'+_ts+'.json');
@@ -5439,7 +5463,20 @@ function importIndividual(type, input) {
         Object.keys(data).forEach(function(k){ delete data[k]; }); Object.assign(data, scripts);
         ensureColors(); save(); render(); showEmpty();
         window._appCache.scripts = data; window.idbSetAppData('scripts', data);
-        toast('✅ スクリプトをインポートしました'); closeSaveModal();
+        // 固定文言もスクリプトの一部。含まれていれば一緒に反映する
+        var hadFixed = false;
+        if (raw.fixedTexts && typeof raw.fixedTexts === 'object') {
+          window._appCache.fixedTexts = raw.fixedTexts;
+          window.idbSetAppData('fixedTexts', raw.fixedTexts);
+          try {
+            var bcF = new BroadcastChannel('tool_data_update');
+            bcF.postMessage({ type: 'fixedTextsUpdated', data: raw.fixedTexts });
+            bcF.close();
+          } catch(e) {}
+          if (currentFixedItem) renderFixedItemEditor(currentFixedItem);
+          hadFixed = true;
+        }
+        toast('✅ スクリプトをインポートしました' + (hadFixed ? '（固定文言を含む）' : '')); closeSaveModal();
       } else if (type === 'mail') {
         var mails = raw.mailTemplates || (Array.isArray(raw) ? raw : null);
         if (!mails) { toast('❌ メール形式が正しくありません'); return; }
@@ -6442,6 +6479,9 @@ function exportDataJS(silent) {
       fixedTexts:       window._appCache.fixedTexts       || {},
       faqData:          window._appCache.faqData          || [],
       hearingTemplates: window._appCache.hearingTemplates || [],
+      hearingLabelPrefix: window.getHearingDefaultPrefix(),   // 項目名の先頭記号
+      hearingDevices:   window.getHearingDevices(),           // デバイス候補
+      hearingCarriers:  window.getHearingCarriers(),          // キャリア候補
       // スクリプト・メールも構成ファイルに含める
       talkScripts:      window._appCache.scripts          || (typeof data     !== 'undefined' ? data     : {}),
       mailTemplates:    window._appCache.mailTemplates    || (typeof mailData !== 'undefined' ? mailData : []),
@@ -6805,7 +6845,7 @@ function smTableAddRow(si) {
   if (!sec || sec.type !== 'table') return;
   sec.rows = sec.rows || [];
   sec.rows.push((sec.headers || ['', '']).map(function(){ return ''; }));
-  smSave(); smRender();
+  smSave();
 }
 
 /** 表の行を削除する */
@@ -6813,7 +6853,7 @@ function smTableDelRow(si, ri) {
   var sec = (_smData || [])[si];
   if (!sec || !sec.rows) return;
   sec.rows.splice(ri, 1);
-  smSave(); smRender();
+  smSave();
 }
 
 /** セルの内容を更新する */
@@ -6821,7 +6861,7 @@ function smTableSet(si, ri, ci, val) {
   var sec = (_smData || [])[si];
   if (!sec || !sec.rows || !sec.rows[ri]) return;
   sec.rows[ri][ci] = val;
-  smSave();
+  smPersist();   // 再描画しない＝入力中もフォーカスが外れない
 }
 
 /** 見出しを更新する */
@@ -6829,7 +6869,7 @@ function smTableSetHeader(si, ci, val) {
   var sec = (_smData || [])[si];
   if (!sec || !sec.headers) return;
   sec.headers[ci] = val;
-  smSave(); smRender();
+  smPersist();
 }
 
 /** ショートカット一覧の編集画面（見出しごとに キー / 説明 を並べる） */
@@ -6841,7 +6881,7 @@ function smRenderShortcut(sec, si) {
   (sec.groups || []).forEach(function(g, gi) {
     h += '<div style="display:flex;align-items:center;gap:6px;margin:10px 0 5px;">'
       + '<input type="text" value="' + esc(g.label || '') + '" placeholder="見出し（例：編集）"'
-      +   ' onchange="smScSetGroup(' + si + ',' + gi + ',this.value)"'
+      +   ' oninput="smScSetGroup(' + si + ',' + gi + ',this.value)"'
       +   ' style="' + inp + 'font-weight:700;flex:1;">'
       + '<button class="btn-del" onclick="smScDelGroup(' + si + ',' + gi + ')" title="この見出しごと削除">×</button>'
       + '</div>'
@@ -6875,7 +6915,7 @@ function smRenderShortcut(sec, si) {
     + '<div style="margin-top:10px;">'
     + '<div style="font-size:10px;color:var(--text3);margin-bottom:3px;">補足（一覧の下に表示されます）</div>'
     + '<input type="text" value="' + esc(sec.note || '') + '"'
-    +   ' onchange="smScSetNote(' + si + ',this.value)" style="' + inp + '">'
+    +   ' oninput="smScSetNote(' + si + ',this.value)" style="' + inp + '">'
     + '</div></div>';
   return h;
 }
@@ -6886,16 +6926,16 @@ function smScSet(si, gi, ri, ci, val) {
   var g = (_smSec(si) || {}).groups;
   if (!g || !g[gi] || !g[gi].rows || !g[gi].rows[ri]) return;
   g[gi].rows[ri][ci] = val;
-  smSave();
+  smPersist();   // 再描画しない＝入力中もフォーカスが外れない
 }
 function smScSetGroup(si, gi, val) {
   var g = (_smSec(si) || {}).groups;
   if (!g || !g[gi]) return;
-  g[gi].label = val; smSave(); smRender();
+  g[gi].label = val; smPersist();
 }
 function smScSetNote(si, val) {
   var sec = _smSec(si); if (!sec) return;
-  sec.note = val; smSave();
+  sec.note = val; smPersist();
 }
 function smScAddRow(si, gi) {
   var g = (_smSec(si) || {}).groups;
@@ -6933,7 +6973,7 @@ function smRenderTable(sec, si) {
     + '<thead><tr>'
     + (sec.headers || []).map(function(t, ci) {
         return '<th style="padding:3px;"><input type="text" value="' + esc(t) + '"'
-          + ' onchange="smTableSetHeader(' + si + ',' + ci + ',this.value)"'
+          + ' oninput="smTableSetHeader(' + si + ',' + ci + ',this.value)"'
           + ' style="' + inp + 'font-weight:700;text-align:center;"></th>';
       }).join('')
     + '<th style="width:34px;"></th></tr></thead><tbody>'
@@ -13247,6 +13287,164 @@ window.addEventListener('resize',function(){
   /** 出力文の入力例（プレースホルダ／説明で使い回す） */
   var HR_OUT_TPL_SAMPLE = '空GCを[入力]本、不要になったため返却したい。';
 
+  /**
+   * 先頭記号を選ぶ小さなプルダウンを作る。
+   * 先頭は「既定」＝全体設定に従う。質問ごとに個別指定もできる。
+   */
+  // ── デバイス／キャリアの選択肢エディタ ──────────────────
+  // 実データは data.js（hearingDevices / hearingCarriers）にあり、事業所ごとに変えられる。
+  // 入力中は保存だけ行い再描画しない（1文字ごとにフォーカスが外れるのを防ぐ）。
+  var _hrChoiceOpen = false;
+
+  function _hrChoiceSave(rerender) {
+    window.idbSetAppData('hearingDevices',  window._appCache.hearingDevices);
+    window.idbSetAppData('hearingCarriers', window._appCache.hearingCarriers);
+    exportDataJS(true).catch(function() {});
+    if (rerender) window.renderHearing();
+  }
+
+  function _hrChoiceEditorHTML() {
+    var inp = 'box-sizing:border-box;height:24px;padding:0 6px;font-size:11px;' +
+              'border:1px solid var(--border);border-radius:4px;' +
+              'background:var(--surface);color:var(--text);font-family:inherit;';
+    var devs = window.getHearingDevices();
+    var cars = window.getHearingCarriers();
+
+    var h = '<div style="border:1px solid var(--border);border-radius:6px;margin-bottom:10px;overflow:hidden;">' +
+      '<div id="hrChoiceHead" style="display:flex;align-items:center;gap:8px;padding:6px 10px;cursor:pointer;' +
+        'background:var(--surface2);font-size:11px;font-weight:700;color:var(--text2);">' +
+        '<span>' + (_hrChoiceOpen ? '▼' : '▶') + '</span>' +
+        '<span>デバイス・キャリアの選択肢</span>' +
+        '<span style="font-weight:400;font-size:10px;color:var(--text3);">' +
+          'デバイス ' + devs.length + ' 件／キャリア ' + cars.length + ' 件' +
+        '</span></div>' +
+      '<div id="hrChoiceBody" style="display:' + (_hrChoiceOpen ? 'block' : 'none') + ';padding:10px;">';
+
+    // デバイス
+    h += '<div style="font-size:11px;font-weight:700;margin-bottom:5px;">デバイス</div>' +
+         '<div style="font-size:10px;color:var(--text3);margin-bottom:6px;">' +
+           '詳細はカンマ区切りで入力してください（例：Web, アプリ）。空欄にすると詳細ボタンは出ません。</div>' +
+         '<table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:4px;">' +
+         '<thead><tr>' +
+           '<th style="text-align:left;padding:2px 3px;width:36%;color:var(--text3);font-weight:400;">デバイス名</th>' +
+           '<th style="text-align:left;padding:2px 3px;color:var(--text3);font-weight:400;">詳細（カンマ区切り）</th>' +
+           '<th style="width:30px;"></th></tr></thead><tbody>';
+    devs.forEach(function(d, i) {
+      h += '<tr>' +
+        '<td style="padding:2px 3px;"><input type="text" value="' + hEsc(d.name) + '"' +
+          ' data-hrdev="' + i + '" data-k="name" style="' + inp + 'width:100%;"></td>' +
+        '<td style="padding:2px 3px;"><input type="text" value="' + hEsc(d.details.join(', ')) + '"' +
+          ' data-hrdev="' + i + '" data-k="details" placeholder="Web, アプリ" style="' + inp + 'width:100%;"></td>' +
+        '<td style="padding:2px 3px;text-align:center;">' +
+          '<button class="btn-del" data-hrdevdel="' + i + '" title="このデバイスを削除">×</button></td></tr>';
+    });
+    h += '</tbody></table>' +
+         '<button class="hr-add-btn" id="hrDevAdd">＋ デバイスを追加</button>';
+
+    // キャリア
+    h += '<div style="font-size:11px;font-weight:700;margin:12px 0 5px;">キャリア</div>' +
+         '<div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:6px;">';
+    cars.forEach(function(c, i) {
+      h += '<span style="display:inline-flex;align-items:center;gap:2px;">' +
+        '<input type="text" value="' + hEsc(c) + '" data-hrcar="' + i + '"' +
+          ' style="' + inp + 'width:112px;">' +
+        '<button class="btn-del" data-hrcardel="' + i + '" title="このキャリアを削除">×</button></span>';
+    });
+    h += '</div><button class="hr-add-btn" id="hrCarAdd">＋ キャリアを追加</button>';
+
+    h += '</div></div>';
+    return h;
+  }
+
+  function _hrBindChoiceEditor(root) {
+    var head = root.querySelector('#hrChoiceHead');
+    if (!head) return;
+    head.addEventListener('click', function() {
+      _hrChoiceOpen = !_hrChoiceOpen;
+      window.renderHearing();
+    });
+
+    // 入力中：保存のみ（再描画しない＝フォーカスが外れない）
+    root.querySelectorAll('[data-hrdev]').forEach(function(inp) {
+      inp.addEventListener('input', function() {
+        var i = +inp.getAttribute('data-hrdev');
+        var list = window.getHearingDevices();
+        if (!list[i]) return;
+        if (inp.getAttribute('data-k') === 'name') list[i].name = inp.value;
+        else list[i].details = inp.value.split(/[,、]/).map(function(v) { return v.trim(); })
+                                        .filter(function(v) { return v; });
+        window._appCache.hearingDevices = list;
+        _hrChoiceSave(false);
+      });
+    });
+    root.querySelectorAll('[data-hrcar]').forEach(function(inp) {
+      inp.addEventListener('input', function() {
+        var i = +inp.getAttribute('data-hrcar');
+        var list = window.getHearingCarriers();
+        if (i >= list.length) return;
+        list[i] = inp.value;
+        window._appCache.hearingCarriers = list;
+        _hrChoiceSave(false);
+      });
+    });
+
+    // 追加・削除：構造が変わるので描き直す
+    root.querySelectorAll('[data-hrdevdel]').forEach(function(b) {
+      b.addEventListener('click', function() {
+        var i = +b.getAttribute('data-hrdevdel');
+        var list = window.getHearingDevices();
+        if (!confirm('デバイス「' + (list[i] && list[i].name) + '」を選択肢から削除しますか？')) return;
+        list.splice(i, 1);
+        window._appCache.hearingDevices = list;
+        _hrChoiceSave(true);
+      });
+    });
+    root.querySelectorAll('[data-hrcardel]').forEach(function(b) {
+      b.addEventListener('click', function() {
+        var i = +b.getAttribute('data-hrcardel');
+        var list = window.getHearingCarriers();
+        list.splice(i, 1);
+        window._appCache.hearingCarriers = list;
+        _hrChoiceSave(true);
+      });
+    });
+    var dAdd = root.querySelector('#hrDevAdd');
+    if (dAdd) dAdd.addEventListener('click', function() {
+      var list = window.getHearingDevices();
+      list.push({ name: '新しいデバイス', details: [] });
+      window._appCache.hearingDevices = list;
+      _hrChoiceSave(true);
+    });
+    var cAdd = root.querySelector('#hrCarAdd');
+    if (cAdd) cAdd.addEventListener('click', function() {
+      var list = window.getHearingCarriers();
+      list.push('新しいキャリア');
+      window._appCache.hearingCarriers = list;
+      _hrChoiceSave(true);
+    });
+  }
+
+  function _mkPrefixSelect(q, onChange) {
+    var sel = document.createElement('select');
+    var cur = (q && typeof q.prefix === 'string') ? q.prefix : '__default__';
+    var opts = [{ v: '__default__', l: '既定(' + (window.getHearingDefaultPrefix() || 'なし') + ')' }]
+      .concat(window.HEARING_PREFIX_OPTIONS.map(function(o) {
+        return { v: o.v, l: o.v === '' ? 'なし' : o.v };
+      }));
+    sel.innerHTML = opts.map(function(o) {
+      return '<option value="' + hEsc(o.v) + '"' + (o.v === cur ? ' selected' : '') + '>' + hEsc(o.l) + '</option>';
+    }).join('');
+    sel.title = 'この項目の先頭に付ける記号';
+    sel.style.cssText =
+      'height:18px;padding:0 2px;margin-right:3px;border:1px dashed var(--border);' +
+      'border-radius:3px;background:var(--surface2);color:var(--text2);' +
+      'font-size:10px;font-family:inherit;cursor:pointer;vertical-align:middle;';
+    sel.addEventListener('click', function(e) { e.stopPropagation(); });
+    sel.addEventListener('dblclick', function(e) { e.stopPropagation(); });
+    sel.addEventListener('change', function() { onChange(sel.value); });
+    return sel;
+  }
+
   function _mkAddBtn(label, onClick) {
     var b = document.createElement('button');
     b.type = 'button';
@@ -13424,6 +13622,16 @@ window.addEventListener('resize',function(){
     tplWrap.appendChild(outTplInp); tplWrap.appendChild(tplSub);
     var outTplRow = row('出力文', tplWrap);
     outTplRow.style.alignItems = 'flex-start';
+
+    // ── 先頭記号 ──
+    var pfxSel = document.createElement('select');
+    pfxSel.style.cssText = INP;
+    pfxSel.innerHTML = '<option value="__default__">既定に従う（' +
+        (window.getHearingDefaultPrefix() || 'なし') + '）</option>' +
+      window.HEARING_PREFIX_OPTIONS.map(function(o) {
+        return '<option value="' + hEsc(o.v) + '">' + hEsc(o.l) + '</option>';
+      }).join('');
+    row('先頭記号', pfxSel);
 
     // ── 回答方法 ──
     var typeSel = document.createElement('select');
@@ -13606,6 +13814,8 @@ window.addEventListener('resize',function(){
         tplId: tplId || ''
       };
       newQ.field = newQ.id;                 // 回答の保存先キー
+      // 先頭記号：「既定に従う」ならキー自体を持たせない
+      if (pfxSel.value !== '__default__') newQ.prefix = pfxSel.value;
 
       // 表示条件（既存の showIf と同じ形式で保存する）
       if (condQ.value) {
@@ -13723,8 +13933,18 @@ window.addEventListener('resize',function(){
     if (labelEl) {
       labelEl.style.cursor = 'pointer';
       labelEl.title = 'ダブルクリックでラベルを編集';
-      // ■ と実テキストを分離して保持
-      labelEl.innerHTML = '<span class="hr-label-prefix">■</span><span class="hr-label-text">' + hEsc(q.label) + '</span>';
+      // 記号と実テキストを分離して保持（記号はプルダウンで選べる）
+      labelEl.innerHTML = '<span class="hr-label-prefix"></span><span class="hr-label-text">' + hEsc(q.label) + '</span>';
+      var pfxEl = labelEl.querySelector('.hr-label-prefix');
+      pfxEl.appendChild(_mkPrefixSelect(q, function(val) {
+        var qs2 = _hrQuestionsGet();
+        var qi2 = qs2.findIndex(function(x) { return x.id === qId; });
+        if (qi2 < 0) return;
+        if (val === '__default__') delete qs2[qi2].prefix;   // 全体の既定に従う
+        else qs2[qi2].prefix = val;
+        _hrQuestionsSave(qs2);
+        window.renderHearing();
+      }));
       var labelTextEl = labelEl.querySelector('.hr-label-text');
       labelTextEl.addEventListener('dblclick', function(e) {
         e.stopPropagation();
@@ -13925,31 +14145,45 @@ window.addEventListener('resize',function(){
            '✏️ <b>ラベル・ボタンテキスト</b>をダブルクリックで編集　<b>＋ 追加</b> / <b>×</b> で選択肢の追加・削除　末尾の <b>＋ 質問を追加</b> で新規質問をインライン追加' +
            '</div>';
 
-      // ■メモ（最上部に配置）
-      h += '<div class="hr-row hr-memo-row">' +
-           '<div class="hr-label">■メモ</div>' +
-           '<textarea class="hr-memo-textarea" rows="3" placeholder="自由記入欄…" oninput="window._setHearingMemo(this.value)">' +
-           _hEscL(s.memo || '') + '</textarea></div>';
+      // 項目名の先頭に付ける記号（全体の既定）。質問ごとの指定が無いものに効く。
+      h += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;font-size:11px;color:var(--text2);">' +
+             '<span>項目の先頭記号（全体の既定）</span>' +
+             '<select id="hrDefaultPrefixSel" style="height:26px;padding:0 6px;border:1px solid var(--border);' +
+               'border-radius:4px;background:var(--surface);color:var(--text);font-size:11px;font-family:inherit;cursor:pointer;">' +
+               window.HEARING_PREFIX_OPTIONS.map(function(o) {
+                 return '<option value="' + hEsc(o.v) + '"' +
+                        (o.v === window.getHearingDefaultPrefix() ? ' selected' : '') + '>' + hEsc(o.l) + '</option>';
+               }).join('') +
+             '</select>' +
+             '<span style="font-size:10px;color:var(--text3);">個別に変えたい項目は、各項目名の左のプルダウンで指定できます</span>' +
+           '</div>';
 
-      // ■デバイス（常時表示・固定・編集不要／common-utils.js の共通ヘルパーを使用）
-      if (typeof window._hrDeviceSectionHTML === 'function') h += window._hrDeviceSectionHTML(s);
+      // デバイス／キャリアの選択肢（data.js で管理。事業所ごとに変えられる）
+      h += _hrChoiceEditorHTML();
 
+      // デバイス・キャリア・メールドメイン・メモも通常の項目として並ぶ
       qs.forEach(function(q) {
         if (!q.enabled) return;
         if (q.id in patternOverrides) { if (!patternOverrides[q.id]) return; }
         else if (typeof window._hrEvalShowIf === 'function' && !window._hrEvalShowIf(q.showIf, s)) return;
 
+        // 選択肢そのものを編集できる型だけ専用の描画。それ以外は共通の描画を使う
         var content = '';
         if (q.type === 'bool') {
           content = _boolBtnsEdit(q.field, s[q.field], q.trueLabel||'はい', q.falseLabel||'いいえ');
         } else if (q.type === 'str') {
-          content = _strBtnsEdit(q.field, s[q.field], q.options||[]);
-        } else if (q.type === 'text') {
-          content = '<input type="text" class="hr-text-input" value="' + _hEscL(s[q.field]||'') + '" oninput="setHearing(\'' + q.field + '\',this.value)">';
+          content = _strBtnsEdit(q.field, s[q.field], window.getHearingOptions(q));
+        } else if (typeof window.hearingItemHTML === 'function') {
+          // デバイス／プルダウン（手入力つき）／記述などをそのまま流用する
+          var row = window.hearingItemHTML(q, s);
+          var m = row.match(/<div class="hr-btns">([\s\S]*)<\/div>\s*<\/div>\s*$/);
+          content = m ? m[1] : '';
         }
         // data-q-id を行に付与
         h += '<div class="hr-row" data-q-id="' + hEsc(q.id) + '">' +
-             '<div class="hr-label">■<span class="hr-label-text">' + hEsc(q.label) + '</span></div>' +
+             '<div class="hr-label">' +
+               '<span class="hr-label-prefix">' + hEsc(window.getHearingPrefix(q)) + '</span>' +
+               '<span class="hr-label-text">' + hEsc(q.label) + '</span></div>' +
              '<div class="hr-btns">' + content + '</div>' +
              '</div>';
       });
@@ -13979,6 +14213,17 @@ window.addEventListener('resize',function(){
       // サマリ描画
       if (typeof window.renderHearingSummary === 'function') window.renderHearingSummary();
       if (typeof _hrUpdateAddPolicyBtn === 'function') _hrUpdateAddPolicyBtn();
+
+      _hrBindChoiceEditor(el);
+
+      // 全体の既定記号
+      var pfSel = el.querySelector('#hrDefaultPrefixSel');
+      if (pfSel) {
+        pfSel.addEventListener('change', function() {
+          window.setHearingDefaultPrefix(pfSel.value);   // 中で renderHearing まで走る
+          toast('項目の先頭記号を「' + (pfSel.value || 'なし') + '」にしました');
+        });
+      }
 
       // 各 [data-q-id] 行に編集機能を付加
       el.querySelectorAll('.hr-row[data-q-id]').forEach(function(rowEl) {

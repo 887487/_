@@ -467,10 +467,92 @@ window.APP_STATIC_DATA = {
           "アンダーバー"
         ]
       ]
+    },
+    {
+      "id": "sm_domain",
+      "type": "table",
+      "label": "📧 メールドメイン一覧",
+      "note": "ここで編集した内容が、ヒアリングの「メールドメイン」の選択肢になります。",
+      "headers": [
+        "ドメイン",
+        "備考"
+      ],
+      "rows": [
+        [
+          "@docomo.ne.jp",
+          "ドコモ"
+        ],
+        [
+          "@softbank.ne.jp",
+          "ソフトバンク"
+        ],
+        [
+          "@i.softbank.jp",
+          "ソフトバンク（iPhone）"
+        ],
+        [
+          "@ezweb.ne.jp",
+          "au"
+        ],
+        [
+          "@au.com",
+          "au"
+        ],
+        [
+          "@gmail.com",
+          "Gmail"
+        ],
+        [
+          "@yahoo.co.jp",
+          "Yahoo!メール"
+        ],
+        [
+          "@outlook.com",
+          "Outlook"
+        ]
+      ]
     }
   ],
   "sideMenuFiles": {},
   "hearingQuestions": [
+    {
+      "id": "q_devices",
+      "field": "devices",
+      "label": "デバイス",
+      "type": "device",
+      "common": true,
+      "enabled": true,
+      "builtin": true,
+      "showIf": []
+    },
+    {
+      "id": "q_carrier",
+      "field": "carrier",
+      "label": "キャリア",
+      "type": "select",
+      "optionsFrom": "carriers",
+      "allowManual": true,
+      "manualField": "carrierManual",
+      "manualPlaceholder": "例）mineo",
+      "common": true,
+      "enabled": true,
+      "builtin": true,
+      "showIf": []
+    },
+    {
+      "id": "q_domain",
+      "field": "mailDomain",
+      "label": "メールドメイン",
+      "type": "select",
+      "optionsFrom": "domains",
+      "allowManual": true,
+      "manualField": "mailDomainManual",
+      "manualPlaceholder": "例）@example.com",
+      "common": true,
+      "enabled": true,
+      "builtin": true,
+      "showIf": []
+    },
     {
       "id": "q_usage",
       "label": "用途",
@@ -1151,6 +1233,18 @@ window.APP_STATIC_DATA = {
       "common": false,
       "tplId": "tpl_vztoy8",
       "field": "q_yniqyz0"
+    },
+    {
+      "id": "q_memo",
+      "field": "memo",
+      "label": "メモ",
+      "type": "text",
+      "multiline": true,
+      "placeholder": "自由記入欄…",
+      "common": true,
+      "enabled": true,
+      "builtin": true,
+      "showIf": []
     }
   ],
   "hearingPolicies": [
@@ -1690,5 +1784,53 @@ window.APP_STATIC_DATA = {
     "subs": {
       "mcat_1788611851040": []
     }
-  }
+  },
+  "hearingDevices": [
+    {
+      "name": "iPhone",
+      "details": [
+        "Web",
+        "アプリ"
+      ]
+    },
+    {
+      "name": "Android",
+      "details": [
+        "Web",
+        "アプリ"
+      ]
+    },
+    {
+      "name": "タブレット",
+      "details": [
+        "Web",
+        "アプリ"
+      ]
+    },
+    {
+      "name": "PC",
+      "details": [
+        "Win",
+        "Mac",
+        "ChromeBook"
+      ]
+    },
+    {
+      "name": "TV",
+      "details": []
+    }
+  ],
+  "hearingCarriers": [
+    "docomo",
+    "au",
+    "SoftBank",
+    "楽天モバイル",
+    "ahamo",
+    "povo",
+    "LINEMO",
+    "Y!mobile",
+    "UQ mobile",
+    "格安SIM（MVNO）",
+    "Wi-Fiのみ"
+  ]
 };

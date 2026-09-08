@@ -861,7 +861,10 @@ window._appCache = {
   sideMenuData:     null,
   faqData:          [],
   linkify:          {},
-  hearingTemplates: []
+  hearingTemplates: [],
+  hearingLabelPrefix: '■',  // 項目名の先頭に付ける記号（'' なら付けない）
+  hearingDevices:   [],     // デバイス候補（[{name, details:[]}]）
+  hearingCarriers:  []      // キャリア候補（文字列の配列）
 };
 
 // ── data.js の内容を「読み込み直後に同期で」キャッシュへ流し込む ──
@@ -884,6 +887,9 @@ window._appCache = {
   if (sd.faqData          != null) window._appCache.faqData          = sd.faqData;
   if (sd.linkify          != null) window._appCache.linkify          = sd.linkify;
   if (sd.hearingTemplates != null) window._appCache.hearingTemplates = sd.hearingTemplates;
+  if (sd.hearingLabelPrefix != null) window._appCache.hearingLabelPrefix = sd.hearingLabelPrefix;
+  if (sd.hearingDevices   != null) window._appCache.hearingDevices  = sd.hearingDevices;
+  if (sd.hearingCarriers  != null) window._appCache.hearingCarriers = sd.hearingCarriers;
 })();
 
 // localStorage からの一回限りのマイグレーション
@@ -935,6 +941,9 @@ window.initAppData = function() {
     if (sd.faqData          != null) window._appCache.faqData          = sd.faqData;
     if (sd.linkify          != null) window._appCache.linkify          = sd.linkify;
     if (sd.hearingTemplates != null) window._appCache.hearingTemplates = sd.hearingTemplates;
+    if (sd.hearingLabelPrefix != null) window._appCache.hearingLabelPrefix = sd.hearingLabelPrefix;
+    if (sd.hearingDevices   != null) window._appCache.hearingDevices  = sd.hearingDevices;
+    if (sd.hearingCarriers  != null) window._appCache.hearingCarriers = sd.hearingCarriers;
   if (sd.hearingTemplates != null) window._appCache.hearingTemplates = sd.hearingTemplates;
   if (sd.linkify          != null) window._appCache.linkify          = sd.linkify;
   if (sd.hearingTemplates != null) window._appCache.hearingTemplates = sd.hearingTemplates;
@@ -2370,21 +2379,63 @@ var DEFAULT_STATE = {
   memo: ''
 };
 
-var DEVICE_LIST = ['iPhone', 'Android', 'タブレット', 'PC', 'TV'];
-// ■キャリア のプルダウン候補
-var CARRIER_OPTIONS = [
+// ── デバイス／キャリアの候補 ──────────────────────────
+// 事業所ごとに変えられるよう、実データは data.js（hearingDevices /
+// hearingCarriers）で管理する。ここにあるのは data.js が無いときの既定値。
+// Web / アプリ は複数選択できるため「両方」の選択肢は不要（両方押せばよい）
+window.HEARING_DEFAULT_DEVICES = [
+  { name: 'iPhone',       details: ['Web', 'アプリ'] },
+  { name: 'Android',      details: ['Web', 'アプリ'] },
+  { name: 'タブレット', details: ['Web', 'アプリ'] },
+  { name: 'PC',           details: ['Win', 'Mac', 'ChromeBook'] },
+  { name: 'TV',           details: [] }
+];
+window.HEARING_DEFAULT_CARRIERS = [
   'docomo', 'au', 'SoftBank', '楽天モバイル',
   'ahamo', 'povo', 'LINEMO', 'Y!mobile', 'UQ mobile',
   '格安SIM（MVNO）', 'Wi-Fiのみ'
 ];
 
-// Web / アプリ は複数選択できるため「両方」の選択肢は不要（両方押せばよい）
-var DEVICE_DETAIL_OPTIONS = {
-  'iPhone':       ['Web', 'アプリ'],
-  'Android':      ['Web', 'アプリ'],
-  'タブレット': ['Web', 'アプリ'],
-  'PC':           ['Win', 'Mac', 'ChromeBook'],
-  'TV':           []
+/** デバイス候補（[{name, details:[]}, ...]）。名前が空の行は無視する */
+window.getHearingDevices = function () {
+  var list = window._appCache && window._appCache.hearingDevices;
+  if (!Array.isArray(list) || !list.length) list = window.HEARING_DEFAULT_DEVICES;
+  var out = [];
+  list.forEach(function (d) {
+    if (!d) return;
+    var name = String(d.name || '').trim();
+    if (!name || out.some(function (x) { return x.name === name; })) return;
+    var det = Array.isArray(d.details) ? d.details : [];
+    out.push({
+      name: name,
+      details: det.map(function (v) { return String(v || '').trim(); })
+                  .filter(function (v, i, a) { return v && a.indexOf(v) === i; })
+    });
+  });
+  return out.length ? out : JSON.parse(JSON.stringify(window.HEARING_DEFAULT_DEVICES));
+};
+
+/** デバイス名だけの配列（旧 DEVICE_LIST 相当） */
+window.getHearingDeviceNames = function () {
+  return window.getHearingDevices().map(function (d) { return d.name; });
+};
+
+/** そのデバイスの詳細候補（旧 DEVICE_DETAIL_OPTIONS[name] 相当） */
+window.getHearingDeviceDetails = function (name) {
+  var d = window.getHearingDevices().find(function (x) { return x.name === name; });
+  return d ? d.details : [];
+};
+
+/** キャリア候補（旧 CARRIER_OPTIONS 相当） */
+window.getHearingCarriers = function () {
+  var list = window._appCache && window._appCache.hearingCarriers;
+  if (!Array.isArray(list) || !list.length) list = window.HEARING_DEFAULT_CARRIERS;
+  var out = [];
+  list.forEach(function (v) {
+    var t = String(v || '').trim();
+    if (t && out.indexOf(t) < 0) out.push(t);
+  });
+  return out.length ? out : window.HEARING_DEFAULT_CARRIERS.slice();
 };
 
 /**
@@ -2395,7 +2446,7 @@ var DEVICE_DETAIL_OPTIONS = {
 function _hrNewState() {
   var st = JSON.parse(JSON.stringify(DEFAULT_STATE));
   if (!st.devices) st.devices = {};
-  DEVICE_LIST.forEach(function (d) { st.devices[d] = { selected: false, detail: [] }; });
+  window.getHearingDeviceNames().forEach(function (d) { st.devices[d] = { selected: false, detail: [] }; });
   return st;
 }
 window._hrNewState = _hrNewState;
@@ -2406,7 +2457,7 @@ function loadHearingState() {
     if (saved) {
       var parsed = JSON.parse(saved);
       var devices = {};
-      DEVICE_LIST.forEach(function (d) {
+      window.getHearingDeviceNames().forEach(function (d) {
         devices[d] = (parsed.devices && parsed.devices[d]) ? parsed.devices[d] : { selected: false, detail: [] };
         if (!Array.isArray(devices[d].detail)) devices[d].detail = devices[d].detail ? [devices[d].detail] : [];
         // 旧データの「両方」は Web＋アプリ に変換する。
@@ -2418,7 +2469,7 @@ function loadHearingState() {
           });
         }
         // 選択肢に無い値が残っていたら取り除く
-        var allowed = DEVICE_DETAIL_OPTIONS[d];
+        var allowed = window.getHearingDeviceDetails(d);
         if (allowed && allowed.length) {
           devices[d].detail = devices[d].detail.filter(function (v) { return allowed.indexOf(v) >= 0; });
         }
@@ -2758,9 +2809,47 @@ function _strBtns(field, value, items) {
   }).join('');
 }
 
-function _hrRow(label, content, extraClass) {
+// ── 項目名の先頭に付ける記号 ────────────────────────────
+// 以前は「■」を決め打ちで付けていたが、付けるかどうか・どの記号にするかを
+// 選べるようにした。全体の既定（hearingLabelPrefix）を質問ごとに上書きできる。
+window.HEARING_PREFIX_OPTIONS = [
+  { v: '',  l: 'なし（記号を付けない）' },
+  { v: '■', l: '■' },
+  { v: '●', l: '●' },
+  { v: '◆', l: '◆' },
+  { v: '▶', l: '▶' },
+  { v: '〇', l: '〇' },
+  { v: '・', l: '・' },
+  { v: '※', l: '※' },
+  { v: '＞', l: '＞' }
+];
+
+/** 全体の既定記号（未設定なら ■） */
+window.getHearingDefaultPrefix = function () {
+  var v = window._appCache && window._appCache.hearingLabelPrefix;
+  return (typeof v === 'string') ? v : '■';
+};
+
+/** 全体の既定記号を変える（管理画面から呼ぶ） */
+window.setHearingDefaultPrefix = function (v) {
+  window._appCache.hearingLabelPrefix = (typeof v === 'string') ? v : '■';
+  if (window.idbSetAppData) window.idbSetAppData('hearingLabelPrefix', window._appCache.hearingLabelPrefix);
+  if (typeof renderHearing === 'function') renderHearing();
+};
+
+/**
+ * その項目に付ける記号を返す。
+ * 質問に prefix が設定されていればそれを、無ければ全体の既定を使う。
+ */
+window.getHearingPrefix = function (q) {
+  if (q && typeof q.prefix === 'string') return q.prefix;
+  return window.getHearingDefaultPrefix();
+};
+
+function _hrRow(label, content, extraClass, prefix) {
+  var pf = (typeof prefix === 'string') ? prefix : window.getHearingDefaultPrefix();
   return '<div class="hr-row' + (extraClass ? ' ' + extraClass : '') + '">' +
-         '<div class="hr-label">■' + label + '</div>' +
+         '<div class="hr-label">' + _hEsc(pf) + label + '</div>' +
          '<div class="hr-btns">' + content + '</div>' +
          '</div>';
 }
@@ -2849,11 +2938,30 @@ function _hrQuestionsSave(list) {
   if (typeof markDirty === 'function') markDirty();
   return p || Promise.resolve();
 }
+/**
+ * 組み込み項目（デバイス／キャリア／メールドメイン／メモ）を補って返す。
+ * まだ保存データに入っていない環境でも、必ず画面に出るようにするため。
+ * すでに同じ id があれば触らないので、並べ替えや非表示の設定は保たれる。
+ */
+function _hrWithFixedItems(list) {
+  var arr = Array.isArray(list) ? list.slice() : [];
+  var head = [];
+  (window.HEARING_FIXED_ITEMS || []).forEach(function (t) {
+    if (arr.some(function (q) { return q && q.id === t.id; })) return;
+    var copy = JSON.parse(JSON.stringify(t));
+    var atEnd = copy.atEnd; delete copy.atEnd;
+    if (atEnd) arr.push(copy); else head.push(copy);
+  });
+  if (head.length) arr = head.concat(arr);
+  return arr;
+}
+window._hrWithFixedItems = _hrWithFixedItems;
+
 function _hrGetQuestions() {
   var cached = _hrQuestionsLoad();
-  if (cached && cached.length) return cached;
+  if (cached && cached.length) return _hrWithFixedItems(cached);
   var sd = window.APP_STATIC_DATA;
-  return JSON.parse(JSON.stringify((sd && sd.hearingQuestions) || []));
+  return _hrWithFixedItems(JSON.parse(JSON.stringify((sd && sd.hearingQuestions) || [])));
 }
 
 function _hrEvalShowIf(showIf, s) {
@@ -2882,9 +2990,9 @@ window.addEventListener('storage', function(e) {
   try {
     var updated = e.newValue ? JSON.parse(e.newValue) : null;
     if (!updated) return;
-    // devices は DEVICE_LIST ベースで補完
+    // devices はデバイス候補をもとに補完
     var devices = {};
-    DEVICE_LIST.forEach(function(d) {
+    window.getHearingDeviceNames().forEach(function(d) {
       devices[d] = (updated.devices && updated.devices[d])
         ? updated.devices[d] : { selected: false, detail: [] };
     });
@@ -2894,50 +3002,141 @@ window.addEventListener('storage', function(e) {
   } catch(ex) {}
 });
 
-function _hrDeviceSectionHTML(s) {
-  // ラベル＋ボタンを1行に収め、5デバイスを1つの枠にまとめてコンパクトに表示する
-  var h = '<div class="hr-divider">■デバイス</div><div class="hr-device-group">';
-  DEVICE_LIST.forEach(function (device) {
+// ── ヒアリングの「組み込み項目」──────────────────────────
+// デバイス／キャリア／メールドメイン／メモは、以前はコードに直接
+// 書き込まれていて並べ替えも非表示もできなかった。
+// これらを他と同じ「カスタム項目」として hearingQuestions に持たせ、
+// 並べ替え・非表示・記号・出力名などを同じ仕組みで扱えるようにする。
+window.HEARING_FIXED_ITEMS = [
+  {
+    id: 'q_devices', field: 'devices', label: 'デバイス', type: 'device',
+    common: true, enabled: true, builtin: true, showIf: []
+  },
+  {
+    id: 'q_carrier', field: 'carrier', label: 'キャリア', type: 'select',
+    optionsFrom: 'carriers', allowManual: true,
+    manualField: 'carrierManual', manualPlaceholder: '例）mineo',
+    common: true, enabled: true, builtin: true, showIf: []
+  },
+  {
+    id: 'q_domain', field: 'mailDomain', label: 'メールドメイン', type: 'select',
+    optionsFrom: 'domains', allowManual: true,
+    manualField: 'mailDomainManual', manualPlaceholder: '例）@example.com',
+    common: true, enabled: true, builtin: true, showIf: []
+  },
+  {
+    id: 'q_memo', field: 'memo', label: 'メモ', type: 'text', multiline: true,
+    placeholder: '自由記入欄…',
+    common: true, enabled: true, builtin: true, showIf: [], atEnd: true
+  }
+];
+
+/**
+ * 組み込み項目を hearingQuestions に取り込む（1回だけ）。
+ * デバイス～ドメインは先頭、メモは末尾に入れる。
+ * すでに同じ id があれば何もしないので、並べ替えた結果は保たれる。
+ */
+window.ensureHearingFixedItems = function () {
+  var list = window._appCache.hearingQuestions;
+  if (!Array.isArray(list)) return false;
+  var merged = window._hrWithFixedItems(list);
+  if (merged.length === list.length) return false;
+  window._appCache.hearingQuestions = merged;
+  return true;
+};
+
+/** 質問の選択肢を求める。optionsFrom があれば共有リストから引く */
+window.getHearingOptions = function (q) {
+  if (!q) return [];
+  if (q.optionsFrom === 'carriers') {
+    return window.getHearingCarriers().map(function (v) { return { l: v, v: v }; });
+  }
+  if (q.optionsFrom === 'domains') {
+    return window.getMailDomainList().map(function (v) { return { l: v, v: v }; });
+  }
+  return q.options || [];
+};
+
+/** デバイス項目（複数デバイス＋詳細）の中身 */
+function _hrDeviceContentHTML(s) {
+  var h = '<div class="hr-device-group">';
+  window.getHearingDeviceNames().forEach(function (device) {
     var d = (s.devices && s.devices[device]) || { selected: false, detail: [] };
     var dDetail = Array.isArray(d.detail) ? d.detail : (d.detail ? [d.detail] : []);
-    var details = DEVICE_DETAIL_OPTIONS[device] || [];
+    var details = window.getHearingDeviceDetails(device);
     var content = '';
     if (details.length) {
       // Web/アプリ（PCはWin/Mac/ChromeBook）を複数選択可能なトグルボタン群として表示。
-      // 選択中のボタンをもう一度押すとその項目だけOFFになる（setHearingDeviceDetail 側で制御）。
+      // 選択中のボタンをもう一度押すとその項目だけOFFになる。
       details.forEach(function (opt) {
         var active = (dDetail.indexOf(opt) >= 0) ? ' active' : '';
         content += '<button class="hr-device-btn' + active + '" onclick="setHearingDeviceDetail(\'' + device + '\',\'' + opt + '\')">' + _hEsc(opt) + '</button>';
       });
     } else {
-      // 詳細選択肢のないデバイス（TV）は単純なON/OFFトグル
+      // 詳細選択肢のないデバイスは単純なON/OFFトグル
       content = '<button class="hr-device-btn' + (d.selected ? ' active' : '') + '" onclick="toggleHearingDevice(\'' + device + '\')">' + (d.selected ? '利用あり' : '利用なし') + '</button>';
     }
     h += _hrRow(device, content, 'hr-device-row');
   });
-  h += '</div>';
+  return h + '</div>';
+}
+window._hrDeviceContentHTML = _hrDeviceContentHTML;
 
-  // ── ■キャリア（デバイスの直下）──
-  var cv = s.carrier;
-  var carrierContent = '<select id="hearingCarrierSel" class="hr-select" onchange="onHearingCarrierChange()">' +
+/** 「その他（手入力）」付きのプルダウン */
+function _hrSelectManualHTML(q, s) {
+  var fld  = q.field || q.id;
+  var mfld = q.manualField || (fld + 'Manual');
+  var v    = s[fld];
+  var opts = window.getHearingOptions(q);
+  var h = '<select class="hr-select" onchange="window.setHearingSelect(\'' + fld + '\',this.value)">' +
     '<option value="">選択してください</option>' +
-    CARRIER_OPTIONS.map(function (o) { return _mkOpt(o, cv); }).join('') +
-    '<option value="__manual__"' + (cv === '__manual__' ? ' selected' : '') + '>その他（手入力）</option></select>' +
-    '<div id="hearingCarrierManualWrap" style="display:' + (cv === '__manual__' ? 'block' : 'none') + ';margin-top:6px;">' +
-    '<input id="hearingCarrierManual" type="text" class="hr-text-input" placeholder="例）mineo" value="' + _hEsc(s.carrierManual) + '" oninput="onHearingCarrierManualInput()"></div>';
-  h += _hrRow('キャリア', carrierContent);
-
-  var dv = s.mailDomain;
-  var domainContent = '<select id="hearingDomainSel" class="hr-select" onchange="onHearingDomainChange()"><option value="">選択してください</option>' +
-    _mkOpt('@docomo.ne.jp', dv) + _mkOpt('@softbank.ne.jp', dv) + _mkOpt('@i.softbank.jp', dv) +
-    _mkOpt('@ezweb.ne.jp', dv) + _mkOpt('@au.com', dv) + _mkOpt('@gmail.com', dv) +
-    _mkOpt('@yahoo.co.jp', dv) + _mkOpt('@outlook.com', dv) +
-    '<option value="__manual__"' + (dv === '__manual__' ? ' selected' : '') + '>その他（手入力）</option></select>' +
-    '<div id="hearingDomainManualWrap" style="display:' + (dv === '__manual__' ? 'block' : 'none') + ';margin-top:6px;">' +
-    '<input id="hearingDomainManual" type="text" class="hr-text-input" placeholder="例）@example.com" value="' + _hEsc(s.mailDomainManual) + '" oninput="onHearingDomainManualInput()"></div>';
-  h += _hrRow('メールドメイン', domainContent);
+    opts.map(function (o) { return _mkOpt(o.v, v, o.l); }).join('') +
+    '<option value="__manual__"' + (v === '__manual__' ? ' selected' : '') + '>その他（手入力）</option></select>';
+  h += '<div style="display:' + (v === '__manual__' ? 'block' : 'none') + ';margin-top:6px;">' +
+    '<input type="text" class="hr-text-input" placeholder="' + _hEsc(q.manualPlaceholder || '') + '"' +
+    ' value="' + _hEsc(s[mfld] || '') + '" oninput="setHearing(\'' + mfld + '\',this.value)"></div>';
   return h;
 }
+window._hrSelectManualHTML = _hrSelectManualHTML;
+
+/** プルダウンの選択。手入力に切り替わったとき欄を出すため描き直す */
+window.setHearingSelect = function (field, value) {
+  hearingState[field] = value;
+  saveHearingState();
+  renderHearing();
+};
+
+/** 1つのヒアリング項目の HTML（画面用）。組み込み項目もここを通る */
+window.hearingItemHTML = function (q, s) {
+  var fld = q.field || q.id;
+  var pf  = window.getHearingPrefix(q);
+  if (q.type === 'device') {
+    return _hrRow(q.label, _hrDeviceContentHTML(s), 'hr-device-wrap', pf);
+  }
+  if (q.type === 'bool') {
+    return _hrRow(q.label, _boolBtns(fld, s[fld], q.trueLabel || 'はい', q.falseLabel || 'いいえ'), '', pf);
+  }
+  if (q.type === 'str' || q.type === 'toggle') {
+    return _hrRow(q.label, q.multi
+      ? _multiBtns(fld, s[fld], window.getHearingOptions(q))
+      : _strBtns(fld, s[fld], window.getHearingOptions(q)), '', pf);
+  }
+  if (q.type === 'radio') {
+    return _hrRow(q.label, _radioBtns(fld, s[fld], window.getHearingOptions(q), q.multi), '', pf);
+  }
+  if (q.type === 'select') {
+    return _hrRow(q.label, q.allowManual
+      ? _hrSelectManualHTML(q, s)
+      : _selectBox(fld, s[fld], window.getHearingOptions(q)), '', pf);
+  }
+  if (q.type === 'text') {
+    var ph = _hEsc(q.placeholder || '');
+    return _hrRow(q.label, q.multiline
+      ? '<textarea class="hr-text-input" rows="3" placeholder="' + ph + '" style="resize:vertical;font-family:inherit;" oninput="setHearing(\'' + fld + '\',this.value)">' + _hEsc(s[fld] || '') + '</textarea>'
+      : '<input type="text" class="hr-text-input" placeholder="' + ph + '" value="' + _hEsc(s[fld] || '') + '" oninput="setHearing(\'' + fld + '\',this.value)">', '', pf);
+  }
+  return '';
+};
 
 // opts: {title, mistakeField, spamField, permField, permLabel}
 function _hrMailCheckGroupHTML(s, opts) {
@@ -2990,8 +3189,47 @@ window.SIDEMENU_DEFAULT_TABLES = [
       ['Y','ヨコハマ'],['Z','ゼブラ'],
       ['-','ハイフン'],['_','アンダーバー']
     ]
+  },
+  {
+    id: 'sm_domain', type: 'table', label: '📧 メールドメイン一覧',
+    note: 'ここで編集した内容が、ヒアリングの「メールドメイン」の選択肢になります。',
+    headers: ['ドメイン', '備考'],
+    rows: [
+      ['@docomo.ne.jp',   'ドコモ'],
+      ['@softbank.ne.jp', 'ソフトバンク'],
+      ['@i.softbank.jp',  'ソフトバンク（iPhone）'],
+      ['@ezweb.ne.jp',    'au'],
+      ['@au.com',         'au'],
+      ['@gmail.com',      'Gmail'],
+      ['@yahoo.co.jp',    'Yahoo!メール'],
+      ['@outlook.com',    'Outlook']
+    ]
   }
 ];
+
+/** ドメイン一覧の既定値（サイドメニューに無いときのフォールバック） */
+function _defaultMailDomains() {
+  var t = window.SIDEMENU_DEFAULT_TABLES.find(function(x) { return x.id === 'sm_domain'; });
+  return (t ? t.rows : []).map(function(r) { return r[0]; });
+}
+
+/**
+ * ヒアリングの「メールドメイン」で使う候補を返す。
+ * サイドメニューの「メールドメイン一覧」を唯一の管理元とし、
+ * 管理画面で編集した内容がそのまま選択肢になる。
+ */
+window.getMailDomainList = function () {
+  var list = (window._appCache && window._appCache.sideMenuData) || [];
+  var sec = list.find(function(x) { return x && x.id === 'sm_domain'; });
+  var rows = (sec && Array.isArray(sec.rows)) ? sec.rows : null;
+  if (!rows || !rows.length) return _defaultMailDomains();
+  var out = [];
+  rows.forEach(function(r) {
+    var v = String((r && r[0]) || '').trim();
+    if (v && out.indexOf(v) < 0) out.push(v);
+  });
+  return out.length ? out : _defaultMailDomains();
+};
 
 /** 既定のショートカット一覧（見出し＋行）を組み立てる */
 function _defaultShortcutGroups() {
@@ -3200,15 +3438,8 @@ function renderHearing() {
     }
   });
 
-  // ── ■メモ（最上部に配置）──
-  var h = '<div class="hr-row hr-memo-row">' +
-    '<div class="hr-label">■メモ</div>' +
-    '<textarea class="hr-memo-textarea" rows="3" placeholder="自由記入欄…" oninput="window._setHearingMemo(this.value)">' +
-    _hEsc(s.memo || '') + '</textarea>' +
-    '</div>';
-
-  // ── ■デバイス（常時表示） ──
-  h += _hrDeviceSectionHTML(s);
+  // デバイス・キャリア・メールドメイン・メモも通常の項目として並ぶ
+  var h = '';
 
   qs.forEach(function(q) {
     if (!q.enabled) return;
@@ -3227,28 +3458,14 @@ function renderHearing() {
       var opened = (_hrGroupState[gid] !== false);
       h += '<div class="hr-group' + (opened ? ' open' : '') + '">'
         +   '<div class="hr-heading" onclick="toggleHearingGroup(\'' + gid + '\')">'
-        +     '<span class="hr-group-arrow">▼</span>' + _hEsc(q.label)
+        +     '<span class="hr-group-arrow">▼</span>'
+        +     _hEsc(window.getHearingPrefix(q)) + _hEsc(q.label)
         +   '</div>'
         +   '<div class="hr-group-body">';
       _hrGroupOpen = true;
       return;
     }
-    if (q.type === 'bool') {
-      h += _hrRow(q.label, _boolBtns(fld, s[fld], q.trueLabel||'はい', q.falseLabel||'いいえ'));
-    } else if (q.type === 'str' || q.type === 'toggle') {
-      // トグルは従来のボタン群と同じ見た目。複数選択にも対応する
-      h += _hrRow(q.label, q.multi
-        ? _multiBtns(fld, s[fld], q.options||[])
-        : _strBtns(fld, s[fld], q.options||[]));
-    } else if (q.type === 'radio') {
-      h += _hrRow(q.label, _radioBtns(fld, s[fld], q.options||[], q.multi));
-    } else if (q.type === 'select') {
-      h += _hrRow(q.label, _selectBox(fld, s[fld], q.options||[]));
-    } else if (q.type === 'text') {
-      h += _hrRow(q.label, q.multiline
-        ? '<textarea class="hr-text-input" rows="3" style="resize:vertical;font-family:inherit;" oninput="setHearing(\'' + fld + '\',this.value)">' + _hEsc(s[fld]||'') + '</textarea>'
-        : '<input type="text" class="hr-text-input" value="' + _hEsc(s[fld]||'') + '" oninput="setHearing(\'' + fld + '\',this.value)">');
-    }
+    h += window.hearingItemHTML(q, s);
   });
 
   // 【Sアカ】メール受信なし（固定セクション）
@@ -3278,7 +3495,10 @@ function renderHearing() {
   if (typeof _hrUpdateAddPolicyBtn === 'function') _hrUpdateAddPolicyBtn();
 }
 
-function _mkOpt(val, selected) { return '<option value="' + val + '"' + (selected === val ? ' selected' : '') + '>' + val + '</option>'; }
+function _mkOpt(val, selected, label) {
+  return '<option value="' + _hEsc(val) + '"' + (selected === val ? ' selected' : '') + '>' +
+         _hEsc(label === undefined || label === null ? val : label) + '</option>';
+}
 function _mkChk(id, checked, label) { return '<label class="hr-check-label"><input id="hearingCb_' + id + '" type="checkbox" ' + (checked ? 'checked' : '') + ' onchange="onHearingCheckChange(\'' + id + '\')">' + ' ' + label + '</label>'; }
 
 window._setHearingMemo = function(val) {
@@ -3310,7 +3530,10 @@ window.hearingFillSlot = function (tpl, val) {
 
 /** 1行ぶんの出力テキスト（コピー用） */
 function _hrLineText(item) {
-  if (item.kind === 'heading') return '■ ' + item.text;
+  if (item.kind === 'heading') {
+    var pf = (typeof item.prefix === 'string') ? item.prefix : window.getHearingDefaultPrefix();
+    return pf ? pf + ' ' + item.text : item.text;
+  }
   if (item.kind === 'policy')  return '対応方針：' + item.value;
   // 出力文が設定されていれば「項目名：値」ではなく文章として出す
   if (item.outTpl && window.hearingHasSlot(item.outTpl)) {
@@ -3338,37 +3561,18 @@ window._hrPatternOverrides = _hrPatternOverrides;
 
 /** 選択肢の値を表示用テキストに直す */
 function _hrOptText(q, v) {
-  var o = (q.options || []).find(function (x) { return x.v === v; });
+  var o = window.getHearingOptions(q).find(function (x) { return x.v === v; });
   return o ? (o.r || o.l) : String(v);
 }
 
 function buildHearingLines(s) {
   s = s || hearingState;
   var out = [];
-  var devs = s.devices || {};
-
-  // ── 操作環境（デバイス） ──
-  var envParts = [];
-  DEVICE_LIST.forEach(function (device) {
-    var d = devs[device];
-    if (!d || !d.selected) return;
-    var dDetail = Array.isArray(d.detail) ? d.detail : (d.detail ? [d.detail] : []);
-    envParts.push(dDetail.length ? device + '(' + dDetail.join('/') + ')' : device);
-  });
   var push = function (label, value) {
     out.push({ kind: 'row', label: label, outLabel: label, value: value, type: '', outTpl: '' });
   };
-  if (envParts.length) push('操作環境', envParts.join('、'));
-  if (s.carrier) {
-    var carrier = s.carrier === '__manual__' ? s.carrierManual : s.carrier;
-    if (carrier) push('キャリア', carrier);
-  }
-  if (s.mailDomain) {
-    var domain = s.mailDomain === '__manual__' ? s.mailDomainManual : s.mailDomain;
-    if (domain) push('メールドメイン', domain);
-  }
 
-  // ── 質問（builtin/カスタム問わず全て） ──
+  // ── 項目（デバイス・キャリア・メールドメイン・メモを含め全て） ──
   // 表示中のテンプレートに合わせて絞る（画面の見た目とコピー結果をそろえる）
   var qs = (typeof _hrGetQuestions === 'function')
     ? window.filterQuestionsByTemplate(_hrGetQuestions()) : [];
@@ -3380,11 +3584,45 @@ function buildHearingLines(s) {
     else if (!_hrEvalShowIf(q.showIf, s)) return;
 
     // 見出しは入力を持たないが、区切りとして出力する
-    if (q.type === 'heading') { out.push({ kind: 'heading', text: (q.outLabel || q.label) }); return; }
+    if (q.type === 'heading') {
+      out.push({ kind: 'heading', text: (q.outLabel || q.label), prefix: window.getHearingPrefix(q) });
+      return;
+    }
 
-    var val = s[q.field || q.id];
+    var fld = q.field || q.id;
+
+    // デバイスは「操作環境：iPhone(Web)、PC(Win)」の形にまとめる
+    if (q.type === 'device') {
+      var devs = s.devices || {};
+      var envParts = [];
+      window.getHearingDeviceNames().forEach(function (device) {
+        var d = devs[device];
+        if (!d || !d.selected) return;
+        var dd = Array.isArray(d.detail) ? d.detail : (d.detail ? [d.detail] : []);
+        envParts.push(dd.length ? device + '(' + dd.join('/') + ')' : device);
+      });
+      if (!envParts.length) return;
+      out.push({
+        kind: 'row', label: q.label, outLabel: (q.outLabel || q.label),
+        value: envParts.join('、'), type: '', outTpl: q.outTpl || ''
+      });
+      return;
+    }
+
+    var val = s[fld];
     if (val === null || val === undefined || val === '') return;
     if (Array.isArray(val) && !val.length) return;
+
+    // 「その他（手入力）」が選ばれているときは手入力の値を使う
+    if (val === '__manual__') {
+      val = s[q.manualField || (fld + 'Manual')];
+      if (!val) return;
+      out.push({
+        kind: 'row', label: q.label, outLabel: (q.outLabel || q.label),
+        value: String(val), type: '', outTpl: q.outTpl || ''
+      });
+      return;
+    }
 
     var disp = '', type = '';
     if (q.type === 'bool') {
@@ -3424,8 +3662,6 @@ function buildHearingLines(s) {
   // ── 対応方針 ──
   calcPolicies(s).forEach(function (p) { out.push({ kind: 'policy', value: p }); });
 
-  // ── メモ ──
-  if (s.memo && String(s.memo).trim()) push('メモ', String(s.memo).trim());
 
   // 中身が1つも無い見出しは出さない（結果文が見出しだらけになるのを防ぐ）
   return out.filter(function (item, i) {
@@ -3450,7 +3686,8 @@ function renderHearingSummary() {
   items.forEach(function (it) {
     if (it.kind === 'policy') return;   // 対応方針は下にまとめて出す
     if (it.kind === 'heading') {
-      h += '<div class="hr-summary-heading">■ ' + _hEsc(it.text) + '</div>';
+      var hpf = (typeof it.prefix === 'string') ? it.prefix : window.getHearingDefaultPrefix();
+      h += '<div class="hr-summary-heading">' + _hEsc(hpf ? hpf + ' ' : '') + _hEsc(it.text) + '</div>';
       return;
     }
     // 出力文が設定されている項目は、文章そのものを1行で見せる

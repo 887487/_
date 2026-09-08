@@ -1,9 +1,9 @@
 // 画面遷移データ — admin.html の「💾 保存して反映」で自動更新されます。
 // 画像は screen-images/ フォルダに実ファイルとして保存されています。
 // library は画像ライブラリの復元用です（別PCでも一覧が再現されます）。
-// 生成日時: 2026-09-07T09:54:36.803Z
+// 生成日時: 2026-09-08T14:33:00.600Z
 window.APP_SCREEN_DATA = {
-  "savedAt": "2026-09-07T09:54:36.803Z",
+  "savedAt": "2026-09-08T14:33:00.600Z",
   "images": {
     "lib00mgrcfnd": "screen-images/Sアカウント/０２．誤受信防止措置 ②事業.jpg",
     "lib05670wknj": "screen-images/03.Ｊ tel設定.png",
