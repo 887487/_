@@ -2396,9 +2396,22 @@ window.HEARING_DEFAULT_CARRIERS = [
   '格安SIM（MVNO）', 'Wi-Fiのみ'
 ];
 
-/** デバイス候補（[{name, details:[]}, ...]）。名前が空の行は無視する */
-window.getHearingDevices = function () {
-  var list = window._appCache && window._appCache.hearingDevices;
+/** いま使われているデバイス項目（type:'device' の質問）を探す */
+window.getHearingDeviceQuestion = function () {
+  var qs = (typeof _hrGetQuestions === 'function') ? _hrGetQuestions() : [];
+  return qs.find(function (q) { return q && q.type === 'device'; }) || null;
+};
+
+/**
+ * デバイス候補（[{name, details:[]}, ...]）。名前が空の行は無視する。
+ * 選択肢は質問そのもの（q.devices）が持つ。
+ * 引数を省いた場合はデバイス項目を自動で探す。
+ */
+window.getHearingDevices = function (q) {
+  if (q === undefined) q = window.getHearingDeviceQuestion();
+  var list = q && q.devices;
+  // 旧データ（全体設定として持っていた頃）からの読み替え
+  if (!Array.isArray(list) || !list.length) list = window._appCache && window._appCache.hearingDevices;
   if (!Array.isArray(list) || !list.length) list = window.HEARING_DEFAULT_DEVICES;
   var out = [];
   list.forEach(function (d) {
@@ -2415,27 +2428,17 @@ window.getHearingDevices = function () {
   return out.length ? out : JSON.parse(JSON.stringify(window.HEARING_DEFAULT_DEVICES));
 };
 
-/** デバイス名だけの配列（旧 DEVICE_LIST 相当） */
-window.getHearingDeviceNames = function () {
-  return window.getHearingDevices().map(function (d) { return d.name; });
+/** デバイス名だけの配列 */
+window.getHearingDeviceNames = function (q) {
+  return window.getHearingDevices(q).map(function (d) { return d.name; });
 };
 
-/** そのデバイスの詳細候補（旧 DEVICE_DETAIL_OPTIONS[name] 相当） */
-window.getHearingDeviceDetails = function (name) {
-  var d = window.getHearingDevices().find(function (x) { return x.name === name; });
+/** そのデバイスの詳細候補 */
+window.getHearingDeviceDetails = function (q, name) {
+  // 旧シグネチャ getHearingDeviceDetails(name) にも対応する
+  if (typeof q === 'string') { name = q; q = undefined; }
+  var d = window.getHearingDevices(q).find(function (x) { return x.name === name; });
   return d ? d.details : [];
-};
-
-/** キャリア候補（旧 CARRIER_OPTIONS 相当） */
-window.getHearingCarriers = function () {
-  var list = window._appCache && window._appCache.hearingCarriers;
-  if (!Array.isArray(list) || !list.length) list = window.HEARING_DEFAULT_CARRIERS;
-  var out = [];
-  list.forEach(function (v) {
-    var t = String(v || '').trim();
-    if (t && out.indexOf(t) < 0) out.push(t);
-  });
-  return out.length ? out : window.HEARING_DEFAULT_CARRIERS.slice();
 };
 
 /**
@@ -2953,6 +2956,27 @@ function _hrWithFixedItems(list) {
     if (atEnd) arr.push(copy); else head.push(copy);
   });
   if (head.length) arr = head.concat(arr);
+
+  // 選択肢は「質問そのもの」が持つ形に揃える。
+  // 以前は全体設定（hearingDevices / hearingCarriers）に置いていたため、
+  // 古いデータを読んだときはここで質問側へ移し替える。
+  arr = arr.map(function (q) {
+    if (!q) return q;
+    if (q.type === 'device' && (!Array.isArray(q.devices) || !q.devices.length)) {
+      var dv = (window._appCache && window._appCache.hearingDevices);
+      q = Object.assign({}, q, {
+        devices: JSON.parse(JSON.stringify(
+          (Array.isArray(dv) && dv.length) ? dv : window.HEARING_DEFAULT_DEVICES))
+      });
+    }
+    if (q.optionsFrom === 'carriers' || (q.id === 'q_carrier' && !Array.isArray(q.options))) {
+      var cv = (window._appCache && window._appCache.hearingCarriers);
+      var src = (Array.isArray(cv) && cv.length) ? cv : window.HEARING_DEFAULT_CARRIERS;
+      q = Object.assign({}, q, { options: src.map(function (v) { return { l: v, v: v }; }) });
+      delete q.optionsFrom;
+    }
+    return q;
+  });
   return arr;
 }
 window._hrWithFixedItems = _hrWithFixedItems;
@@ -3010,11 +3034,13 @@ window.addEventListener('storage', function(e) {
 window.HEARING_FIXED_ITEMS = [
   {
     id: 'q_devices', field: 'devices', label: 'デバイス', type: 'device',
+    devices: null,   // 実際の候補は _hrWithFixedItems で入れる（定義順の都合）
     common: true, enabled: true, builtin: true, showIf: []
   },
   {
     id: 'q_carrier', field: 'carrier', label: 'キャリア', type: 'select',
-    optionsFrom: 'carriers', allowManual: true,
+    options: null,   // 実際の候補は _hrWithFixedItems で入れる
+    allowManual: true,
     manualField: 'carrierManual', manualPlaceholder: '例）mineo',
     common: true, enabled: true, builtin: true, showIf: []
   },
@@ -3048,9 +3074,6 @@ window.ensureHearingFixedItems = function () {
 /** 質問の選択肢を求める。optionsFrom があれば共有リストから引く */
 window.getHearingOptions = function (q) {
   if (!q) return [];
-  if (q.optionsFrom === 'carriers') {
-    return window.getHearingCarriers().map(function (v) { return { l: v, v: v }; });
-  }
   if (q.optionsFrom === 'domains') {
     return window.getMailDomainList().map(function (v) { return { l: v, v: v }; });
   }
@@ -3058,12 +3081,12 @@ window.getHearingOptions = function (q) {
 };
 
 /** デバイス項目（複数デバイス＋詳細）の中身 */
-function _hrDeviceContentHTML(s) {
+function _hrDeviceContentHTML(s, q) {
   var h = '<div class="hr-device-group">';
-  window.getHearingDeviceNames().forEach(function (device) {
+  window.getHearingDeviceNames(q).forEach(function (device) {
     var d = (s.devices && s.devices[device]) || { selected: false, detail: [] };
     var dDetail = Array.isArray(d.detail) ? d.detail : (d.detail ? [d.detail] : []);
-    var details = window.getHearingDeviceDetails(device);
+    var details = window.getHearingDeviceDetails(q, device);
     var content = '';
     if (details.length) {
       // Web/アプリ（PCはWin/Mac/ChromeBook）を複数選択可能なトグルボタン群として表示。
@@ -3111,7 +3134,7 @@ window.hearingItemHTML = function (q, s) {
   var fld = q.field || q.id;
   var pf  = window.getHearingPrefix(q);
   if (q.type === 'device') {
-    return _hrRow(q.label, _hrDeviceContentHTML(s), 'hr-device-wrap', pf);
+    return _hrRow(q.label, _hrDeviceContentHTML(s, q), 'hr-device-wrap', pf);
   }
   if (q.type === 'bool') {
     return _hrRow(q.label, _boolBtns(fld, s[fld], q.trueLabel || 'はい', q.falseLabel || 'いいえ'), '', pf);
@@ -3595,7 +3618,7 @@ function buildHearingLines(s) {
     if (q.type === 'device') {
       var devs = s.devices || {};
       var envParts = [];
-      window.getHearingDeviceNames().forEach(function (device) {
+      window.getHearingDeviceNames(q).forEach(function (device) {
         var d = devs[device];
         if (!d || !d.selected) return;
         var dd = Array.isArray(d.detail) ? d.detail : (d.detail ? [d.detail] : []);

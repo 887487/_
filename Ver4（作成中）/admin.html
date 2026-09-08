@@ -332,6 +332,49 @@
 }
 /* 型を変更できないセクション（ショートカット／表）の表示。
    sm-select と同じ幅にして、どのカテゴリでも見出し行の並びをそろえる。 */
+/* ── ヒアリングシート（プレビュー）の見た目 ───────────────── */
+/* 説明や設定でプレビューの上が埋まらないよう、1行のツールバーにまとめる */
+.hr-prev-bar{
+  display:flex;align-items:center;gap:8px;
+  padding:0 0 8px;margin-bottom:10px;
+  border-bottom:1px solid var(--border);
+}
+.hr-prev-ctl{display:inline-flex;align-items:center;gap:5px;font-size:10px;color:var(--text3);}
+.hr-prev-ctl select{
+  height:22px;padding:0 4px;font-size:11px;font-family:inherit;
+  border:1px solid var(--border);border-radius:4px;
+  background:var(--surface);color:var(--text);cursor:pointer;
+}
+.hr-prev-sp{flex:1;}
+.hr-prev-help{
+  width:18px;height:18px;padding:0;border-radius:50%;
+  border:1px solid var(--border);background:var(--surface);color:var(--text3);
+  font-size:10px;font-family:inherit;cursor:pointer;line-height:1;
+}
+.hr-prev-help:hover,.hr-prev-help.active{
+  background:var(--accent-lt);color:var(--accent-text);border-color:var(--accent);
+}
+.hr-prev-help-body{
+  display:none;font-size:10px;line-height:1.7;color:var(--text3);
+  background:var(--surface2);border-radius:5px;padding:7px 10px;margin-bottom:10px;
+}
+.hr-prev-help-body.open{display:block;}
+
+/* 行の編集ボタンは普段は控えめにし、行にふれたときだけはっきり見せる。
+   ボタンが常に主張していると、シートとしての見た目が読みにくくなる。 */
+.tab-panel-hearing .hr-row .hr-label button,
+.tab-panel-hearing .hr-row .hr-label select{opacity:.25;transition:opacity .12s;}
+.tab-panel-hearing .hr-row:hover .hr-label button,
+.tab-panel-hearing .hr-row:hover .hr-label select,
+.tab-panel-hearing .hr-row .hr-label button:focus,
+.tab-panel-hearing .hr-row .hr-label select:focus{opacity:1;}
+
+/* 選択肢・デバイスのインライン編集パネル */
+.hr-opt-panel{
+  margin:2px 0 8px;padding:8px 10px;
+  background:var(--surface2);border:1px dashed var(--border);border-radius:6px;
+}
+
 .sm-type-label {
   display: inline-flex; align-items: center; justify-content: center;
   height: 28px; width: 132px; flex: 0 0 132px; box-sizing: border-box;
@@ -6480,8 +6523,6 @@ function exportDataJS(silent) {
       faqData:          window._appCache.faqData          || [],
       hearingTemplates: window._appCache.hearingTemplates || [],
       hearingLabelPrefix: window.getHearingDefaultPrefix(),   // 項目名の先頭記号
-      hearingDevices:   window.getHearingDevices(),           // デバイス候補
-      hearingCarriers:  window.getHearingCarriers(),          // キャリア候補
       // スクリプト・メールも構成ファイルに含める
       talkScripts:      window._appCache.scripts          || (typeof data     !== 'undefined' ? data     : {}),
       mailTemplates:    window._appCache.mailTemplates    || (typeof mailData !== 'undefined' ? mailData : []),
@@ -13291,137 +13332,118 @@ window.addEventListener('resize',function(){
    * 先頭記号を選ぶ小さなプルダウンを作る。
    * 先頭は「既定」＝全体設定に従う。質問ごとに個別指定もできる。
    */
-  // ── デバイス／キャリアの選択肢エディタ ──────────────────
-  // 実データは data.js（hearingDevices / hearingCarriers）にあり、事業所ごとに変えられる。
-  // 入力中は保存だけ行い再描画しない（1文字ごとにフォーカスが外れるのを防ぐ）。
-  var _hrChoiceOpen = false;
-
-  function _hrChoiceSave(rerender) {
-    window.idbSetAppData('hearingDevices',  window._appCache.hearingDevices);
-    window.idbSetAppData('hearingCarriers', window._appCache.hearingCarriers);
-    exportDataJS(true).catch(function() {});
-    if (rerender) window.renderHearing();
+  // ── 選択肢／デバイスのインライン編集パネル ─────────────
+  // 独立した設定枠をやめたので、各項目の行から直接その項目の候補を編集する。
+  // 入力中は保存だけ行い描き直さない（1文字ごとにフォーカスが外れるのを防ぐ）。
+  function _hrOptPanelSave(qId, mutate) {
+    var qs = _hrQuestionsGet();
+    var i = qs.findIndex(function(x) { return x.id === qId; });
+    if (i < 0) return null;
+    mutate(qs[i]);
+    _hrQuestionsSave(qs);
+    return qs[i];
   }
 
-  function _hrChoiceEditorHTML() {
+  function _hrBuildOptPanel(panel, qId) {
+    var qs = _hrQuestionsGet();
+    var q  = qs.find(function(x) { return x.id === qId; });
+    if (!q) return;
+    var isDev = (q.type === 'device');
     var inp = 'box-sizing:border-box;height:24px;padding:0 6px;font-size:11px;' +
               'border:1px solid var(--border);border-radius:4px;' +
               'background:var(--surface);color:var(--text);font-family:inherit;';
-    var devs = window.getHearingDevices();
-    var cars = window.getHearingCarriers();
+    panel.innerHTML = '';
 
-    var h = '<div style="border:1px solid var(--border);border-radius:6px;margin-bottom:10px;overflow:hidden;">' +
-      '<div id="hrChoiceHead" style="display:flex;align-items:center;gap:8px;padding:6px 10px;cursor:pointer;' +
-        'background:var(--surface2);font-size:11px;font-weight:700;color:var(--text2);">' +
-        '<span>' + (_hrChoiceOpen ? '▼' : '▶') + '</span>' +
-        '<span>デバイス・キャリアの選択肢</span>' +
-        '<span style="font-weight:400;font-size:10px;color:var(--text3);">' +
-          'デバイス ' + devs.length + ' 件／キャリア ' + cars.length + ' 件' +
-        '</span></div>' +
-      '<div id="hrChoiceBody" style="display:' + (_hrChoiceOpen ? 'block' : 'none') + ';padding:10px;">';
+    var hd = document.createElement('div');
+    hd.style.cssText = 'font-size:10px;color:var(--text3);margin-bottom:6px;';
+    hd.textContent = isDev
+      ? 'デバイス名と詳細（カンマ区切り／空欄なら「利用あり・なし」）'
+      : 'この項目の選択肢';
+    panel.appendChild(hd);
 
-    // デバイス
-    h += '<div style="font-size:11px;font-weight:700;margin-bottom:5px;">デバイス</div>' +
-         '<div style="font-size:10px;color:var(--text3);margin-bottom:6px;">' +
-           '詳細はカンマ区切りで入力してください（例：Web, アプリ）。空欄にすると詳細ボタンは出ません。</div>' +
-         '<table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:4px;">' +
-         '<thead><tr>' +
-           '<th style="text-align:left;padding:2px 3px;width:36%;color:var(--text3);font-weight:400;">デバイス名</th>' +
-           '<th style="text-align:left;padding:2px 3px;color:var(--text3);font-weight:400;">詳細（カンマ区切り）</th>' +
-           '<th style="width:30px;"></th></tr></thead><tbody>';
-    devs.forEach(function(d, i) {
-      h += '<tr>' +
-        '<td style="padding:2px 3px;"><input type="text" value="' + hEsc(d.name) + '"' +
-          ' data-hrdev="' + i + '" data-k="name" style="' + inp + 'width:100%;"></td>' +
-        '<td style="padding:2px 3px;"><input type="text" value="' + hEsc(d.details.join(', ')) + '"' +
-          ' data-hrdev="' + i + '" data-k="details" placeholder="Web, アプリ" style="' + inp + 'width:100%;"></td>' +
-        '<td style="padding:2px 3px;text-align:center;">' +
-          '<button class="btn-del" data-hrdevdel="' + i + '" title="このデバイスを削除">×</button></td></tr>';
+    var rows = document.createElement('div');
+    rows.style.cssText = 'display:flex;flex-direction:column;gap:4px;';
+    panel.appendChild(rows);
+
+    var list = isDev ? (q.devices || []) : (q.options || []);
+    list.forEach(function(item, idx) {
+      var r = document.createElement('div');
+      r.style.cssText = 'display:flex;align-items:center;gap:5px;';
+      var a = document.createElement('input');
+      a.type = 'text';
+      a.value = isDev ? (item.name || '') : (item.l || '');
+      a.placeholder = isDev ? 'デバイス名' : '選択肢名';
+      a.style.cssText = inp + (isDev ? 'flex:0 0 34%;' : 'flex:1;');
+      a.addEventListener('input', function() {
+        _hrOptPanelSave(qId, function(qq) {
+          if (isDev) qq.devices[idx].name = a.value;
+          else { qq.options[idx].l = a.value; qq.options[idx].v = a.value; }
+        });
+      });
+      r.appendChild(a);
+
+      if (isDev) {
+        var b = document.createElement('input');
+        b.type = 'text';
+        b.value = (item.details || []).join(', ');
+        b.placeholder = '詳細（カンマ区切り／空欄可）';
+        b.style.cssText = inp + 'flex:1;';
+        b.addEventListener('input', function() {
+          _hrOptPanelSave(qId, function(qq) {
+            qq.devices[idx].details = b.value.split(/[,、]/)
+              .map(function(v) { return v.trim(); }).filter(function(v) { return v; });
+          });
+        });
+        r.appendChild(b);
+      }
+
+      var del = document.createElement('button');
+      del.type = 'button'; del.className = 'btn-del'; del.textContent = '×';
+      del.title = '削除';
+      del.addEventListener('click', function() {
+        _hrOptPanelSave(qId, function(qq) {
+          if (isDev) qq.devices.splice(idx, 1); else qq.options.splice(idx, 1);
+        });
+        _hrBuildOptPanel(panel, qId);
+        window.renderHearing();
+      });
+      r.appendChild(del);
+      rows.appendChild(r);
     });
-    h += '</tbody></table>' +
-         '<button class="hr-add-btn" id="hrDevAdd">＋ デバイスを追加</button>';
 
-    // キャリア
-    h += '<div style="font-size:11px;font-weight:700;margin:12px 0 5px;">キャリア</div>' +
-         '<div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:6px;">';
-    cars.forEach(function(c, i) {
-      h += '<span style="display:inline-flex;align-items:center;gap:2px;">' +
-        '<input type="text" value="' + hEsc(c) + '" data-hrcar="' + i + '"' +
-          ' style="' + inp + 'width:112px;">' +
-        '<button class="btn-del" data-hrcardel="' + i + '" title="このキャリアを削除">×</button></span>';
-    });
-    h += '</div><button class="hr-add-btn" id="hrCarAdd">＋ キャリアを追加</button>';
-
-    h += '</div></div>';
-    return h;
-  }
-
-  function _hrBindChoiceEditor(root) {
-    var head = root.querySelector('#hrChoiceHead');
-    if (!head) return;
-    head.addEventListener('click', function() {
-      _hrChoiceOpen = !_hrChoiceOpen;
+    var add = document.createElement('button');
+    add.type = 'button'; add.className = 'hr-add-btn';
+    add.style.cssText = 'align-self:flex-start;height:22px;font-size:10px;margin-top:6px;';
+    add.textContent = isDev ? '＋ デバイスを追加' : '＋ 選択肢を追加';
+    add.addEventListener('click', function() {
+      _hrOptPanelSave(qId, function(qq) {
+        if (isDev) { qq.devices = qq.devices || []; qq.devices.push({ name: '新しいデバイス', details: [] }); }
+        else { qq.options = qq.options || []; qq.options.push({ l: '新しい選択肢', v: 'opt_' + Date.now() }); }
+      });
+      _hrBuildOptPanel(panel, qId);
       window.renderHearing();
     });
+    panel.appendChild(add);
 
-    // 入力中：保存のみ（再描画しない＝フォーカスが外れない）
-    root.querySelectorAll('[data-hrdev]').forEach(function(inp) {
-      inp.addEventListener('input', function() {
-        var i = +inp.getAttribute('data-hrdev');
-        var list = window.getHearingDevices();
-        if (!list[i]) return;
-        if (inp.getAttribute('data-k') === 'name') list[i].name = inp.value;
-        else list[i].details = inp.value.split(/[,、]/).map(function(v) { return v.trim(); })
-                                        .filter(function(v) { return v; });
-        window._appCache.hearingDevices = list;
-        _hrChoiceSave(false);
-      });
-    });
-    root.querySelectorAll('[data-hrcar]').forEach(function(inp) {
-      inp.addEventListener('input', function() {
-        var i = +inp.getAttribute('data-hrcar');
-        var list = window.getHearingCarriers();
-        if (i >= list.length) return;
-        list[i] = inp.value;
-        window._appCache.hearingCarriers = list;
-        _hrChoiceSave(false);
-      });
-    });
+    var apply = document.createElement('button');
+    apply.type = 'button'; apply.className = 'hr-add-btn';
+    apply.style.cssText = 'align-self:flex-start;height:22px;font-size:10px;margin:6px 0 0 6px;';
+    apply.textContent = '反映';
+    apply.title = 'プレビューに反映します';
+    apply.addEventListener('click', function() { window.renderHearing(); });
+    panel.appendChild(apply);
+  }
 
-    // 追加・削除：構造が変わるので描き直す
-    root.querySelectorAll('[data-hrdevdel]').forEach(function(b) {
-      b.addEventListener('click', function() {
-        var i = +b.getAttribute('data-hrdevdel');
-        var list = window.getHearingDevices();
-        if (!confirm('デバイス「' + (list[i] && list[i].name) + '」を選択肢から削除しますか？')) return;
-        list.splice(i, 1);
-        window._appCache.hearingDevices = list;
-        _hrChoiceSave(true);
-      });
-    });
-    root.querySelectorAll('[data-hrcardel]').forEach(function(b) {
-      b.addEventListener('click', function() {
-        var i = +b.getAttribute('data-hrcardel');
-        var list = window.getHearingCarriers();
-        list.splice(i, 1);
-        window._appCache.hearingCarriers = list;
-        _hrChoiceSave(true);
-      });
-    });
-    var dAdd = root.querySelector('#hrDevAdd');
-    if (dAdd) dAdd.addEventListener('click', function() {
-      var list = window.getHearingDevices();
-      list.push({ name: '新しいデバイス', details: [] });
-      window._appCache.hearingDevices = list;
-      _hrChoiceSave(true);
-    });
-    var cAdd = root.querySelector('#hrCarAdd');
-    if (cAdd) cAdd.addEventListener('click', function() {
-      var list = window.getHearingCarriers();
-      list.push('新しいキャリア');
-      window._appCache.hearingCarriers = list;
-      _hrChoiceSave(true);
-    });
+  function _hrToggleOptPanel(rowEl, qId) {
+    var exist = rowEl.nextElementSibling;
+    if (exist && exist.classList && exist.classList.contains('hr-opt-panel')) {
+      exist.parentNode.removeChild(exist);
+      return;
+    }
+    var panel = document.createElement('div');
+    panel.className = 'hr-opt-panel';
+    _hrBuildOptPanel(panel, qId);
+    rowEl.parentNode.insertBefore(panel, rowEl.nextSibling);
   }
 
   function _mkPrefixSelect(q, onChange) {
@@ -13641,6 +13663,7 @@ window.addEventListener('resize',function(){
       '<option value="select">プルダウン</option>' +
       '<option value="radio">ラジオボタン</option>' +
       '<option value="toggle">トグルボタン</option>' +
+      '<option value="device">デバイス（複数選択＋詳細）</option>' +
       '<option value="heading">見出し（入力なし）</option>';
     row('回答方法', typeSel);
 
@@ -13650,7 +13673,28 @@ window.addEventListener('resize',function(){
       'background:var(--surface2);border-radius:6px;';
     container.appendChild(extra);
 
-    var multiline = null, multi = null, optsArea = null;
+    var multiline = null, multi = null, optsArea = null, devArea = null;
+
+    // デバイス1行ぶん（デバイス名＋詳細）
+    var addDevRow = function(name, details) {
+      var r = document.createElement('div');
+      r.style.cssText = 'display:flex;align-items:center;gap:6px;';
+      var n = document.createElement('input');
+      n.type = 'text'; n.dataset.role = 'devname';
+      n.value = name || ''; n.placeholder = 'デバイス名';
+      n.style.cssText = INP + 'height:26px;flex:0 0 34%;';
+      var d = document.createElement('input');
+      d.type = 'text'; d.dataset.role = 'devdetail';
+      d.value = details || ''; d.placeholder = '詳細（カンマ区切り／空欄可）';
+      d.style.cssText = INP + 'height:26px;flex:1;';
+      var del = document.createElement('button');
+      del.type = 'button'; del.className = 'btn-del'; del.textContent = '×';
+      del.title = 'このデバイスを削除';
+      del.addEventListener('click', function() { r.parentNode.removeChild(r); });
+      r.appendChild(n); r.appendChild(d); r.appendChild(del);
+      devArea.insertBefore(r, devArea.lastChild);
+      return n;
+    };
 
     var addOptRow = function(val) {
       var r = document.createElement('div');
@@ -13679,6 +13723,32 @@ window.addEventListener('resize',function(){
 
       if (t === 'heading') { extra.style.display = 'none'; return; }
       extra.style.display = '';
+
+      if (t === 'device') {
+        var dhd = document.createElement('div');
+        dhd.style.cssText = 'font-size:11px;font-weight:700;color:var(--text2);';
+        dhd.textContent = 'デバイスと詳細';
+        extra.appendChild(dhd);
+        var dnote = document.createElement('div');
+        dnote.style.cssText = 'font-size:10px;color:var(--text3);';
+        dnote.textContent = '詳細はカンマ区切り（例：Web, アプリ）。空欄にすると「利用あり／なし」の切り替えになります。';
+        extra.appendChild(dnote);
+
+        devArea = document.createElement('div');
+        devArea.style.cssText = 'display:flex;flex-direction:column;gap:5px;';
+        var dAdd = document.createElement('button');
+        dAdd.type = 'button'; dAdd.className = 'hr-add-btn';
+        dAdd.style.cssText = 'align-self:flex-start;height:24px;font-size:11px;';
+        dAdd.textContent = '＋ デバイスを追加';
+        dAdd.addEventListener('click', function() { addDevRow('', '').focus(); });
+        devArea.appendChild(dAdd);
+        extra.appendChild(devArea);
+        // 初期値としてよく使う組み合わせを入れておく
+        (window.HEARING_DEFAULT_DEVICES || []).forEach(function(d) {
+          addDevRow(d.name, (d.details || []).join(', '));
+        });
+        return;
+      }
 
       if (t === 'text') {
         var lw = document.createElement('label');
@@ -13826,6 +13896,20 @@ window.addEventListener('resize',function(){
         // 入力欄を持たないので追加設定は不要
       } else if (t === 'text') {
         newQ.multiline = !!(multiline && multiline.checked);
+      } else if (t === 'device') {
+        newQ.devices = [];
+        devArea.querySelectorAll('[data-role="devname"]').forEach(function(nInp) {
+          var name = nInp.value.trim();
+          if (!name) return;
+          var dInp = nInp.parentNode.querySelector('[data-role="devdetail"]');
+          newQ.devices.push({
+            name: name,
+            details: String(dInp ? dInp.value : '').split(/[,、]/)
+              .map(function(v) { return v.trim(); })
+              .filter(function(v) { return v; })
+          });
+        });
+        if (!newQ.devices.length) { toast('⚠️ デバイスを1つ以上入力してください'); return; }
       } else {
         newQ.options = [];
         optsArea.querySelectorAll('[data-role="opt"]').forEach(function(inp) {
@@ -14006,6 +14090,23 @@ window.addEventListener('resize',function(){
         });
         labelEl.appendChild(tplBtn);
       }
+
+      // 選択肢／デバイスをその場で編集する
+      if (q.type === 'device' || q.type === 'select' || q.type === 'radio' || q.type === 'toggle') {
+        var optBtn = document.createElement('button');
+        optBtn.type = 'button';
+        optBtn.textContent = q.type === 'device' ? '機器' : '選択肢';
+        optBtn.title = q.type === 'device' ? 'デバイスと詳細を編集' : 'この項目の選択肢を編集';
+        optBtn.style.cssText =
+          'height:18px;padding:0 6px;margin-left:4px;border-radius:3px;' +
+          'border:1px dashed var(--border);background:var(--surface2);color:var(--text3);' +
+          'font-size:10px;font-family:inherit;cursor:pointer;vertical-align:middle;';
+        optBtn.addEventListener('click', function(e) {
+          e.stopPropagation();
+          _hrToggleOptPanel(rowEl, qId);
+        });
+        labelEl.appendChild(optBtn);
+      }
     }
 
     // ② ボタン群の編集
@@ -14141,25 +14242,26 @@ window.addEventListener('resize',function(){
 
       var h = '';
       // ヒント行
-      h += '<div style="font-size:10px;color:var(--accent-text);background:var(--accent-lt);border:1px solid var(--accent);border-radius:5px;padding:5px 10px;margin-bottom:10px;">' +
-           '✏️ <b>ラベル・ボタンテキスト</b>をダブルクリックで編集　<b>＋ 追加</b> / <b>×</b> で選択肢の追加・削除　末尾の <b>＋ 質問を追加</b> で新規質問をインライン追加' +
+      // ── ツールバー（1行にまとめる）──
+      // 説明文と設定でプレビューの上が埋まらないよう、コンパクトな1行にする。
+      h += '<div class="hr-prev-bar">' +
+             '<label class="hr-prev-ctl"><span>記号</span>' +
+               '<select id="hrDefaultPrefixSel">' +
+                 window.HEARING_PREFIX_OPTIONS.map(function(o) {
+                   return '<option value="' + hEsc(o.v) + '"' +
+                          (o.v === window.getHearingDefaultPrefix() ? ' selected' : '') + '>' +
+                          hEsc(o.v === '' ? 'なし' : o.v) + '</option>';
+                 }).join('') +
+               '</select></label>' +
+             '<span class="hr-prev-sp"></span>' +
+             '<button type="button" class="hr-prev-help" id="hrPrevHelpBtn" title="編集のしかた">？</button>' +
+           '</div>' +
+           '<div class="hr-prev-help-body" id="hrPrevHelp">' +
+             '<b>ダブルクリック</b>で項目名・ボタン名を編集　/　' +
+             '<b>選択肢</b>・<b>機器</b>で候補を編集　/　' +
+             '<b>文</b>で出力文を設定　/　項目名の左のプルダウンで記号を個別指定<br>' +
+             '末尾の <b>＋ 質問を追加</b> から新しい項目を追加できます。' +
            '</div>';
-
-      // 項目名の先頭に付ける記号（全体の既定）。質問ごとの指定が無いものに効く。
-      h += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;font-size:11px;color:var(--text2);">' +
-             '<span>項目の先頭記号（全体の既定）</span>' +
-             '<select id="hrDefaultPrefixSel" style="height:26px;padding:0 6px;border:1px solid var(--border);' +
-               'border-radius:4px;background:var(--surface);color:var(--text);font-size:11px;font-family:inherit;cursor:pointer;">' +
-               window.HEARING_PREFIX_OPTIONS.map(function(o) {
-                 return '<option value="' + hEsc(o.v) + '"' +
-                        (o.v === window.getHearingDefaultPrefix() ? ' selected' : '') + '>' + hEsc(o.l) + '</option>';
-               }).join('') +
-             '</select>' +
-             '<span style="font-size:10px;color:var(--text3);">個別に変えたい項目は、各項目名の左のプルダウンで指定できます</span>' +
-           '</div>';
-
-      // デバイス／キャリアの選択肢（data.js で管理。事業所ごとに変えられる）
-      h += _hrChoiceEditorHTML();
 
       // デバイス・キャリア・メールドメイン・メモも通常の項目として並ぶ
       qs.forEach(function(q) {
@@ -14214,7 +14316,14 @@ window.addEventListener('resize',function(){
       if (typeof window.renderHearingSummary === 'function') window.renderHearingSummary();
       if (typeof _hrUpdateAddPolicyBtn === 'function') _hrUpdateAddPolicyBtn();
 
-      _hrBindChoiceEditor(el);
+      var helpBtn = el.querySelector('#hrPrevHelpBtn');
+      var helpBox = el.querySelector('#hrPrevHelp');
+      if (helpBtn && helpBox) {
+        helpBtn.addEventListener('click', function() {
+          var open = helpBox.classList.toggle('open');
+          helpBtn.classList.toggle('active', open);
+        });
+      }
 
       // 全体の既定記号
       var pfSel = el.querySelector('#hrDefaultPrefixSel');

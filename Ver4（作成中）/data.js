@@ -523,21 +523,101 @@ window.APP_STATIC_DATA = {
       "common": true,
       "enabled": true,
       "builtin": true,
-      "showIf": []
+      "showIf": [],
+      "devices": [
+        {
+          "name": "iPhone",
+          "details": [
+            "Web",
+            "アプリ"
+          ]
+        },
+        {
+          "name": "Android",
+          "details": [
+            "Web",
+            "アプリ"
+          ]
+        },
+        {
+          "name": "タブレット",
+          "details": [
+            "Web",
+            "アプリ"
+          ]
+        },
+        {
+          "name": "PC",
+          "details": [
+            "Win",
+            "Mac",
+            "ChromeBook"
+          ]
+        },
+        {
+          "name": "TV",
+          "details": []
+        }
+      ]
     },
     {
       "id": "q_carrier",
       "field": "carrier",
       "label": "キャリア",
       "type": "select",
-      "optionsFrom": "carriers",
       "allowManual": true,
       "manualField": "carrierManual",
       "manualPlaceholder": "例）mineo",
       "common": true,
       "enabled": true,
       "builtin": true,
-      "showIf": []
+      "showIf": [],
+      "options": [
+        {
+          "l": "docomo",
+          "v": "docomo"
+        },
+        {
+          "l": "au",
+          "v": "au"
+        },
+        {
+          "l": "SoftBank",
+          "v": "SoftBank"
+        },
+        {
+          "l": "楽天モバイル",
+          "v": "楽天モバイル"
+        },
+        {
+          "l": "ahamo",
+          "v": "ahamo"
+        },
+        {
+          "l": "povo",
+          "v": "povo"
+        },
+        {
+          "l": "LINEMO",
+          "v": "LINEMO"
+        },
+        {
+          "l": "Y!mobile",
+          "v": "Y!mobile"
+        },
+        {
+          "l": "UQ mobile",
+          "v": "UQ mobile"
+        },
+        {
+          "l": "格安SIM（MVNO）",
+          "v": "格安SIM（MVNO）"
+        },
+        {
+          "l": "Wi-Fiのみ",
+          "v": "Wi-Fiのみ"
+        }
+      ]
     },
     {
       "id": "q_domain",
@@ -1784,53 +1864,5 @@ window.APP_STATIC_DATA = {
     "subs": {
       "mcat_1788611851040": []
     }
-  },
-  "hearingDevices": [
-    {
-      "name": "iPhone",
-      "details": [
-        "Web",
-        "アプリ"
-      ]
-    },
-    {
-      "name": "Android",
-      "details": [
-        "Web",
-        "アプリ"
-      ]
-    },
-    {
-      "name": "タブレット",
-      "details": [
-        "Web",
-        "アプリ"
-      ]
-    },
-    {
-      "name": "PC",
-      "details": [
-        "Win",
-        "Mac",
-        "ChromeBook"
-      ]
-    },
-    {
-      "name": "TV",
-      "details": []
-    }
-  ],
-  "hearingCarriers": [
-    "docomo",
-    "au",
-    "SoftBank",
-    "楽天モバイル",
-    "ahamo",
-    "povo",
-    "LINEMO",
-    "Y!mobile",
-    "UQ mobile",
-    "格安SIM（MVNO）",
-    "Wi-Fiのみ"
-  ]
+  }
 };
