@@ -26,7 +26,7 @@ var HEARING_DATA_VERSION = 2;
 // admin.html で編集し data.js に保存される。
 // script.html でも同じ値を使うため、既定値と取得口を共通側に置く。
 window.FIXED_TEXT_DEFAULTS = {
-  opening:        'お電話 ありがとうございます。○○窓口 担当●●でございます。',
+  opening:        'お電話 ありがとうございます。＿＿窓口 担当●●でございます。',
   closingDefault: 'ご案内は以上となりますが、そのほか確認されたいことなどはございませんでしょうか？',
   closingNone:    'ありがとうございます。 それでは本日●●がご案内いたしました。それでは失礼いたします。',
   closingAsk:     '最後にアンケートを送らせていただきたいのでメールアドレスを教えていただけますか。'
@@ -861,7 +861,8 @@ window._appCache = {
   sideMenuData:     null,
   faqData:          [],
   linkify:          {},
-  hearingTemplates: []
+  hearingTemplates: [],
+  hearingLabelPrefix: '■'   // 項目名の先頭に付ける記号（'' なら付けない）
 };
 
 // ── data.js の内容を「読み込み直後に同期で」キャッシュへ流し込む ──
@@ -884,6 +885,7 @@ window._appCache = {
   if (sd.faqData          != null) window._appCache.faqData          = sd.faqData;
   if (sd.linkify          != null) window._appCache.linkify          = sd.linkify;
   if (sd.hearingTemplates != null) window._appCache.hearingTemplates = sd.hearingTemplates;
+  if (sd.hearingLabelPrefix != null) window._appCache.hearingLabelPrefix = sd.hearingLabelPrefix;
 })();
 
 // localStorage からの一回限りのマイグレーション
@@ -935,6 +937,7 @@ window.initAppData = function() {
     if (sd.faqData          != null) window._appCache.faqData          = sd.faqData;
     if (sd.linkify          != null) window._appCache.linkify          = sd.linkify;
     if (sd.hearingTemplates != null) window._appCache.hearingTemplates = sd.hearingTemplates;
+    if (sd.hearingLabelPrefix != null) window._appCache.hearingLabelPrefix = sd.hearingLabelPrefix;
   if (sd.hearingTemplates != null) window._appCache.hearingTemplates = sd.hearingTemplates;
   if (sd.linkify          != null) window._appCache.linkify          = sd.linkify;
   if (sd.hearingTemplates != null) window._appCache.hearingTemplates = sd.hearingTemplates;
@@ -1350,6 +1353,16 @@ function _processImportText(text, noReload) {
               if (Array.isArray(raw.sideMenuFiles) && raw.sideMenuFiles.length && window.idbSaveMenuFile) {
                 Promise.all(raw.sideMenuFiles.map(function(f){ return window.idbSaveMenuFile(f); })).catch(function(){});
               }
+
+  // ドメインリスト（固定・1列テーブル）
+  html += '<div class="side-section"><div class="side-section-header" onclick="toggleAccordion(\'domainListPanel\')">📧ドメインリスト <span class="arrow" style="display:inline-block;transition:transform .2s">▶</span></div>' +
+    '<div class="accordion-body" id="domainListPanel" style="padding:10px 12px 14px;"><div style="overflow-x:auto;">' +
+    '<table style="width:100%;border-collapse:collapse;font-size:11px;min-width:160px;">' +
+    '<tbody>' +
+     ['aol.com', 'asahinet.jp', 'au.com', 'auone-net.jp', 'bbiq.jp', 'biglobe.ne.jp', 'biz.ezweb.ne.jp', 'canet.ne.jp', 'commufa.jp', 'dion.ne.jp', 'docomo.ne.jp', 'dream.com', 'dti.ne.jp', 'eonet.ne.jp', 'excite.co.jp', 'ezweb.ne.jp', 'gmail.com', 'gmobb.jp', 'gol.com', 'goo.jp', 'googlemail.com', 'goomail.com', 'hotmail.co.jp', 'hotmail.com', 'i.softbank.jp', 'icloud.com', 'infoseek.co.jp', 'infoseek.jp', 'itscom.net', 'jcom.home.ne.jp', 'jcom.zaq.ne.jp', 'ktv.ne.jp', 'live.jp', 'mac.com', 'mail.bbexcite.jp', 'mail.goo.ne.jp', 'me.com', 'mineo.com', 'msn.com', 'mvt-net.com', 'nifty.com', 'ocn.ne.jp', 'odn.ne.jp', 'outlook.com', 'plala.or.jp', 'pobox.com', 'rakuten.jp', 'softbank.ne.jp', 'so-net.ne.jp', 'vodafone.ne.jp', 'wakwak.com', 'yahoo.co.jp', 'yahoo.ne.jp', 'ybb.ne.jp', 'ymobile.ne.jp', 'ztv.ne.jp'].map(function(d) {
+      return '<tr><td style="padding:6px 8px;border:1px solid var(--border,#e8eaed);text-align:center;color:var(--text,#2f3542)">' + d + '</td></tr>';
+    }).join('') +
+    '</tbody></table></div></div></div>';
 
               // 更新履歴
               if (Array.isArray(raw.updateHistory) && raw.updateHistory.length > 0) {
@@ -2253,15 +2266,6 @@ function _buildSideMenuHTML(isDark) {
   // 管理画面（サイドメニュー編集）で作れる「表セクション」に移行した。
   // ここでのハードコードは廃止し、sideMenuData から描画する。
 
-  // ドメインリスト（固定・1列テーブル）
-  html += '<div class="side-section"><div class="side-section-header" onclick="toggleAccordion(\'domainListPanel\')">📧ドメインリスト <span class="arrow" style="display:inline-block;transition:transform .2s">▶</span></div>' +
-    '<div class="accordion-body" id="domainListPanel" style="padding:10px 12px 14px;"><div style="overflow-x:auto;">' +
-    '<table style="width:100%;border-collapse:collapse;font-size:11px;min-width:160px;">' +
-    '<tbody>' +
-     ['aol.com', 'asahinet.jp', 'au.com', 'auone-net.jp', 'bbiq.jp', 'biglobe.ne.jp', 'biz.ezweb.ne.jp', 'canet.ne.jp', 'commufa.jp', 'dion.ne.jp', 'docomo.ne.jp', 'dream.com', 'dti.ne.jp', 'eonet.ne.jp', 'excite.co.jp', 'ezweb.ne.jp', 'gmail.com', 'gmobb.jp', 'gol.com', 'goo.jp', 'googlemail.com', 'goomail.com', 'hotmail.co.jp', 'hotmail.com', 'i.softbank.jp', 'icloud.com', 'infoseek.co.jp', 'infoseek.jp', 'itscom.net', 'jcom.home.ne.jp', 'jcom.zaq.ne.jp', 'ktv.ne.jp', 'live.jp', 'mac.com', 'mail.bbexcite.jp', 'mail.goo.ne.jp', 'me.com', 'mineo.com', 'msn.com', 'mvt-net.com', 'nifty.com', 'ocn.ne.jp', 'odn.ne.jp', 'outlook.com', 'plala.or.jp', 'pobox.com', 'rakuten.jp', 'softbank.ne.jp', 'so-net.ne.jp', 'vodafone.ne.jp', 'wakwak.com', 'yahoo.co.jp', 'yahoo.ne.jp', 'ybb.ne.jp', 'ymobile.ne.jp', 'ztv.ne.jp'].map(function(d) {
-      return '<tr><td style="padding:6px 8px;border:1px solid var(--border,#e8eaed);text-align:center;color:var(--text,#2f3542)">' + d + '</td></tr>';
-    }).join('') +
-    '</tbody></table></div></div></div>';
 
   // 更新履歴（固定）
   html += '<div class="side-section" id="historySideSection">' +
@@ -2767,9 +2771,47 @@ function _strBtns(field, value, items) {
   }).join('');
 }
 
-function _hrRow(label, content, extraClass) {
+// ── 項目名の先頭に付ける記号 ────────────────────────────
+// 以前は「■」を決め打ちで付けていたが、付けるかどうか・どの記号にするかを
+// 選べるようにした。全体の既定（hearingLabelPrefix）を質問ごとに上書きできる。
+window.HEARING_PREFIX_OPTIONS = [
+  { v: '',  l: 'なし（記号を付けない）' },
+  { v: '■', l: '■' },
+  { v: '●', l: '●' },
+  { v: '◆', l: '◆' },
+  { v: '▶', l: '▶' },
+  { v: '〇', l: '〇' },
+  { v: '・', l: '・' },
+  { v: '※', l: '※' },
+  { v: '＞', l: '＞' }
+];
+
+/** 全体の既定記号（未設定なら ■） */
+window.getHearingDefaultPrefix = function () {
+  var v = window._appCache && window._appCache.hearingLabelPrefix;
+  return (typeof v === 'string') ? v : '■';
+};
+
+/** 全体の既定記号を変える（管理画面から呼ぶ） */
+window.setHearingDefaultPrefix = function (v) {
+  window._appCache.hearingLabelPrefix = (typeof v === 'string') ? v : '■';
+  if (window.idbSetAppData) window.idbSetAppData('hearingLabelPrefix', window._appCache.hearingLabelPrefix);
+  if (typeof renderHearing === 'function') renderHearing();
+};
+
+/**
+ * その項目に付ける記号を返す。
+ * 質問に prefix が設定されていればそれを、無ければ全体の既定を使う。
+ */
+window.getHearingPrefix = function (q) {
+  if (q && typeof q.prefix === 'string') return q.prefix;
+  return window.getHearingDefaultPrefix();
+};
+
+function _hrRow(label, content, extraClass, prefix) {
+  var pf = (typeof prefix === 'string') ? prefix : window.getHearingDefaultPrefix();
   return '<div class="hr-row' + (extraClass ? ' ' + extraClass : '') + '">' +
-         '<div class="hr-label">■' + label + '</div>' +
+         '<div class="hr-label">' + _hEsc(pf) + label + '</div>' +
          '<div class="hr-btns">' + content + '</div>' +
          '</div>';
 }
@@ -2905,7 +2947,8 @@ window.addEventListener('storage', function(e) {
 
 function _hrDeviceSectionHTML(s) {
   // ラベル＋ボタンを1行に収め、5デバイスを1つの枠にまとめてコンパクトに表示する
-  var h = '<div class="hr-divider">■デバイス</div><div class="hr-device-group">';
+  var pf = window.getHearingDefaultPrefix();
+  var h = '<div class="hr-divider">' + _hEsc(pf) + 'デバイス</div><div class="hr-device-group">';
   DEVICE_LIST.forEach(function (device) {
     var d = (s.devices && s.devices[device]) || { selected: false, detail: [] };
     var dDetail = Array.isArray(d.detail) ? d.detail : (d.detail ? [d.detail] : []);
@@ -3211,7 +3254,7 @@ function renderHearing() {
 
   // ── ■メモ（最上部に配置）──
   var h = '<div class="hr-row hr-memo-row">' +
-    '<div class="hr-label">■メモ</div>' +
+    '<div class="hr-label">' + _hEsc(window.getHearingDefaultPrefix()) + 'メモ</div>' +
     '<textarea class="hr-memo-textarea" rows="3" placeholder="自由記入欄…" oninput="window._setHearingMemo(this.value)">' +
     _hEsc(s.memo || '') + '</textarea>' +
     '</div>';
@@ -3236,27 +3279,29 @@ function renderHearing() {
       var opened = (_hrGroupState[gid] !== false);
       h += '<div class="hr-group' + (opened ? ' open' : '') + '">'
         +   '<div class="hr-heading" onclick="toggleHearingGroup(\'' + gid + '\')">'
-        +     '<span class="hr-group-arrow">▼</span>' + _hEsc(q.label)
+        +     '<span class="hr-group-arrow">▼</span>'
+        +     _hEsc(window.getHearingPrefix(q)) + _hEsc(q.label)
         +   '</div>'
         +   '<div class="hr-group-body">';
       _hrGroupOpen = true;
       return;
     }
+    var qpf = window.getHearingPrefix(q);   // 項目ごとの先頭記号
     if (q.type === 'bool') {
-      h += _hrRow(q.label, _boolBtns(fld, s[fld], q.trueLabel||'はい', q.falseLabel||'いいえ'));
+      h += _hrRow(q.label, _boolBtns(fld, s[fld], q.trueLabel||'はい', q.falseLabel||'いいえ'), '', qpf);
     } else if (q.type === 'str' || q.type === 'toggle') {
       // トグルは従来のボタン群と同じ見た目。複数選択にも対応する
       h += _hrRow(q.label, q.multi
         ? _multiBtns(fld, s[fld], q.options||[])
-        : _strBtns(fld, s[fld], q.options||[]));
+        : _strBtns(fld, s[fld], q.options||[]), '', qpf);
     } else if (q.type === 'radio') {
-      h += _hrRow(q.label, _radioBtns(fld, s[fld], q.options||[], q.multi));
+      h += _hrRow(q.label, _radioBtns(fld, s[fld], q.options||[], q.multi), '', qpf);
     } else if (q.type === 'select') {
-      h += _hrRow(q.label, _selectBox(fld, s[fld], q.options||[]));
+      h += _hrRow(q.label, _selectBox(fld, s[fld], q.options||[]), '', qpf);
     } else if (q.type === 'text') {
       h += _hrRow(q.label, q.multiline
         ? '<textarea class="hr-text-input" rows="3" style="resize:vertical;font-family:inherit;" oninput="setHearing(\'' + fld + '\',this.value)">' + _hEsc(s[fld]||'') + '</textarea>'
-        : '<input type="text" class="hr-text-input" value="' + _hEsc(s[fld]||'') + '" oninput="setHearing(\'' + fld + '\',this.value)">');
+        : '<input type="text" class="hr-text-input" value="' + _hEsc(s[fld]||'') + '" oninput="setHearing(\'' + fld + '\',this.value)">', '', qpf);
     }
   });
 
@@ -3319,7 +3364,10 @@ window.hearingFillSlot = function (tpl, val) {
 
 /** 1行ぶんの出力テキスト（コピー用） */
 function _hrLineText(item) {
-  if (item.kind === 'heading') return '■ ' + item.text;
+  if (item.kind === 'heading') {
+    var pf = (typeof item.prefix === 'string') ? item.prefix : window.getHearingDefaultPrefix();
+    return pf ? pf + ' ' + item.text : item.text;
+  }
   if (item.kind === 'policy')  return '対応方針：' + item.value;
   // 出力文が設定されていれば「項目名：値」ではなく文章として出す
   if (item.outTpl && window.hearingHasSlot(item.outTpl)) {
@@ -3389,7 +3437,10 @@ function buildHearingLines(s) {
     else if (!_hrEvalShowIf(q.showIf, s)) return;
 
     // 見出しは入力を持たないが、区切りとして出力する
-    if (q.type === 'heading') { out.push({ kind: 'heading', text: (q.outLabel || q.label) }); return; }
+    if (q.type === 'heading') {
+      out.push({ kind: 'heading', text: (q.outLabel || q.label), prefix: window.getHearingPrefix(q) });
+      return;
+    }
 
     var val = s[q.field || q.id];
     if (val === null || val === undefined || val === '') return;
@@ -3459,7 +3510,8 @@ function renderHearingSummary() {
   items.forEach(function (it) {
     if (it.kind === 'policy') return;   // 対応方針は下にまとめて出す
     if (it.kind === 'heading') {
-      h += '<div class="hr-summary-heading">■ ' + _hEsc(it.text) + '</div>';
+      var hpf = (typeof it.prefix === 'string') ? it.prefix : window.getHearingDefaultPrefix();
+      h += '<div class="hr-summary-heading">' + _hEsc(hpf ? hpf + ' ' : '') + _hEsc(it.text) + '</div>';
       return;
     }
     // 出力文が設定されている項目は、文章そのものを1行で見せる
