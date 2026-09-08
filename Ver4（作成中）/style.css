@@ -580,6 +580,11 @@ body > .hearing-panel { top:var(--header-h); }
 .hr-summary-row { display:flex;align-items:baseline;gap:0;font-size:11px;line-height:1.4;text-align:left; }
 .hr-sum-label { color:#888;white-space:nowrap;flex-shrink:0;text-align:left; }
 .hr-sum-label::after { content:'：';margin-right:2px; }
+/* 結果文の中の見出し（■〜）。質問グループの区切りとして表示する */
+.hr-summary-heading { font-size:10px;font-weight:700;color:var(--text2,#555);margin:6px 0 1px;text-align:left;letter-spacing:0.03em; }
+.hr-summary-heading:first-child { margin-top:0; }
+/* 「出力文」を設定した項目は、項目名を出さず文章そのものを1行で見せる */
+.hr-summary-sentence .hr-sum-val { white-space:pre-wrap;word-break:break-word; }
 .hr-sum-val { color:var(--text);font-weight:600;word-break:break-all;text-align:left; }
 .hr-sum-yes { color:#27ae60;background:#e8fdf5;border-radius:4px;padding:1px 7px;font-size:10px; }
 .hr-sum-no { color:var(--red);background:#fff0f0;border-radius:4px;padding:1px 7px;font-size:10px; }

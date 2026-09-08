@@ -326,6 +326,16 @@
   font-size: 11px; font-family: inherit;
   background: var(--surface); color: var(--text);
   cursor: pointer;
+  /* 選択中の文字数で幅が変わると、カテゴリを開閉するたびに見出し行がガタつく。
+     いちばん長い「サブカテゴリ付き」が収まる幅に固定する。 */
+  width: 132px; flex: 0 0 132px; box-sizing: border-box;
+}
+/* 型を変更できないセクション（ショートカット／表）の表示。
+   sm-select と同じ幅にして、どのカテゴリでも見出し行の並びをそろえる。 */
+.sm-type-label {
+  display: inline-flex; align-items: center; justify-content: center;
+  height: 28px; width: 132px; flex: 0 0 132px; box-sizing: border-box;
+  font-size: 11px; color: var(--text3); white-space: nowrap;
 }
 .sm-del-btn {
   height: 28px; padding: 0 8px;
@@ -373,6 +383,14 @@
 /* URL欄のドロップゾーンハイライト */
 .sm-url-dz-over > .sm-url-input { border-color: var(--accent) !important; background: var(--accent-lt) !important; }
 .tab-panel-sidemenu { display: none; }
+/* サイドメニュー編集タブは .tab-panel.active により display:flex で表示される。
+   そのため中身の div がフレックスアイテムとなり、内容の幅に合わせて縮んでしまう
+   （＝すべて閉じると横幅が狭くなり、中央に寄って見える）。
+   開閉に関わらず常にパネルの幅いっぱいを使うように固定する。 */
+#smPanelInner { width: 100%; flex: 1 1 auto; min-width: 0; }
+/* カテゴリ一覧の各ブロックも、中身に関係なく同じ幅にそろえる */
+#smCatList { align-items: stretch; }
+#smCatList > .sm-cat-block { width: 100%; box-sizing: border-box; }
 
 .hist-del-btn {
   display:inline-flex;align-items:center;justify-content:center;
@@ -2176,7 +2194,7 @@ html[data-theme="dark"] .nav-arrow-btn { background: rgba(40,42,54,.9); }
 
   <!-- ===== ☰ サイドメニュー編集タブ ===== -->
   <div class="tab-panel tab-panel-sidemenu" id="tabSideMenu" style="padding:20px;overflow-y:scroll;scrollbar-gutter:stable;">
-    <div style="max-width:1680px;margin:0 auto;">
+    <div id="smPanelInner" style="max-width:1680px;margin:0 auto;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
         <div style="font-size:14px;font-weight:700;color:var(--text);">☰ サイドメニュー編集</div>
       </div>
@@ -6630,9 +6648,9 @@ function smRender() {
       '</span>' +
       '<input class="sm-input" value="' + _smEsc(sec.label) + '" placeholder="カテゴリ名（絵文字可）" oninput="smSetCat(' + si + ',\'label\',this.value)" style="flex:1;font-weight:700;font-size:13px;">' +
       (isFixed
-        ? '<span style="font-size:11px;color:var(--text3);white-space:nowrap;flex-shrink:0;">ショートカット一覧</span>'
+        ? '<span class="sm-type-label">ショートカット一覧</span>'
         : isTable
-          ? '<span style="font-size:11px;color:var(--text3);white-space:nowrap;flex-shrink:0;">表</span>'
+          ? '<span class="sm-type-label">表</span>'
           : '<select class="sm-select" onchange="smSetCat(' + si + ',\'type\',this.value)">' +
             '<option value="links"' + (sec.type === 'links' ? ' selected' : '') + '>リンク一覧</option>' +
             '<option value="links_with_sub"' + (sec.type === 'links_with_sub' ? ' selected' : '') + '>サブカテゴリ付き</option>' +
@@ -13212,6 +13230,23 @@ window.addEventListener('resize',function(){
   }
 
   // ── ＋ボタン（選択肢追加） ──
+  /**
+   * 出力文の入力欄に「[入力]」を差し込む。
+   * カーソル位置（選択範囲があればそこ）に入れる。
+   */
+  function _hrInsertSlot(inp) {
+    var token = window.HEARING_SLOT_TOKEN || '[入力]';
+    var v  = inp.value || '';
+    var s0 = (inp.selectionStart == null) ? v.length : inp.selectionStart;
+    var e0 = (inp.selectionEnd   == null) ? v.length : inp.selectionEnd;
+    inp.value = v.slice(0, s0) + token + v.slice(e0);
+    inp.focus();
+    try { inp.setSelectionRange(s0 + token.length, s0 + token.length); } catch (e) {}
+  }
+
+  /** 出力文の入力例（プレースホルダ／説明で使い回す） */
+  var HR_OUT_TPL_SAMPLE = '空GCを[入力]本、不要になったため返却したい。';
+
   function _mkAddBtn(label, onClick) {
     var b = document.createElement('button');
     b.type = 'button';
@@ -13363,6 +13398,33 @@ window.addEventListener('resize',function(){
     outInp.style.cssText = INP;
     row('出力名', outInp);
 
+    // ── 出力文（文章の一部を入力箇所にする）──
+    //   例）空GCを[入力]本、不要になったため返却したい。
+    //   [入力] の位置に、実際の回答が差し込まれて1文として出力される。
+    var tplWrap = document.createElement('div');
+    tplWrap.style.cssText = 'display:flex;flex-direction:column;gap:4px;flex:1;min-width:0;';
+    var outTplInp = document.createElement('input');
+    outTplInp.type = 'text';
+    outTplInp.placeholder = '例）' + HR_OUT_TPL_SAMPLE;
+    outTplInp.style.cssText = INP;
+    var tplSub = document.createElement('div');
+    tplSub.style.cssText = 'display:flex;align-items:center;gap:6px;flex-wrap:wrap;';
+    var insBtn = document.createElement('button');
+    insBtn.type = 'button';
+    insBtn.style.cssText =
+      'height:22px;padding:0 8px;border:1px dashed var(--accent);border-radius:4px;' +
+      'background:var(--accent-lt);color:var(--accent-text);font-size:10px;font-weight:700;' +
+      'cursor:pointer;font-family:inherit;flex-shrink:0;';
+    insBtn.textContent = '［入力］を挿入';
+    insBtn.addEventListener('click', function() { _hrInsertSlot(outTplInp); });
+    var tplHint = document.createElement('span');
+    tplHint.style.cssText = 'font-size:10px;color:var(--text3);line-height:1.5;';
+    tplHint.textContent = '空欄なら「出力名：回答」の形で出力します。[入力] の位置に回答が入ります。';
+    tplSub.appendChild(insBtn); tplSub.appendChild(tplHint);
+    tplWrap.appendChild(outTplInp); tplWrap.appendChild(tplSub);
+    var outTplRow = row('出力文', tplWrap);
+    outTplRow.style.alignItems = 'flex-start';
+
     // ── 回答方法 ──
     var typeSel = document.createElement('select');
     typeSel.style.cssText = INP;
@@ -13403,6 +13465,9 @@ window.addEventListener('resize',function(){
       extra.innerHTML = '';
       multiline = multi = optsArea = null;
       var t = typeSel.value;
+
+      // 見出しは回答を持たないので、出力文（入力箇所の埋め込み）も使わない
+      outTplRow.style.display = (t === 'heading') ? 'none' : 'flex';
 
       if (t === 'heading') { extra.style.display = 'none'; return; }
       extra.style.display = '';
@@ -13535,6 +13600,7 @@ window.addEventListener('resize',function(){
         enabled: true,                      // これが無いと一覧に出ない
         label: label,
         outLabel: outInp.value.trim(),      // 空なら出力時に label を使う
+        outTpl: (t === 'heading') ? '' : outTplInp.value.trim(),  // [入力] を含む文章
         type: t,
         common: !tplId,                     // テンプレート未指定＝共通項目
         tplId: tplId || ''
@@ -13682,6 +13748,44 @@ window.addEventListener('resize',function(){
         _hrDeleteQuestion(qId, q.label);
       });
       labelEl.appendChild(delQ);
+
+      // 出力文（文章の一部を入力箇所にする）の設定ボタン
+      if (q.type !== 'heading') {
+        var tplBtn = document.createElement('button');
+        tplBtn.type = 'button';
+        tplBtn.textContent = q.outTpl ? '文✓' : '文';
+        tplBtn.title = q.outTpl
+          ? '出力文：' + q.outTpl
+          : '出力文を設定する（例：' + HR_OUT_TPL_SAMPLE + '）';
+        tplBtn.style.cssText =
+          'height:18px;padding:0 6px;margin-left:4px;border-radius:3px;' +
+          'font-size:10px;font-family:inherit;cursor:pointer;vertical-align:middle;' +
+          (q.outTpl
+            ? 'border:1px solid var(--accent);background:var(--accent-lt);color:var(--accent-text);'
+            : 'border:1px dashed var(--border);background:var(--surface2);color:var(--text3);');
+        tplBtn.addEventListener('click', function(e) {
+          e.stopPropagation();
+          var qs2 = _hrQuestionsGet();
+          var qi2 = qs2.findIndex(function(x) { return x.id === qId; });
+          if (qi2 < 0) return;
+          var val = prompt(
+            '出力文を入力してください。\n' +
+            '[入力] と書いた位置に、実際の回答が差し込まれます。\n\n' +
+            '例）' + HR_OUT_TPL_SAMPLE + '\n\n' +
+            '（空欄にすると「出力名：回答」の形に戻ります）',
+            qs2[qi2].outTpl || '');
+          if (val === null) return;
+          val = val.trim();
+          if (val && !(window.hearingHasSlot && window.hearingHasSlot(val))) {
+            if (!confirm('文章に [入力] が見つかりません。\n回答が差し込まれない文章になりますが、このまま設定しますか？')) return;
+          }
+          qs2[qi2].outTpl = val;
+          _hrQuestionsSave(qs2);
+          window.renderHearing();
+          toast(val ? '✅ 出力文を設定しました' : '出力文を解除しました');
+        });
+        labelEl.appendChild(tplBtn);
+      }
     }
 
     // ② ボタン群の編集

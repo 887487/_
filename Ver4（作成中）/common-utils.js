@@ -2171,7 +2171,10 @@ function _buildSideMenuHTML(isDark) {
 
     } else if (sec.type === 'shortcut') {
       // ショートカットキー一覧。見出し（group）ごとに キー / 説明 を並べる。
-      var scBody = (sec.groups || []).map(function(g) {
+      // data.js に見出しだけ入っている（groups が無い）場合は既定の内容を出す。
+      var scGroups = (Array.isArray(sec.groups) && sec.groups.length)
+        ? sec.groups : _defaultShortcutGroups();
+      var scBody = scGroups.map(function(g) {
         return '<div class="sc-sec">' + _smHtmlEsc(g.label || '') + '</div>'
           + '<table class="sc-table">' + (g.rows || []).map(function(r) {
               var keys = String(r[0] || '').split(' ').map(function(k) {
@@ -2322,11 +2325,15 @@ window.setCurrentTemplate = function(id) {
     else      localStorage.removeItem(HEARING_TPL_KEY);
   } catch (e) {}
 
-  // 別の聞き取りを始める操作なので入力済みの回答は消す
-  if (typeof hearingState !== 'undefined' && hearingState) {
-    Object.keys(hearingState).forEach(function(k) { delete hearingState[k]; });
-    if (typeof saveHearingState === 'function') saveHearingState();
-  }
+  // 別の聞き取りを始める操作なので入力済みの回答は消す。
+  //
+  // 【不具合対応】以前はキーを1つ残らず delete していたため、
+  // devices（デバイス欄の入れ物）まで消えてしまい、直後の renderHearing() が
+  // s.devices[device] で例外を出して止まっていた。
+  // その結果「解除ボタンが効かない」「結果文が出ない」「リセットの効き方が不安定」
+  // といった症状がまとめて発生していたので、既定値で作り直す形に改める。
+  hearingState = _hrNewState();
+  if (typeof saveHearingState === 'function') saveHearingState();
   if (typeof renderHearing === 'function') renderHearing();
 };
 
@@ -2380,6 +2387,19 @@ var DEVICE_DETAIL_OPTIONS = {
   'TV':           []
 };
 
+/**
+ * 既定値の入力状態を新しく作る。
+ * devices（デバイス欄の入れ物）を必ず用意するのがポイント。
+ * ここが欠けると描画時に例外が出て、画面全体が固まってしまう。
+ */
+function _hrNewState() {
+  var st = JSON.parse(JSON.stringify(DEFAULT_STATE));
+  if (!st.devices) st.devices = {};
+  DEVICE_LIST.forEach(function (d) { st.devices[d] = { selected: false, detail: [] }; });
+  return st;
+}
+window._hrNewState = _hrNewState;
+
 function loadHearingState() {
   try {
     var saved = localStorage.getItem(HEARING_KEY);
@@ -2410,9 +2430,7 @@ function loadHearingState() {
       return Object.assign({}, DEFAULT_STATE, parsed);
     }
   } catch (e) {}
-  var state = JSON.parse(JSON.stringify(DEFAULT_STATE));
-  DEVICE_LIST.forEach(function (d) { state.devices[d] = { selected: false, detail: [] }; });
-  return state;
+  return _hrNewState();
 }
 
 function saveHearingState() {
@@ -2639,10 +2657,12 @@ window.toggleHearingPanel = function () {
 };
 
 window.resetHearing = function () {
-  hearingState = JSON.parse(JSON.stringify(DEFAULT_STATE));
-  DEVICE_LIST.forEach(function (d) { hearingState.devices[d] = { selected: false, detail: [] }; });
+  hearingState = _hrNewState();
   saveHearingState();
-  renderHearing();
+  // 「入力内容をすべて消去」なので、テンプレートの選択も一緒に外す。
+  // ここで外さないと、リセットの度に選択が残ったり消えたりして見える。
+  try { localStorage.removeItem(HEARING_TPL_KEY); } catch (e) {}
+  renderHearing();   // テンプレートバーも含めて描き直す
 };
 
 window.setHearing = function (field, value) {
@@ -2657,7 +2677,8 @@ window.setHearing = function (field, value) {
 };
 
 window.toggleHearingDevice = function (device) {
-  var d = hearingState.devices[device];
+  if (!hearingState.devices) hearingState.devices = {};
+  var d = hearingState.devices[device] || (hearingState.devices[device] = { selected: false, detail: [] });
   d.selected = !d.selected;
   if (!d.selected) d.detail = [];
   saveHearingState();
@@ -2665,7 +2686,8 @@ window.toggleHearingDevice = function (device) {
 };
 
 window.setHearingDeviceDetail = function (device, value) {
-  var d = hearingState.devices[device];
+  if (!hearingState.devices) hearingState.devices = {};
+  var d = hearingState.devices[device] || (hearingState.devices[device] = { selected: false, detail: [] });
   if (!Array.isArray(d.detail)) d.detail = [];
   var idx = d.detail.indexOf(value);
   if (idx >= 0) {
@@ -2876,7 +2898,7 @@ function _hrDeviceSectionHTML(s) {
   // ラベル＋ボタンを1行に収め、5デバイスを1つの枠にまとめてコンパクトに表示する
   var h = '<div class="hr-divider">■デバイス</div><div class="hr-device-group">';
   DEVICE_LIST.forEach(function (device) {
-    var d = s.devices[device] || { selected: false, detail: [] };
+    var d = (s.devices && s.devices[device]) || { selected: false, detail: [] };
     var dDetail = Array.isArray(d.detail) ? d.detail : (d.detail ? [d.detail] : []);
     var details = DEVICE_DETAIL_OPTIONS[device] || [];
     var content = '';
@@ -2971,10 +2993,32 @@ window.SIDEMENU_DEFAULT_TABLES = [
   }
 ];
 
+/** 既定のショートカット一覧（見出し＋行）を組み立てる */
+function _defaultShortcutGroups() {
+  return SHORTCUTS.map(function(sec) {
+    return { label: sec[0], rows: sec[1].map(function(r) { return [r[0], r[1]]; }) };
+  });
+}
+window._defaultShortcutGroups = _defaultShortcutGroups;
+
 window.ensureDefaultSideMenuTables = function() {
   var list = window._appCache.sideMenuData;
   if (!Array.isArray(list)) return false;
   var added = false;
+
+  // data.js には見出しだけ（groups 無し）の状態で入っていることがある。
+  // そのままだと管理画面もサイドメニューも「空」に見えてしまうので、
+  // 中身が無いショートカットセクションには既定の内容を入れておく。
+  list.forEach(function(sec) {
+    if (!sec || sec.type !== 'shortcut') return;
+    if (Array.isArray(sec.groups) && sec.groups.length) return;
+    sec.groups = _defaultShortcutGroups();
+    if (!sec.note) {
+      sec.note = 'このツール固有の操作は、各ページの「?」から見られる使い方マニュアルをご覧ください。';
+    }
+    added = true;
+  });
+
   window.SIDEMENU_DEFAULT_TABLES.forEach(function(t) {
     var exists = list.some(function(sec) {
       if (sec.id === t.id) return true;
@@ -2988,11 +3032,7 @@ window.ensureDefaultSideMenuTables = function() {
     if (exists) return;
     var copy = JSON.parse(JSON.stringify(t));
     // ショートカットの中身はここで組み立てる（SHORTCUTS が後に定義されるため）
-    if (copy.type === 'shortcut' && !copy.groups) {
-      copy.groups = SHORTCUTS.map(function(sec) {
-        return { label: sec[0], rows: sec[1].map(function(r) { return [r[0], r[1]]; }) };
-      });
-    }
+    if (copy.type === 'shortcut' && !copy.groups) copy.groups = _defaultShortcutGroups();
     list.push(copy);
     added = true;
   });
@@ -3247,59 +3287,122 @@ window._setHearingMemo = function(val) {
   renderHearingSummary();
 };
 
-function renderHearingSummary() {
-  var area = document.getElementById('hearingSummaryArea');
-  if (!area) return;
-  var s = hearingState, rows = [];
+// ── 結果文（ヒアリング内容）の組み立て ──────────────────────────
+// 画面の「📋 ヒアリング内容」とコピー結果は必ず同じものにしたいので、
+// 一度ここで「行の配列」を作り、表示とコピーの両方がこれを使う。
+//   { kind:'heading', text }                  … 見出し
+//   { kind:'row', label, outLabel, value, type, outTpl } … 質問と回答
+//   { kind:'policy', value }                  … 対応方針
 
-  // ── 操作環境（デバイス） ──
-  var envParts = [];
-  DEVICE_LIST.forEach(function (device) {
-    var d = s.devices[device];
-    if (!d || !d.selected) return;
-    var dDetail = Array.isArray(d.detail) ? d.detail : (d.detail ? [d.detail] : []);
-    envParts.push(dDetail.length ? device + '(' + dDetail.join('/') + ')' : device);
-  });
-  if (envParts.length) rows.push(['操作環境', envParts.join('、'), '']);
-  if (s.carrier) {
-    var carrier = s.carrier === '__manual__' ? s.carrierManual : s.carrier;
-    if (carrier) rows.push(['キャリア', carrier, '']);
-  }
-  if (s.mailDomain) {
-    var domain = s.mailDomain === '__manual__' ? s.mailDomainManual : s.mailDomain;
-    if (domain) rows.push(['メールドメイン', domain, '']);
-  }
+// 出力文に埋め込む「入力箇所」の目印。全角/半角どちらの括弧でも書ける。
+var HEARING_SLOT_RE = /\[入力\]|［入力］|\{入力\}|｛入力｝/;
+window.HEARING_SLOT_TOKEN = '[入力]';
 
-  // ── 質問（builtin/カスタム問わず全て）の回答を表示 ──
-  var qs = (typeof _hrGetQuestions === 'function') ? _hrGetQuestions() : [];
-  var patterns = window._appCache.hearingPatterns || [];
-  var patOver = {};
-  patterns.forEach(function(pat) {
+/** 出力文に「入力箇所」が含まれているか */
+window.hearingHasSlot = function (tpl) {
+  return HEARING_SLOT_RE.test(String(tpl || ''));
+};
+
+/** 出力文の「入力箇所」を実際の入力値に差し替える */
+window.hearingFillSlot = function (tpl, val) {
+  return String(tpl || '').replace(new RegExp(HEARING_SLOT_RE.source, 'g'), String(val == null ? '' : val));
+};
+
+/** 1行ぶんの出力テキスト（コピー用） */
+function _hrLineText(item) {
+  if (item.kind === 'heading') return '■ ' + item.text;
+  if (item.kind === 'policy')  return '対応方針：' + item.value;
+  // 出力文が設定されていれば「項目名：値」ではなく文章として出す
+  if (item.outTpl && window.hearingHasSlot(item.outTpl)) {
+    return window.hearingFillSlot(item.outTpl, item.value);
+  }
+  return item.outLabel + '：' + item.value;
+}
+window._hrLineText = _hrLineText;
+
+/** いま表示中のパターンによる表示/非表示の上書きを求める */
+function _hrPatternOverrides(s) {
+  var over = {};
+  ((window._appCache && window._appCache.hearingPatterns) || []).forEach(function (pat) {
     if (!pat.conditions || !pat.conditions.length) return;
-    var ok = pat.conditions.every(function(c) {
+    var ok = pat.conditions.every(function (c) {
       var sv = s[c.field];
       if (typeof sv === 'boolean') return (c.value === 'true') === sv;
       return String(sv === null || sv === undefined ? '' : sv) === String(c.value || '');
     });
-    if (ok) (pat.targets || []).forEach(function(t) { patOver[t.id] = t.show; });
+    if (ok) (pat.targets || []).forEach(function (t) { over[t.id] = t.show; });
   });
-  qs.forEach(function(q) {
+  return over;
+}
+window._hrPatternOverrides = _hrPatternOverrides;
+
+/** 選択肢の値を表示用テキストに直す */
+function _hrOptText(q, v) {
+  var o = (q.options || []).find(function (x) { return x.v === v; });
+  return o ? (o.r || o.l) : String(v);
+}
+
+function buildHearingLines(s) {
+  s = s || hearingState;
+  var out = [];
+  var devs = s.devices || {};
+
+  // ── 操作環境（デバイス） ──
+  var envParts = [];
+  DEVICE_LIST.forEach(function (device) {
+    var d = devs[device];
+    if (!d || !d.selected) return;
+    var dDetail = Array.isArray(d.detail) ? d.detail : (d.detail ? [d.detail] : []);
+    envParts.push(dDetail.length ? device + '(' + dDetail.join('/') + ')' : device);
+  });
+  var push = function (label, value) {
+    out.push({ kind: 'row', label: label, outLabel: label, value: value, type: '', outTpl: '' });
+  };
+  if (envParts.length) push('操作環境', envParts.join('、'));
+  if (s.carrier) {
+    var carrier = s.carrier === '__manual__' ? s.carrierManual : s.carrier;
+    if (carrier) push('キャリア', carrier);
+  }
+  if (s.mailDomain) {
+    var domain = s.mailDomain === '__manual__' ? s.mailDomainManual : s.mailDomain;
+    if (domain) push('メールドメイン', domain);
+  }
+
+  // ── 質問（builtin/カスタム問わず全て） ──
+  // 表示中のテンプレートに合わせて絞る（画面の見た目とコピー結果をそろえる）
+  var qs = (typeof _hrGetQuestions === 'function')
+    ? window.filterQuestionsByTemplate(_hrGetQuestions()) : [];
+  var over = _hrPatternOverrides(s);
+
+  qs.forEach(function (q) {
     if (!q.enabled) return;
-    if (q.id in patOver) { if (!patOver[q.id]) return; }
+    if (q.id in over) { if (!over[q.id]) return; }
     else if (!_hrEvalShowIf(q.showIf, s)) return;
-    var val = s[q.field];
+
+    // 見出しは入力を持たないが、区切りとして出力する
+    if (q.type === 'heading') { out.push({ kind: 'heading', text: (q.outLabel || q.label) }); return; }
+
+    var val = s[q.field || q.id];
     if (val === null || val === undefined || val === '') return;
+    if (Array.isArray(val) && !val.length) return;
+
     var disp = '', type = '';
     if (q.type === 'bool') {
-      if (val === true)  { disp = q.trueResult  || q.trueLabel  || 'はい';   type = 'yes'; }
-      if (val === false) { disp = q.falseResult || q.falseLabel || 'いいえ'; type = 'no';  }
-    } else if (q.type === 'str') {
-      var opt = (q.options || []).find(function(o) { return o.v === val; });
-      disp = opt ? (opt.r || opt.l) : String(val);
+      if (val === true)       { disp = q.trueResult  || q.trueLabel  || 'はい';   type = 'yes'; }
+      else if (val === false) { disp = q.falseResult || q.falseLabel || 'いいえ'; type = 'no';  }
     } else if (q.type === 'text') {
       disp = String(val);
+    } else {
+      // str / select / radio / toggle。複数選択のときは配列で入る
+      disp = Array.isArray(val)
+        ? val.map(function (v) { return _hrOptText(q, v); }).join('、')
+        : _hrOptText(q, val);
     }
-    if (disp) rows.push([q.label, disp, type]);
+    if (!disp) return;
+    out.push({
+      kind: 'row', label: q.label, outLabel: (q.outLabel || q.label),
+      value: disp, type: type, outTpl: q.outTpl || ''
+    });
   });
 
   // ── メール受信なし確認項目（Sアカ／Jアカ） ──
@@ -3308,136 +3411,95 @@ function renderHearingSummary() {
     if (s.cbSMistake)    checksS.push('入力ミス');
     if (s.cbSSpam)       checksS.push('迷惑メールフィルター');
     if (s.cbSPermission) checksS.push('受信許可設定（mail.nhk）');
-    if (checksS.length) rows.push(['確認項目（Sアカ）', checksS.join('、'), '']);
+    if (checksS.length) push('確認項目（Sアカ）', checksS.join('、'));
   }
   if (s.jAccGuide === '失敗（メール受信なし）') {
     var checksJ = [];
     if (s.cbJMistake)    checksJ.push('入力ミス');
     if (s.cbJSpam)       checksJ.push('迷惑メールフィルター');
     if (s.cbJPermission) checksJ.push('受信許可設定（mail.service.nhk-cs.jp）');
-    if (checksJ.length) rows.push(['確認項目（Jアカ）', checksJ.join('、'), '']);
+    if (checksJ.length) push('確認項目（Jアカ）', checksJ.join('、'));
   }
 
-  var policies = calcPolicies(s);
+  // ── 対応方針 ──
+  calcPolicies(s).forEach(function (p) { out.push({ kind: 'policy', value: p }); });
 
-  if (rows.length === 0 && policies.length === 0) { area.innerHTML = ''; return; }
+  // ── メモ ──
+  if (s.memo && String(s.memo).trim()) push('メモ', String(s.memo).trim());
+
+  // 中身が1つも無い見出しは出さない（結果文が見出しだらけになるのを防ぐ）
+  return out.filter(function (item, i) {
+    if (item.kind !== 'heading') return true;
+    for (var j = i + 1; j < out.length; j++) {
+      if (out[j].kind === 'heading') return false;
+      return true;
+    }
+    return false;
+  });
+}
+window.buildHearingLines = buildHearingLines;
+
+function renderHearingSummary() {
+  var area = document.getElementById('hearingSummaryArea');
+  if (!area) return;
+  var items = buildHearingLines(hearingState);
+  if (!items.length) { area.innerHTML = ''; return; }
+
+  var hasPolicy = items.some(function (it) { return it.kind === 'policy'; });
   var h = '<div class="hr-summary"><div class="hr-summary-title">📋 ヒアリング内容</div><div class="hr-summary-rows">';
-  rows.forEach(function (r) {
-    var label = r[0], val = r[1], type = r[2];
+  items.forEach(function (it) {
+    if (it.kind === 'policy') return;   // 対応方針は下にまとめて出す
+    if (it.kind === 'heading') {
+      h += '<div class="hr-summary-heading">■ ' + _hEsc(it.text) + '</div>';
+      return;
+    }
+    // 出力文が設定されている項目は、文章そのものを1行で見せる
+    if (it.outTpl && window.hearingHasSlot(it.outTpl)) {
+      h += '<div class="hr-summary-row hr-summary-sentence">' +
+           '<span class="hr-sum-val">' + _hEsc(window.hearingFillSlot(it.outTpl, it.value)) + '</span></div>';
+      return;
+    }
     var valClass = 'hr-sum-val';
-    if (type === 'yes') valClass += ' hr-sum-yes';
-    if (type === 'no')  valClass += ' hr-sum-no';
-    h += '<div class="hr-summary-row"><span class="hr-sum-label">' + _hEsc(label) + '</span><span class="' + valClass + '">' + _hEsc(val) + '</span></div>';
+    if (it.type === 'yes') valClass += ' hr-sum-yes';
+    if (it.type === 'no')  valClass += ' hr-sum-no';
+    // 画面の結果文とコピー結果を完全に一致させるため、出力名（未設定なら項目名）で出す
+    h += '<div class="hr-summary-row"><span class="hr-sum-label">' + _hEsc(it.outLabel) + '</span>' +
+         '<span class="' + valClass + '">' + _hEsc(it.value) + '</span></div>';
   });
   h += '</div>';
-  if (policies.length > 0) {
+  if (hasPolicy) {
     h += '<div id="hearingPolicyArea">';
-    policies.forEach(function (p) { h += '<div class="hr-summary-policy"><span class="hr-policy-icon">📌</span><span class="hr-policy-text">対応方針：' + _hEsc(p).replace(/\n/g, '<br>') + '</span></div>'; });
+    items.forEach(function (it) {
+      if (it.kind !== 'policy') return;
+      h += '<div class="hr-summary-policy"><span class="hr-policy-icon">📌</span>' +
+           '<span class="hr-policy-text">対応方針：' + _hEsc(it.value).replace(/\n/g, '<br>') + '</span></div>';
+    });
     h += '</div>';
   }
   h += '</div>';
   area.innerHTML = h;
-  if (policies.length > 0) {
+  if (hasPolicy) {
     setTimeout(function () {
       var pEl = document.getElementById('hearingPolicyArea');
-      if (pEl) pEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      if (pEl && pEl.scrollIntoView) pEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }, 80);
   }
 }
 
 window.copyHearingText = function () {
-  var s = hearingState, lines = [];
-
-  // ── 操作環境（デバイス） ──
-  var envParts = [];
-  DEVICE_LIST.forEach(function (device) {
-    var d = s.devices[device];
-    if (!d || !d.selected) return;
-    var dDetail = Array.isArray(d.detail) ? d.detail : (d.detail ? [d.detail] : []);
-    envParts.push(dDetail.length ? device + '(' + dDetail.join('/') + ')' : device);
-  });
-  if (envParts.length) lines.push('操作環境：' + envParts.join('、'));
-  if (s.carrier) {
-    var carrierC = s.carrier === '__manual__' ? s.carrierManual : s.carrier;
-    if (carrierC) lines.push('キャリア：' + carrierC);
-  }
-  if (s.mailDomain) {
-    var domain = s.mailDomain === '__manual__' ? s.mailDomainManual : s.mailDomain;
-    if (domain) lines.push('メールドメイン：' + domain);
-  }
-
-  // ── 質問（builtin/カスタム問わず全て）の回答 ──
-  // 表示中のテンプレートに合わせて絞る（画面の見た目とコピー結果をそろえる）
-  var cqs = (typeof _hrGetQuestions === 'function')
-    ? window.filterQuestionsByTemplate(_hrGetQuestions()) : [];
-  var cpats = window._appCache.hearingPatterns || [];
-  var cpOver = {};
-  cpats.forEach(function(pat) {
-    if (!pat.conditions || !pat.conditions.length) return;
-    var ok = pat.conditions.every(function(c) {
-      var sv = s[c.field];
-      if (typeof sv === 'boolean') return (c.value === 'true') === sv;
-      return String(sv === null || sv === undefined ? '' : sv) === String(c.value || '');
-    });
-    if (ok) (pat.targets || []).forEach(function(t) { cpOver[t.id] = t.show; });
-  });
-  cqs.forEach(function(q) {
-    if (!q.enabled) return;
-    if (q.id in cpOver) { if (!cpOver[q.id]) return; }
-    else if (!_hrEvalShowIf(q.showIf, s)) return;
-    // 見出しは入力を持たないが、対応履歴の区切りとして出力する
-    if (q.type === 'heading') { lines.push('■ ' + (q.outLabel || q.label)); return; }
-
-    var val = s[q.field || q.id];
-    if (val === null || val === undefined || val === '') return;
-    var disp = '';
-    if (q.type === 'bool') {
-      if (val === true)  disp = q.trueResult  || q.trueLabel  || 'はい';
-      if (val === false) disp = q.falseResult || q.falseLabel || 'いいえ';
-    } else if (q.type === 'str' || q.type === 'select' || q.type === 'radio' || q.type === 'toggle') {
-      // 複数選択のときは配列で入る
-      if (Array.isArray(val)) {
-        disp = val.map(function(v) {
-          var o = (q.options || []).find(function(x) { return x.v === v; });
-          return o ? (o.r || o.l) : String(v);
-        }).join('、');
-      } else {
-        var opt = (q.options || []).find(function(o) { return o.v === val; });
-        disp = opt ? (opt.r || opt.l) : String(val);
-      }
-    } else if (q.type === 'text') {
-      disp = String(val);
-    }
-    // 出力名が設定されていればそちらを使う
-    if (disp) lines.push((q.outLabel || q.label) + '：' + disp);
-  });
-
-  // ── メール受信なし確認項目（Sアカ／Jアカ） ──
-  if (s.migSAccGuide === '失敗（メール受信なし）' || s.newSAccGuide === '失敗（メール受信なし）') {
-    var chksS = [];
-    if (s.cbSMistake)    chksS.push('入力ミス');
-    if (s.cbSSpam)       chksS.push('迷惑メールフィルター');
-    if (s.cbSPermission) chksS.push('受信許可設定（mail.nhk）');
-    if (chksS.length) lines.push('確認項目（Sアカ）：' + chksS.join('、'));
-  }
-  if (s.jAccGuide === '失敗（メール受信なし）') {
-    var chksJ = [];
-    if (s.cbJMistake)    chksJ.push('入力ミス');
-    if (s.cbJSpam)       chksJ.push('迷惑メールフィルター');
-    if (s.cbJPermission) chksJ.push('受信許可設定（mail.service.nhk-cs.jp）');
-    if (chksJ.length) lines.push('確認項目（Jアカ）：' + chksJ.join('、'));
-  }
-
-  calcPolicies(s).forEach(function (p) { lines.push('対応方針：' + p); });
-
-  // ── メモ ──
-  if (s.memo && s.memo.trim()) lines.push('メモ：' + s.memo.trim());
-
+  var lines = buildHearingLines(hearingState).map(_hrLineText);
   if (lines.length === 0) { _showHearingToast('コピーする内容がありません', true); return; }
   var text = lines.join('\n');
   var done = function () { _showHearingToast('ヒアリング内容をコピーしました', false); };
-  if (navigator.clipboard) { navigator.clipboard.writeText(text).then(done).catch(function () { _fallbackCopy(text); done(); }); }
-  else { _fallbackCopy(text); done(); }
+  // 2回目以降も必ず動くよう、失敗時は毎回 fallback に落とす
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    try {
+      navigator.clipboard.writeText(text).then(done, function () { _fallbackCopy(text); done(); });
+    } catch (e) { _fallbackCopy(text); done(); }
+  } else {
+    _fallbackCopy(text);
+    done();
+  }
 };
 
 function _showHearingToast(msg, isError) {
