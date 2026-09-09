@@ -1,5 +1,27 @@
 **https://887487.github.io/_/**
 ---
+
+* *サイドメニュー メールドメイン一覧　一列テーブルで（'aol.com', 'asahinet.jp', 'au.com', 'auone-net.jp', 'bbiq.jp', 'biglobe.ne.jp', 'biz.ezweb.ne.jp', 'canet.ne.jp', 'commufa.jp', 'dion.ne.jp', 'docomo.ne.jp', 'dream.com', 'dti.ne.jp', 'eonet.ne.jp', 'excite.co.jp', 'ezweb.ne.jp', 'gmail.com', 'gmobb.jp', 'gol.com', 'goo.jp', 'googlemail.com', 'goomail.com', 'hotmail.co.jp', 'hotmail.com', 'i.softbank.jp', 'icloud.com', 'infoseek.co.jp', 'infoseek.jp', 'itscom.net', 'jcom.home.ne.jp', 'jcom.zaq.ne.jp', 'ktv.ne.jp', 'live.jp', 'mac.com', 'mail.bbexcite.jp', 'mail.goo.ne.jp', 'me.com', 'mineo.com', 'msn.com', 'mvt-net.com', 'nifty.com', 'ocn.ne.jp', 'odn.ne.jp', 'outlook.com', 'plala.or.jp', 'pobox.com', 'rakuten.jp', 'softbank.ne.jp', 'so-net.ne.jp', 'vodafone.ne.jp', 'wakwak.com', 'yahoo.co.jp', 'yahoo.ne.jp', 'ybb.ne.jp', 'ymobile.ne.jp', 'ztv.ne.jp'）を表示
+
+* FAQ.html　定型文がない
+* 定型文　カーソルの判定がシビアで選択前に表示が消えてしまう
+* 各ページに配置されている　🏠ホーム　字体を揃える
+* ヘッダーのタイトルボタン押下時、index.htmlに戻る → 正しくはページ内で初期表示に戻す（リフレッシュ）
+* index.html　ヘッダー右側 yyyy/mm/dd(aaa) hh:mm:ss の表示を全ページ共通表示にする
+* ヘッダーのボタンに白い枠が表示されることがある
+* ショートカットキー一覧　表最下段の罫線が引かれていない（見えない）
+* 「screen-imagesフォルダ」の名称変更　→ 「SCRimgフォルダ」
+* お知らせ　を管理画面から編集可能にする（お知らせ.js/.txtからの読み込みを廃止する）
+
+ヒアリング　
+* *プルダウン　から手入力を可能にする　例）その他を選択した時にテキストボックスが表示される ※それ以外を選択した時はテキストボックス非表示
+* *テンプレートの削除方法が存在しない
+* *項目名 と 出力名 を同じ行に並べる
+* 回答方法(見出し)　は　回答方法のプルダウンに含めず、チェックボックス に変更
+* 先頭記号　項目名　出力名　□見出しにする　を同じ行に並べる
+* 記述　のテキストボックス　1文字ごとにフォーカスが外れる
+
+
 前頁共通
 * *サイドメニューから指定したExcelファイルを開く
 * *使い方マニュアル を更新（FAQページにも追加）
