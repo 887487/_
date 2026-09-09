@@ -1,6 +1,49 @@
 **https://887487.github.io/_/**
 ---
+サイドメニュー
+* メールドメイン一覧　一列テーブルで（'aol.com', 'asahinet.jp', 'au.com', 'auone-net.jp', 'bbiq.jp', 'biglobe.ne.jp', 'biz.ezweb.ne.jp', 'canet.ne.jp', 'commufa.jp', 'dion.ne.jp', 'docomo.ne.jp', 'dream.com', 'dti.ne.jp', 'eonet.ne.jp', 'excite.co.jp', 'ezweb.ne.jp', 'gmail.com', 'gmobb.jp', 'gol.com', 'goo.jp', 'googlemail.com', 'goomail.com', 'hotmail.co.jp', 'hotmail.com', 'i.softbank.jp', 'icloud.com', 'infoseek.co.jp', 'infoseek.jp', 'itscom.net', 'jcom.home.ne.jp', 'jcom.zaq.ne.jp', 'ktv.ne.jp', 'live.jp', 'mac.com', 'mail.bbexcite.jp', 'mail.goo.ne.jp', 'me.com', 'mineo.com', 'msn.com', 'mvt-net.com', 'nifty.com', 'ocn.ne.jp', 'odn.ne.jp', 'outlook.com', 'plala.or.jp', 'pobox.com', 'rakuten.jp', 'softbank.ne.jp', 'so-net.ne.jp', 'vodafone.ne.jp', 'wakwak.com', 'yahoo.co.jp', 'yahoo.ne.jp', 'ybb.ne.jp', 'ymobile.ne.jp', 'ztv.ne.jp'）を表示　
+* ショートカットキー一覧　表最下段の罫線が引かれていない（見えない）
 
+全ページ
+* 各ページに配置されている　🏠ホーム　字体を揃える
+* ヘッダーのタイトルボタン押下時、index.htmlに戻る → 正しくはページ内で初期表示に戻す（リフレッシュ）
+* ヘッダーのボタンに白い枠が表示されることがある
+* 定型文　カーソルの判定がシビアで選択前に表示が消えてしまう
+* index.htmlのヘッダー右側にある yyyy/mm/dd(aaa) hh:mm:ss の表示を全ページで表示する
+* 「screen-imagesフォルダ」の名称変更　→ 「SCRimgフォルダ」
+
+FAQ/hearing　.html
+* 定型文がない
+
+hearing.html
+* ■メモ　表示位置は ヒアリング結果 の上に固定
+* ■メモ　プレースホルダーテキスト（自由記入欄…）を中段揃えにする
+* ■メモ　テキストボックスの高さ＝1行 を既定にする　改行に合わせて全体が表示される高さに自動調節
+
+admin.html ページ全体
+* CTRL + S で保存画面表示 → Enterキー押下で保存実行
+* お知らせ を管理画面から編集可能にする（お知らせ.js/.txtからの読み込みを廃止する）
+
+admin.html ヒアリングタブ
+* 削除ボタンの位置を統一　カードの枠内右端
+* 削除ボタンの左側に 編集 のボタンを追加
+* 各テキストボックス1行の高さを統一
+* ヒアリングシート（プレビュー）側で ■メモ が実際には削除されていないが、プレビュー上では削除できてしまうため削除不可にする
+* プルダウン から手入力を可能にする　例）「その他(手入力)」を選択した時のみ追加でテキストボックスが表示される ※それ以外を選択した時はテキストボックス非表示
+* テンプレートの削除方法が存在しない
+* トグルボタン　詳細空白時　利用あり/なし　になる → ON/OFF に表示変更
+* テキストボックス　1文字ごとにフォーカスが外れる
+
+
+* テンプレート名［共通,,,,,新規作成のプルダウン］
+* テンプレート名［入力欄］※新規作成を選択した時のみ表示
+
+* 先頭記号［なし,-,■,●,◆,▶,○,・,※,＞のプルダウン］　項目名［入力欄(1行)］　□見出しにする
+* 出力［表示名,文 のプルダウン］
+
+* 回答方法［記述,プルダウンラジオボタントグルボタン］　□複数 行/選択 許可する　※複数行許可 と 複数選択許可 のチェックボックスは同じ位置に配置する（選択値に応じてどちらかしか表示されないため）
+---
+* 
 * *サイドメニュー メールドメイン一覧　一列テーブルで（'aol.com', 'asahinet.jp', 'au.com', 'auone-net.jp', 'bbiq.jp', 'biglobe.ne.jp', 'biz.ezweb.ne.jp', 'canet.ne.jp', 'commufa.jp', 'dion.ne.jp', 'docomo.ne.jp', 'dream.com', 'dti.ne.jp', 'eonet.ne.jp', 'excite.co.jp', 'ezweb.ne.jp', 'gmail.com', 'gmobb.jp', 'gol.com', 'goo.jp', 'googlemail.com', 'goomail.com', 'hotmail.co.jp', 'hotmail.com', 'i.softbank.jp', 'icloud.com', 'infoseek.co.jp', 'infoseek.jp', 'itscom.net', 'jcom.home.ne.jp', 'jcom.zaq.ne.jp', 'ktv.ne.jp', 'live.jp', 'mac.com', 'mail.bbexcite.jp', 'mail.goo.ne.jp', 'me.com', 'mineo.com', 'msn.com', 'mvt-net.com', 'nifty.com', 'ocn.ne.jp', 'odn.ne.jp', 'outlook.com', 'plala.or.jp', 'pobox.com', 'rakuten.jp', 'softbank.ne.jp', 'so-net.ne.jp', 'vodafone.ne.jp', 'wakwak.com', 'yahoo.co.jp', 'yahoo.ne.jp', 'ybb.ne.jp', 'ymobile.ne.jp', 'ztv.ne.jp'）を表示
 
 * FAQ.html　定型文がない
