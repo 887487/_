@@ -1093,6 +1093,39 @@ window.QUICK_ITEMS = [
   { text: '🐻離席してもよろしいでしょうか🐻',     label: 'お手洗い' },
 ];
 
+/**
+ * 定型文メニューとトーストを、ボタンの真下に置き直す。
+ *
+ * ヘッダーの各列（.hd-right など）には、幅が足りないときに要素が重ならないよう
+ * overflow-x:auto / overflow-y:hidden が指定されている。
+ * そのため position:absolute のままだと、ヘッダーの外に出るメニューが
+ * まるごと切り取られて画面に出てこない（＝ボタンを押しても何も起きないように見える）。
+ * position:fixed に変えて、押すたびにボタンの位置から座標を計算する。
+ */
+function _positionQuickMenu() {
+  var btn  = document.getElementById('quickCopyBtn');
+  var menu = document.getElementById('quickMenu');
+  if (!btn || !menu) return;
+  var r = btn.getBoundingClientRect();
+  var right = Math.max(4, window.innerWidth - r.right);
+  menu.style.position = 'fixed';
+  menu.style.top      = (r.bottom + 4) + 'px';
+  menu.style.left     = 'auto';
+  menu.style.right    = right + 'px';
+  // 画面が低いときにメニューがはみ出さないようにする
+  menu.style.maxHeight = Math.max(120, window.innerHeight - r.bottom - 16) + 'px';
+  menu.style.overflowY = 'auto';
+
+  var toast = document.getElementById('quickCopyToast');
+  if (toast) {
+    toast.style.position = 'fixed';
+    toast.style.top   = (r.bottom + 8) + 'px';
+    toast.style.left  = 'auto';
+    toast.style.right = right + 'px';
+  }
+}
+window._positionQuickMenu = _positionQuickMenu;
+
 window.renderQuickMenu = function () {
   var el = document.getElementById('quickMenu');
   if (!el) return;
@@ -1105,11 +1138,54 @@ window.renderQuickMenu = function () {
     var item = window.QUICK_ITEMS[parseInt(d.dataset.qi)];
     if (item) window.copyText(item.text, item.label);
   });
+
+  // マウスを乗せただけで開くCSSがあるので、そちらでも位置を合わせる
+  var area = el.closest('.quick-copy-area');
+  if (area) area.addEventListener('mouseenter', _positionQuickMenu);
+
+  // 開いたまま画面が動いてもボタンに追従させる
+  var follow = function () { if (el.classList.contains('open')) _positionQuickMenu(); };
+  window.addEventListener('resize', follow);
+  window.addEventListener('scroll', follow, true);
+
+  _positionQuickMenu();
 };
+
+/**
+ * 検索サジェストの位置合わせ。
+ * 定型文メニューと同じくヘッダーに切り取られるため position:fixed にしてある。
+ * 表示のON/OFFは各ページのコードが style.display で行うので、
+ * その変化を見て入力欄の真下に置き直す。
+ */
+document.addEventListener('DOMContentLoaded', function () {
+  var box   = document.getElementById('suggestBox');
+  var input = document.getElementById('searchBox');
+  if (!box || !input) return;
+  var last = '';
+  var place = function () {
+    if (!box.style.display || box.style.display === 'none') return;
+    var r = input.getBoundingClientRect();
+    var sig = [r.bottom, r.left, r.width, window.innerHeight].join(',');
+    if (sig === last) return;   // 自分の書き込みで無限に呼ばれないようにする
+    last = sig;
+    box.style.top   = (r.bottom + 4) + 'px';
+    box.style.left  = r.left + 'px';
+    box.style.width = Math.max(220, r.width) + 'px';
+    box.style.maxHeight = Math.max(120, window.innerHeight - r.bottom - 16) + 'px';
+  };
+  if (window.MutationObserver) {
+    new MutationObserver(place).observe(box, { attributes: true, attributeFilter: ['style'] });
+  }
+  input.addEventListener('focus', place);
+  window.addEventListener('resize', place);
+  window.addEventListener('scroll', place, true);
+});
 
 window.toggleQuickMenu = function () {
   var menu = document.getElementById('quickMenu');
-  if (menu) menu.classList.toggle('open');
+  if (!menu) return;
+  _positionQuickMenu();          // 開く前に位置を合わせる
+  menu.classList.toggle('open');
 };
 
 window.copyText = function (text, label) {
@@ -2390,16 +2466,60 @@ window.HEARING_DEFAULT_DEVICES = [
   { name: 'PC',           details: ['Win', 'Mac', 'ChromeBook'] },
   { name: 'TV',           details: [] }
 ];
+// ヒアリングシートのメールドメイン候補。
+// サイドメニューの「メールドメイン一覧」とは別管理（用途が違うため）。
+window.HEARING_DEFAULT_DOMAINS = [
+  '@docomo.ne.jp', '@softbank.ne.jp', '@i.softbank.jp',
+  '@ezweb.ne.jp', '@au.com', '@gmail.com',
+  '@yahoo.co.jp', '@icloud.com', '@outlook.com'
+];
 window.HEARING_DEFAULT_CARRIERS = [
   'docomo', 'au', 'SoftBank', '楽天モバイル',
   'ahamo', 'povo', 'LINEMO', 'Y!mobile', 'UQ mobile',
   '格安SIM（MVNO）', 'Wi-Fiのみ'
 ];
 
-/** いま使われているデバイス項目（type:'device' の質問）を探す */
+/**
+ * 質問の選択肢。候補は質問そのものが持つ。
+ * 読み込み順に左右されないよう関数宣言にしている
+ * （初期状態の組み立てが、この下の定義より先に走るため）。
+ */
+function _hrOptsOf(q) {
+  var list = (q && q.options) || [];
+  // 名前が空の選択肢は選べないので出さない。
+  // 同じ値が重複していると入力状態が共有されて紛らわしいので、先勝ちで1つにする。
+  var seen = {};
+  return list.filter(function (o) {
+    if (!o) return false;
+    var v = String(o.v !== undefined && o.v !== null && o.v !== '' ? o.v : (o.l || '')).trim();
+    if (!v || seen[v]) return false;
+    seen[v] = true;
+    return true;
+  });
+}
+
+/**
+ * 「詳細つきトグル」かどうか。
+ * 選択肢のどれかが details を持っていれば、2段構え（選択肢＋詳細）で表示する。
+ * デバイス（iPhone→Web/アプリ）のような項目がこれにあたる。
+ */
+window.isDetailToggle = function (q) {
+  if (!q || (q.type !== 'toggle' && q.type !== 'device')) return false;
+  return (q.options || []).some(function (o) {
+    return o && Array.isArray(o.details) && o.details.length;
+  });
+};
+
+/** 詳細つきトグルの項目を探す（入力状態の初期化に使う） */
+window.getDetailToggleQuestions = function () {
+  var qs = (typeof _hrGetQuestions === 'function') ? _hrGetQuestions() : [];
+  return qs.filter(function (q) { return window.isDetailToggle(q); });
+};
+
+/** いま使われているデバイス項目（後方互換用） */
 window.getHearingDeviceQuestion = function () {
   var qs = (typeof _hrGetQuestions === 'function') ? _hrGetQuestions() : [];
-  return qs.find(function (q) { return q && q.type === 'device'; }) || null;
+  return qs.find(function (q) { return q && (q.type === 'device' || q.id === 'q_devices'); }) || null;
 };
 
 /**
@@ -2409,8 +2529,10 @@ window.getHearingDeviceQuestion = function () {
  */
 window.getHearingDevices = function (q) {
   if (q === undefined) q = window.getHearingDeviceQuestion();
-  var list = q && q.devices;
-  // 旧データ（全体設定として持っていた頃）からの読み替え
+  // いまは options（{l,v,details}）が正。古い形（devices / 全体設定）も読める
+  var list = q && Array.isArray(q.options) && q.options.length
+    ? q.options.map(function (o) { return { name: o.v || o.l, details: o.details || [] }; })
+    : (q && q.devices);
   if (!Array.isArray(list) || !list.length) list = window._appCache && window._appCache.hearingDevices;
   if (!Array.isArray(list) || !list.length) list = window.HEARING_DEFAULT_DEVICES;
   var out = [];
@@ -2449,7 +2571,15 @@ window.getHearingDeviceDetails = function (q, name) {
 function _hrNewState() {
   var st = JSON.parse(JSON.stringify(DEFAULT_STATE));
   if (!st.devices) st.devices = {};
-  window.getHearingDeviceNames().forEach(function (d) { st.devices[d] = { selected: false, detail: [] }; });
+  // 詳細つきトグル（デバイスなど）は「選択肢ごとに {selected, detail}」を持つ
+  (window.getDetailToggleQuestions ? window.getDetailToggleQuestions() : []).forEach(function (q) {
+    var fld = q.field || q.id;
+    st[fld] = {};
+    _hrOptsOf(q).forEach(function (o) {
+      st[fld][o.v || o.l] = { selected: false, detail: [] };
+    });
+  });
+  if (!st.devices) st.devices = {};
   return st;
 }
 window._hrNewState = _hrNewState;
@@ -2459,28 +2589,36 @@ function loadHearingState() {
     var saved = localStorage.getItem(HEARING_KEY);
     if (saved) {
       var parsed = JSON.parse(saved);
-      var devices = {};
-      window.getHearingDeviceNames().forEach(function (d) {
-        devices[d] = (parsed.devices && parsed.devices[d]) ? parsed.devices[d] : { selected: false, detail: [] };
-        if (!Array.isArray(devices[d].detail)) devices[d].detail = devices[d].detail ? [devices[d].detail] : [];
-        // 旧データの「両方」は Web＋アプリ に変換する。
-        // 選択肢から外したため、そのままだと画面に出ない選択が残ってしまう。
-        if (devices[d].detail.indexOf('両方') >= 0) {
-          devices[d].detail = devices[d].detail.filter(function (v) { return v !== '両方'; });
-          ['Web', 'アプリ'].forEach(function (v) {
-            if (devices[d].detail.indexOf(v) < 0) devices[d].detail.push(v);
-          });
-        }
-        // 選択肢に無い値が残っていたら取り除く
-        var allowed = window.getHearingDeviceDetails(d);
-        if (allowed && allowed.length) {
-          devices[d].detail = devices[d].detail.filter(function (v) { return allowed.indexOf(v) >= 0; });
-        }
-        devices[d].selected = (allowed && allowed.length)
-          ? devices[d].detail.length > 0
-          : !!devices[d].selected;
+      // 詳細つきトグル（デバイスなど）の保存値を、いまの選択肢に合わせて整える
+      (window.getDetailToggleQuestions ? window.getDetailToggleQuestions() : []).forEach(function (q) {
+        var fld  = q.field || q.id;
+        var cur  = parsed[fld];
+        if (!cur || typeof cur !== 'object' || Array.isArray(cur)) cur = {};
+        var next = {};
+        _hrOptsOf(q).forEach(function (o) {
+          var val = o.v || o.l;
+          var d = next[val] = cur[val] || { selected: false, detail: [] };
+          if (!Array.isArray(d.detail)) d.detail = d.detail ? [d.detail] : [];
+          // 旧データの「両方」は Web＋アプリ に変換する。
+          // 選択肢から外したため、そのままだと画面に出ない選択が残ってしまう。
+          if (d.detail.indexOf('両方') >= 0) {
+            d.detail = d.detail.filter(function (v) { return v !== '両方'; });
+            ['Web', 'アプリ'].forEach(function (v) {
+              if (d.detail.indexOf(v) < 0) d.detail.push(v);
+            });
+          }
+          // 選択肢に無い値が残っていたら取り除く
+          var allowed = Array.isArray(o.details) ? o.details : [];
+          if (allowed.length) {
+            d.detail = d.detail.filter(function (v) { return allowed.indexOf(v) >= 0; });
+            d.selected = d.detail.length > 0;
+          } else {
+            d.detail = [];
+            d.selected = !!d.selected;
+          }
+        });
+        parsed[fld] = next;
       });
-      parsed.devices = devices;
       return Object.assign({}, DEFAULT_STATE, parsed);
     }
   } catch (e) {}
@@ -2730,29 +2868,41 @@ window.setHearing = function (field, value) {
   renderHearing();
 };
 
-window.toggleHearingDevice = function (device) {
-  if (!hearingState.devices) hearingState.devices = {};
-  var d = hearingState.devices[device] || (hearingState.devices[device] = { selected: false, detail: [] });
+window.toggleHearingOpt = function (field, value) {
+  if (!hearingState[field] || typeof hearingState[field] !== 'object' || Array.isArray(hearingState[field])) {
+    hearingState[field] = {};
+  }
+  var st = hearingState[field];
+  var d = st[value] || (st[value] = { selected: false, detail: [] });
   d.selected = !d.selected;
   if (!d.selected) d.detail = [];
   saveHearingState();
   renderHearing();
 };
+/** 旧名（デバイス専用だった頃の呼び出し互換） */
+window.toggleHearingDevice = function (device) { window.toggleHearingOpt('devices', device); };
 
-window.setHearingDeviceDetail = function (device, value) {
-  if (!hearingState.devices) hearingState.devices = {};
-  var d = hearingState.devices[device] || (hearingState.devices[device] = { selected: false, detail: [] });
+window.setHearingOptDetail = function (field, value, detail) {
+  if (!hearingState[field] || typeof hearingState[field] !== 'object' || Array.isArray(hearingState[field])) {
+    hearingState[field] = {};
+  }
+  var st = hearingState[field];
+  var d = st[value] || (st[value] = { selected: false, detail: [] });
   if (!Array.isArray(d.detail)) d.detail = [];
-  var idx = d.detail.indexOf(value);
+  var idx = d.detail.indexOf(detail);
   if (idx >= 0) {
     // すでに選択中のボタンをもう一度押すと、その項目だけOFF（複数選択可）
     d.detail.splice(idx, 1);
   } else {
-    d.detail.push(value);
+    d.detail.push(detail);
   }
   d.selected = d.detail.length > 0;
   saveHearingState();
   renderHearing();
+};
+/** 旧名（デバイス専用だった頃の呼び出し互換） */
+window.setHearingDeviceDetail = function (device, value) {
+  window.setHearingOptDetail('devices', device, value);
 };
 
 window.onHearingCarrierChange = function () {
@@ -2962,12 +3112,24 @@ function _hrWithFixedItems(list) {
   // 古いデータを読んだときはここで質問側へ移し替える。
   arr = arr.map(function (q) {
     if (!q) return q;
-    if (q.type === 'device' && (!Array.isArray(q.devices) || !q.devices.length)) {
-      var dv = (window._appCache && window._appCache.hearingDevices);
+    // デバイス専用だった型を「詳細つきトグル」に読み替える
+    if (q.type === 'device' || (q.id === 'q_devices' && !Array.isArray(q.options))) {
+      var dv = (Array.isArray(q.devices) && q.devices.length) ? q.devices
+             : (window._appCache && window._appCache.hearingDevices);
+      if (!Array.isArray(dv) || !dv.length) dv = window.HEARING_DEFAULT_DEVICES;
       q = Object.assign({}, q, {
-        devices: JSON.parse(JSON.stringify(
-          (Array.isArray(dv) && dv.length) ? dv : window.HEARING_DEFAULT_DEVICES))
+        type: 'toggle', multi: true,
+        options: dv.map(function (d) {
+          return { l: d.name, v: d.name, details: (d.details || []).slice() };
+        })
       });
+      delete q.devices;
+    }
+    if (q.optionsFrom === 'domains' || (q.id === 'q_domain' && !Array.isArray(q.options))) {
+      q = Object.assign({}, q, {
+        options: window.HEARING_DEFAULT_DOMAINS.map(function (v) { return { l: v, v: v }; })
+      });
+      delete q.optionsFrom;
     }
     if (q.optionsFrom === 'carriers' || (q.id === 'q_carrier' && !Array.isArray(q.options))) {
       var cv = (window._appCache && window._appCache.hearingCarriers);
@@ -3014,13 +3176,18 @@ window.addEventListener('storage', function(e) {
   try {
     var updated = e.newValue ? JSON.parse(e.newValue) : null;
     if (!updated) return;
-    // devices はデバイス候補をもとに補完
-    var devices = {};
-    window.getHearingDeviceNames().forEach(function(d) {
-      devices[d] = (updated.devices && updated.devices[d])
-        ? updated.devices[d] : { selected: false, detail: [] };
+    // 詳細つきトグル（デバイスなど）は選択肢ぶんの入れ物を補完しておく
+    (window.getDetailToggleQuestions ? window.getDetailToggleQuestions() : []).forEach(function(q) {
+      var fld = q.field || q.id;
+      var cur = updated[fld];
+      if (!cur || typeof cur !== 'object' || Array.isArray(cur)) cur = {};
+      var next = {};
+      _hrOptsOf(q).forEach(function(o) {
+        var v = o.v || o.l;
+        next[v] = cur[v] || { selected: false, detail: [] };
+      });
+      updated[fld] = next;
     });
-    updated.devices = devices;
     hearingState = Object.assign({}, DEFAULT_STATE, updated);
     if (typeof renderHearing === 'function') renderHearing();
   } catch(ex) {}
@@ -3033,8 +3200,8 @@ window.addEventListener('storage', function(e) {
 // 並べ替え・非表示・記号・出力名などを同じ仕組みで扱えるようにする。
 window.HEARING_FIXED_ITEMS = [
   {
-    id: 'q_devices', field: 'devices', label: 'デバイス', type: 'device',
-    devices: null,   // 実際の候補は _hrWithFixedItems で入れる（定義順の都合）
+    id: 'q_devices', field: 'devices', label: 'デバイス', type: 'toggle', multi: true,
+    options: null,   // 実際の候補は _hrWithFixedItems で入れる（定義順の都合）
     common: true, enabled: true, builtin: true, showIf: []
   },
   {
@@ -3046,7 +3213,8 @@ window.HEARING_FIXED_ITEMS = [
   },
   {
     id: 'q_domain', field: 'mailDomain', label: 'メールドメイン', type: 'select',
-    optionsFrom: 'domains', allowManual: true,
+    options: null,   // 実際の候補は _hrWithFixedItems で入れる
+    allowManual: true,
     manualField: 'mailDomainManual', manualPlaceholder: '例）@example.com',
     common: true, enabled: true, builtin: true, showIf: []
   },
@@ -3071,39 +3239,39 @@ window.ensureHearingFixedItems = function () {
   return true;
 };
 
-/** 質問の選択肢を求める。optionsFrom があれば共有リストから引く */
-window.getHearingOptions = function (q) {
-  if (!q) return [];
-  if (q.optionsFrom === 'domains') {
-    return window.getMailDomainList().map(function (v) { return { l: v, v: v }; });
-  }
-  return q.options || [];
-};
+/** 質問の選択肢。候補は質問そのものが持つ */
+window.getHearingOptions = _hrOptsOf;
 
 /** デバイス項目（複数デバイス＋詳細）の中身 */
-function _hrDeviceContentHTML(s, q) {
+/**
+ * 詳細つきトグルの中身。
+ * 選択肢を1行ずつ並べ、詳細があればその行に詳細ボタンを並べる。
+ * 詳細が無い選択肢は「利用あり／利用なし」の単純なトグルになる。
+ */
+function _hrDetailToggleHTML(s, q) {
+  var fld = q.field || q.id;
+  var st  = s[fld] || {};
   var h = '<div class="hr-device-group">';
-  window.getHearingDeviceNames(q).forEach(function (device) {
-    var d = (s.devices && s.devices[device]) || { selected: false, detail: [] };
+  _hrOptsOf(q).forEach(function (o) {
+    var val = o.v || o.l;
+    var d = st[val] || { selected: false, detail: [] };
     var dDetail = Array.isArray(d.detail) ? d.detail : (d.detail ? [d.detail] : []);
-    var details = window.getHearingDeviceDetails(q, device);
+    var details = Array.isArray(o.details) ? o.details : [];
     var content = '';
     if (details.length) {
-      // Web/アプリ（PCはWin/Mac/ChromeBook）を複数選択可能なトグルボタン群として表示。
-      // 選択中のボタンをもう一度押すとその項目だけOFFになる。
+      // 詳細は複数選択可。選択中をもう一度押すとその項目だけOFF
       details.forEach(function (opt) {
         var active = (dDetail.indexOf(opt) >= 0) ? ' active' : '';
-        content += '<button class="hr-device-btn' + active + '" onclick="setHearingDeviceDetail(\'' + device + '\',\'' + opt + '\')">' + _hEsc(opt) + '</button>';
+        content += '<button class="hr-device-btn' + active + '" onclick="setHearingOptDetail(\'' + fld + '\',\'' + val + '\',\'' + opt + '\')">' + _hEsc(opt) + '</button>';
       });
     } else {
-      // 詳細選択肢のないデバイスは単純なON/OFFトグル
-      content = '<button class="hr-device-btn' + (d.selected ? ' active' : '') + '" onclick="toggleHearingDevice(\'' + device + '\')">' + (d.selected ? '利用あり' : '利用なし') + '</button>';
+      content = '<button class="hr-device-btn' + (d.selected ? ' active' : '') + '" onclick="toggleHearingOpt(\'' + fld + '\',\'' + val + '\')">' + (d.selected ? '利用あり' : '利用なし') + '</button>';
     }
-    h += _hrRow(device, content, 'hr-device-row');
+    h += _hrRow(o.l || val, content, 'hr-device-row');
   });
   return h + '</div>';
 }
-window._hrDeviceContentHTML = _hrDeviceContentHTML;
+window._hrDetailToggleHTML = _hrDetailToggleHTML;
 
 /** 「その他（手入力）」付きのプルダウン */
 function _hrSelectManualHTML(q, s) {
@@ -3133,13 +3301,15 @@ window.setHearingSelect = function (field, value) {
 window.hearingItemHTML = function (q, s) {
   var fld = q.field || q.id;
   var pf  = window.getHearingPrefix(q);
-  if (q.type === 'device') {
-    return _hrRow(q.label, _hrDeviceContentHTML(s, q), 'hr-device-wrap', pf);
-  }
+
   if (q.type === 'bool') {
     return _hrRow(q.label, _boolBtns(fld, s[fld], q.trueLabel || 'はい', q.falseLabel || 'いいえ'), '', pf);
   }
-  if (q.type === 'str' || q.type === 'toggle') {
+  if (q.type === 'str' || q.type === 'toggle' || q.type === 'device') {
+    // 選択肢に詳細があるものは2段構え（例：iPhone → Web / アプリ）
+    if (window.isDetailToggle(q)) {
+      return _hrRow(q.label, _hrDetailToggleHTML(s, q), 'hr-device-wrap', pf);
+    }
     return _hrRow(q.label, q.multi
       ? _multiBtns(fld, s[fld], window.getHearingOptions(q))
       : _strBtns(fld, s[fld], window.getHearingOptions(q)), '', pf);
@@ -3215,7 +3385,7 @@ window.SIDEMENU_DEFAULT_TABLES = [
   },
   {
     id: 'sm_domain', type: 'table', label: '📧 メールドメイン一覧',
-    note: 'ここで編集した内容が、ヒアリングの「メールドメイン」の選択肢になります。',
+    note: 'サイドメニューに表示する参照用の一覧です。ヒアリングシートのメールドメイン候補とは別管理です。',
     headers: ['ドメイン', '備考'],
     rows: [
       ['@docomo.ne.jp',   'ドコモ'],
@@ -3237,9 +3407,8 @@ function _defaultMailDomains() {
 }
 
 /**
- * ヒアリングの「メールドメイン」で使う候補を返す。
- * サイドメニューの「メールドメイン一覧」を唯一の管理元とし、
- * 管理画面で編集した内容がそのまま選択肢になる。
+ * サイドメニューの「メールドメイン一覧」の中身を返す（参照用）。
+ * ヒアリングシートの候補は別管理なので、こちらとは連動しない。
  */
 window.getMailDomainList = function () {
   var list = (window._appCache && window._appCache.sideMenuData) || [];
@@ -3614,20 +3783,21 @@ function buildHearingLines(s) {
 
     var fld = q.field || q.id;
 
-    // デバイスは「操作環境：iPhone(Web)、PC(Win)」の形にまとめる
-    if (q.type === 'device') {
-      var devs = s.devices || {};
-      var envParts = [];
-      window.getHearingDeviceNames(q).forEach(function (device) {
-        var d = devs[device];
+    // 詳細つきトグルは「iPhone(Web)、PC(Win)」の形にまとめる
+    if (window.isDetailToggle(q)) {
+      var st = s[fld] || {};
+      var parts = [];
+      _hrOptsOf(q).forEach(function (o) {
+        var val = o.v || o.l;
+        var d = st[val];
         if (!d || !d.selected) return;
         var dd = Array.isArray(d.detail) ? d.detail : (d.detail ? [d.detail] : []);
-        envParts.push(dd.length ? device + '(' + dd.join('/') + ')' : device);
+        parts.push(dd.length ? (o.l || val) + '(' + dd.join('/') + ')' : (o.l || val));
       });
-      if (!envParts.length) return;
+      if (!parts.length) return;
       out.push({
         kind: 'row', label: q.label, outLabel: (q.outLabel || q.label),
-        value: envParts.join('、'), type: '', outTpl: q.outTpl || ''
+        value: parts.join('、'), type: '', outTpl: q.outTpl || ''
       });
       return;
     }

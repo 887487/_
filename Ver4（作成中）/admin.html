@@ -13348,7 +13348,8 @@ window.addEventListener('resize',function(){
     var qs = _hrQuestionsGet();
     var q  = qs.find(function(x) { return x.id === qId; });
     if (!q) return;
-    var isDev = (q.type === 'device');
+    // トグルは選択肢ごとに詳細を持てるので、詳細欄も出す
+    var withDetail = (q.type === 'toggle');
     var inp = 'box-sizing:border-box;height:24px;padding:0 6px;font-size:11px;' +
               'border:1px solid var(--border);border-radius:4px;' +
               'background:var(--surface);color:var(--text);font-family:inherit;';
@@ -13356,8 +13357,8 @@ window.addEventListener('resize',function(){
 
     var hd = document.createElement('div');
     hd.style.cssText = 'font-size:10px;color:var(--text3);margin-bottom:6px;';
-    hd.textContent = isDev
-      ? 'デバイス名と詳細（カンマ区切り／空欄なら「利用あり・なし」）'
+    hd.textContent = withDetail
+      ? '選択肢と詳細（カンマ区切り／空欄なら「利用あり・なし」）'
       : 'この項目の選択肢';
     panel.appendChild(hd);
 
@@ -13365,24 +13366,23 @@ window.addEventListener('resize',function(){
     rows.style.cssText = 'display:flex;flex-direction:column;gap:4px;';
     panel.appendChild(rows);
 
-    var list = isDev ? (q.devices || []) : (q.options || []);
+    var list = q.options || [];
     list.forEach(function(item, idx) {
       var r = document.createElement('div');
       r.style.cssText = 'display:flex;align-items:center;gap:5px;';
       var a = document.createElement('input');
       a.type = 'text';
-      a.value = isDev ? (item.name || '') : (item.l || '');
-      a.placeholder = isDev ? 'デバイス名' : '選択肢名';
-      a.style.cssText = inp + (isDev ? 'flex:0 0 34%;' : 'flex:1;');
+      a.value = item.l || '';
+      a.placeholder = '選択肢名';
+      a.style.cssText = inp + (withDetail ? 'flex:0 0 34%;' : 'flex:1;');
       a.addEventListener('input', function() {
         _hrOptPanelSave(qId, function(qq) {
-          if (isDev) qq.devices[idx].name = a.value;
-          else { qq.options[idx].l = a.value; qq.options[idx].v = a.value; }
+          qq.options[idx].l = a.value; qq.options[idx].v = a.value;
         });
       });
       r.appendChild(a);
 
-      if (isDev) {
+      if (withDetail) {
         var b = document.createElement('input');
         b.type = 'text';
         b.value = (item.details || []).join(', ');
@@ -13390,8 +13390,10 @@ window.addEventListener('resize',function(){
         b.style.cssText = inp + 'flex:1;';
         b.addEventListener('input', function() {
           _hrOptPanelSave(qId, function(qq) {
-            qq.devices[idx].details = b.value.split(/[,、]/)
+            var det = b.value.split(/[,、]/)
               .map(function(v) { return v.trim(); }).filter(function(v) { return v; });
+            if (det.length) qq.options[idx].details = det;
+            else delete qq.options[idx].details;
           });
         });
         r.appendChild(b);
@@ -13401,9 +13403,7 @@ window.addEventListener('resize',function(){
       del.type = 'button'; del.className = 'btn-del'; del.textContent = '×';
       del.title = '削除';
       del.addEventListener('click', function() {
-        _hrOptPanelSave(qId, function(qq) {
-          if (isDev) qq.devices.splice(idx, 1); else qq.options.splice(idx, 1);
-        });
+        _hrOptPanelSave(qId, function(qq) { qq.options.splice(idx, 1); });
         _hrBuildOptPanel(panel, qId);
         window.renderHearing();
       });
@@ -13414,11 +13414,11 @@ window.addEventListener('resize',function(){
     var add = document.createElement('button');
     add.type = 'button'; add.className = 'hr-add-btn';
     add.style.cssText = 'align-self:flex-start;height:22px;font-size:10px;margin-top:6px;';
-    add.textContent = isDev ? '＋ デバイスを追加' : '＋ 選択肢を追加';
+    add.textContent = '＋ 選択肢を追加';
     add.addEventListener('click', function() {
       _hrOptPanelSave(qId, function(qq) {
-        if (isDev) { qq.devices = qq.devices || []; qq.devices.push({ name: '新しいデバイス', details: [] }); }
-        else { qq.options = qq.options || []; qq.options.push({ l: '新しい選択肢', v: 'opt_' + Date.now() }); }
+        qq.options = qq.options || [];
+        qq.options.push({ l: '新しい選択肢', v: 'opt_' + Date.now() });
       });
       _hrBuildOptPanel(panel, qId);
       window.renderHearing();
@@ -13663,7 +13663,6 @@ window.addEventListener('resize',function(){
       '<option value="select">プルダウン</option>' +
       '<option value="radio">ラジオボタン</option>' +
       '<option value="toggle">トグルボタン</option>' +
-      '<option value="device">デバイス（複数選択＋詳細）</option>' +
       '<option value="heading">見出し（入力なし）</option>';
     row('回答方法', typeSel);
 
@@ -13673,42 +13672,33 @@ window.addEventListener('resize',function(){
       'background:var(--surface2);border-radius:6px;';
     container.appendChild(extra);
 
-    var multiline = null, multi = null, optsArea = null, devArea = null;
+    var multiline = null, multi = null, optsArea = null;
 
-    // デバイス1行ぶん（デバイス名＋詳細）
-    var addDevRow = function(name, details) {
-      var r = document.createElement('div');
-      r.style.cssText = 'display:flex;align-items:center;gap:6px;';
-      var n = document.createElement('input');
-      n.type = 'text'; n.dataset.role = 'devname';
-      n.value = name || ''; n.placeholder = 'デバイス名';
-      n.style.cssText = INP + 'height:26px;flex:0 0 34%;';
-      var d = document.createElement('input');
-      d.type = 'text'; d.dataset.role = 'devdetail';
-      d.value = details || ''; d.placeholder = '詳細（カンマ区切り／空欄可）';
-      d.style.cssText = INP + 'height:26px;flex:1;';
-      var del = document.createElement('button');
-      del.type = 'button'; del.className = 'btn-del'; del.textContent = '×';
-      del.title = 'このデバイスを削除';
-      del.addEventListener('click', function() { r.parentNode.removeChild(r); });
-      r.appendChild(n); r.appendChild(d); r.appendChild(del);
-      devArea.insertBefore(r, devArea.lastChild);
-      return n;
-    };
-
-    var addOptRow = function(val) {
+    var addOptRow = function(val, details) {
+      var withDetail = (typeSel.value === 'toggle');
       var r = document.createElement('div');
       r.style.cssText = 'display:flex;align-items:center;gap:6px;';
       var inp = document.createElement('input');
       inp.type = 'text'; inp.dataset.role = 'opt';
       inp.value = val || '';
       inp.placeholder = '項目名';
-      inp.style.cssText = INP + 'height:26px;';
+      inp.style.cssText = INP + 'height:26px;' + (withDetail ? 'flex:0 0 34%;' : 'flex:1;');
+      // トグルは選択肢ごとに詳細を持てる（例：iPhone → Web / アプリ）
+      var det = null;
+      if (withDetail) {
+        det = document.createElement('input');
+        det.type = 'text'; det.dataset.role = 'optdetail';
+        det.value = details || '';
+        det.placeholder = '詳細（カンマ区切り／空欄可）';
+        det.style.cssText = INP + 'height:26px;flex:1;';
+      }
       var del = document.createElement('button');
       del.type = 'button'; del.className = 'btn-del'; del.textContent = '×';
       del.title = 'この選択肢を削除';
       del.addEventListener('click', function() { r.parentNode.removeChild(r); });
-      r.appendChild(inp); r.appendChild(del);
+      r.appendChild(inp);
+      if (det) r.appendChild(det);
+      r.appendChild(del);
       optsArea.insertBefore(r, optsArea.lastChild);
       return inp;
     };
@@ -13723,32 +13713,6 @@ window.addEventListener('resize',function(){
 
       if (t === 'heading') { extra.style.display = 'none'; return; }
       extra.style.display = '';
-
-      if (t === 'device') {
-        var dhd = document.createElement('div');
-        dhd.style.cssText = 'font-size:11px;font-weight:700;color:var(--text2);';
-        dhd.textContent = 'デバイスと詳細';
-        extra.appendChild(dhd);
-        var dnote = document.createElement('div');
-        dnote.style.cssText = 'font-size:10px;color:var(--text3);';
-        dnote.textContent = '詳細はカンマ区切り（例：Web, アプリ）。空欄にすると「利用あり／なし」の切り替えになります。';
-        extra.appendChild(dnote);
-
-        devArea = document.createElement('div');
-        devArea.style.cssText = 'display:flex;flex-direction:column;gap:5px;';
-        var dAdd = document.createElement('button');
-        dAdd.type = 'button'; dAdd.className = 'hr-add-btn';
-        dAdd.style.cssText = 'align-self:flex-start;height:24px;font-size:11px;';
-        dAdd.textContent = '＋ デバイスを追加';
-        dAdd.addEventListener('click', function() { addDevRow('', '').focus(); });
-        devArea.appendChild(dAdd);
-        extra.appendChild(devArea);
-        // 初期値としてよく使う組み合わせを入れておく
-        (window.HEARING_DEFAULT_DEVICES || []).forEach(function(d) {
-          addDevRow(d.name, (d.details || []).join(', '));
-        });
-        return;
-      }
 
       if (t === 'text') {
         var lw = document.createElement('label');
@@ -13765,8 +13729,15 @@ window.addEventListener('resize',function(){
       // プルダウン / ラジオ / トグル は選択肢が必要
       var hd = document.createElement('div');
       hd.style.cssText = 'font-size:11px;font-weight:700;color:var(--text2);';
-      hd.textContent = '各項目名';
+      hd.textContent = (t === 'toggle') ? '各項目名と詳細' : '各項目名';
       extra.appendChild(hd);
+      if (t === 'toggle') {
+        var note = document.createElement('div');
+        note.style.cssText = 'font-size:10px;color:var(--text3);';
+        note.textContent = '詳細はカンマ区切り（例：Web, アプリ）。'
+          + '入れると「項目 → 詳細」の2段になり、空欄なら「利用あり／なし」の切り替えになります。';
+        extra.appendChild(note);
+      }
 
       optsArea = document.createElement('div');
       optsArea.style.cssText = 'display:flex;flex-direction:column;gap:5px;';
@@ -13896,25 +13867,20 @@ window.addEventListener('resize',function(){
         // 入力欄を持たないので追加設定は不要
       } else if (t === 'text') {
         newQ.multiline = !!(multiline && multiline.checked);
-      } else if (t === 'device') {
-        newQ.devices = [];
-        devArea.querySelectorAll('[data-role="devname"]').forEach(function(nInp) {
-          var name = nInp.value.trim();
-          if (!name) return;
-          var dInp = nInp.parentNode.querySelector('[data-role="devdetail"]');
-          newQ.devices.push({
-            name: name,
-            details: String(dInp ? dInp.value : '').split(/[,、]/)
-              .map(function(v) { return v.trim(); })
-              .filter(function(v) { return v; })
-          });
-        });
-        if (!newQ.devices.length) { toast('⚠️ デバイスを1つ以上入力してください'); return; }
       } else {
         newQ.options = [];
         optsArea.querySelectorAll('[data-role="opt"]').forEach(function(inp) {
           var v = inp.value.trim();
-          if (v) newQ.options.push({ l: v, v: v });
+          if (!v) return;
+          var o = { l: v, v: v };
+          // トグルは選択肢ごとの詳細を持てる
+          var dInp = inp.parentNode.querySelector('[data-role="optdetail"]');
+          if (dInp) {
+            var det = String(dInp.value).split(/[,、]/)
+              .map(function(x) { return x.trim(); }).filter(function(x) { return x; });
+            if (det.length) o.details = det;
+          }
+          newQ.options.push(o);
         });
         if (!newQ.options.length) { toast('⚠️ 項目名を1つ以上入力してください'); return; }
         if (t === 'radio' || t === 'toggle') newQ.multi = !!(multi && multi.checked);
@@ -14092,11 +14058,12 @@ window.addEventListener('resize',function(){
       }
 
       // 選択肢／デバイスをその場で編集する
-      if (q.type === 'device' || q.type === 'select' || q.type === 'radio' || q.type === 'toggle') {
+      if (q.type === 'select' || q.type === 'radio' || q.type === 'toggle') {
         var optBtn = document.createElement('button');
         optBtn.type = 'button';
-        optBtn.textContent = q.type === 'device' ? '機器' : '選択肢';
-        optBtn.title = q.type === 'device' ? 'デバイスと詳細を編集' : 'この項目の選択肢を編集';
+        optBtn.textContent = '選択肢';
+        optBtn.title = (q.type === 'toggle')
+          ? 'この項目の選択肢と詳細を編集' : 'この項目の選択肢を編集';
         optBtn.style.cssText =
           'height:18px;padding:0 6px;margin-left:4px;border-radius:3px;' +
           'border:1px dashed var(--border);background:var(--surface2);color:var(--text3);' +

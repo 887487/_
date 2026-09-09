@@ -519,35 +519,40 @@ window.APP_STATIC_DATA = {
       "id": "q_devices",
       "field": "devices",
       "label": "デバイス",
-      "type": "device",
+      "type": "toggle",
       "common": true,
       "enabled": true,
       "builtin": true,
       "showIf": [],
-      "devices": [
+      "multi": true,
+      "options": [
         {
-          "name": "iPhone",
+          "l": "iPhone",
+          "v": "iPhone",
           "details": [
             "Web",
             "アプリ"
           ]
         },
         {
-          "name": "Android",
+          "l": "Android",
+          "v": "Android",
           "details": [
             "Web",
             "アプリ"
           ]
         },
         {
-          "name": "タブレット",
+          "l": "タブレット",
+          "v": "タブレット",
           "details": [
             "Web",
             "アプリ"
           ]
         },
         {
-          "name": "PC",
+          "l": "PC",
+          "v": "PC",
           "details": [
             "Win",
             "Mac",
@@ -555,7 +560,8 @@ window.APP_STATIC_DATA = {
           ]
         },
         {
-          "name": "TV",
+          "l": "TV",
+          "v": "TV",
           "details": []
         }
       ]
@@ -624,14 +630,51 @@ window.APP_STATIC_DATA = {
       "field": "mailDomain",
       "label": "メールドメイン",
       "type": "select",
-      "optionsFrom": "domains",
       "allowManual": true,
       "manualField": "mailDomainManual",
       "manualPlaceholder": "例）@example.com",
       "common": true,
       "enabled": true,
       "builtin": true,
-      "showIf": []
+      "showIf": [],
+      "options": [
+        {
+          "l": "@docomo.ne.jp",
+          "v": "@docomo.ne.jp"
+        },
+        {
+          "l": "@softbank.ne.jp",
+          "v": "@softbank.ne.jp"
+        },
+        {
+          "l": "@i.softbank.jp",
+          "v": "@i.softbank.jp"
+        },
+        {
+          "l": "@ezweb.ne.jp",
+          "v": "@ezweb.ne.jp"
+        },
+        {
+          "l": "@au.com",
+          "v": "@au.com"
+        },
+        {
+          "l": "@gmail.com",
+          "v": "@gmail.com"
+        },
+        {
+          "l": "@yahoo.co.jp",
+          "v": "@yahoo.co.jp"
+        },
+        {
+          "l": "@icloud.com",
+          "v": "@icloud.com"
+        },
+        {
+          "l": "@outlook.com",
+          "v": "@outlook.com"
+        }
+      ]
     },
     {
       "id": "q_usage",
