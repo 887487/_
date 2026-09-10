@@ -1034,17 +1034,20 @@ window.initAppData = function() {
     // IndexedDB に旧バージョンのヒアリング項目／対応方針／パターンが残っていると、
     // data.js 側で新しく定義した内容が反映されない。
     // バージョン番号が一致しない場合は保存データを破棄し、data.js の内容で上書き・再保存する。
+    // バージョン違いは旧形式の保存データなので data.js で作り直す。
+    // ただし保存データがある場合は編集結果なので残す。
+    // （無条件に上書きしていたため、管理画面で削除した項目が復活していた）
     var storedHearingVer = result ? result.hearingDataVersion : null;
     if (storedHearingVer !== HEARING_DATA_VERSION && sd) {
-      window._appCache.hearingQuestions = JSON.parse(JSON.stringify(sd.hearingQuestions || []));
-      window._appCache.hearingPolicies  = JSON.parse(JSON.stringify(sd.hearingPolicies  || []));
-      window._appCache.hearingPatterns  = JSON.parse(JSON.stringify(sd.hearingPatterns  || []));
-      if (window.idbSetAppData) {
-        window.idbSetAppData('hearingQuestions', window._appCache.hearingQuestions);
-        window.idbSetAppData('hearingPolicies',  window._appCache.hearingPolicies);
-        window.idbSetAppData('hearingPatterns',  window._appCache.hearingPatterns);
-        window.idbSetAppData('hearingDataVersion', HEARING_DATA_VERSION);
-      }
+      [['hearingQuestions', 'hearingQuestions'],
+       ['hearingPolicies',  'hearingPolicies'],
+       ['hearingPatterns',  'hearingPatterns']].forEach(function (k) {
+        var saved = result ? result[k[0]] : null;
+        if (Array.isArray(saved)) { window._appCache[k[0]] = saved; return; }
+        window._appCache[k[0]] = JSON.parse(JSON.stringify(sd[k[1]] || []));
+        if (window.idbSetAppData) window.idbSetAppData(k[0], window._appCache[k[0]]);
+      });
+      if (window.idbSetAppData) window.idbSetAppData('hearingDataVersion', HEARING_DATA_VERSION);
     }
     return window._appCache;
   });
@@ -3546,11 +3549,16 @@ window.hearingItemHTML = function (q, s) {
       : _strBtns(fld, s[fld], window.getHearingOptions(q)), '', pf);
   }
   if (q.type === 'radio') {
-    return _hrRow(q.label, _radioBtns(fld, s[fld], window.getHearingOptions(q), q.multi), '', pf);
+    // ラジオは1つだけ選ぶので横並びで足りる
+    return _hrRow(q.label, _radioBtns(fld, s[fld], window.getHearingOptions(q), false), '', pf);
   }
   if (q.type === 'checkbox') {
-    // チェックボックスは常に複数選択。選んだものが「、」でつながって出力される
-    return _hrRow(q.label, _radioBtns(fld, s[fld], window.getHearingOptions(q), true), '', pf);
+    // チェックボックスは常に複数選択。選んだものが「、」でつながって出力される。
+    // 複数を見比べながら選ぶため縦に並べる。
+    return _hrRow(q.label,
+      '<div class="hr-choice-vertical">' +
+        _radioBtns(fld, s[fld], window.getHearingOptions(q), true) +
+      '</div>', '', pf);
   }
   if (q.type === 'select') {
     // 「その他（手入力）」を出す設定か、手入力にする選択肢が1つでもあれば
@@ -4391,6 +4399,8 @@ document.addEventListener('keydown', function (e) {
     // 1行から始めて内容に合わせて伸ばす。プレースホルダは行の中央に見せる
     '.hr-autogrow { min-height:32px; height:32px; overflow-y:hidden; resize:none; line-height:1.6; padding:6px 9px; }' +
     '.hr-sum-multiline { white-space:pre-wrap; word-break:break-word; }' +
+    // 複数選択は縦並び（横に並ぶと選択済みが分かりにくいため）
+    '.hr-choice-vertical .hr-radio-group,.hr-choice-vertical { display:flex; flex-direction:column; align-items:flex-start; gap:4px; }' +
     '.hr-summary-block { align-items:flex-start; }' +
     '.hr-memo-textarea { width:100%; min-height:60px; resize:vertical; padding:7px 9px; border:1px solid var(--border,#dfe4ea); border-radius:6px; font-family:inherit; font-size:12px; background:var(--bg,#f1f2f6); color:var(--text,#2f3542); line-height:1.6; transition:border-color .15s; }' +
     '.hr-memo-textarea:focus { outline:none; border-color:var(--accent,#3742fa); }';

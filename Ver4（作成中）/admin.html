@@ -395,6 +395,15 @@
   flex:1; min-width:0;
 }
 
+/* 条件を満たさず本来は出ない項目。管理画面では触れるように薄く出す */
+.hr-row-cond-hidden{ opacity:.55; background:repeating-linear-gradient(
+  135deg, transparent, transparent 6px, var(--surface2) 6px, var(--surface2) 12px); }
+.hr-hidden-tag{
+  margin-left:6px; padding:1px 6px; border-radius:3px;
+  font-size:9px; font-weight:700; white-space:nowrap;
+  background:var(--surface2); color:var(--text3); border:1px solid var(--border);
+}
+
 .hr-opt-panel{
   margin:2px 0 8px;padding:8px 10px;
   background:var(--surface2);border:1px dashed var(--border);border-radius:6px;
@@ -2352,7 +2361,7 @@ html[data-theme="dark"] .nav-arrow-btn { background: rgba(40,42,54,.9); }
     <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--border);flex-shrink:0;">
       <span style="font-size:15px;font-weight:700;flex-shrink:0;">💾 保存して反映</span>
       <!-- 「保存中…」はここに出す。本文に置くと高さが変わってスクロールが出るため -->
-      <div id="saveModalStatus" style="visibility:hidden;flex:1;margin:0 12px;padding:5px 10px;border-radius:6px;font-size:12px;font-weight:600;text-align:left;background:var(--surface2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">&nbsp;</div>
+      <div id="saveModalStatus" style="visibility:hidden;flex:0 1 auto;margin-left:12px;margin-right:auto;padding:5px 10px;border-radius:6px;font-size:12px;font-weight:600;text-align:left;background:var(--surface2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">&nbsp;</div>
       <button onclick="closeSaveModal()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text3);flex-shrink:0;">✕</button>
     </div>
     <!-- ボディ。スクロールを出さず全体を見せるため、説明はできるだけ簡潔にする -->
@@ -2562,17 +2571,34 @@ function _hrLoadAndRender() {
     // 画面に反映されない。バージョンが一致する場合のみ保存データを使う。
     var storedVer = r[3];
     if (storedVer === window.HEARING_DATA_VERSION) {
-      if (Array.isArray(r[0]) && r[0].length) window._appCache.hearingPolicies  = r[0];
-      if (Array.isArray(r[1]) && r[1].length) window._appCache.hearingPatterns  = r[1];
-      if (Array.isArray(r[2]) && r[2].length) window._appCache.hearingQuestions = r[2];
+      // 空配列は「全部削除した」という意思表示。長さで判定すると、
+      // 削除した項目が data.js から復活して条件の一覧などに出てしまう。
+      if (Array.isArray(r[0])) window._appCache.hearingPolicies  = r[0];
+      if (Array.isArray(r[1])) window._appCache.hearingPatterns  = r[1];
+      if (Array.isArray(r[2])) window._appCache.hearingQuestions = r[2];
     } else if (typeof window.HEARING_DATA_VERSION !== 'undefined') {
+      // バージョン違い＝旧形式の保存データ。data.js で作り直す。
+      // ただし保存データがあるなら編集結果なので消さない。
+      // （ここで無条件に上書きしていたため、削除した項目が復活していた）
       var _sd2 = window.APP_STATIC_DATA || {};
-      window._appCache.hearingPolicies  = JSON.parse(JSON.stringify(_sd2.hearingPolicies  || []));
-      window._appCache.hearingPatterns  = JSON.parse(JSON.stringify(_sd2.hearingPatterns  || []));
-      window._appCache.hearingQuestions = JSON.parse(JSON.stringify(_sd2.hearingQuestions || []));
-      window.idbSetAppData('hearingPolicies',  window._appCache.hearingPolicies);
-      window.idbSetAppData('hearingPatterns',  window._appCache.hearingPatterns);
-      window.idbSetAppData('hearingQuestions', window._appCache.hearingQuestions);
+      if (!Array.isArray(r[2])) {
+        window._appCache.hearingQuestions = JSON.parse(JSON.stringify(_sd2.hearingQuestions || []));
+        window.idbSetAppData('hearingQuestions', window._appCache.hearingQuestions);
+      } else {
+        window._appCache.hearingQuestions = r[2];
+      }
+      if (!Array.isArray(r[0])) {
+        window._appCache.hearingPolicies = JSON.parse(JSON.stringify(_sd2.hearingPolicies || []));
+        window.idbSetAppData('hearingPolicies', window._appCache.hearingPolicies);
+      } else {
+        window._appCache.hearingPolicies = r[0];
+      }
+      if (!Array.isArray(r[1])) {
+        window._appCache.hearingPatterns = JSON.parse(JSON.stringify(_sd2.hearingPatterns || []));
+        window.idbSetAppData('hearingPatterns', window._appCache.hearingPatterns);
+      } else {
+        window._appCache.hearingPatterns = r[1];
+      }
       window.idbSetAppData('hearingDataVersion', window.HEARING_DATA_VERSION);
     }
     _draw();
@@ -2663,6 +2689,11 @@ function _hrConditionFields() {
   return out;
 }
 
+// プレビューで「条件を満たさない項目」を隠すかどうか。
+// 既定は表示（false）。条件の参照先を消すと項目が永久に隠れ、
+// 編集も削除もできなくなるため、管理画面では見えるようにしておく。
+var _hrHideConditional = false;
+
 // 各対応方針アコーディオンの開閉状態（id → bool）。再描画後も状態を保持するための保管庫。
 var _hrPolicyOpenState = window._hrPolicyOpenState || {};
 window._hrPolicyOpenState = _hrPolicyOpenState;
@@ -2719,7 +2750,9 @@ function _hrEditorRender() {
     hd.appendChild(arrow); hd.appendChild(num); hd.appendChild(ena);
     {
       var del = document.createElement('button');
-      del.textContent = '🗑 削除'; del.style.cssText = 'font-size:10px;padding:2px 8px;border:1px solid var(--border);border-radius:4px;background:var(--surface2);cursor:pointer;color:var(--text);font-family:inherit;';
+      // 削除は他と同じ赤枠・赤文字にそろえる
+      del.textContent = '🗑 削除'; del.className = 'btn-del';
+      del.style.cssText = 'font-size:10px;padding:0 8px;';
       del.onclick = (function(iidx){ return function(e) {
         e.stopPropagation(); // アコーディオン開閉と干渉させない
         if(!confirm('この対応方針を削除しますか？'))return;
@@ -5063,13 +5096,9 @@ function _hrPatClose() { document.getElementById('hrPatModal').classList.remove(
 /** トリガーボタングリッドを描画 */
 function _hrPatModalRenderTriggers() {
   var el = document.getElementById('hrPatModalTriggers'); if (!el) return;
-  var qs = (function(){
-    var qs = _hrQuestionsGet();
-    if (!qs || !qs.length) {
-      qs = (window.APP_STATIC_DATA && window.APP_STATIC_DATA.hearingQuestions) || [];
-    }
-    return JSON.parse(JSON.stringify(qs || []));
-  })();
+  // 空配列は「全部削除した」という意思表示。data.js から補うと
+  // 削除済みの項目がトリガー／対象の一覧に出てきてしまう。
+  var qs = JSON.parse(JSON.stringify(_hrQuestionsGet() || []));
   el.innerHTML = '';
   qs.forEach(function(q) {
     if (!q.enabled) return;
@@ -5080,8 +5109,11 @@ function _hrPatModalRenderTriggers() {
         { label: q.trueLabel  || 'はい',   value: 'true'  },
         { label: q.falseLabel || 'いいえ', value: 'false' }
       ];
-    } else if (q.type === 'str') {
-      buttons = (q.options || []).map(function(o) { return { label: o.l, value: o.v }; });
+    } else if (q.type === 'heading') {
+      return;                                   // 見出しは回答を持たない
+    } else {
+      buttons = (window.getHearingOptions ? window.getHearingOptions(q) : (q.options || []))
+        .map(function(o) { return { label: o.l, value: o.v }; });
     }
     if (!buttons.length) return;
     var group = document.createElement('div'); group.className = 'hr-pat-trigger-group';
@@ -5117,13 +5149,9 @@ function _hrPatModalRenderTriggers() {
 /** ターゲット質問リストを描画 */
 function _hrPatModalRenderTargets() {
   var el = document.getElementById('hrPatModalTargets'); if (!el) return;
-  var qs = (function(){
-    var qs = _hrQuestionsGet();
-    if (!qs || !qs.length) {
-      qs = (window.APP_STATIC_DATA && window.APP_STATIC_DATA.hearingQuestions) || [];
-    }
-    return JSON.parse(JSON.stringify(qs || []));
-  })();
+  // 空配列は「全部削除した」という意思表示。data.js から補うと
+  // 削除済みの項目がトリガー／対象の一覧に出てきてしまう。
+  var qs = JSON.parse(JSON.stringify(_hrQuestionsGet() || []));
   el.innerHTML = '';
   qs.forEach(function(q) {
     if (!q.enabled) return;
@@ -7012,11 +7040,14 @@ function smRenderShortcut(sec, si) {
 
   var h = '<div style="padding:10px 12px;">';
   (sec.groups || []).forEach(function(g, gi) {
+    // ✖ は下の表の削除列（34px）と中心をそろえる
     h += '<div style="display:flex;align-items:center;gap:6px;margin:10px 0 5px;">'
       + '<input type="text" value="' + esc(g.label || '') + '" placeholder="見出し（例：編集）"'
       +   ' oninput="smScSetGroup(' + si + ',' + gi + ',this.value)"'
       +   ' style="' + inp + 'font-weight:700;flex:1;">'
-      + '<button class="btn-del" onclick="smScDelGroup(' + si + ',' + gi + ')" title="この見出しごと削除">×</button>'
+      + '<span style="width:34px;display:inline-flex;justify-content:center;flex-shrink:0;">'
+      +   '<button class="btn-del" onclick="smScDelGroup(' + si + ',' + gi + ')" title="この見出しごと削除">×</button>'
+      + '</span>'
       + '</div>'
       + '<table style="width:100%;border-collapse:collapse;font-size:11px;">'
       + '<thead><tr>'
@@ -13694,7 +13725,13 @@ window.addEventListener('resize',function(){
    *   テンプレート名／項目名／出力名／回答方法 を指定する。
    *   回答方法によって、必要な追加設定（複数行・選択肢・複数選択）を出し分ける。
    */
-  function _openInlineAddForm(container) {
+  /**
+   * 質問の追加フォーム。editQ を渡すと「その質問の編集画面」になる。
+   * 記号・出力・選択肢などを行ごとの小さなボタンに分けていたが、
+   * 見つけにくく使いこなせないという指摘のため、編集はこの1画面にまとめた。
+   */
+  function _openInlineAddForm(container, editQ) {
+    var isEdit = !!editQ;
     container.innerHTML = '';
     container.style.cssText =
       'margin:8px 0 4px;background:var(--surface);border:1px solid var(--accent);' +
@@ -13720,7 +13757,7 @@ window.addEventListener('resize',function(){
 
     var title = document.createElement('div');
     title.style.cssText = 'font-size:12px;font-weight:700;color:var(--accent-text);';
-    title.textContent = '＋ 新しい質問を追加';
+    title.textContent = isEdit ? '✏️ 「' + (editQ.label || '') + '」を編集' : '＋ 新しい質問を追加';
     container.appendChild(title);
 
     // ── テンプレート名 ──
@@ -13798,6 +13835,16 @@ window.addEventListener('resize',function(){
       '<option value="checkbox">チェックボックス</option>' +
       '<option value="toggle">トグルボタン</option>';
     var typeRow = row('回答方法', typeSel);
+
+    // 編集のときは、いまの値を入れておく
+    if (isEdit) {
+      labelInp.value = editQ.label || '';
+      outTplInp.value = editQ.outTpl || editQ.outLabel || '';
+      pfxSel.value = (typeof editQ.prefix === 'string') ? editQ.prefix : '__default__';
+      headChk.checked = (editQ.type === 'heading');
+      if (editQ.type !== 'heading') typeSel.value = editQ.type || 'text';
+      if (editQ.tplId) tplSel.value = editQ.tplId;
+    }
     // 「複数行を許可」「複数選択を許可」は同時には出ないので、
     // 回答方法の右の同じ場所に出す（行が増えて縦に伸びるのを防ぐ）
     var allowWrap = document.createElement('label');
@@ -13815,7 +13862,7 @@ window.addEventListener('resize',function(){
     var setAllowChk = function(kind) {
       if (!kind) { allowWrap.style.display = 'none'; multiline = multi = null; return; }
       allowWrap.style.display = 'inline-flex';
-      allowChk.checked = false;
+      allowChk.checked = isEdit && !!(kind === 'multiline' ? editQ.multiline : editQ.multi);
       allowTxt.nodeValue = (kind === 'multiline') ? '複数行の入力を許可する' : '複数選択を許可する';
       multiline = (kind === 'multiline') ? allowChk : null;
       multi     = (kind === 'multi')     ? allowChk : null;
@@ -13852,17 +13899,14 @@ window.addEventListener('resize',function(){
       inp.placeholder = '項目名';
       inp.style.cssText = INP + 'height:26px;' + (withDetail ? 'flex:0 0 34%;' : 'flex:1;');
       // トグルは選択肢ごとに詳細を持てる（例：iPhone → Web / アプリ）
-      // 選択肢ごとに手入力欄を出せるのはプルダウンのみ
+      // 手入力は「＋『その他（手入力）』を追加」ボタンから作るので、
+      // 行ごとのチェックは出さない（同じ設定が2か所にあると迷うため）。
+      // 値は保持したいので、見えない入力として持たせておく。
       var man = null;
       if (typeSel.value === 'select') {
-        man = document.createElement('label');
-        man.style.cssText = 'display:inline-flex;align-items:center;gap:3px;font-size:10px;'
-          + 'color:var(--text3);white-space:nowrap;cursor:pointer;';
-        man.title = 'この選択肢を選んだときにテキストボックスを表示します';
-        var manChk = document.createElement('input');
-        manChk.type = 'checkbox'; manChk.dataset.role = 'optmanual';
-        man.appendChild(manChk);
-        man.appendChild(document.createTextNode('手入力'));
+        man = document.createElement('input');
+        man.type = 'checkbox'; man.dataset.role = 'optmanual';
+        man.style.display = 'none';
       }
       var det = null;
       if (withDetail) {
@@ -13921,6 +13965,17 @@ window.addEventListener('resize',function(){
       addBtn2.textContent = '＋ 項目を追加';
       addBtn2.addEventListener('click', function() { addOptRow('').focus(); });
       optsArea.appendChild(addBtn2);
+      // 編集時は、いまの選択肢を並べておく
+      if (isEdit && Array.isArray(editQ.options) && editQ.options.length) {
+        optsArea.querySelectorAll('[data-role="opt"]').forEach(function(i) {
+          i.parentNode.parentNode.removeChild(i.parentNode);
+        });
+        editQ.options.forEach(function(o) {
+          var inp = addOptRow(o.l || o.v, (o.details || []).join(', '));
+          var mk = inp.parentNode.querySelector('[data-role="optmanual"]');
+          if (mk && o.manual) mk.checked = true;
+        });
+      }
 
       // プルダウンは「その他（手入力）」をワンタッチで足せるようにする。
       // 各行の「手入力」チェックだけだと見つけにくいという指摘があったため。
@@ -13938,7 +13993,9 @@ window.addEventListener('resize',function(){
         optsArea.appendChild(otherBtn2);
       }
       extra.appendChild(optsArea);
-      addOptRow(''); addOptRow('');
+      if (!(isEdit && Array.isArray(editQ.options) && editQ.options.length)) {
+        addOptRow(''); addOptRow('');
+      }
 
       // ラジオは1つだけ選ぶもの。複数選択にすると見た目がチェックボックスになり
       // 意味が分からなくなるため許可しない（複数選ばせたい場合はチェックボックス型を使う）。
@@ -13989,7 +14046,14 @@ window.addEventListener('resize',function(){
             }).join('');
     };
     condQ.addEventListener('change', fillVals);
-    fillVals();
+    if (isEdit && Array.isArray(editQ.showIf) && editQ.showIf.length) {
+      var c0 = (editQ.showIf[0] || [])[0];
+      if (c0 && c0.field) condQ.value = c0.field;
+      fillVals();
+      if (c0 && c0.value != null) condV.value = c0.value;
+    } else {
+      fillVals();
+    }
 
     var eq = document.createElement('span');
     eq.textContent = 'が';
@@ -14014,7 +14078,7 @@ window.addEventListener('resize',function(){
     var addBtn = document.createElement('button');
     addBtn.type = 'button'; addBtn.className = 'btn btn-primary';
     addBtn.style.cssText = 'font-size:12px;height:28px;';
-    addBtn.textContent = '追加する';
+    addBtn.textContent = isEdit ? '保存する' : '追加する';
     addBtn.addEventListener('click', function() {
       var label = labelInp.value.trim();
       if (!label) { toast('⚠️ 項目名を入力してください'); labelInp.focus(); return; }
@@ -14037,8 +14101,8 @@ window.addEventListener('resize',function(){
       var outVal = outTplInp.value.trim();
       var isSentence = !!(window.hearingHasSlot && window.hearingHasSlot(outVal));
       var newQ = {
-        id: 'q_' + Math.random().toString(36).substr(2, 7),
-        enabled: true,                      // これが無いと一覧に出ない
+        id: isEdit ? editQ.id : ('q_' + Math.random().toString(36).substr(2, 7)),
+        enabled: isEdit ? (editQ.enabled !== false) : true,   // これが無いと一覧に出ない
         label: label,
         outLabel: isSentence ? '' : outVal, // 空なら出力時に label を使う
         outTpl: (t === 'heading' || !isSentence) ? '' : outVal,
@@ -14046,7 +14110,9 @@ window.addEventListener('resize',function(){
         common: !tplId,                     // テンプレート未指定＝共通項目
         tplId: tplId || ''
       };
-      newQ.field = newQ.id;                 // 回答の保存先キー
+      // 回答の保存先キー。編集では入力済みの回答が消えないよう元のキーを保つ
+      newQ.field = isEdit ? (editQ.field || editQ.id) : newQ.id;
+      if (isEdit && editQ.builtin) newQ.builtin = editQ.builtin;
       // 先頭記号：「既定に従う」ならキー自体を持たせない
       if (pfxSel.value !== '__default__') newQ.prefix = pfxSel.value;
 
@@ -14082,13 +14148,18 @@ window.addEventListener('resize',function(){
       }
 
       var qs = _hrQuestionsGet();
-      qs.push(newQ);
+      if (isEdit) {
+        var ei = qs.findIndex(function(x) { return x.id === newQ.id; });
+        if (ei >= 0) qs[ei] = newQ; else qs.push(newQ);   // 見つからなければ追加扱い
+      } else {
+        qs.push(newQ);
+      }
       // 保存を待たずに再描画すると、読み直しで追加が消える
       Promise.resolve(_hrQuestionsSave(qs)).then(function() {
         window.renderHearing();
         if (typeof _hrLoadAndRender === 'function') _hrLoadAndRender();
       });
-      toast('✅ 「' + label + '」を追加しました');
+      toast(isEdit ? '✅ 「' + label + '」を保存しました' : '✅ 「' + label + '」を追加しました');
     });
 
     btnRow.appendChild(cancelBtn); btnRow.appendChild(addBtn);
@@ -14178,33 +14249,19 @@ window.addEventListener('resize',function(){
     if (labelEl) {
       labelEl.style.cursor = 'pointer';
       labelEl.title = 'ダブルクリックでラベルを編集';
-      // 記号と実テキストを分離して保持（記号はプルダウンで選べる）
-      labelEl.innerHTML = '<span class="hr-label-prefix"></span><span class="hr-label-text">' + hEsc(q.label) + '</span>';
-      var pfxEl = labelEl.querySelector('.hr-label-prefix');
-      pfxEl.appendChild(_mkPrefixSelect(q, function(val) {
-        var qs2 = _hrQuestionsGet();
-        var qi2 = qs2.findIndex(function(x) { return x.id === qId; });
-        if (qi2 < 0) return;
-        if (val === '__default__') delete qs2[qi2].prefix;   // 全体の既定に従う
-        else qs2[qi2].prefix = val;
-        _hrQuestionsSave(qs2);
-        window.renderHearing();
-      }));
+      // 項目名の左の記号プルダウン、「文」「選択肢」の小さなボタンは廃止した。
+      // 見つけにくく使いこなせないという指摘のため、右端の「編集」から
+      // 追加フォームと同じ画面でまとめて設定する形にしている。
+      labelEl.innerHTML = '<span class="hr-label-prefix">' + hEsc(window.getHearingPrefix(q)) +
+        '</span><span class="hr-label-text">' + hEsc(q.label) + '</span>';
       var labelTextEl = labelEl.querySelector('.hr-label-text');
-      labelTextEl.addEventListener('dblclick', function(e) {
-        e.stopPropagation();
-        _inlineEdit(labelTextEl, q.label, function(val) {
-          var qs2 = _hrQuestionsGet();
-          var qi2 = qs2.findIndex(function(x) { return x.id === qId; });
-          if (qi2 >= 0) { qs2[qi2].label = val; _hrQuestionsSave(qs2); }
-          window.renderHearing();
-        });
-      });
 
       // 編集・削除は行の右端にまとめる（項目名の直後だと位置が揃わないため）
       var actions = document.createElement('span');
       actions.className = 'hr-row-actions';
 
+      // メモは項目名も選択肢も変える必要がないので編集ボタンを出さない
+      var undeletable = (q.field === 'memo' || q.id === 'q_memo');
       var editQ = document.createElement('button');
       editQ.type = 'button';
       editQ.textContent = '編集';
@@ -14212,18 +14269,17 @@ window.addEventListener('resize',function(){
       editQ.title = '項目名を編集';
       editQ.addEventListener('click', function(e) {
         e.stopPropagation();
-        _inlineEdit(labelTextEl, q.label, function(val) {
-          var qs2 = _hrQuestionsGet();
-          var qi2 = qs2.findIndex(function(x) { return x.id === qId; });
-          if (qi2 >= 0) { qs2[qi2].label = val; _hrQuestionsSave(qs2); }
-          window.renderHearing();
-        });
+        // その行の編集画面を、追加フォームと同じ形で開く（現在の値が入った状態）
+        var area = document.getElementById('hrInlineAddArea');
+        var cur = _hrQuestionsGet().find(function(x) { return x.id === qId; });
+        if (!area || !cur) return;
+        _openInlineAddForm(area, cur);
+        if (area.scrollIntoView) area.scrollIntoView({ behavior: 'smooth', block: 'center' });
       });
-      actions.appendChild(editQ);
+      if (!undeletable) actions.appendChild(editQ);
 
       // メモは仕組み上そのまま残るため、プレビューだけ消せてしまうと誤解を招く。
       // 消せない項目には削除ボタンを出さない。
-      var undeletable = (q.field === 'memo' || q.id === 'q_memo');
       if (!undeletable) {
         var delQ = document.createElement('button');
         delQ.type = 'button';
@@ -14238,61 +14294,8 @@ window.addEventListener('resize',function(){
       }
       rowEl.appendChild(actions);
 
-      // 出力文（文章の一部を入力箇所にする）の設定ボタン
-      if (q.type !== 'heading') {
-        var tplBtn = document.createElement('button');
-        tplBtn.type = 'button';
-        tplBtn.textContent = q.outTpl ? '文✓' : '文';
-        tplBtn.title = q.outTpl
-          ? '出力文：' + q.outTpl
-          : '出力文を設定する（例：' + HR_OUT_TPL_SAMPLE + '）';
-        tplBtn.style.cssText =
-          'height:18px;padding:0 6px;margin-left:4px;border-radius:3px;' +
-          'font-size:10px;font-family:inherit;cursor:pointer;vertical-align:middle;' +
-          (q.outTpl
-            ? 'border:1px solid var(--accent);background:var(--accent-lt);color:var(--accent-text);'
-            : 'border:1px dashed var(--border);background:var(--surface2);color:var(--text3);');
-        tplBtn.addEventListener('click', function(e) {
-          e.stopPropagation();
-          var qs2 = _hrQuestionsGet();
-          var qi2 = qs2.findIndex(function(x) { return x.id === qId; });
-          if (qi2 < 0) return;
-          var val = prompt(
-            '出力文を入力してください。\n' +
-            '[入力] と書いた位置に、実際の回答が差し込まれます。\n\n' +
-            '例）' + HR_OUT_TPL_SAMPLE + '\n\n' +
-            '（空欄にすると「出力名：回答」の形に戻ります）',
-            qs2[qi2].outTpl || '');
-          if (val === null) return;
-          val = val.trim();
-          if (val && !(window.hearingHasSlot && window.hearingHasSlot(val))) {
-            if (!confirm('文章に [入力] が見つかりません。\n回答が差し込まれない文章になりますが、このまま設定しますか？')) return;
-          }
-          qs2[qi2].outTpl = val;
-          _hrQuestionsSave(qs2);
-          window.renderHearing();
-          toast(val ? '✅ 出力文を設定しました' : '出力文を解除しました');
-        });
-        labelEl.appendChild(tplBtn);
-      }
-
-      // 選択肢／デバイスをその場で編集する
-      if (q.type === 'select' || q.type === 'radio' || q.type === 'toggle' || q.type === 'checkbox') {
-        var optBtn = document.createElement('button');
-        optBtn.type = 'button';
-        optBtn.textContent = '選択肢';
-        optBtn.title = (q.type === 'toggle')
-          ? 'この項目の選択肢と詳細を編集' : 'この項目の選択肢を編集';
-        optBtn.style.cssText =
-          'height:18px;padding:0 6px;margin-left:4px;border-radius:3px;' +
-          'border:1px dashed var(--border);background:var(--surface2);color:var(--text3);' +
-          'font-size:10px;font-family:inherit;cursor:pointer;vertical-align:middle;';
-        optBtn.addEventListener('click', function(e) {
-          e.stopPropagation();
-          _hrToggleOptPanel(rowEl, qId);
-        });
-        labelEl.appendChild(optBtn);
-      }
+      // 「文」「選択肢」の小さなボタンは廃止。
+      // 出力文も選択肢も、右端の「編集」から開く画面でまとめて設定する。
     }
 
     // ② ボタン群の編集
@@ -14442,6 +14445,9 @@ window.addEventListener('resize',function(){
                           hEsc(o.v === '' ? 'なし' : o.v) + '</option>';
                  }).join('') +
                '</select></label>' +
+             '<label class="hr-prev-ctl" title="条件を満たさない項目も薄く表示します（編集・削除できます）">' +
+               '<input type="checkbox" id="hrShowHiddenChk"' + (_hrHideConditional ? '' : ' checked') + '>' +
+               '<span>条件で隠れる項目も表示</span></label>' +
              '<span class="hr-prev-sp"></span>' +
              '<button type="button" class="hr-prev-help" id="hrPrevHelpBtn" title="編集のしかた">？</button>' +
            '</div>' +
@@ -14455,10 +14461,31 @@ window.addEventListener('resize',function(){
       // デバイス・キャリア・メールドメインは通常の項目として並ぶ。
       // メモだけは hearing.html と同じく最下段に固定するため、いったん取り置く。
       var memoHtml = '';
+      // 条件を満たさない項目は本来なら出ないが、管理画面で消してしまうと
+      // 編集も削除もできなくなる（条件の参照先を消すと芋づる式に隠れる）。
+      // ここでは薄く表示して、いつでも触れるようにしておく。
+      var showHidden = !_hrHideConditional;
+      var allFields = {};
+      qs.forEach(function(x) { if (x) allFields[x.field || x.id] = 1; });
+
       qs.forEach(function(q) {
         if (!q.enabled) return;
-        if (q.id in patternOverrides) { if (!patternOverrides[q.id]) return; }
-        else if (typeof window._hrEvalShowIf === 'function' && !window._hrEvalShowIf(q.showIf, s)) return;
+        var hiddenBy = '';
+        if (q.id in patternOverrides) {
+          if (!patternOverrides[q.id]) hiddenBy = 'パターンにより非表示';
+        } else if (typeof window._hrEvalShowIf === 'function' && !window._hrEvalShowIf(q.showIf, s)) {
+          // 条件の参照先が削除されていると、二度と表示されない
+          var missing = [];
+          (q.showIf || []).forEach(function(g) {
+            (Array.isArray(g) ? g : [g]).forEach(function(c) {
+              if (c && c.field && !allFields[c.field]) missing.push(c.field);
+            });
+          });
+          hiddenBy = missing.length
+            ? '条件の参照先がありません（' + missing.join(', ') + '）'
+            : '条件により非表示';
+        }
+        if (hiddenBy && !showHidden) return;
 
         // 選択肢そのものを編集できる型だけ専用の描画。それ以外は共通の描画を使う
         var content = '';
@@ -14473,7 +14500,9 @@ window.addEventListener('resize',function(){
           content = m ? m[1] : '';
         }
         // data-q-id を行に付与
-        var rowHtml = '<div class="hr-row" data-q-id="' + hEsc(q.id) + '">' +
+        var rowHtml = '<div class="hr-row' + (hiddenBy ? ' hr-row-cond-hidden' : '') + '"' +
+             ' data-q-id="' + hEsc(q.id) + '"' +
+             (hiddenBy ? ' data-hidden-by="' + hEsc(hiddenBy) + '"' : '') + '>' +
              '<div class="hr-label">' +
                '<span class="hr-label-prefix">' + hEsc(window.getHearingPrefix(q)) + '</span>' +
                '<span class="hr-label-text">' + hEsc(q.label) + '</span></div>' +
@@ -14513,6 +14542,14 @@ window.addEventListener('resize',function(){
       if (typeof window.renderHearingSummary === 'function') window.renderHearingSummary();
       if (typeof _hrUpdateAddPolicyBtn === 'function') _hrUpdateAddPolicyBtn();
 
+      var shChk = el.querySelector('#hrShowHiddenChk');
+      if (shChk) {
+        shChk.addEventListener('change', function() {
+          _hrHideConditional = !shChk.checked;
+          window.renderHearing();
+        });
+      }
+
       var helpBtn = el.querySelector('#hrPrevHelpBtn');
       var helpBox = el.querySelector('#hrPrevHelp');
       if (helpBtn && helpBox) {
@@ -14534,6 +14571,19 @@ window.addEventListener('resize',function(){
       // 各 [data-q-id] 行に編集機能を付加
       el.querySelectorAll('.hr-row[data-q-id]').forEach(function(rowEl) {
         _attachRowEditing(rowEl, rowEl.dataset.qId);
+      });
+
+      // 非表示の理由を行に添える。
+      // _attachRowEditing がラベルを組み直すので、必ずその後に付ける。
+      el.querySelectorAll('.hr-row-cond-hidden').forEach(function(r) {
+        var why = r.getAttribute('data-hidden-by') || '';
+        if (!why) return;
+        var lab = r.querySelector('.hr-label');
+        if (!lab || lab.querySelector('.hr-hidden-tag')) return;
+        var tag = document.createElement('span');
+        tag.className = 'hr-hidden-tag';
+        tag.textContent = why;
+        lab.appendChild(tag);
       });
 
       // ── 質問追加フォームをメモ欄の直前に挿入 ──

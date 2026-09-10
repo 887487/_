@@ -1,9 +1,9 @@
 // ツール設定ファイル — スクリプト・メール・サイドメニュー・ヒアリング・更新履歴・固定テキスト
 // admin.html の「💾 保存して反映」で自動更新されます。手動編集は非推奨です。
-// 生成日時: 2026-09-10T14:53:20.344Z
+// 生成日時: 2026-09-07T14:49:05.537Z
 window.APP_STATIC_DATA = {
-  "generatedAt": "2026-09-10T14:53:20.344Z",
-  "savedAt": "2026-09-10T14:53:20.344Z",
+  "generatedAt": "2026-09-07T14:49:05.537Z",
+  "savedAt": "2026-09-07T14:49:05.537Z",
   "sideMenuData": [
     {
       "id": "linkTools",
@@ -651,6 +651,213 @@ window.APP_STATIC_DATA = {
   "sideMenuFiles": {},
   "hearingQuestions": [
     {
+      "id": "q_devices",
+      "field": "devices",
+      "label": "デバイス",
+      "type": "toggle",
+      "common": true,
+      "enabled": true,
+      "builtin": true,
+      "showIf": [],
+      "multi": true,
+      "options": [
+        {
+          "l": "iPhone",
+          "v": "iPhone",
+          "details": [
+            "Web",
+            "アプリ"
+          ]
+        },
+        {
+          "l": "Android",
+          "v": "Android",
+          "details": [
+            "Web",
+            "アプリ"
+          ]
+        },
+        {
+          "l": "タブレット",
+          "v": "タブレット",
+          "details": [
+            "Web",
+            "アプリ"
+          ]
+        },
+        {
+          "l": "PC",
+          "v": "PC",
+          "details": [
+            "Win",
+            "Mac",
+            "ChromeBook"
+          ]
+        },
+        {
+          "l": "TV",
+          "v": "TV",
+          "details": []
+        }
+      ]
+    },
+    {
+      "id": "q_carrier",
+      "field": "carrier",
+      "label": "キャリア",
+      "type": "select",
+      "allowManual": true,
+      "manualField": "carrierManual",
+      "manualPlaceholder": "例）mineo",
+      "common": true,
+      "enabled": true,
+      "builtin": true,
+      "showIf": [],
+      "options": [
+        {
+          "l": "docomo",
+          "v": "docomo"
+        },
+        {
+          "l": "au",
+          "v": "au"
+        },
+        {
+          "l": "SoftBank",
+          "v": "SoftBank"
+        },
+        {
+          "l": "楽天モバイル",
+          "v": "楽天モバイル"
+        },
+        {
+          "l": "ahamo",
+          "v": "ahamo"
+        },
+        {
+          "l": "povo",
+          "v": "povo"
+        },
+        {
+          "l": "LINEMO",
+          "v": "LINEMO"
+        },
+        {
+          "l": "Y!mobile",
+          "v": "Y!mobile"
+        },
+        {
+          "l": "UQ mobile",
+          "v": "UQ mobile"
+        },
+        {
+          "l": "格安SIM（MVNO）",
+          "v": "格安SIM（MVNO）"
+        },
+        {
+          "l": "Wi-Fiのみ",
+          "v": "Wi-Fiのみ"
+        }
+      ]
+    },
+    {
+      "id": "q_domain",
+      "field": "mailDomain",
+      "label": "メールドメイン",
+      "type": "select",
+      "allowManual": true,
+      "manualField": "mailDomainManual",
+      "manualPlaceholder": "例）@example.com",
+      "common": true,
+      "enabled": true,
+      "builtin": true,
+      "showIf": [],
+      "options": [
+        {
+          "l": "@docomo.ne.jp",
+          "v": "@docomo.ne.jp"
+        },
+        {
+          "l": "@softbank.ne.jp",
+          "v": "@softbank.ne.jp"
+        },
+        {
+          "l": "@i.softbank.jp",
+          "v": "@i.softbank.jp"
+        },
+        {
+          "l": "@ezweb.ne.jp",
+          "v": "@ezweb.ne.jp"
+        },
+        {
+          "l": "@au.com",
+          "v": "@au.com"
+        },
+        {
+          "l": "@gmail.com",
+          "v": "@gmail.com"
+        },
+        {
+          "l": "@yahoo.co.jp",
+          "v": "@yahoo.co.jp"
+        },
+        {
+          "l": "@icloud.com",
+          "v": "@icloud.com"
+        },
+        {
+          "l": "@outlook.com",
+          "v": "@outlook.com"
+        }
+      ]
+    },
+    {
+      "id": "q_usage",
+      "label": "用途",
+      "field": "usage",
+      "type": "str",
+      "options": [
+        {
+          "l": "世帯",
+          "v": "世帯"
+        },
+        {
+          "l": "学校",
+          "v": "学校"
+        },
+        {
+          "l": "事業",
+          "v": "事業"
+        }
+      ],
+      "showIf": [],
+      "builtin": true,
+      "enabled": true,
+      "resets": [
+        "oldPlusUsed",
+        "migMailStatus",
+        "migSAccCreated",
+        "migSAccGuide",
+        "migSAccLogin",
+        "migSAccPwReset",
+        "transferA",
+        "transferB",
+        "transferC",
+        "newSAccCreated",
+        "newSAccGuide",
+        "newSAccLogin",
+        "newSAccPwReset",
+        "sjLink",
+        "jAccGuide",
+        "cbSMistake",
+        "cbSSpam",
+        "cbSPermission",
+        "cbJMistake",
+        "cbJSpam",
+        "cbJPermission"
+      ]
+    },
+    {
       "id": "q_oldPlusUsed",
       "label": "旧NHKプラス",
       "field": "oldPlusUsed",
@@ -1276,6 +1483,16 @@ window.APP_STATIC_DATA = {
       ]
     },
     {
+      "id": "q_yniqyz0",
+      "enabled": true,
+      "label": "ｓｓｓ",
+      "outLabel": "",
+      "type": "heading",
+      "common": false,
+      "tplId": "tpl_vztoy8",
+      "field": "q_yniqyz0"
+    },
+    {
       "id": "q_memo",
       "field": "memo",
       "label": "メモ",
@@ -1286,18 +1503,6 @@ window.APP_STATIC_DATA = {
       "enabled": true,
       "builtin": true,
       "showIf": []
-    },
-    {
-      "id": "q_txvz04i",
-      "enabled": true,
-      "label": "TEST",
-      "outLabel": "",
-      "outTpl": "",
-      "type": "text",
-      "common": true,
-      "tplId": "",
-      "field": "q_txvz04i",
-      "multiline": false
     }
   ],
   "hearingPolicies": [
@@ -1755,10 +1960,30 @@ window.APP_STATIC_DATA = {
     "opening": "お電話 ありがとうございます。NHKONE窓口 担当●●でございます。"
   },
   "faqData": [],
-  "hearingTemplates": [],
-  "hearingLabelPrefix": "■",
-  "hearingFixedReady": true,
-  "talkScripts": {},
+  "hearingTemplates": [
+    {
+      "id": "tpl_vztoy8",
+      "name": "A",
+      "order": 0
+    }
+  ],
+  "talkScripts": {
+    "cat_1788611867379": {
+      "name": "あ」",
+      "color": "#ffa502",
+      "list": [
+        {
+          "title": "https://chatgpt.com/",
+          "steps": [
+            {
+              "text": "https://chatgpt.com/",
+              "choices": []
+            }
+          ]
+        }
+      ]
+    }
+  },
   "mailTemplates": [
     {
       "id": "mail_1788611852548",
@@ -1782,6 +2007,9 @@ window.APP_STATIC_DATA = {
         "color": "#e63946"
       }
     ],
-    "subs": {}
-  }
+    "subs": {
+      "mcat_1788611851040": []
+    }
+  },
+  "hearingFixedReady": true
 };
