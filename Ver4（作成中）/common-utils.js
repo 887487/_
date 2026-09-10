@@ -863,6 +863,7 @@ window._appCache = {
   linkify:          {},
   hearingTemplates: [],
   hearingLabelPrefix: '■',  // 項目名の先頭に付ける記号（'' なら付けない）
+  hearingFixedReady: false, // 組み込み項目を取り込み済みか（true なら足し直さない）
   hearingDevices:   [],     // デバイス候補（[{name, details:[]}]）
   hearingCarriers:  []      // キャリア候補（文字列の配列）
 };
@@ -888,6 +889,7 @@ window._appCache = {
   if (sd.linkify          != null) window._appCache.linkify          = sd.linkify;
   if (sd.hearingTemplates != null) window._appCache.hearingTemplates = sd.hearingTemplates;
   if (sd.hearingLabelPrefix != null) window._appCache.hearingLabelPrefix = sd.hearingLabelPrefix;
+  if (sd.hearingFixedReady != null) window._appCache.hearingFixedReady = sd.hearingFixedReady;
   if (sd.hearingDevices   != null) window._appCache.hearingDevices  = sd.hearingDevices;
   if (sd.hearingCarriers  != null) window._appCache.hearingCarriers = sd.hearingCarriers;
 })();
@@ -933,15 +935,16 @@ window.initAppData = function() {
   }
   if (sd) {
     if (sd.sideMenuData     != null) window._appCache.sideMenuData     = sd.sideMenuData;
-    if (sd.hearingQuestions != null && sd.hearingQuestions.length) window._appCache.hearingQuestions = sd.hearingQuestions;
-    if (sd.hearingPolicies  != null && sd.hearingPolicies.length)  window._appCache.hearingPolicies  = sd.hearingPolicies;
-    if (sd.hearingPatterns  != null && sd.hearingPatterns.length)  window._appCache.hearingPatterns  = sd.hearingPatterns;
+    if (sd.hearingQuestions != null) window._appCache.hearingQuestions = sd.hearingQuestions;
+    if (sd.hearingPolicies  != null) window._appCache.hearingPolicies  = sd.hearingPolicies;
+    if (sd.hearingPatterns  != null) window._appCache.hearingPatterns  = sd.hearingPatterns;
     if (sd.updateHistory    != null) window._appCache.updateHistory    = sd.updateHistory;
     if (sd.fixedTexts       != null) window._appCache.fixedTexts       = sd.fixedTexts;
     if (sd.faqData          != null) window._appCache.faqData          = sd.faqData;
     if (sd.linkify          != null) window._appCache.linkify          = sd.linkify;
     if (sd.hearingTemplates != null) window._appCache.hearingTemplates = sd.hearingTemplates;
     if (sd.hearingLabelPrefix != null) window._appCache.hearingLabelPrefix = sd.hearingLabelPrefix;
+    if (sd.hearingFixedReady != null) window._appCache.hearingFixedReady = sd.hearingFixedReady;
     if (sd.hearingDevices   != null) window._appCache.hearingDevices  = sd.hearingDevices;
     if (sd.hearingCarriers  != null) window._appCache.hearingCarriers = sd.hearingCarriers;
   if (sd.hearingTemplates != null) window._appCache.hearingTemplates = sd.hearingTemplates;
@@ -1109,7 +1112,7 @@ function _positionQuickMenu() {
   var r = btn.getBoundingClientRect();
   var right = Math.max(4, window.innerWidth - r.right);
   menu.style.position = 'fixed';
-  menu.style.top      = (r.bottom + 4) + 'px';
+  menu.style.top      = r.bottom + 'px';   // 隙間があるとマウス移動中にホバーが切れる
   menu.style.left     = 'auto';
   menu.style.right    = right + 'px';
   // 画面が低いときにメニューがはみ出さないようにする
@@ -1139,9 +1142,31 @@ window.renderQuickMenu = function () {
     if (item) window.copyText(item.text, item.label);
   });
 
-  // マウスを乗せただけで開くCSSがあるので、そちらでも位置を合わせる
+  // マウスの出入りで開閉する。
+  // ボタンからメニューへ動かす途中で一瞬でも外れると閉じてしまい
+  // 「選ぶ前に消える」ため、閉じるまでに少し猶予を持たせる。
   var area = el.closest('.quick-copy-area');
-  if (area) area.addEventListener('mouseenter', _positionQuickMenu);
+  if (area) {
+    var closeTimer = null;
+    var cancelClose = function () {
+      if (closeTimer) { clearTimeout(closeTimer); closeTimer = null; }
+    };
+    var open = function () {
+      cancelClose();
+      _positionQuickMenu();
+      el.classList.add('open');
+    };
+    var scheduleClose = function () {
+      cancelClose();
+      closeTimer = setTimeout(function () { el.classList.remove('open'); }, 320);
+    };
+    [area, el].forEach(function (n) {
+      n.addEventListener('mouseenter', open);
+      n.addEventListener('mouseleave', scheduleClose);
+    });
+    // 押して開いた場合は、うっかり外れても閉じないよう猶予を打ち消す
+    area.addEventListener('click', cancelClose);
+  }
 
   // 開いたまま画面が動いてもボタンに追従させる
   var follow = function () { if (el.classList.contains('open')) _positionQuickMenu(); };
@@ -1150,6 +1175,88 @@ window.renderQuickMenu = function () {
 
   _positionQuickMenu();
 };
+
+// ヘッダー右側に並べるページ移動ボタン。並び順もここで決める。
+window.NAV_PAGES = [
+  { file: 'script.html',  tab: 'scriptTab',     label: '📋 スクリプト' },
+  { file: 'mail.html',    tab: 'mailTab',       label: '✉️ メール' },
+  { file: 'screen.html',  tab: 'screenFlowTab', label: '🖥️ 画面遷移' },
+  { file: 'FAQ.html',     tab: 'faqTab',        label: '❓ FAQ' },
+  { file: 'hearing.html', tab: 'hearingTab',    label: '🩺 ヒアリング' }
+];
+
+/** いま開いているページのファイル名（大文字小文字は無視して比較する） */
+function _currentPageFile() {
+  var p = (location.pathname || '').split('/').pop() || 'index.html';
+  return decodeURIComponent(p).toLowerCase();
+}
+
+/**
+ * ページ移動ボタンをヘッダーに並べ直す。
+ * ページごとに数も並び順も見た目もばらばらだったため共通化し、
+ * 自分自身のページのボタンは出さない。
+ */
+function _injectNavBtns() {
+  var right = document.querySelector('header .hd-right');
+  if (!right) return;                                   // ホームなど
+  var here = _currentPageFile();
+
+  // 既存の移動ボタン（HTMLに直接書かれているもの）を取り除く
+  Array.prototype.slice.call(right.querySelectorAll('button')).forEach(function (b) {
+    var oc = b.getAttribute('onclick') || '';
+    if (oc.indexOf('openNamedTab(') < 0) return;
+    var hit = window.NAV_PAGES.some(function (p) { return oc.indexOf(p.file) >= 0; });
+    if (hit) b.parentNode.removeChild(b);
+  });
+
+  var frag = document.createDocumentFragment();
+  window.NAV_PAGES.forEach(function (p) {
+    if (p.file.toLowerCase() === here) return;          // 自ページは出さない
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'nav-btn';
+    b.textContent = p.label;
+    b.addEventListener('click', function () { openNamedTab(p.file, p.tab); });
+    frag.appendChild(b);
+  });
+  right.insertBefore(frag, right.firstChild);
+}
+
+/**
+ * ヘッダーに［💬 定型文］を差し込む。
+ * FAQ・ヒアリングには置かれていなかったため、全ページで同じ位置に出す。
+ * すでにページ内にある場合は二重に作らない。
+ */
+function _injectQuickCopy() {
+  if (document.getElementById('quickCopyBtn')) return;      // 既にある
+  // 管理画面は編集作業の場なので置かない
+  if (document.body.classList.contains('page-admin')) return;
+
+  // ホームはヘッダーの作りが違うので、ヘッダー内の末尾に置く
+  var right = document.querySelector('header .hd-right')
+           || document.querySelector('header.home-header');
+  if (!right) return;
+
+  var area = document.createElement('div');
+  area.className = 'quick-copy-area';
+  area.innerHTML =
+    '<button class="quick-copy-btn nav-btn-green" id="quickCopyBtn" type="button">💬 定型文</button>' +
+    '<div class="quick-menu" id="quickMenu"></div>' +
+    '<div class="quick-copy-toast" id="quickCopyToast"></div>';
+  area.querySelector('#quickCopyBtn').addEventListener('click', function () {
+    window.toggleQuickMenu();
+  });
+
+  if (right.classList.contains('home-header')) {
+    area.style.marginLeft = '12px';                        // 時計の右に置く
+    right.appendChild(area);
+    return;
+  }
+  // 検索欄がある場合はその手前に置き、他ページと並びをそろえる
+  var search = right.querySelector('.search-wrap');
+  if (search) right.insertBefore(area, search);
+  else right.appendChild(area);
+}
 
 /**
  * 検索サジェストの位置合わせ。
@@ -2373,15 +2480,19 @@ window.loadHearingData = function() {
     window.idbGetAppData('hearingTemplates'),
     window.idbGetAppData('hearingQuestions'),
     window.idbGetAppData('hearingPolicies'),
-    window.idbGetAppData('hearingDataVersion')
+    window.idbGetAppData('hearingDataVersion'),
+    window.idbGetAppData('hearingFixedReady')
   ]).then(function(r) {
+    if (r[4] != null) window._appCache.hearingFixedReady = !!r[4];
     // バージョンが合うときだけ保存データを使う（合わなければ data.js の内容）
+    // 「.length があるときだけ採用」にしていると、全件削除して保存した空配列が
+    // 無視され、data.js の内容が復活してしまう。配列であればそのまま使う。
     if (r[3] === window.HEARING_DATA_VERSION) {
-      if (Array.isArray(r[1]) && r[1].length) window._appCache.hearingQuestions = r[1];
-      if (Array.isArray(r[2]) && r[2].length) window._appCache.hearingPolicies  = r[2];
+      if (Array.isArray(r[1])) window._appCache.hearingQuestions = r[1];
+      if (Array.isArray(r[2])) window._appCache.hearingPolicies  = r[2];
     }
     // テンプレートはバージョン管理の対象外（後から追加した機能のため）
-    if (Array.isArray(r[0]) && r[0].length) window._appCache.hearingTemplates = r[0];
+    if (Array.isArray(r[0])) window._appCache.hearingTemplates = r[0];
     if (typeof renderHearing === 'function') renderHearing();
   }).catch(function() {});
 };
@@ -2755,6 +2866,33 @@ function _unlinkifyEl(el) {
 }
 
 /**
+ * ヘッダーのページ名ボタンの動作。
+ * これまで index.html へ移動していたが、求められているのは
+ * 「そのページの初期表示に戻す」なので、ページ内でリセットする。
+ * ページ独自の戻し方（goHome）があればそれを使い、無ければ読み込み直す。
+ */
+window.resetPageView = function () {
+  if (typeof window.goHome === 'function') {
+    try {
+      window.goHome();
+      window.scrollTo(0, 0);
+      return;
+    } catch (e) {}
+  }
+  location.reload();
+};
+
+/** ページ名ボタンを「ページ内リセット」に付け替える */
+function _bindTitleBtn() {
+  document.querySelectorAll('header .hd-title-btn').forEach(function (b) {
+    if (b.tagName !== 'BUTTON') return;          // 管理画面は span（押せない）
+    b.removeAttribute('onclick');
+    b.onclick = function () { window.resetPageView(); };
+    b.title = 'このページを初期表示に戻す';
+  });
+}
+
+/**
  * ヘッダーに［🏠 ホーム］ボタンを差し込む。
  *
  * これまでページ名（📋 トークスクリプト など）自体がホームへのリンクだったが、
@@ -2783,10 +2921,11 @@ function _injectHomeBtn() {
   else left.insertBefore(b, left.firstChild);
 }
 
+function _initHeaderBtns() { _injectHomeBtn(); _bindTitleBtn(); _injectNavBtns(); }
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', _injectHomeBtn);
+  document.addEventListener('DOMContentLoaded', _initHeaderBtns);
 } else {
-  _injectHomeBtn();
+  _initHeaderBtns();
 }
 
 /**
@@ -2855,6 +2994,37 @@ window.resetHearing = function () {
   // ここで外さないと、リセットの度に選択が残ったり消えたりして見える。
   try { localStorage.removeItem(HEARING_TPL_KEY); } catch (e) {}
   renderHearing();   // テンプレートバーも含めて描き直す
+};
+
+/** 他の項目の表示条件が、この欄の値を見ているか */
+function _hrShowIfDepends(field) {
+  var qs = _hrGetQuestions();
+  // showIf は [[{field,op,value}, ...], ...] の入れ子（OR の中に AND）
+  var hit = qs.some(function (q) {
+    var inShowIf = (q.showIf || []).some(function (group) {
+      return (Array.isArray(group) ? group : [group]).some(function (c) {
+        return c && c.field === field;
+      });
+    });
+    return inShowIf || (q.resets || []).indexOf(field) >= 0;
+  });
+  if (hit) return true;
+  return ((window._appCache && window._appCache.hearingPatterns) || []).some(function (p) {
+    return (p.conditions || []).some(function (c) { return c && c.field === field; });
+  });
+}
+
+/**
+ * 記述欄など「打ちながら」更新する項目の保存。
+ * setHearing() は毎回 renderHearing() するため、1文字ごとに入力欄が
+ * 作り直されてフォーカスが外れてしまう。ここでは結果文だけ更新する。
+ * ただし他の項目の表示条件がこの欄を見ている場合は全体を描き直す。
+ */
+window.setHearingInput = function (field, value) {
+  hearingState[field] = value;
+  saveHearingState();
+  if (_hrShowIfDepends(field)) { renderHearing(); return; }
+  if (typeof renderHearingSummary === 'function') renderHearingSummary();
 };
 
 window.setHearing = function (field, value) {
@@ -3011,59 +3181,88 @@ function _hEsc(s) {
   return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
-function calcPolicies(s) {
-  var policies = [];
-
-  // ── ■用途：学校/事業 ──
-  if (s.usage === '学校' || s.usage === '事業') policies.push('【学校/事業】アカウント担当者からの入電として対応してください。');
-
-  // ── 【移行Sアカ】ログイン／PW再設定 ──
-  if (s.migSAccLogin === true) policies.push('クロージング　Jアカ作成希望であれば320誘導');
-  if (s.migSAccPwReset === '成功') policies.push('ログイン確認後、クロージング　Jアカ作成希望であれば320誘導');
-  if (s.migSAccPwReset === '失敗（ログインID設定あり）') policies.push('ログインID開示で受付');
-  if (s.migSAccPwReset === '失敗（ログインID以外の任意情報設定あり）') policies.push('入力した任意情報に誤りがあります。入力内容をご確認下さい。');
-  if (s.migSAccPwReset === '失敗（任意情報設定なし）') policies.push('入力されたメアドでアカウントが存在しない可能性が高いです。');
-
-  // ── 【新規Sアカ】PW再設定 ──
-  if (s.newSAccPwReset === '失敗（ログインID設定あり）') policies.push('ログインID開示で受付');
-  if (s.newSAccPwReset === '失敗（ログインID以外の任意情報設定あり）') policies.push('入力した任意情報に誤りがあります。入力内容をご確認下さい。');
-  if (s.newSAccPwReset === '失敗（任意情報設定なし）') policies.push('入力されたメアドでアカウントが存在しない可能性が高いです。');
-
-  // ── 【転送パターンA〜D】入電者確認 ──
-  ['transferA', 'transferB', 'transferC', 'transferD'].forEach(function (f) {
-    var v = s[f];
-    if (v === '受信契約者本人' || v === '配偶者' || v === '受信契約者本人/配偶者　ではないが　本人同席') policies.push('転送OK');
-    if (v === '上記に該当しない') policies.push('転送NG　本人からおかけ直しいただくよう案内');
-  });
-
-  // ── 【S-J連携】 ──
-  if (s.sjLink === '連携済（Jアカ作成済）') policies.push('クロージング');
-  if (s.sjLink === '未連携（Jアカ作成済）') policies.push('S-J連携を完了してサービスをご利用ください');
-  if (s.sjLink === '未確認（照合NG）') policies.push('077で正しい受信契約情報を確認いただくよう案内');
-
-  // ── 【Jアカ】作成案内 ──
-  if (s.jAccGuide === '失敗（エラーメール受信）') policies.push('同メアドで既にJアカが存在しています。');
-
-  // ── メール受信なし（チェックボックス全部✓でクライアントエスカレ） ──
-  if (s.cbSMistake === true && s.cbSSpam === true && s.cbSPermission === true) policies.push('クライアントエスカレ');
-  if (s.cbJMistake === true && s.cbJSpam === true && s.cbJPermission === true) policies.push('クライアントエスカレ');
-
-  // admin.html で登録されたカスタム対応方針を追記
-  if (typeof _hrCustomPolicies === 'function') {
-    _hrCustomPolicies(s).forEach(function(p){ if(p)policies.push(p); });
+/**
+ * 対応方針の条件を1つ評価する。
+ *
+ * 保存形式が2通りある：
+ *   {field, op:'eq', value:'学校'} … 演算子つき（エディタが作る新しい形）
+ *   {field, value:'学校'}          … 演算子なし（等しいものとして扱う）
+ * 真偽値は {field, op:'true'} のように value を持たないため、
+ * value だけを見ていると「条件なし」と誤解して常に成立してしまう。
+ */
+function _hrCondMatches(cond, s) {
+  if (!cond || !cond.field) return true;
+  var val = s[cond.field];
+  var op  = cond.op;
+  var cv  = cond.value;
+  // 演算子が無い古い形は、値の比較として扱う（'true'/'false' は真偽値とみなす）
+  if (!op) {
+    if (cv === 'true')  return val === true;
+    if (cv === 'false') return val === false;
+    return val === cv;
   }
+  switch (op) {
+    case 'true':    return val === true;
+    case 'false':   return val === false;
+    case 'eq':      return val === cv;
+    case 'neq':     return val !== cv;
+    case 'notnull': return val !== null && val !== undefined && val !== '';
+    case 'in':      return String(cv || '').split(',').indexOf(String(val)) >= 0;
+    default:        return val === cv;
+  }
+}
+window._hrCondMatches = _hrCondMatches;
 
-  // 同じ文言が複数の条件から出ることがある（組み込み判定と、
-  // それを再現した登録済み方針が両方ヒットするなど）。重複は1つにまとめる。
+/** 対応方針の一覧を取り出す（data.js / _appCache が唯一の管理元） */
+window.getHearingPolicies = function () {
+  // 空配列＝「全部消した」。未設定（配列ですらない）ときだけ data.js を見る。
+  // ここを長さで判定していたため、最後の1件を消すと全件復活していた。
+  var cached = window._appCache && window._appCache.hearingPolicies;
+  if (!Array.isArray(cached)) {
+    var sd = window.APP_STATIC_DATA;
+    cached = (sd && Array.isArray(sd.hearingPolicies)) ? sd.hearingPolicies : [];
+  }
+  return JSON.parse(JSON.stringify(cached));
+};
+
+/**
+ * 対応方針を判定する。
+ *
+ * 以前は組み込みぶんを calcPolicies() に直接書いていたため、
+ * 管理画面の対応方針エディタから編集も削除もできなかった。
+ * いまは組み込みぶんも data.js（hearingPolicies）に入っているので、
+ * ここでは条件を評価するだけにする。
+ *
+ * また、判定関数は admin.html にしか無く、ヒアリング画面では
+ * 登録した方針が反映されないままだったので共通側へ移した。
+ */
+window.evalHearingPolicies = function (s) {
+  var cur = window.getCurrentTemplate ? window.getCurrentTemplate() : '';
+  var out = [];
+  window.getHearingPolicies().forEach(function (item) {
+    if (!item || item.enabled === false || !item.policy) return;
+    // テンプレート指定なし（共通）と、いま選んでいるテンプレートのものだけ
+    if (item.tplId && item.tplId !== cur) return;
+    var match = (item.conditions || []).every(function (cond) {
+      return _hrCondMatches(cond, s);
+    });
+    if (match) out.push(item.policy);
+  });
+  return out;
+};
+
+function calcPolicies(s) {
+  var policies = window.evalHearingPolicies(s);
+
+  // 同じ文言が複数の条件から出ることがあるため、重複は1つにまとめる
   var seen = {}, uniq = [];
-  policies.forEach(function(p) {
+  policies.forEach(function (p) {
     var k = String(p == null ? '' : p).trim();
     if (!k || seen[k]) return;
     seen[k] = 1; uniq.push(k);
   });
   return uniq;
 }
-
 
 // ===================================================================
 // ヒアリング質問定義（データ駆動式）
@@ -3083,6 +3282,10 @@ function _hrQuestionsLoad() {
 }
 function _hrQuestionsSave(list) {
   window._appCache.hearingQuestions = JSON.parse(JSON.stringify(list || []));
+  // 一度でも保存したら、組み込み項目を自動で足し直さない
+  // （消した項目が次の描画で戻ってきてしまうため）
+  window._appCache.hearingFixedReady = true;
+  if (window.idbSetAppData) window.idbSetAppData('hearingFixedReady', true);
   var p = window.idbSetAppData('hearingQuestions', window._appCache.hearingQuestions);
   // バージョンも保存しないと、次の読み込みで data.js の内容に戻され追加が消える
   if (typeof window.HEARING_DATA_VERSION !== 'undefined') {
@@ -3098,14 +3301,19 @@ function _hrQuestionsSave(list) {
  */
 function _hrWithFixedItems(list) {
   var arr = Array.isArray(list) ? list.slice() : [];
-  var head = [];
-  (window.HEARING_FIXED_ITEMS || []).forEach(function (t) {
-    if (arr.some(function (q) { return q && q.id === t.id; })) return;
-    var copy = JSON.parse(JSON.stringify(t));
-    var atEnd = copy.atEnd; delete copy.atEnd;
-    if (atEnd) arr.push(copy); else head.push(copy);
-  });
-  if (head.length) arr = head.concat(arr);
+
+  // 組み込み項目（デバイス／キャリア／メールドメイン／メモ）の取り込みは
+  // 一度だけ。毎回補っていると、管理画面で削除しても次の描画で復活してしまう。
+  if (!(window._appCache && window._appCache.hearingFixedReady)) {
+    var head = [];
+    (window.HEARING_FIXED_ITEMS || []).forEach(function (t) {
+      if (arr.some(function (q) { return q && q.id === t.id; })) return;
+      var copy = JSON.parse(JSON.stringify(t));
+      var atEnd = copy.atEnd; delete copy.atEnd;
+      if (atEnd) arr.push(copy); else head.push(copy);
+    });
+    if (head.length) arr = head.concat(arr);
+  }
 
   // 選択肢は「質問そのもの」が持つ形に揃える。
   // 以前は全体設定（hearingDevices / hearingCarriers）に置いていたため、
@@ -3144,10 +3352,12 @@ function _hrWithFixedItems(list) {
 window._hrWithFixedItems = _hrWithFixedItems;
 
 function _hrGetQuestions() {
-  var cached = _hrQuestionsLoad();
-  if (cached && cached.length) return _hrWithFixedItems(cached);
-  var sd = window.APP_STATIC_DATA;
-  return _hrWithFixedItems(JSON.parse(JSON.stringify((sd && sd.hearingQuestions) || [])));
+  var cached = window._appCache && window._appCache.hearingQuestions;
+  if (!Array.isArray(cached)) {
+    var sd = window.APP_STATIC_DATA;
+    cached = (sd && Array.isArray(sd.hearingQuestions)) ? sd.hearingQuestions : [];
+  }
+  return _hrWithFixedItems(JSON.parse(JSON.stringify(cached)));
 }
 
 function _hrEvalShowIf(showIf, s) {
@@ -3246,7 +3456,7 @@ window.getHearingOptions = _hrOptsOf;
 /**
  * 詳細つきトグルの中身。
  * 選択肢を1行ずつ並べ、詳細があればその行に詳細ボタンを並べる。
- * 詳細が無い選択肢は「利用あり／利用なし」の単純なトグルになる。
+ * 詳細が無い選択肢は ON / OFF の単純なトグルになる。
  */
 function _hrDetailToggleHTML(s, q) {
   var fld = q.field || q.id;
@@ -3265,7 +3475,7 @@ function _hrDetailToggleHTML(s, q) {
         content += '<button class="hr-device-btn' + active + '" onclick="setHearingOptDetail(\'' + fld + '\',\'' + val + '\',\'' + opt + '\')">' + _hEsc(opt) + '</button>';
       });
     } else {
-      content = '<button class="hr-device-btn' + (d.selected ? ' active' : '') + '" onclick="toggleHearingOpt(\'' + fld + '\',\'' + val + '\')">' + (d.selected ? '利用あり' : '利用なし') + '</button>';
+      content = '<button class="hr-device-btn' + (d.selected ? ' active' : '') + '" onclick="toggleHearingOpt(\'' + fld + '\',\'' + val + '\')">' + (d.selected ? 'ON' : 'OFF') + '</button>';
     }
     h += _hrRow(o.l || val, content, 'hr-device-row');
   });
@@ -3274,18 +3484,39 @@ function _hrDetailToggleHTML(s, q) {
 window._hrDetailToggleHTML = _hrDetailToggleHTML;
 
 /** 「その他（手入力）」付きのプルダウン */
+/**
+ * 手入力欄を出す選択肢かどうか。
+ * 既定は「その他（手入力）」だが、質問の選択肢に manual:true を付ければ
+ * 任意の選択肢（例：その他）を手入力のきっかけにできる。
+ */
+/** この項目が手入力欄を持つか（その他を出す／手入力にした選択肢がある） */
+window.hearingNeedsManual = function (q) {
+  if (!q) return false;
+  if (q.allowManual) return true;
+  return window.getHearingOptions(q).some(function (o) { return !!o.manual; });
+};
+
+function _hrIsManualValue(q, v) {
+  if (v === '__manual__') return true;
+  return window.getHearingOptions(q).some(function (o) { return o.manual && o.v === v; });
+}
+window._hrIsManualValue = _hrIsManualValue;
+
 function _hrSelectManualHTML(q, s) {
   var fld  = q.field || q.id;
   var mfld = q.manualField || (fld + 'Manual');
   var v    = s[fld];
   var opts = window.getHearingOptions(q);
+  var showManual = _hrIsManualValue(q, v);
   var h = '<select class="hr-select" onchange="window.setHearingSelect(\'' + fld + '\',this.value)">' +
     '<option value="">選択してください</option>' +
     opts.map(function (o) { return _mkOpt(o.v, v, o.l); }).join('') +
-    '<option value="__manual__"' + (v === '__manual__' ? ' selected' : '') + '>その他（手入力）</option></select>';
-  h += '<div style="display:' + (v === '__manual__' ? 'block' : 'none') + ';margin-top:6px;">' +
+    (q.allowManual === false ? ''
+      : '<option value="__manual__"' + (v === '__manual__' ? ' selected' : '') + '>その他（手入力）</option>') +
+    '</select>';
+  h += '<div style="display:' + (showManual ? 'block' : 'none') + ';margin-top:6px;">' +
     '<input type="text" class="hr-text-input" placeholder="' + _hEsc(q.manualPlaceholder || '') + '"' +
-    ' value="' + _hEsc(s[mfld] || '') + '" oninput="setHearing(\'' + mfld + '\',this.value)"></div>';
+    ' data-hr-field="' + _hEsc(mfld) + '" value="' + _hEsc(s[mfld] || '') + '" oninput="setHearingInput(\'' + mfld + '\',this.value)"></div>';
   return h;
 }
 window._hrSelectManualHTML = _hrSelectManualHTML;
@@ -3317,16 +3548,22 @@ window.hearingItemHTML = function (q, s) {
   if (q.type === 'radio') {
     return _hrRow(q.label, _radioBtns(fld, s[fld], window.getHearingOptions(q), q.multi), '', pf);
   }
+  if (q.type === 'checkbox') {
+    // チェックボックスは常に複数選択。選んだものが「、」でつながって出力される
+    return _hrRow(q.label, _radioBtns(fld, s[fld], window.getHearingOptions(q), true), '', pf);
+  }
   if (q.type === 'select') {
-    return _hrRow(q.label, q.allowManual
+    // 「その他（手入力）」を出す設定か、手入力にする選択肢が1つでもあれば
+    // 手入力欄つきの表示にする
+    return _hrRow(q.label, window.hearingNeedsManual(q)
       ? _hrSelectManualHTML(q, s)
       : _selectBox(fld, s[fld], window.getHearingOptions(q)), '', pf);
   }
   if (q.type === 'text') {
     var ph = _hEsc(q.placeholder || '');
     return _hrRow(q.label, q.multiline
-      ? '<textarea class="hr-text-input" rows="3" placeholder="' + ph + '" style="resize:vertical;font-family:inherit;" oninput="setHearing(\'' + fld + '\',this.value)">' + _hEsc(s[fld] || '') + '</textarea>'
-      : '<input type="text" class="hr-text-input" placeholder="' + ph + '" value="' + _hEsc(s[fld] || '') + '" oninput="setHearing(\'' + fld + '\',this.value)">', '', pf);
+      ? '<textarea class="hr-text-input hr-autogrow" data-hr-field="' + _hEsc(fld) + '" rows="1" placeholder="' + ph + '" style="font-family:inherit;" oninput="setHearingInput(\'' + fld + '\',this.value);window.hrAutoGrow(this)">' + _hEsc(s[fld] || '') + '</textarea>'
+      : '<input type="text" class="hr-text-input" data-hr-field="' + _hEsc(fld) + '" placeholder="' + ph + '" value="' + _hEsc(s[fld] || '') + '" oninput="setHearingInput(\'' + fld + '\',this.value)">', '', pf);
   }
   return '';
 };
@@ -3383,19 +3620,67 @@ window.SIDEMENU_DEFAULT_TABLES = [
       ['-','ハイフン'],['_','アンダーバー']
     ]
   },
-  {
+{
     id: 'sm_domain', type: 'table', label: '📧 メールドメイン一覧',
     note: 'サイドメニューに表示する参照用の一覧です。ヒアリングシートのメールドメイン候補とは別管理です。',
-    headers: ['ドメイン', '備考'],
+    headers: ['ドメイン'],
     rows: [
-      ['@docomo.ne.jp',   'ドコモ'],
-      ['@softbank.ne.jp', 'ソフトバンク'],
-      ['@i.softbank.jp',  'ソフトバンク（iPhone）'],
-      ['@ezweb.ne.jp',    'au'],
-      ['@au.com',         'au'],
-      ['@gmail.com',      'Gmail'],
-      ['@yahoo.co.jp',    'Yahoo!メール'],
-      ['@outlook.com',    'Outlook']
+      ['aol.com'],
+      ['asahinet.jp'],
+      ['au.com'],
+      ['auone-net.jp'],
+      ['bbiq.jp'],
+      ['biglobe.ne.jp'],
+      ['biz.ezweb.ne.jp'],
+      ['canet.ne.jp'],
+      ['commufa.jp'],
+      ['dion.ne.jp'],
+      ['docomo.ne.jp'],
+      ['dream.com'],
+      ['dti.ne.jp'],
+      ['eonet.ne.jp'],
+      ['excite.co.jp'],
+      ['ezweb.ne.jp'],
+      ['gmail.com'],
+      ['gmobb.jp'],
+      ['gol.com'],
+      ['goo.jp'],
+      ['googlemail.com'],
+      ['goomail.com'],
+      ['hotmail.co.jp'],
+      ['hotmail.com'],
+      ['i.softbank.jp'],
+      ['icloud.com'],
+      ['infoseek.co.jp'],
+      ['infoseek.jp'],
+      ['itscom.net'],
+      ['jcom.home.ne.jp'],
+      ['jcom.zaq.ne.jp'],
+      ['ktv.ne.jp'],
+      ['live.jp'],
+      ['mac.com'],
+      ['mail.bbexcite.jp'],
+      ['mail.goo.ne.jp'],
+      ['me.com'],
+      ['mineo.com'],
+      ['msn.com'],
+      ['mvt-net.com'],
+      ['nifty.com'],
+      ['ocn.ne.jp'],
+      ['odn.ne.jp'],
+      ['outlook.com'],
+      ['plala.or.jp'],
+      ['pobox.com'],
+      ['rakuten.jp'],
+      ['softbank.ne.jp'],
+      ['so-net.ne.jp'],
+      ['vodafone.ne.jp'],
+      ['wakwak.com'],
+      ['yahoo.co.jp'],
+      ['yahoo.ne.jp'],
+      ['ybb.ne.jp'],
+      ['ymobile.ne.jp'],
+      ['ztv.ne.jp']
     ]
   }
 ];
@@ -3594,22 +3879,64 @@ window.toggleHearingMulti = function(field, value) {
   renderHearing();
 };
 
+/** テンプレートバーの HTML（管理画面の描画からも使う） */
+window._hrTemplateBarHTML = function () { return _hrTemplateBar(); };
+
 function _hrTemplateBar() {
   var tpls = window.getHearingTemplates();
   if (!tpls.length) return '';
   var cur = window.getCurrentTemplate();
+  // 管理画面では、テンプレートごとに削除ボタンを出す
+  var admin = document.body.classList.contains('page-admin');
   return '<div class="hr-tpl-bar">'
     + tpls.map(function(t) {
-        return '<button type="button" class="hr-tpl-btn' + (t.id === cur ? ' active' : '') + '"'
-          + ' onclick="window.setCurrentTemplate(\'' + t.id + '\')">' + _hEsc(t.name) + '</button>';
+        return '<span class="hr-tpl-wrap">'
+          + '<button type="button" class="hr-tpl-btn' + (t.id === cur ? ' active' : '') + '"'
+          + ' onclick="window.setCurrentTemplate(\'' + t.id + '\')">' + _hEsc(t.name) + '</button>'
+          + (admin ? '<button type="button" class="hr-tpl-del"'
+              + ' onclick="window.deleteHearingTemplate(\'' + t.id + '\')"'
+              + ' title="このテンプレートを削除">×</button>' : '')
+          + '</span>';
       }).join('')
     + (cur ? '<button type="button" class="hr-tpl-btn hr-tpl-clear"'
            + ' onclick="window.clearHearingTemplate()" title="選択を解除して共通項目だけにする">✕ 解除</button>' : '')
     + '</div>';
 }
 
+/**
+ * テンプレートを削除する。
+ * そのテンプレート専用の質問も一緒に消えるため、件数を示して確認する。
+ */
+window.deleteHearingTemplate = function (id) {
+  var tpls = window.getHearingTemplates();
+  var t = tpls.find(function (x) { return x.id === id; });
+  if (!t) return;
+  var qs = _hrGetQuestions();
+  var owned = qs.filter(function (q) { return q.tplId === id && !q.common; });
+  var msg = '「' + t.name + '」を削除しますか？';
+  if (owned.length) msg += '\nこのテンプレート専用の項目 ' + owned.length + ' 件も削除されます。';
+  if (!window.confirm(msg)) return;
+
+  var nextTpls = tpls.filter(function (x) { return x.id !== id; });
+  window._appCache.hearingTemplates = nextTpls;
+  if (window.idbSetAppData) window.idbSetAppData('hearingTemplates', nextTpls);
+
+  if (owned.length) {
+    var nextQs = qs.filter(function (q) { return !(q.tplId === id && !q.common); });
+    if (typeof _hrQuestionsSave === 'function') _hrQuestionsSave(nextQs);
+    else window._appCache.hearingQuestions = nextQs;
+  }
+  if (window.getCurrentTemplate() === id) {
+    try { localStorage.removeItem(HEARING_TPL_KEY); } catch (e) {}
+  }
+  renderHearing();
+};
+
+var _hrMemoHTML = '';   // メモは結果文の直前に固定するため一時的に保持する
+
 function renderHearing() {
   var el = document.getElementById('hearingContent');
+  _hrMemoHTML = '';
   if (!el) return;
   var s = hearingState;
   // テンプレートで表示する項目を絞る（共通項目は常に表示）
@@ -3657,6 +3984,11 @@ function renderHearing() {
       _hrGroupOpen = true;
       return;
     }
+    // メモだけは結果文の直前に固定するため、いったん取り置く
+    if (q.field === 'memo' || q.id === 'q_memo') {
+      _hrMemoHTML = window.hearingItemHTML(q, s);
+      return;
+    }
     h += window.hearingItemHTML(q, s);
   });
 
@@ -3679,12 +4011,53 @@ function renderHearing() {
   }
 
   if (_hrGroupOpen) { h += '</div></div>'; _hrGroupOpen = false; }
+  // メモは結果文のすぐ上に固定する（並び順に関係なくここへ出す）
+  if (_hrMemoHTML) { h += _hrMemoHTML; _hrMemoHTML = ''; }
   h += '<div id="hearingSummaryArea"></div>';
   h = _hrTemplateBar() + h;
+  // 描き直しで入力欄が作り直されるため、打っていた場所を覚えて戻す
+  var focused = _hrCaptureFocus();
   el.innerHTML = h;
+  _hrAutoGrowAll();
+  _hrRestoreFocus(focused);
   renderHearingSummary();
   // 管理画面では「＋ 対応方針を追加」に、いま条件になる件数を出す
   if (typeof _hrUpdateAddPolicyBtn === 'function') _hrUpdateAddPolicyBtn();
+}
+
+/**
+ * 複数行入力の高さを内容に合わせる。
+ * 既定は1行分で、改行が増えたぶんだけ伸ばす（縮むときも追従させる）。
+ */
+window.hrAutoGrow = function (el) {
+  if (!el) return;
+  el.style.height = 'auto';
+  el.style.height = (el.scrollHeight || 0) + 'px';
+};
+
+/** 画面内の自動調節つき入力欄をまとめて整える */
+function _hrAutoGrowAll() {
+  document.querySelectorAll('.hr-autogrow').forEach(function (el) { window.hrAutoGrow(el); });
+}
+
+/** いま入力中の欄と、カーソルの位置を覚えておく */
+function _hrCaptureFocus() {
+  var el = document.activeElement;
+  if (!el || !el.getAttribute || !el.getAttribute('data-hr-field')) return null;
+  var r = { field: el.getAttribute('data-hr-field') };
+  try { r.start = el.selectionStart; r.end = el.selectionEnd; } catch (e) {}
+  return r;
+}
+
+/** 描き直したあと、同じ欄の同じ位置にカーソルを戻す */
+function _hrRestoreFocus(info) {
+  if (!info) return;
+  var el = document.querySelector('[data-hr-field="' + info.field + '"]');
+  if (!el) return;
+  try {
+    el.focus();
+    if (info.start != null) el.setSelectionRange(info.start, info.end);
+  } catch (e) {}
 }
 
 function _mkOpt(val, selected, label) {
@@ -3807,7 +4180,7 @@ function buildHearingLines(s) {
     if (Array.isArray(val) && !val.length) return;
 
     // 「その他（手入力）」が選ばれているときは手入力の値を使う
-    if (val === '__manual__') {
+    if (_hrIsManualValue(q, val)) {
       val = s[q.manualField || (fld + 'Manual')];
       if (!val) return;
       out.push({
@@ -3832,7 +4205,9 @@ function buildHearingLines(s) {
     if (!disp) return;
     out.push({
       kind: 'row', label: q.label, outLabel: (q.outLabel || q.label),
-      value: disp, type: type, outTpl: q.outTpl || ''
+      value: disp, type: type, outTpl: q.outTpl || '',
+      isMemo: (fld === 'memo' || q.id === 'q_memo'),
+      multiline: !!q.multiline
     });
   });
 
@@ -3855,6 +4230,10 @@ function buildHearingLines(s) {
   // ── 対応方針 ──
   calcPolicies(s).forEach(function (p) { out.push({ kind: 'policy', value: p }); });
 
+
+  // メモは並び順に関わらず最下段に置く（結果文の締めとして読みやすいため）
+  var memoIdx = out.findIndex(function (o) { return o.kind === 'row' && o.isMemo; });
+  if (memoIdx >= 0) out.push(out.splice(memoIdx, 1)[0]);
 
   // 中身が1つも無い見出しは出さない（結果文が見出しだらけになるのを防ぐ）
   return out.filter(function (item, i) {
@@ -3892,9 +4271,14 @@ function renderHearingSummary() {
     var valClass = 'hr-sum-val';
     if (it.type === 'yes') valClass += ' hr-sum-yes';
     if (it.type === 'no')  valClass += ' hr-sum-no';
+    // メモなど複数行の内容は、改行をそのまま見せる
+    var val = _hEsc(it.value);
+    var block = (it.isMemo || it.multiline);
+    if (block) { valClass += ' hr-sum-multiline'; val = val.replace(/\n/g, '<br>'); }
     // 画面の結果文とコピー結果を完全に一致させるため、出力名（未設定なら項目名）で出す
-    h += '<div class="hr-summary-row"><span class="hr-sum-label">' + _hEsc(it.outLabel) + '</span>' +
-         '<span class="' + valClass + '">' + _hEsc(it.value) + '</span></div>';
+    h += '<div class="hr-summary-row' + (block ? ' hr-summary-block' : '') + '">' +
+         '<span class="hr-sum-label">' + _hEsc(it.outLabel) + '</span>' +
+         '<span class="' + valClass + '">' + val + '</span></div>';
   });
   h += '</div>';
   if (hasPolicy) {
@@ -4004,6 +4388,10 @@ document.addEventListener('keydown', function (e) {
     '.hr-device-group { display:flex; flex-direction:column; gap:2px; padding:5px 7px; background:var(--surface2,#f1f2f6); border:1px solid var(--border,#dfe4ea); border-radius:6px; }' +
     // ── メモ欄 ──
     '.hr-memo-row { align-items: flex-start !important; }' +
+    // 1行から始めて内容に合わせて伸ばす。プレースホルダは行の中央に見せる
+    '.hr-autogrow { min-height:32px; height:32px; overflow-y:hidden; resize:none; line-height:1.6; padding:6px 9px; }' +
+    '.hr-sum-multiline { white-space:pre-wrap; word-break:break-word; }' +
+    '.hr-summary-block { align-items:flex-start; }' +
     '.hr-memo-textarea { width:100%; min-height:60px; resize:vertical; padding:7px 9px; border:1px solid var(--border,#dfe4ea); border-radius:6px; font-family:inherit; font-size:12px; background:var(--bg,#f1f2f6); color:var(--text,#2f3542); line-height:1.6; transition:border-color .15s; }' +
     '.hr-memo-textarea:focus { outline:none; border-color:var(--accent,#3742fa); }';
   document.head.appendChild(style);
@@ -4042,7 +4430,8 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
-  window.renderQuickMenu();
+  _injectQuickCopy();
+  window.renderQuickMenu();   // 差し込みが無ければ何もしない
 
   if (document.getElementById('hearingContent')) renderHearing();
 

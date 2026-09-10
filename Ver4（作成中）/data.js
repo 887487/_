@@ -1,9 +1,9 @@
 // ツール設定ファイル — スクリプト・メール・サイドメニュー・ヒアリング・更新履歴・固定テキスト
 // admin.html の「💾 保存して反映」で自動更新されます。手動編集は非推奨です。
-// 生成日時: 2026-09-07T14:49:05.537Z
+// 生成日時: 2026-09-10T14:53:20.344Z
 window.APP_STATIC_DATA = {
-  "generatedAt": "2026-09-07T14:49:05.537Z",
-  "savedAt": "2026-09-07T14:49:05.537Z",
+  "generatedAt": "2026-09-10T14:53:20.344Z",
+  "savedAt": "2026-09-10T14:53:20.344Z",
   "sideMenuData": [
     {
       "id": "linkTools",
@@ -472,256 +472,184 @@ window.APP_STATIC_DATA = {
       "id": "sm_domain",
       "type": "table",
       "label": "📧 メールドメイン一覧",
-      "note": "ここで編集した内容が、ヒアリングの「メールドメイン」の選択肢になります。",
+      "note": "サイドメニューに表示する参照用の一覧です。ヒアリングシートのメールドメイン候補とは別管理です。",
       "headers": [
-        "ドメイン",
-        "備考"
+        "ドメイン"
       ],
       "rows": [
         [
-          "@docomo.ne.jp",
-          "ドコモ"
+          "aol.com"
         ],
         [
-          "@softbank.ne.jp",
-          "ソフトバンク"
+          "asahinet.jp"
         ],
         [
-          "@i.softbank.jp",
-          "ソフトバンク（iPhone）"
+          "au.com"
         ],
         [
-          "@ezweb.ne.jp",
-          "au"
+          "auone-net.jp"
         ],
         [
-          "@au.com",
-          "au"
+          "bbiq.jp"
         ],
         [
-          "@gmail.com",
-          "Gmail"
+          "biglobe.ne.jp"
         ],
         [
-          "@yahoo.co.jp",
-          "Yahoo!メール"
+          "biz.ezweb.ne.jp"
         ],
         [
-          "@outlook.com",
-          "Outlook"
+          "canet.ne.jp"
+        ],
+        [
+          "commufa.jp"
+        ],
+        [
+          "dion.ne.jp"
+        ],
+        [
+          "docomo.ne.jp"
+        ],
+        [
+          "dream.com"
+        ],
+        [
+          "dti.ne.jp"
+        ],
+        [
+          "eonet.ne.jp"
+        ],
+        [
+          "excite.co.jp"
+        ],
+        [
+          "ezweb.ne.jp"
+        ],
+        [
+          "gmail.com"
+        ],
+        [
+          "gmobb.jp"
+        ],
+        [
+          "gol.com"
+        ],
+        [
+          "goo.jp"
+        ],
+        [
+          "googlemail.com"
+        ],
+        [
+          "goomail.com"
+        ],
+        [
+          "hotmail.co.jp"
+        ],
+        [
+          "hotmail.com"
+        ],
+        [
+          "i.softbank.jp"
+        ],
+        [
+          "icloud.com"
+        ],
+        [
+          "infoseek.co.jp"
+        ],
+        [
+          "infoseek.jp"
+        ],
+        [
+          "itscom.net"
+        ],
+        [
+          "jcom.home.ne.jp"
+        ],
+        [
+          "jcom.zaq.ne.jp"
+        ],
+        [
+          "ktv.ne.jp"
+        ],
+        [
+          "live.jp"
+        ],
+        [
+          "mac.com"
+        ],
+        [
+          "mail.bbexcite.jp"
+        ],
+        [
+          "mail.goo.ne.jp"
+        ],
+        [
+          "me.com"
+        ],
+        [
+          "mineo.com"
+        ],
+        [
+          "msn.com"
+        ],
+        [
+          "mvt-net.com"
+        ],
+        [
+          "nifty.com"
+        ],
+        [
+          "ocn.ne.jp"
+        ],
+        [
+          "odn.ne.jp"
+        ],
+        [
+          "outlook.com"
+        ],
+        [
+          "plala.or.jp"
+        ],
+        [
+          "pobox.com"
+        ],
+        [
+          "rakuten.jp"
+        ],
+        [
+          "softbank.ne.jp"
+        ],
+        [
+          "so-net.ne.jp"
+        ],
+        [
+          "vodafone.ne.jp"
+        ],
+        [
+          "wakwak.com"
+        ],
+        [
+          "yahoo.co.jp"
+        ],
+        [
+          "yahoo.ne.jp"
+        ],
+        [
+          "ybb.ne.jp"
+        ],
+        [
+          "ymobile.ne.jp"
+        ],
+        [
+          "ztv.ne.jp"
         ]
       ]
     }
   ],
   "sideMenuFiles": {},
   "hearingQuestions": [
-    {
-      "id": "q_devices",
-      "field": "devices",
-      "label": "デバイス",
-      "type": "toggle",
-      "common": true,
-      "enabled": true,
-      "builtin": true,
-      "showIf": [],
-      "multi": true,
-      "options": [
-        {
-          "l": "iPhone",
-          "v": "iPhone",
-          "details": [
-            "Web",
-            "アプリ"
-          ]
-        },
-        {
-          "l": "Android",
-          "v": "Android",
-          "details": [
-            "Web",
-            "アプリ"
-          ]
-        },
-        {
-          "l": "タブレット",
-          "v": "タブレット",
-          "details": [
-            "Web",
-            "アプリ"
-          ]
-        },
-        {
-          "l": "PC",
-          "v": "PC",
-          "details": [
-            "Win",
-            "Mac",
-            "ChromeBook"
-          ]
-        },
-        {
-          "l": "TV",
-          "v": "TV",
-          "details": []
-        }
-      ]
-    },
-    {
-      "id": "q_carrier",
-      "field": "carrier",
-      "label": "キャリア",
-      "type": "select",
-      "allowManual": true,
-      "manualField": "carrierManual",
-      "manualPlaceholder": "例）mineo",
-      "common": true,
-      "enabled": true,
-      "builtin": true,
-      "showIf": [],
-      "options": [
-        {
-          "l": "docomo",
-          "v": "docomo"
-        },
-        {
-          "l": "au",
-          "v": "au"
-        },
-        {
-          "l": "SoftBank",
-          "v": "SoftBank"
-        },
-        {
-          "l": "楽天モバイル",
-          "v": "楽天モバイル"
-        },
-        {
-          "l": "ahamo",
-          "v": "ahamo"
-        },
-        {
-          "l": "povo",
-          "v": "povo"
-        },
-        {
-          "l": "LINEMO",
-          "v": "LINEMO"
-        },
-        {
-          "l": "Y!mobile",
-          "v": "Y!mobile"
-        },
-        {
-          "l": "UQ mobile",
-          "v": "UQ mobile"
-        },
-        {
-          "l": "格安SIM（MVNO）",
-          "v": "格安SIM（MVNO）"
-        },
-        {
-          "l": "Wi-Fiのみ",
-          "v": "Wi-Fiのみ"
-        }
-      ]
-    },
-    {
-      "id": "q_domain",
-      "field": "mailDomain",
-      "label": "メールドメイン",
-      "type": "select",
-      "allowManual": true,
-      "manualField": "mailDomainManual",
-      "manualPlaceholder": "例）@example.com",
-      "common": true,
-      "enabled": true,
-      "builtin": true,
-      "showIf": [],
-      "options": [
-        {
-          "l": "@docomo.ne.jp",
-          "v": "@docomo.ne.jp"
-        },
-        {
-          "l": "@softbank.ne.jp",
-          "v": "@softbank.ne.jp"
-        },
-        {
-          "l": "@i.softbank.jp",
-          "v": "@i.softbank.jp"
-        },
-        {
-          "l": "@ezweb.ne.jp",
-          "v": "@ezweb.ne.jp"
-        },
-        {
-          "l": "@au.com",
-          "v": "@au.com"
-        },
-        {
-          "l": "@gmail.com",
-          "v": "@gmail.com"
-        },
-        {
-          "l": "@yahoo.co.jp",
-          "v": "@yahoo.co.jp"
-        },
-        {
-          "l": "@icloud.com",
-          "v": "@icloud.com"
-        },
-        {
-          "l": "@outlook.com",
-          "v": "@outlook.com"
-        }
-      ]
-    },
-    {
-      "id": "q_usage",
-      "label": "用途",
-      "field": "usage",
-      "type": "str",
-      "options": [
-        {
-          "l": "世帯",
-          "v": "世帯"
-        },
-        {
-          "l": "学校",
-          "v": "学校"
-        },
-        {
-          "l": "事業",
-          "v": "事業"
-        }
-      ],
-      "showIf": [],
-      "builtin": true,
-      "enabled": true,
-      "resets": [
-        "oldPlusUsed",
-        "migMailStatus",
-        "migSAccCreated",
-        "migSAccGuide",
-        "migSAccLogin",
-        "migSAccPwReset",
-        "transferA",
-        "transferB",
-        "transferC",
-        "newSAccCreated",
-        "newSAccGuide",
-        "newSAccLogin",
-        "newSAccPwReset",
-        "sjLink",
-        "jAccGuide",
-        "cbSMistake",
-        "cbSSpam",
-        "cbSPermission",
-        "cbJMistake",
-        "cbJSpam",
-        "cbJPermission"
-      ]
-    },
     {
       "id": "q_oldPlusUsed",
       "label": "旧NHKプラス",
@@ -1348,16 +1276,6 @@ window.APP_STATIC_DATA = {
       ]
     },
     {
-      "id": "q_yniqyz0",
-      "enabled": true,
-      "label": "ｓｓｓ",
-      "outLabel": "",
-      "type": "heading",
-      "common": false,
-      "tplId": "tpl_vztoy8",
-      "field": "q_yniqyz0"
-    },
-    {
       "id": "q_memo",
       "field": "memo",
       "label": "メモ",
@@ -1368,6 +1286,18 @@ window.APP_STATIC_DATA = {
       "enabled": true,
       "builtin": true,
       "showIf": []
+    },
+    {
+      "id": "q_txvz04i",
+      "enabled": true,
+      "label": "TEST",
+      "outLabel": "",
+      "outTpl": "",
+      "type": "text",
+      "common": true,
+      "tplId": "",
+      "field": "q_txvz04i",
+      "multiline": false
     }
   ],
   "hearingPolicies": [
@@ -1381,8 +1311,7 @@ window.APP_STATIC_DATA = {
         }
       ],
       "policy": "【学校/事業】アカウント担当者からの入電として対応してください。",
-      "enabled": true,
-      "builtin": true
+      "enabled": true
     },
     {
       "id": "builtin_p02",
@@ -1394,8 +1323,7 @@ window.APP_STATIC_DATA = {
         }
       ],
       "policy": "【学校/事業】アカウント担当者からの入電として対応してください。",
-      "enabled": true,
-      "builtin": true
+      "enabled": true
     },
     {
       "id": "builtin_p03",
@@ -1406,8 +1334,7 @@ window.APP_STATIC_DATA = {
         }
       ],
       "policy": "クロージング　Jアカ作成希望であれば320誘導",
-      "enabled": true,
-      "builtin": true
+      "enabled": true
     },
     {
       "id": "builtin_p04",
@@ -1419,8 +1346,7 @@ window.APP_STATIC_DATA = {
         }
       ],
       "policy": "ログイン確認後、クロージング　Jアカ作成希望であれば320誘導",
-      "enabled": true,
-      "builtin": true
+      "enabled": true
     },
     {
       "id": "builtin_p05",
@@ -1432,8 +1358,7 @@ window.APP_STATIC_DATA = {
         }
       ],
       "policy": "ログインID開示で受付",
-      "enabled": true,
-      "builtin": true
+      "enabled": true
     },
     {
       "id": "builtin_p06",
@@ -1445,8 +1370,7 @@ window.APP_STATIC_DATA = {
         }
       ],
       "policy": "入力した任意情報に誤りがあります。入力内容をご確認下さい。",
-      "enabled": true,
-      "builtin": true
+      "enabled": true
     },
     {
       "id": "builtin_p07",
@@ -1458,8 +1382,7 @@ window.APP_STATIC_DATA = {
         }
       ],
       "policy": "入力されたメアドでアカウントが存在しない可能性が高いです。",
-      "enabled": true,
-      "builtin": true
+      "enabled": true
     },
     {
       "id": "builtin_p08",
@@ -1471,8 +1394,7 @@ window.APP_STATIC_DATA = {
         }
       ],
       "policy": "ログインID開示で受付",
-      "enabled": true,
-      "builtin": true
+      "enabled": true
     },
     {
       "id": "builtin_p09",
@@ -1484,8 +1406,7 @@ window.APP_STATIC_DATA = {
         }
       ],
       "policy": "入力した任意情報に誤りがあります。入力内容をご確認下さい。",
-      "enabled": true,
-      "builtin": true
+      "enabled": true
     },
     {
       "id": "builtin_p10",
@@ -1497,8 +1418,7 @@ window.APP_STATIC_DATA = {
         }
       ],
       "policy": "入力されたメアドでアカウントが存在しない可能性が高いです。",
-      "enabled": true,
-      "builtin": true
+      "enabled": true
     },
     {
       "id": "builtin_p11",
@@ -1510,8 +1430,7 @@ window.APP_STATIC_DATA = {
         }
       ],
       "policy": "転送OK",
-      "enabled": true,
-      "builtin": true
+      "enabled": true
     },
     {
       "id": "builtin_p12",
@@ -1523,8 +1442,7 @@ window.APP_STATIC_DATA = {
         }
       ],
       "policy": "転送OK",
-      "enabled": true,
-      "builtin": true
+      "enabled": true
     },
     {
       "id": "builtin_p13",
@@ -1536,8 +1454,7 @@ window.APP_STATIC_DATA = {
         }
       ],
       "policy": "転送OK",
-      "enabled": true,
-      "builtin": true
+      "enabled": true
     },
     {
       "id": "builtin_p14",
@@ -1549,8 +1466,7 @@ window.APP_STATIC_DATA = {
         }
       ],
       "policy": "転送NG　本人からおかけ直しいただくよう案内",
-      "enabled": true,
-      "builtin": true
+      "enabled": true
     },
     {
       "id": "builtin_p15",
@@ -1562,8 +1478,7 @@ window.APP_STATIC_DATA = {
         }
       ],
       "policy": "転送OK",
-      "enabled": true,
-      "builtin": true
+      "enabled": true
     },
     {
       "id": "builtin_p16",
@@ -1575,8 +1490,7 @@ window.APP_STATIC_DATA = {
         }
       ],
       "policy": "転送OK",
-      "enabled": true,
-      "builtin": true
+      "enabled": true
     },
     {
       "id": "builtin_p17",
@@ -1588,8 +1502,7 @@ window.APP_STATIC_DATA = {
         }
       ],
       "policy": "転送OK",
-      "enabled": true,
-      "builtin": true
+      "enabled": true
     },
     {
       "id": "builtin_p18",
@@ -1601,8 +1514,7 @@ window.APP_STATIC_DATA = {
         }
       ],
       "policy": "転送NG　本人からおかけ直しいただくよう案内",
-      "enabled": true,
-      "builtin": true
+      "enabled": true
     },
     {
       "id": "builtin_p19",
@@ -1614,8 +1526,7 @@ window.APP_STATIC_DATA = {
         }
       ],
       "policy": "転送OK",
-      "enabled": true,
-      "builtin": true
+      "enabled": true
     },
     {
       "id": "builtin_p20",
@@ -1627,8 +1538,7 @@ window.APP_STATIC_DATA = {
         }
       ],
       "policy": "転送OK",
-      "enabled": true,
-      "builtin": true
+      "enabled": true
     },
     {
       "id": "builtin_p21",
@@ -1640,8 +1550,7 @@ window.APP_STATIC_DATA = {
         }
       ],
       "policy": "転送OK",
-      "enabled": true,
-      "builtin": true
+      "enabled": true
     },
     {
       "id": "builtin_p22",
@@ -1653,8 +1562,7 @@ window.APP_STATIC_DATA = {
         }
       ],
       "policy": "転送NG　本人からおかけ直しいただくよう案内",
-      "enabled": true,
-      "builtin": true
+      "enabled": true
     },
     {
       "id": "builtin_p23",
@@ -1666,8 +1574,7 @@ window.APP_STATIC_DATA = {
         }
       ],
       "policy": "転送OK",
-      "enabled": true,
-      "builtin": true
+      "enabled": true
     },
     {
       "id": "builtin_p24",
@@ -1679,8 +1586,7 @@ window.APP_STATIC_DATA = {
         }
       ],
       "policy": "転送OK",
-      "enabled": true,
-      "builtin": true
+      "enabled": true
     },
     {
       "id": "builtin_p25",
@@ -1692,8 +1598,7 @@ window.APP_STATIC_DATA = {
         }
       ],
       "policy": "転送OK",
-      "enabled": true,
-      "builtin": true
+      "enabled": true
     },
     {
       "id": "builtin_p26",
@@ -1705,8 +1610,7 @@ window.APP_STATIC_DATA = {
         }
       ],
       "policy": "転送NG　本人からおかけ直しいただくよう案内",
-      "enabled": true,
-      "builtin": true
+      "enabled": true
     },
     {
       "id": "builtin_p27",
@@ -1718,8 +1622,7 @@ window.APP_STATIC_DATA = {
         }
       ],
       "policy": "クロージング",
-      "enabled": true,
-      "builtin": true
+      "enabled": true
     },
     {
       "id": "builtin_p28",
@@ -1731,8 +1634,7 @@ window.APP_STATIC_DATA = {
         }
       ],
       "policy": "S-J連携を完了してサービスをご利用ください",
-      "enabled": true,
-      "builtin": true
+      "enabled": true
     },
     {
       "id": "builtin_p29",
@@ -1744,8 +1646,7 @@ window.APP_STATIC_DATA = {
         }
       ],
       "policy": "077で正しい受信契約情報を確認いただくよう案内",
-      "enabled": true,
-      "builtin": true
+      "enabled": true
     },
     {
       "id": "builtin_p30",
@@ -1757,8 +1658,7 @@ window.APP_STATIC_DATA = {
         }
       ],
       "policy": "同メアドで既にJアカが存在しています。",
-      "enabled": true,
-      "builtin": true
+      "enabled": true
     },
     {
       "id": "builtin_p31",
@@ -1777,8 +1677,7 @@ window.APP_STATIC_DATA = {
         }
       ],
       "policy": "クライアントエスカレ",
-      "enabled": true,
-      "builtin": true
+      "enabled": true
     },
     {
       "id": "builtin_p32",
@@ -1797,8 +1696,7 @@ window.APP_STATIC_DATA = {
         }
       ],
       "policy": "クライアントエスカレ",
-      "enabled": true,
-      "builtin": true
+      "enabled": true
     }
   ],
   "hearingPatterns": [],
@@ -1857,30 +1755,10 @@ window.APP_STATIC_DATA = {
     "opening": "お電話 ありがとうございます。NHKONE窓口 担当●●でございます。"
   },
   "faqData": [],
-  "hearingTemplates": [
-    {
-      "id": "tpl_vztoy8",
-      "name": "A",
-      "order": 0
-    }
-  ],
-  "talkScripts": {
-    "cat_1788611867379": {
-      "name": "あ」",
-      "color": "#ffa502",
-      "list": [
-        {
-          "title": "https://chatgpt.com/",
-          "steps": [
-            {
-              "text": "https://chatgpt.com/",
-              "choices": []
-            }
-          ]
-        }
-      ]
-    }
-  },
+  "hearingTemplates": [],
+  "hearingLabelPrefix": "■",
+  "hearingFixedReady": true,
+  "talkScripts": {},
   "mailTemplates": [
     {
       "id": "mail_1788611852548",
@@ -1904,8 +1782,6 @@ window.APP_STATIC_DATA = {
         "color": "#e63946"
       }
     ],
-    "subs": {
-      "mcat_1788611851040": []
-    }
+    "subs": {}
   }
 };
