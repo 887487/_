@@ -13,7 +13,7 @@
 * 「screen-imagesフォルダ」の名称変更　→ 「SCRimgフォルダ」
 
 index.html
-* 
+* 　
 
 script.html
 * 
