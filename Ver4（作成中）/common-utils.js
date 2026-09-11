@@ -4398,6 +4398,9 @@ document.addEventListener('keydown', function (e) {
     '.hr-memo-row { align-items: flex-start !important; }' +
     // 1行から始めて内容に合わせて伸ばす。プレースホルダは行の中央に見せる
     '.hr-autogrow { min-height:32px; height:32px; overflow-y:hidden; resize:none; line-height:1.6; padding:6px 9px; }' +
+    // メモは他の入力欄と同じ幅にそろえる（1行始まりだと細く見えるため）
+    '.hr-memo-row .hr-btns { flex:1; min-width:0; }' +
+    '.hr-memo-row .hr-autogrow, .hr-row .hr-btns > .hr-autogrow { width:100%; box-sizing:border-box; }' +
     '.hr-sum-multiline { white-space:pre-wrap; word-break:break-word; }' +
     // 複数選択は縦並び（横に並ぶと選択済みが分かりにくいため）
     '.hr-choice-vertical .hr-radio-group,.hr-choice-vertical { display:flex; flex-direction:column; align-items:flex-start; gap:4px; }' +

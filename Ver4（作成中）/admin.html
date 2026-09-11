@@ -2296,6 +2296,8 @@ html[data-theme="dark"] .nav-arrow-btn { background: rgba(40,42,54,.9); }
           <button class="btn btn-primary" onclick="smAddCategory()" style="flex:1;height:36px;font-size:13px;">＋ カテゴリを追加</button>
           <button class="btn btn-secondary" onclick="smAddTable()" style="flex:1;height:36px;font-size:13px;"
                   title="フォネティックコードやドメイン一覧のような表を追加します">＋ 表を追加</button>
+          <button class="btn btn-secondary" onclick="smAddGroupTable()" style="flex:1;height:36px;font-size:13px;"
+                  title="ショートカット一覧のように、見出しで区切った表を追加します">＋ 見出し付きの表を追加</button>
         </div>
       </div>
 
@@ -6976,6 +6978,35 @@ function smDelCat(si) {
   _smData.splice(si, 1); smRender();
 }
 /** 表セクションを追加する（フォネティックコード等） */
+/**
+ * ショートカット一覧と同じ形式（見出し＋2列の表）のセクションを追加する。
+ * フォネティックコードのような単純な表とは別に、
+ * 「編集 / 文字の書式 / …」のようにグループ分けしたい場合に使う。
+ */
+function smAddGroupTable() {
+  var name = prompt('一覧の名前を入力してください\n（例：⌨️ 独自ショートカット）');
+  if (name === null) return;
+  name = name.trim(); if (!name) return;
+
+  var cols = prompt('列の見出しを「,」区切りで入力してください\n（例：キー,説明）', 'キー,説明');
+  if (cols === null) return;
+  var headers = cols.split(',').map(function(t){ return t.trim(); }).filter(Boolean);
+  if (headers.length < 2) headers = ['キー', '説明'];
+
+  var list = window._appCache.sideMenuData || [];
+  list.push({
+    id: 'smg_' + Math.random().toString(36).substr(2, 7),
+    type: 'shortcut',                 // 見出し＋表の描画を使い回す
+    label: name,
+    headers: headers.slice(0, 2),
+    groups: [{ label: '見出し', rows: [['', '']] }]
+  });
+  window._appCache.sideMenuData = list;
+  _smData = list;
+  smSave(); smRender();
+  toast('✅ 「' + name + '」を追加しました');
+}
+
 function smAddTable() {
   var name = prompt('表の名前を入力してください\n（例：📖 フォネティックコード）');
   if (name === null) return;
@@ -7129,9 +7160,32 @@ function smScDelGroup(si, gi) {
 }
 
 /** 表セクションの編集画面を組み立てる */
+// 中身を編集しないセクション（内容が決まっている参照用の表）
+var SM_READONLY_TABLES = ['sm_phonetic', 'sm_domain'];
+
 function smRenderTable(sec, si) {
   var inp = 'width:100%;box-sizing:border-box;height:26px;padding:0 6px;font-size:11px;' +
             'border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text);';
+  // フォネティックコードとメールドメイン一覧は内容が決まっているので編集させない。
+  // 見出し名の変更やセクションごとの削除は、他と同じようにできる。
+  var ro = SM_READONLY_TABLES.indexOf(sec.id) >= 0;
+  if (ro) {
+    return '<div style="padding:10px 12px;">'
+      + '<div style="font-size:10px;color:var(--text3);margin-bottom:6px;">'
+      +   '内容が決まっている参照用の一覧です（' + (sec.rows || []).length + ' 行）。編集はできません。</div>'
+      + '<table style="width:100%;border-collapse:collapse;font-size:11px;">'
+      + '<thead><tr>' + (sec.headers || []).map(function(t) {
+          return '<th style="padding:3px 6px;text-align:left;color:var(--text3);font-weight:700;'
+            + 'border-bottom:1px solid var(--border);">' + esc(t) + '</th>';
+        }).join('') + '</tr></thead><tbody>'
+      + (sec.rows || []).map(function(r) {
+          return '<tr>' + (sec.headers || []).map(function(_, ci) {
+            return '<td style="padding:3px 6px;border-bottom:1px solid var(--border);color:var(--text2);">'
+              + esc(r[ci] || '') + '</td>';
+          }).join('') + '</tr>';
+        }).join('')
+      + '</tbody></table></div>';
+  }
   var h = '<div style="padding:10px 12px;">'
     + '<table style="width:100%;border-collapse:collapse;font-size:11px;">'
     + '<thead><tr>'
@@ -13651,14 +13705,37 @@ window.addEventListener('resize',function(){
    * 消すと判定が壊れるため件数を示して確認する。
    */
   function _hrDeleteQuestion(qId, label) {
+    var all = _hrQuestionsGet();
+    var me  = all.find(function(x) { return x.id === qId; });
+    // 条件側は id ではなく field で参照するため、両方で照合する
+    var keys = [qId];
+    if (me && me.field && keys.indexOf(me.field) < 0) keys.push(me.field);
+    var uses = function(f) { return f && keys.indexOf(f) >= 0; };
+
     var pol = (window._appCache.hearingPolicies || []).filter(function(p) {
-      return (p.conditions || []).some(function(c) { return c.field === qId; });
+      return (p.conditions || []).some(function(c) { return uses(c.field); });
     }).length;
     var pat = (window._appCache.hearingPatterns || []).filter(function(p) {
-      return (p.targets || []).some(function(t) { return t.id === qId; });
+      return (p.targets || []).some(function(t) { return t.id === qId; })
+          || (p.conditions || []).some(function(c) { return uses(c.field); });
     }).length;
 
+    // この質問を表示条件にしている質問。消すとその項目が二度と出なくなる
+    var dependents = all.filter(function(x) {
+      if (!x || x.id === qId) return false;
+      return (x.showIf || []).some(function(g) {
+        return (Array.isArray(g) ? g : [g]).some(function(c) { return c && uses(c.field); });
+      });
+    });
+
     var msg = '質問「' + label + '」を削除しますか？\n\n入力済みの回答も表示されなくなります。';
+    if (dependents.length) {
+      msg += '\n\n⚠️ この質問を「表示条件」にしている項目が ' + dependents.length + ' 件あります。'
+           + '\n' + dependents.slice(0, 5).map(function(x) { return '　・' + x.label; }).join('\n')
+           + (dependents.length > 5 ? '\n　ほか ' + (dependents.length - 5) + ' 件' : '')
+           + '\n\n削除すると、これらは条件を満たせなくなり画面に出なくなります。'
+           + '\n（管理画面では薄く表示されるので、あとから直せます）';
+    }
     if (pol || pat) {
       msg += '\n\n⚠️ この質問を条件に使っている設定があります。'
            + (pol ? '\n　・対応方針 ' + pol + ' 件' : '')
@@ -13667,7 +13744,7 @@ window.addEventListener('resize',function(){
     }
     if (!confirm(msg)) return;
 
-    var qs = _hrQuestionsGet().filter(function(x) { return x.id !== qId; });
+    var qs = all.filter(function(x) { return x.id !== qId; });
     _hrQuestionsSave(qs);
     // 入力済みの回答も片付ける
     try {
@@ -14437,14 +14514,6 @@ window.addEventListener('resize',function(){
       // ── ツールバー（1行にまとめる）──
       // 説明文と設定でプレビューの上が埋まらないよう、コンパクトな1行にする。
       h += '<div class="hr-prev-bar">' +
-             '<label class="hr-prev-ctl"><span>記号</span>' +
-               '<select id="hrDefaultPrefixSel">' +
-                 window.HEARING_PREFIX_OPTIONS.map(function(o) {
-                   return '<option value="' + hEsc(o.v) + '"' +
-                          (o.v === window.getHearingDefaultPrefix() ? ' selected' : '') + '>' +
-                          hEsc(o.v === '' ? 'なし' : o.v) + '</option>';
-                 }).join('') +
-               '</select></label>' +
              '<label class="hr-prev-ctl" title="条件を満たさない項目も薄く表示します（編集・削除できます）">' +
                '<input type="checkbox" id="hrShowHiddenChk"' + (_hrHideConditional ? '' : ' checked') + '>' +
                '<span>条件で隠れる項目も表示</span></label>' +
@@ -14454,7 +14523,7 @@ window.addEventListener('resize',function(){
            '<div class="hr-prev-help-body" id="hrPrevHelp">' +
              '<b>ダブルクリック</b>で項目名・ボタン名を編集　/　' +
              '<b>選択肢</b>・<b>機器</b>で候補を編集　/　' +
-             '<b>文</b>で出力文を設定　/　項目名の左のプルダウンで記号を個別指定<br>' +
+             '記号・出力文・選択肢は、右端の<b>編集</b>からまとめて設定します<br>' +
              '末尾の <b>＋ 質問を追加</b> から新しい項目を追加できます。' +
            '</div>';
 
@@ -14559,14 +14628,8 @@ window.addEventListener('resize',function(){
         });
       }
 
-      // 全体の既定記号
-      var pfSel = el.querySelector('#hrDefaultPrefixSel');
-      if (pfSel) {
-        pfSel.addEventListener('change', function() {
-          window.setHearingDefaultPrefix(pfSel.value);   // 中で renderHearing まで走る
-          toast('項目の先頭記号を「' + (pfSel.value || 'なし') + '」にしました');
-        });
-      }
+      // 記号の既定を選ぶプルダウンはプレビュー上部から外した。
+      // 変える機会が少なく、個別指定は各行の「編集」からできるため。
 
       // 各 [data-q-id] 行に編集機能を付加
       el.querySelectorAll('.hr-row[data-q-id]').forEach(function(rowEl) {
