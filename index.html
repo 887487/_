@@ -15,9 +15,6 @@
     const repo = "-";
     const branch = "main";
 
-    // ダウンロード対象フォルダー
-    const targetFolder = "Ver4（作成中）";
-
   </script>
 
   <!-- ========================================
@@ -150,7 +147,7 @@
 
 
     /* ========================================
-       対象フォルダー
+       対象リポジトリ
        ======================================== */
 
     .target-folder {
@@ -658,11 +655,13 @@
     </h1>
 
 
-    <!-- 対象フォルダー -->
+    <!-- ========================================
+         対象リポジトリ
+         ======================================== -->
 
     <div class="target-folder">
 
-      対象フォルダー：
+      対象リポジトリ：
 
       <span id="targetFolderName"></span>
 
@@ -732,7 +731,7 @@
     document
       .getElementById("targetFolderName")
       .innerText =
-        targetFolder;
+        `${owner}/${repo}`;
 
 
 
@@ -783,11 +782,22 @@
        GitHub Contents API
        ======================================== */
 
-    async function fetchContents(path) {
+    async function fetchContents(path = "") {
 
+      let url =
+        `https://api.github.com/repos/${owner}/${repo}/contents/`;
 
-      const url =
-        `https://api.github.com/repos/${owner}/${repo}/contents/${encodeURIComponent(path)}?ref=${branch}`;
+      if (path) {
+
+        url +=
+          `${path.split("/")
+            .map(encodeURIComponent)
+            .join("/")}`;
+
+      }
+
+      url +=
+        `?ref=${encodeURIComponent(branch)}`;
 
 
       const res =
@@ -990,12 +1000,19 @@
 
 
         status.innerText =
-          "GitHubからファイルを取得しています…";
+          "GitHubからリポジトリ全体を取得しています…";
 
+
+        /*
+         * リポジトリのルートから開始
+         *
+         * zip のルートに直接ファイルを追加するため、
+         * ZIP内に余計なフォルダーは作成されません。
+         */
 
         await addToZip(
           zip,
-          targetFolder,
+          "",
           zip
         );
 
@@ -1058,7 +1075,7 @@
            ------------------------------------ */
 
         const zipFileName =
-          `${targetFolder}.zip`;
+          `${repo}.zip`;
 
 
 
@@ -1138,7 +1155,6 @@
         status.innerText =
           `「${zipFileName}」のダウンロードが完了しました。`;
 
-
       }
 
 
@@ -1175,7 +1191,6 @@
         status.innerText =
           `エラー：${error.message}`;
 
-
       }
 
 
@@ -1196,6 +1211,43 @@
       }
 
     }
+
+
+    /* ========================================
+       エンターキーでダウンロード開始
+       ======================================== */
+
+    document.addEventListener(
+      "keydown",
+      function(event) {
+
+        if (
+          event.key === "Enter" &&
+          !event.ctrlKey &&
+          !event.altKey &&
+          !event.shiftKey &&
+          !event.metaKey
+        ) {
+
+          const downloadButton =
+            document.getElementById(
+              "downloadButton"
+            );
+
+
+          if (
+            !downloadButton.disabled
+          ) {
+
+            downloadZip();
+
+          }
+
+        }
+
+      }
+    );
+
 
   </script>
 
