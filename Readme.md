@@ -65,7 +65,7 @@ admin.html サイドメニュータブ
 ---
 プロファイル化
 * index.html／script.html／mail.html／screen.html／FAQ.html／hearing.html／admin.html／style.css／common-utils.js　は全プロファイルで共通利用のファイルとする
-* data.js ファイル名の先頭部分をプロファイル名として扱う（ファイル名の異なるdata.jsが複数存在する場合のみ、どのプロファイルでデータを表示するか選択する）
+* data.js ファイル名の先頭部分をプロファイル名として扱う　例）【NGH】data.js = プロファイル名：NGH　※ファイル名の異なるdata.jsが複数存在する場合のみ、どのプロファイルでデータを表示するか選択する
 ---
 分析ページを作成
 * CMリスト　社員番号：姓名　の形式で保存
