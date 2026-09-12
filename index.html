@@ -86,6 +86,7 @@
       font-weight: bold;
     }
 
+    /* ボタン共通 */
     button {
       width: 100%;
 
@@ -94,7 +95,6 @@
       border: none;
       border-radius: 10px;
 
-      background: #2563eb;
       color: #ffffff;
 
       font-size: 17px;
@@ -106,10 +106,8 @@
         background 0.2s,
         transform 0.1s,
         opacity 0.2s;
-    }
 
-    button:hover {
-      background: #1d4ed8;
+      margin-bottom: 12px;
     }
 
     button:active {
@@ -117,13 +115,31 @@
     }
 
     button:disabled {
-      background: #9ca3af;
+      background: #9ca3af !important;
       cursor: not-allowed;
       transform: none;
     }
 
+    /* ダウンロードボタン */
+    #downloadButton {
+      background: #2563eb;
+    }
+
+    #downloadButton:hover {
+      background: #1d4ed8;
+    }
+
+    /* ページ更新ボタン */
+    #reloadButton {
+      background: #6b7280;
+    }
+
+    #reloadButton:hover {
+      background: #4b5563;
+    }
+
     #status {
-      margin: 20px 0 0;
+      margin: 8px 0 0;
 
       min-height: 24px;
 
@@ -138,7 +154,7 @@
     .progress {
       display: none;
 
-      margin-top: 15px;
+      margin-top: 10px;
 
       width: 100%;
       height: 8px;
@@ -161,6 +177,7 @@
 
     /* スマートフォン */
     @media (max-width: 600px) {
+
       body {
         padding: 15px;
       }
@@ -191,6 +208,7 @@
 
     /* 小型スマートフォン */
     @media (max-width: 380px) {
+
       body {
         padding: 10px;
       }
@@ -207,6 +225,7 @@
         min-height: 52px;
       }
     }
+
   </style>
 </head>
 
@@ -217,15 +236,33 @@
     <h1>887487 Downloader</h1>
 
     <div class="target-folder">
-      対象フォルダー：<span id="targetFolderName"></span>
+      対象フォルダー：
+      <span id="targetFolderName"></span>
     </div>
 
-    <button id="downloadButton" onclick="downloadZip()">
+    <!-- ダウンロード -->
+    <button
+      id="downloadButton"
+      onclick="downloadZip()">
       ダウンロード
     </button>
 
-    <div class="progress" id="progress">
-      <div class="progress-bar" id="progressBar"></div>
+    <!-- ページ更新 -->
+    <button
+      id="reloadButton"
+      onclick="reloadPage()">
+      ページを更新
+    </button>
+
+    <div
+      class="progress"
+      id="progress">
+
+      <div
+        class="progress-bar"
+        id="progressBar">
+      </div>
+
     </div>
 
     <p id="status"></p>
@@ -247,7 +284,19 @@ const targetFolder = "Ver4（作成中）";
 // 初期表示
 // ==============================
 
-document.getElementById("targetFolderName").innerText = targetFolder;
+document.getElementById("targetFolderName").innerText =
+  targetFolder;
+
+
+// ==============================
+// ページ更新
+// ==============================
+
+function reloadPage() {
+
+  location.reload();
+
+}
 
 
 // ==============================
@@ -262,9 +311,11 @@ async function fetchContents(path) {
   const res = await fetch(url);
 
   if (!res.ok) {
+
     throw new Error(
       `GitHub API Error: ${res.status} ${res.statusText}`
     );
+
   }
 
   return await res.json();
@@ -277,29 +328,40 @@ async function fetchContents(path) {
 
 async function addToZip(zip, folderPath, zipFolder) {
 
-  const items = await fetchContents(folderPath);
+  const items =
+    await fetchContents(folderPath);
+
 
   for (const item of items) {
 
+    // ファイル
     if (item.type === "file") {
 
-      const fileRes = await fetch(item.download_url);
+      const fileRes =
+        await fetch(item.download_url);
 
       if (!fileRes.ok) {
+
         throw new Error(
           `ファイル取得失敗: ${item.path}`
         );
+
       }
 
-      const blob = await fileRes.blob();
+      const blob =
+        await fileRes.blob();
 
-      zipFolder.file(item.name, blob);
+      zipFolder.file(
+        item.name,
+        blob
+      );
 
       document.getElementById("status").innerText =
         `取得中：${item.path}`;
     }
 
 
+    // フォルダー
     if (item.type === "dir") {
 
       const newFolder =
@@ -310,8 +372,11 @@ async function addToZip(zip, folderPath, zipFolder) {
         item.path,
         newFolder
       );
+
     }
+
   }
+
 }
 
 
@@ -321,8 +386,11 @@ async function addToZip(zip, folderPath, zipFolder) {
 
 async function downloadZip() {
 
-  const button =
+  const downloadButton =
     document.getElementById("downloadButton");
+
+  const reloadButton =
+    document.getElementById("reloadButton");
 
   const status =
     document.getElementById("status");
@@ -336,21 +404,37 @@ async function downloadZip() {
 
   try {
 
+    // ==========================
     // ボタン無効化
-    button.disabled = true;
+    // ==========================
 
-    button.innerText = "ダウンロード中...";
+    downloadButton.disabled = true;
+    reloadButton.disabled = true;
 
+    downloadButton.innerText =
+      "ダウンロード中...";
+
+
+    // ==========================
     // プログレス表示
-    progress.style.display = "block";
+    // ==========================
 
-    progressBar.style.width = "10%";
+    progress.style.display =
+      "block";
 
-    status.innerText = "取得開始...";
+    progressBar.style.width =
+      "10%";
+
+    status.innerText =
+      "取得開始...";
 
 
+    // ==========================
     // ZIP作成
-    const zip = new JSZip();
+    // ==========================
+
+    const zip =
+      new JSZip();
 
 
     await addToZip(
@@ -360,21 +444,25 @@ async function downloadZip() {
     );
 
 
-    progressBar.style.width = "80%";
+    // ==========================
+    // ZIP生成
+    // ==========================
+
+    progressBar.style.width =
+      "80%";
 
     status.innerText =
       "ZIPファイル生成中...";
 
 
-    // ZIP生成
     const content =
       await zip.generateAsync(
         {
           type: "blob"
         },
+
         function(metadata) {
 
-          // ZIP生成進捗
           const percent =
             Math.round(metadata.percent);
 
@@ -386,22 +474,27 @@ async function downloadZip() {
 
           status.innerText =
             `ZIP生成中：${percent}%`;
+
         }
       );
 
 
-    progressBar.style.width = "100%";
+    progressBar.style.width =
+      "100%";
 
 
-    // ==============================
+    // ==========================
     // ZIPファイル名
-    // ==============================
+    // ==========================
 
     const zipFileName =
       `${targetFolder}.zip`;
 
 
+    // ==========================
     // ダウンロード
+    // ==========================
+
     const url =
       URL.createObjectURL(content);
 
@@ -410,7 +503,8 @@ async function downloadZip() {
 
     a.href = url;
 
-    a.download = zipFileName;
+    a.download =
+      zipFileName;
 
     document.body.appendChild(a);
 
@@ -421,14 +515,20 @@ async function downloadZip() {
 
     // URL解放
     setTimeout(() => {
+
       URL.revokeObjectURL(url);
+
     }, 1000);
 
+
+    // ==========================
+    // 完了
+    // ==========================
 
     status.innerText =
       `完了！「${zipFileName}」をダウンロードしました。`;
 
-    button.innerText =
+    downloadButton.innerText =
       "ダウンロード完了";
 
 
@@ -436,17 +536,28 @@ async function downloadZip() {
 
     console.error(error);
 
+
     status.innerText =
       `エラー：${error.message}`;
 
-    progressBar.style.width = "0%";
 
-    button.innerText =
+    progressBar.style.width =
+      "0%";
+
+
+    downloadButton.innerText =
       "再試行";
+
 
   } finally {
 
-    button.disabled = false;
+    // ダウンロードボタンのみ復帰
+    downloadButton.disabled =
+      false;
+
+    // 更新ボタンは復帰
+    reloadButton.disabled =
+      false;
 
   }
 
