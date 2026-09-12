@@ -49,6 +49,12 @@ admin.html ヒアリングタブ
 admin.html サイドメニュータブ
 * ショートカット一覧の形式で表を追加できるようにしてください
 
+* 各ページにadmin.htmlへジャンプするボタン（⚙）を表示
+script.html の ⚙ 押下→ admin.html スクリプトタブ を開く
+mail.html の ⚙ 押下→ admin.html メールタブ を開く
+screen.html の ⚙ 押下→ admin.html 画面遷移タブ を開く
+FAQ.html の ⚙ 押下→ admin.html FAQタブ を開く
+hearing.html の ⚙ 押下→ admin.html ヒアリングタブ を開く
 
 ---
 分析
