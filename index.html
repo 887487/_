@@ -61,9 +61,7 @@
       width: 100%;
       height: 100%;
 
-      /*
-       * スクロール禁止
-       */
+      /* スクロール禁止 */
       overflow: hidden;
 
     }
@@ -84,33 +82,22 @@
 
       color: #222;
 
-      /*
-       * 画面中央配置
-       */
       display: flex;
 
       justify-content: center;
       align-items: center;
 
-      /*
-       * スマートフォンの
-       * アドレスバー等を考慮
-       */
       width: 100%;
+
       min-height: 100vh;
       min-height: 100dvh;
 
-      /*
-       * スクロール禁止
-       */
-      overflow: hidden;
-
       padding: 20px;
 
-      /*
-       * iOS等での
-       * タップ時の拡大を抑制
-       */
+      /* スクロール禁止 */
+      overflow: hidden;
+
+      /* タッチ操作 */
       touch-action: manipulation;
 
     }
@@ -126,10 +113,8 @@
 
       max-width: 500px;
 
-      /*
-       * 高さが画面を超えないようにする
-       */
-      max-height: calc(100dvh - 40px);
+      max-height:
+        calc(100dvh - 40px);
 
       background: #ffffff;
 
@@ -142,9 +127,6 @@
 
       text-align: center;
 
-      /*
-       * コンテナ自体もスクロールさせない
-       */
       overflow: hidden;
 
     }
@@ -185,11 +167,8 @@
 
       line-height: 1.5;
 
-      /*
-       * 長いフォルダー名でも
-       * 横スクロールさせない
-       */
       overflow-wrap: anywhere;
+
       word-break: break-word;
 
     }
@@ -208,6 +187,8 @@
 
     button {
 
+      position: relative;
+
       width: 100%;
 
       min-height: 54px;
@@ -224,41 +205,32 @@
 
       cursor: pointer;
 
-      transition:
-        background 0.2s,
-        transform 0.1s,
-        opacity 0.2s;
-
       margin-bottom: 12px;
 
-      /*
-       * タップ時のハイライトを無効化
-       */
       -webkit-tap-highlight-color: transparent;
 
-      /*
-       * ボタンによる
-       * ブラウザのジェスチャーを抑制
-       */
       touch-action: manipulation;
+
+      /*
+       * アニメーション
+       */
+      transition:
+        background-color 0.15s ease,
+        transform 0.08s ease,
+        box-shadow 0.15s ease,
+        opacity 0.15s ease;
 
     }
 
+
+    /* ========================================
+       ボタン押下時
+       ======================================== */
 
     button:active {
 
-      transform: scale(0.98);
-
-    }
-
-
-    button:disabled {
-
-      background: #9ca3af !important;
-
-      cursor: not-allowed;
-
-      transform: none;
+      transform:
+        scale(0.96);
 
     }
 
@@ -271,12 +243,73 @@
 
       background: #2563eb;
 
+      box-shadow:
+        0 4px 0 #1d4ed8;
+
     }
 
 
     #downloadButton:hover {
 
       background: #1d4ed8;
+
+    }
+
+
+    #downloadButton:active {
+
+      background: #1e40af;
+
+      box-shadow:
+        0 1px 0 #1e3a8a;
+
+      transform:
+        translateY(3px)
+        scale(0.97);
+
+    }
+
+
+    /* ========================================
+       ダウンロード処理中
+       ======================================== */
+
+    #downloadButton.processing {
+
+      background: #64748b;
+
+      box-shadow:
+        0 4px 0 #475569;
+
+      cursor: wait;
+
+    }
+
+
+    /* ========================================
+       ダウンロード完了
+       ======================================== */
+
+    #downloadButton.completed {
+
+      background: #16a34a;
+
+      box-shadow:
+        0 4px 0 #15803d;
+
+    }
+
+
+    /* ========================================
+       エラー
+       ======================================== */
+
+    #downloadButton.error {
+
+      background: #dc2626;
+
+      box-shadow:
+        0 4px 0 #b91c1c;
 
     }
 
@@ -289,12 +322,68 @@
 
       background: #6b7280;
 
+      box-shadow:
+        0 4px 0 #4b5563;
+
     }
 
 
     #reloadButton:hover {
 
       background: #4b5563;
+
+    }
+
+
+    #reloadButton:active {
+
+      background: #374151;
+
+      box-shadow:
+        0 1px 0 #1f2937;
+
+      transform:
+        translateY(3px)
+        scale(0.97);
+
+    }
+
+
+    /* ========================================
+       更新処理中
+       ======================================== */
+
+    #reloadButton.processing {
+
+      background: #475569;
+
+      box-shadow:
+        0 4px 0 #334155;
+
+      cursor: wait;
+
+    }
+
+
+    /* ========================================
+       無効化
+       ======================================== */
+
+    button:disabled {
+
+      cursor: not-allowed;
+
+    }
+
+
+    /*
+     * 処理中はダウンロードボタンを
+     * 明確に表示
+     */
+
+    #downloadButton.processing:disabled {
+
+      opacity: 1;
 
     }
 
@@ -315,11 +404,8 @@
 
       color: #555;
 
-      /*
-       * 長いパスでも
-       * 横スクロールさせない
-       */
       overflow-wrap: anywhere;
+
       word-break: break-word;
 
     }
@@ -337,7 +423,7 @@
 
       width: 100%;
 
-      height: 8px;
+      height: 10px;
 
       background: #e5e7eb;
 
@@ -356,7 +442,10 @@
 
       background: #2563eb;
 
-      transition: width 0.2s;
+      border-radius: 999px;
+
+      transition:
+        width 0.2s ease;
 
     }
 
@@ -479,7 +568,7 @@
 
       .progress {
 
-        height: 7px;
+        height: 8px;
 
       }
 
@@ -487,7 +576,7 @@
 
 
     /* ========================================
-       画面の高さが小さい端末
+       高さが小さいスマートフォン
        ======================================== */
 
     @media (max-height: 600px) {
@@ -569,9 +658,7 @@
     </h1>
 
 
-    <!-- ========================================
-         対象フォルダー
-         ======================================== -->
+    <!-- 対象フォルダー -->
 
     <div class="target-folder">
 
@@ -655,7 +742,38 @@
 
     function reloadPage() {
 
-      location.reload();
+      const button =
+        document.getElementById(
+          "reloadButton"
+        );
+
+
+      /*
+       * 押された瞬間に表示変更
+       */
+
+      button.classList.add(
+        "processing"
+      );
+
+
+      button.disabled = true;
+
+
+      button.innerText =
+        "● 更新中…";
+
+
+      /*
+       * 少しだけ表示を見せてから
+       * ページを更新
+       */
+
+      setTimeout(() => {
+
+        location.reload();
+
+      }, 150);
 
     }
 
@@ -703,7 +821,9 @@
 
 
       const items =
-        await fetchContents(folderPath);
+        await fetchContents(
+          folderPath
+        );
 
 
       for (const item of items) {
@@ -717,7 +837,9 @@
 
 
           const fileRes =
-            await fetch(item.download_url);
+            await fetch(
+              item.download_url
+            );
 
 
           if (!fileRes.ok) {
@@ -756,7 +878,9 @@
 
 
           const newFolder =
-            zipFolder.folder(item.name);
+            zipFolder.folder(
+              item.name
+            );
 
 
           await addToZip(
@@ -810,13 +934,23 @@
         );
 
 
-
       try {
 
 
         /* ------------------------------------
-           ボタン無効化
+           ★ 押された瞬間の表示
            ------------------------------------ */
+
+        downloadButton.classList.remove(
+          "completed",
+          "error"
+        );
+
+
+        downloadButton.classList.add(
+          "processing"
+        );
+
 
         downloadButton.disabled =
           true;
@@ -827,24 +961,23 @@
 
 
         downloadButton.innerText =
-          "ダウンロード中...";
+          "● 処理中…";
 
 
+        status.innerText =
+          "ダウンロードを開始しています…";
 
-        /* ------------------------------------
-           プログレス表示
-           ------------------------------------ */
+
+        /*
+         * すぐにプログレスバーを表示
+         */
 
         progress.style.display =
           "block";
 
 
         progressBar.style.width =
-          "10%";
-
-
-        status.innerText =
-          "取得開始...";
+          "5%";
 
 
 
@@ -855,6 +988,9 @@
         const zip =
           new JSZip();
 
+
+        status.innerText =
+          "GitHubからファイルを取得しています…";
 
 
         await addToZip(
@@ -874,8 +1010,7 @@
 
 
         status.innerText =
-          "ZIPファイル生成中...";
-
+          "ZIPファイルを生成しています…";
 
 
         const content =
@@ -896,7 +1031,8 @@
 
 
               const displayPercent =
-                80 + (percent * 0.2);
+                80 +
+                (percent * 0.2);
 
 
               progressBar.style.width =
@@ -982,15 +1118,25 @@
 
 
         /* ------------------------------------
-           完了
+           ★ 完了表示
            ------------------------------------ */
 
-        status.innerText =
-          `完了！「${zipFileName}」をダウンロードしました。`;
+        downloadButton.classList.remove(
+          "processing"
+        );
+
+
+        downloadButton.classList.add(
+          "completed"
+        );
 
 
         downloadButton.innerText =
-          "ダウンロード完了";
+          "✓ ダウンロード完了";
+
+
+        status.innerText =
+          `「${zipFileName}」のダウンロードが完了しました。`;
 
 
       }
@@ -1008,16 +1154,27 @@
         );
 
 
-        status.innerText =
-          `エラー：${error.message}`;
-
-
         progressBar.style.width =
           "0%";
 
 
+        downloadButton.classList.remove(
+          "processing"
+        );
+
+
+        downloadButton.classList.add(
+          "error"
+        );
+
+
         downloadButton.innerText =
-          "再試行";
+          "! 再試行";
+
+
+        status.innerText =
+          `エラー：${error.message}`;
+
 
       }
 
