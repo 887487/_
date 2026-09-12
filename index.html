@@ -5,11 +5,9 @@
 
   <meta charset="UTF-8">
 
-  <!--
-    ========================================
-    ▼▼▼ ダウンロード設定 ▼▼▼
-    ========================================
-  -->
+  <!-- ========================================
+       ▼▼▼ ダウンロード設定 ▼▼▼
+       ======================================== -->
 
   <script>
 
@@ -22,17 +20,15 @@
 
   </script>
 
-  <!--
-    ========================================
-    ▲▲▲ ダウンロード設定ここまで ▲▲▲
-    ========================================
-  -->
+  <!-- ========================================
+       ▲▲▲ ダウンロード設定ここまで ▲▲▲
+       ======================================== -->
 
 
   <!-- 拡大・縮小禁止 -->
   <meta
     name="viewport"
-    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no"
   >
 
 
@@ -63,7 +59,12 @@
       padding: 0;
 
       width: 100%;
-      min-height: 100%;
+      height: 100%;
+
+      /*
+       * スクロール禁止
+       */
+      overflow: hidden;
 
     }
 
@@ -83,14 +84,34 @@
 
       color: #222;
 
+      /*
+       * 画面中央配置
+       */
       display: flex;
 
       justify-content: center;
       align-items: center;
 
+      /*
+       * スマートフォンの
+       * アドレスバー等を考慮
+       */
+      width: 100%;
       min-height: 100vh;
+      min-height: 100dvh;
+
+      /*
+       * スクロール禁止
+       */
+      overflow: hidden;
 
       padding: 20px;
+
+      /*
+       * iOS等での
+       * タップ時の拡大を抑制
+       */
+      touch-action: manipulation;
 
     }
 
@@ -105,6 +126,11 @@
 
       max-width: 500px;
 
+      /*
+       * 高さが画面を超えないようにする
+       */
+      max-height: calc(100dvh - 40px);
+
       background: #ffffff;
 
       border-radius: 16px;
@@ -115,6 +141,11 @@
         0 8px 30px rgba(0, 0, 0, 0.08);
 
       text-align: center;
+
+      /*
+       * コンテナ自体もスクロールさせない
+       */
+      overflow: hidden;
 
     }
 
@@ -137,7 +168,7 @@
 
 
     /* ========================================
-       対象フォルダー表示
+       対象フォルダー
        ======================================== */
 
     .target-folder {
@@ -154,7 +185,12 @@
 
       line-height: 1.5;
 
-      word-break: break-all;
+      /*
+       * 長いフォルダー名でも
+       * 横スクロールさせない
+       */
+      overflow-wrap: anywhere;
+      word-break: break-word;
 
     }
 
@@ -195,7 +231,16 @@
 
       margin-bottom: 12px;
 
+      /*
+       * タップ時のハイライトを無効化
+       */
       -webkit-tap-highlight-color: transparent;
+
+      /*
+       * ボタンによる
+       * ブラウザのジェスチャーを抑制
+       */
+      touch-action: manipulation;
 
     }
 
@@ -270,7 +315,12 @@
 
       color: #555;
 
-      word-break: break-all;
+      /*
+       * 長いパスでも
+       * 横スクロールさせない
+       */
+      overflow-wrap: anywhere;
+      word-break: break-word;
 
     }
 
@@ -330,6 +380,9 @@
 
         border-radius: 14px;
 
+        max-height:
+          calc(100dvh - 30px);
+
       }
 
 
@@ -384,6 +437,9 @@
 
         padding: 20px 15px;
 
+        max-height:
+          calc(100dvh - 20px);
+
       }
 
 
@@ -391,12 +447,101 @@
 
         font-size: 19px;
 
+        margin-bottom: 8px;
+
+      }
+
+
+      .target-folder {
+
+        margin-bottom: 15px;
+
+        padding: 10px 12px;
+
       }
 
 
       button {
 
         min-height: 52px;
+
+        margin-bottom: 10px;
+
+      }
+
+
+      #status {
+
+        font-size: 12px;
+
+      }
+
+
+      .progress {
+
+        height: 7px;
+
+      }
+
+    }
+
+
+    /* ========================================
+       画面の高さが小さい端末
+       ======================================== */
+
+    @media (max-height: 600px) {
+
+      .container {
+
+        padding-top: 18px;
+
+        padding-bottom: 18px;
+
+      }
+
+
+      h1 {
+
+        font-size: 20px;
+
+        margin-bottom: 6px;
+
+      }
+
+
+      .target-folder {
+
+        padding: 8px 12px;
+
+        margin-bottom: 12px;
+
+      }
+
+
+      button {
+
+        min-height: 46px;
+
+        margin-bottom: 8px;
+
+      }
+
+
+      #status {
+
+        margin-top: 4px;
+
+        min-height: 20px;
+
+        font-size: 12px;
+
+      }
+
+
+      .progress {
+
+        margin-top: 6px;
 
       }
 
@@ -424,7 +569,9 @@
     </h1>
 
 
-    <!-- 対象フォルダー -->
+    <!-- ========================================
+         対象フォルダー
+         ======================================== -->
 
     <div class="target-folder">
 
@@ -497,7 +644,8 @@
 
     document
       .getElementById("targetFolderName")
-      .innerText = targetFolder;
+      .innerText =
+        targetFolder;
 
 
 
@@ -670,9 +818,12 @@
            ボタン無効化
            ------------------------------------ */
 
-        downloadButton.disabled = true;
+        downloadButton.disabled =
+          true;
 
-        reloadButton.disabled = true;
+
+        reloadButton.disabled =
+          true;
 
 
         downloadButton.innerText =
@@ -715,7 +866,7 @@
 
 
         /* ------------------------------------
-           ZIP生成開始
+           ZIP生成
            ------------------------------------ */
 
         progressBar.style.width =
@@ -768,7 +919,6 @@
 
         /* ------------------------------------
            ZIPファイル名
-           ターゲットフォルダー名を使用
            ------------------------------------ */
 
         const zipFileName =
@@ -792,20 +942,25 @@
           );
 
 
-        a.href = url;
+        a.href =
+          url;
 
 
         a.download =
           zipFileName;
 
 
-        document.body.appendChild(a);
+        document.body.appendChild(
+          a
+        );
 
 
         a.click();
 
 
-        document.body.removeChild(a);
+        document.body.removeChild(
+          a
+        );
 
 
 
@@ -816,7 +971,9 @@
         setTimeout(
           () => {
 
-            URL.revokeObjectURL(url);
+            URL.revokeObjectURL(
+              url
+            );
 
           },
           1000
@@ -846,7 +1003,9 @@
       catch (error) {
 
 
-        console.error(error);
+        console.error(
+          error
+        );
 
 
         status.innerText =
@@ -859,7 +1018,6 @@
 
         downloadButton.innerText =
           "再試行";
-
 
       }
 
