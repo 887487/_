@@ -16,7 +16,7 @@
 * 「screen-imagesフォルダ」の名称変更　→ 「SCRimgフォルダ」
 
 index.html
-* 
+* 各ページへ飛ぶボタン　既にページが開かれている場合、そのタブを表示する
 
 script.html
 * 
