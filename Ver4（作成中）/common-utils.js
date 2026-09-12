@@ -26,7 +26,7 @@ var HEARING_DATA_VERSION = 2;
 // admin.html で編集し data.js に保存される。
 // script.html でも同じ値を使うため、既定値と取得口を共通側に置く。
 window.FIXED_TEXT_DEFAULTS = {
-  opening:        'お電話 ありがとうございます。NHKONE窓口 担当●●でございます。',
+  opening:        'お電話 ありがとうございます。＿＿＿窓口 担当●●でございます。',
   closingDefault: 'ご案内は以上となりますが、そのほか確認されたいことなどはございませんでしょうか？',
   closingNone:    'ありがとうございます。 それでは本日●●がご案内いたしました。それでは失礼いたします。',
   closingAsk:     '○○○についてでございますね。（お問い合わせ内容に回答）'

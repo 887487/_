@@ -1,9 +1,9 @@
 // ツール設定ファイル — スクリプト・メール・サイドメニュー・ヒアリング・更新履歴・固定テキスト
 // admin.html の「💾 保存して反映」で自動更新されます。手動編集は非推奨です。
-// 生成日時: 2026-09-12T03:00:19.017Z
+// 生成日時: 2026-09-12T05:12:29.066Z
 window.APP_STATIC_DATA = {
-  "generatedAt": "2026-09-12T03:00:19.017Z",
-  "savedAt": "2026-09-12T03:00:19.017Z",
+  "generatedAt": "2026-09-12T05:12:29.066Z",
+  "savedAt": "2026-09-12T05:12:29.066Z",
   "sideMenuData": [
     {
       "id": "sm_shortcut",
@@ -582,15 +582,59 @@ window.APP_STATIC_DATA = {
       ]
     },
     {
-      "id": "q_aew24tf",
+      "id": "q_skvxs2d",
       "enabled": true,
-      "label": "トグルボタン　単一",
+      "label": "トグルボタン　複数選択オフ　詳細なし",
       "outLabel": "",
       "outTpl": "",
       "type": "toggle",
       "common": true,
       "tplId": "",
-      "field": "q_aew24tf",
+      "field": "q_skvxs2d",
+      "options": [
+        {
+          "l": "スマホ",
+          "v": "スマホ"
+        },
+        {
+          "l": "PC",
+          "v": "PC"
+        }
+      ],
+      "multi": false
+    },
+    {
+      "id": "q_e1i7jbz",
+      "enabled": true,
+      "label": "トグルボタン　複数選択オン　詳細なし",
+      "outLabel": "",
+      "outTpl": "",
+      "type": "toggle",
+      "common": true,
+      "tplId": "",
+      "field": "q_e1i7jbz",
+      "options": [
+        {
+          "l": "スマホ",
+          "v": "スマホ"
+        },
+        {
+          "l": "PC",
+          "v": "PC"
+        }
+      ],
+      "multi": true
+    },
+    {
+      "id": "q_pr22tv2",
+      "enabled": true,
+      "label": "トグルボタン　複数選択オフ　詳細あり",
+      "outLabel": "",
+      "outTpl": "",
+      "type": "toggle",
+      "common": true,
+      "tplId": "",
+      "field": "q_pr22tv2",
       "options": [
         {
           "l": "スマホ",
@@ -604,7 +648,7 @@ window.APP_STATIC_DATA = {
           "l": "PC",
           "v": "PC",
           "details": [
-            "Windows",
+            "Win",
             "Mac"
           ]
         }
@@ -612,75 +656,31 @@ window.APP_STATIC_DATA = {
       "multi": false
     },
     {
-      "id": "q_1dw8jh5",
+      "id": "q_g7dve4u",
       "enabled": true,
-      "label": "トグルボタン　複数選択可",
-      "outLabel": "",
-      "outTpl": "水を[入力]本",
-      "type": "toggle",
-      "common": true,
-      "tplId": "",
-      "field": "q_1dw8jh5",
-      "options": [
-        {
-          "l": "ソフトドリンク",
-          "v": "ソフトドリンク",
-          "details": [
-            "烏龍茶",
-            "コーラ"
-          ]
-        },
-        {
-          "l": "アルコール",
-          "v": "アルコール",
-          "details": [
-            "烏龍ハイ",
-            "コークハイ"
-          ]
-        }
-      ],
-      "multi": true
-    },
-    {
-      "id": "q_3army85",
-      "enabled": true,
-      "label": "トグルボタン　単一　詳細なし",
+      "label": "トグルボタン　複数選択オン　詳細あり",
       "outLabel": "",
       "outTpl": "",
       "type": "toggle",
       "common": true,
       "tplId": "",
-      "field": "q_3army85",
+      "field": "q_g7dve4u",
       "options": [
         {
-          "l": "単品",
-          "v": "単品"
+          "l": "スマホ",
+          "v": "スマホ",
+          "details": [
+            "iPhone",
+            "Android"
+          ]
         },
         {
-          "l": "飲み放",
-          "v": "飲み放"
-        }
-      ],
-      "multi": false
-    },
-    {
-      "id": "q_lxyzcou",
-      "enabled": true,
-      "label": "トグルボタン　複数　詳細なし",
-      "outLabel": "",
-      "outTpl": "",
-      "type": "toggle",
-      "common": true,
-      "tplId": "",
-      "field": "q_lxyzcou",
-      "options": [
-        {
-          "l": "単品",
-          "v": "単品"
-        },
-        {
-          "l": "飲み放",
-          "v": "飲み放"
+          "l": "PC",
+          "v": "PC",
+          "details": [
+            "Win",
+            "Mac"
+          ]
         }
       ],
       "multi": true
