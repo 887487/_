@@ -15,6 +15,7 @@
 * index.htmlのヘッダー右側にある yyyy/mm/dd(aaa) hh:mm:ss の表示を全ページで表示する
 * 「screen-imagesフォルダ」の名称変更　→ 「SCRimgフォルダ」
 * admin.htmlへジャンプするボタン（⚙）を表示。各ページ ⚙ 押下時のアクション：script.html → admin.html スクリプトタブ／mail.html → admin.html メールタブ／screen.html → admin.html 画面遷移タブ／FAQ.html → admin.html FAQタブ／hearing.html → admin.html ヒアリングタブ　を開く
+* タイトルボタン押下時のアクション　screen/FAQ/hearing　.htmlはページの再読み込みが入るが、script/mail/admin　.htmlは再読み込みが入っていない？もし入っていない場合は、再読み込みをするようにしてください
 
 index.html
 * 各ページへ飛ぶボタン　既にページが開かれている場合、そのタブを表示する
